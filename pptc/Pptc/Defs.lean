@@ -15,7 +15,15 @@ limitations under the License.
 This file is part of the Pptc (PowerPoint Constructibility) project.
 -/
 
-import Mathlib
+-- Targeted imports rather than `import Mathlib`: the latter pulls in all 8317 Mathlib
+-- modules and roughly doubles the time to check this file. If a future addition needs a
+-- Mathlib result that is not in scope, add the specific module here.
+import Mathlib.Algebra.Polynomial.AlgebraMap
+import Mathlib.Analysis.Calculus.Deriv.Basic
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Sqrt
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 
 /-! # Pptc.Defs
 

@@ -15,8 +15,16 @@ limitations under the License.
 This file is part of the Pptc (PowerPoint Constructibility) project.
 -/
 
-import Mathlib
+-- Targeted imports rather than `import Mathlib`; see the note in `Pptc.Defs`.
+-- Most of the mathematical content arrives transitively through `Pptc.Defs`.
 import Pptc.Defs
+import Mathlib.Analysis.Calculus.Deriv.Add
+import Mathlib.Analysis.Calculus.Deriv.Mul
+import Mathlib.Tactic.FunProp
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.NormNum
+import Mathlib.Tactic.Push
+import Mathlib.Tactic.Ring
 
 /-! # Pptc.Basic
 
