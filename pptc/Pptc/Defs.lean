@@ -31,10 +31,27 @@ whole-degree increments, and intersecting.
 The two are mutually inductive: a `PConstructibleCurve` may need `PConstructible`
 parameters (e.g. an ellipse's center and dimensions), and `PConstructible` may need
 a `PConstructibleCurve` (reading off the coordinate of a curve-curve intersection
-point), so they must be declared together.
+point, or the arc length of a piece of one), so they must be declared together.
+
+Arc length is measured by `arcLengthOf`, which integrates `speed` over a parameter
+interval. The parametrization is supplied at the point of extraction rather than being
+stored in `PConstructibleCurve`; see the comment on `PConstructible.arc_length`.
 -/
 
 namespace Pconstructible
+
+/-- The speed of a plane curve `γ` at parameter `t`, i.e. the Euclidean norm of its
+velocity vector.
+
+The Euclidean norm is written out as `√(x' ^ 2 + y' ^ 2)` rather than as `‖deriv γ t‖`
+on purpose: the product norm that Mathlib puts on `ℝ × ℝ` is the *supremum* norm, so
+`‖deriv γ t‖` would silently compute the wrong quantity. -/
+noncomputable def speed (γ : ℝ → ℝ × ℝ) (t : ℝ) : ℝ :=
+  Real.sqrt (deriv (fun s => (γ s).1) t ^ 2 + deriv (fun s => (γ s).2) t ^ 2)
+
+/-- The arc length of the plane curve `γ` traced over the parameter interval `[a, b]`. -/
+noncomputable def arcLengthOf (γ : ℝ → ℝ × ℝ) (a b : ℝ) : ℝ :=
+  ∫ t in a..b, speed γ t
 
 mutual
 
@@ -64,6 +81,34 @@ inductive PConstructible : ℝ → Prop
   | inter_y {S T : Set (ℝ × ℝ)} (hS : PConstructibleCurve S) (hT : PConstructibleCurve T)
       {x y : ℝ} (h : S ∩ T = {(x, y)}) :
       PConstructible y
+  -- The arc length of a piece of a constructible curve. The parametrization `γ` is
+  -- supplied here, at the point of extraction, rather than being stored in
+  -- `PConstructibleCurve`: it is a witness that the thing being measured really is an
+  -- arc of `S`, and (for a closed curve such as an ellipse, where two points bound two
+  -- different arcs) it is also what selects *which* arc is meant.
+  --
+  -- The endpoints of the arc are required to be `PConstructible` *points of the plane*,
+  -- not merely `PConstructible` parameter values. Constraining `a` and `b` would achieve
+  -- nothing, since `γ` is arbitrary and can always be reparametrized: taking `a = 0`,
+  -- `b = 1` and `γ t = (π * t, (π * t) ^ 2)` traces the parabola `y = x ^ 2` out to
+  -- `x = π`, and letting that endpoint vary continuously would make every real number an
+  -- arc length, collapsing `PConstructible` to all of `ℝ`. Pinning the endpoints in the
+  -- plane instead makes reparametrization harmless, since any two injective tracings of
+  -- the same arc give the same integral.
+  | arc_length {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      (γ : ℝ → ℝ × ℝ) {a b : ℝ} (hab : a ≤ b)
+      -- `γ` traces an arc of `S` ...
+      (hsub : γ '' Set.Icc a b ⊆ S)
+      -- ... without retracing any part of it, so the integral below is a genuine length ...
+      (hinj : Set.InjOn γ (Set.Icc a b))
+      -- ... and is smooth enough for that integral to mean anything.
+      (hdiff : ∀ t ∈ Set.Icc a b,
+        DifferentiableAt ℝ (fun s => (γ s).1) t ∧ DifferentiableAt ℝ (fun s => (γ s).2) t)
+      (hint : IntervalIntegrable (speed γ) MeasureTheory.volume a b)
+      -- Both endpoints of the arc are P-constructible points of the plane.
+      (hx₀ : PConstructible (γ a).1) (hy₀ : PConstructible (γ a).2)
+      (hx₁ : PConstructible (γ b).1) (hy₁ : PConstructible (γ b).2) :
+      PConstructible (arcLengthOf γ a b)
 
 /-- `PConstructibleCurve S` holds if the point-set `S ⊆ ℝ × ℝ` can be reached by a
 finite sequence of legal curve constructions and geometric operations. -/

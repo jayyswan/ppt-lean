@@ -109,4 +109,88 @@ theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
       · nlinarith [Real.sq_sqrt h.le, Real.sqrt_nonneg a]
       · nlinarith [Real.sq_sqrt h.le, Real.sqrt_nonneg a, sq_nonneg (Real.sqrt a - 1)]
 
+-- Theorem: the square of a P-constructible number is P-constructible.
+theorem sq_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (x ^ 2) := by
+  have := PConstructible.mul hx hx
+  rwa [← sq] at this
+
+-- Theorem: the distance between two P-constructible points is P-constructible.
+-- This needs no appeal to `PConstructible.arc_length`; it is just the distance formula
+-- fed through `sqrt_Pconstructible`.
+theorem dist_Pconstructible {x₀ y₀ x₁ y₁ : ℝ}
+    (hx₀ : PConstructible x₀) (hy₀ : PConstructible y₀)
+    (hx₁ : PConstructible x₁) (hy₁ : PConstructible y₁) :
+    PConstructible (Real.sqrt ((x₁ - x₀) ^ 2 + (y₁ - y₀) ^ 2)) :=
+  sqrt_Pconstructible
+    (PConstructible.add (sq_Pconstructible (PConstructible.sub hx₁ hx₀))
+      (sq_Pconstructible (PConstructible.sub hy₁ hy₀)))
+
+/-- The linear parametrization of the segment from `p` to `q`, traced over `[0, 1]`. -/
+noncomputable def segmentParam (p q : ℝ × ℝ) : ℝ → ℝ × ℝ :=
+  fun t => (p.1 + t * (q.1 - p.1), p.2 + t * (q.2 - p.2))
+
+-- Theorem: a segment is traced at constant speed, namely the distance between its
+-- endpoints.
+theorem speed_segmentParam (p q : ℝ × ℝ) :
+    speed (segmentParam p q) = fun _ => Real.sqrt ((q.1 - p.1) ^ 2 + (q.2 - p.2) ^ 2) := by
+  have hd : ∀ (c d : ℝ) (t : ℝ), HasDerivAt (fun s : ℝ => c + s * d) d t := by
+    intro c d t
+    simpa using ((hasDerivAt_id t).mul_const d).const_add c
+  ext t
+  change Real.sqrt (deriv (fun s : ℝ => p.1 + s * (q.1 - p.1)) t ^ 2 +
+      deriv (fun s : ℝ => p.2 + s * (q.2 - p.2)) t ^ 2) = _
+  rw [(hd p.1 (q.1 - p.1) t).deriv, (hd p.2 (q.2 - p.2) t).deriv]
+
+-- Theorem: `arcLengthOf` really does compute length — on a straight segment it returns
+-- exactly the distance formula. This is the sanity check that `speed` / `arcLengthOf`
+-- were written correctly.
+theorem arcLengthOf_segmentParam (p q : ℝ × ℝ) :
+    arcLengthOf (segmentParam p q) 0 1 =
+      Real.sqrt ((q.1 - p.1) ^ 2 + (q.2 - p.2) ^ 2) := by
+  rw [arcLengthOf, speed_segmentParam]
+  simp
+
+-- Theorem: a straight segment lying inside a constructible curve, with `PConstructible`
+-- endpoints, has `PConstructible` arc length.
+--
+-- Note the conclusion is *identical* to that of `dist_Pconstructible` above, which is
+-- proved without `PConstructible.arc_length`. That is the intended sanity check on the
+-- new constructor: on straight segments it grants no number that was not already
+-- constructible. It also exercises every side condition of the constructor, confirming
+-- they are dischargeable in practice.
+theorem arcLength_segment_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    (p q : ℝ × ℝ) (hne : p ≠ q)
+    (hsub : segmentParam p q '' Set.Icc 0 1 ⊆ S)
+    (hp1 : PConstructible p.1) (hp2 : PConstructible p.2)
+    (hq1 : PConstructible q.1) (hq2 : PConstructible q.2) :
+    PConstructible (Real.sqrt ((q.1 - p.1) ^ 2 + (q.2 - p.2) ^ 2)) := by
+  rw [← arcLengthOf_segmentParam p q]
+  -- `p ≠ q` means the segment is nondegenerate in at least one coordinate, which is what
+  -- makes the parametrization injective.
+  have hkey : q.1 - p.1 ≠ 0 ∨ q.2 - p.2 ≠ 0 := by
+    rcases eq_or_ne (q.1 - p.1) 0 with h1 | h1
+    · refine Or.inr fun h2 => hne ?_
+      have e1 : p.1 = q.1 := by linarith
+      have e2 : p.2 = q.2 := by linarith
+      exact Prod.ext e1 e2
+    · exact Or.inl h1
+  refine PConstructible.arc_length hS _ zero_le_one hsub ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · -- injective on `[0, 1]`
+    intro t₁ _ t₂ _ h
+    have h1 : p.1 + t₁ * (q.1 - p.1) = p.1 + t₂ * (q.1 - p.1) := congrArg Prod.fst h
+    have h2 : p.2 + t₁ * (q.2 - p.2) = p.2 + t₂ * (q.2 - p.2) := congrArg Prod.snd h
+    rcases hkey with hk | hk
+    · exact mul_right_cancel₀ hk (by linarith : t₁ * (q.1 - p.1) = t₂ * (q.1 - p.1))
+    · exact mul_right_cancel₀ hk (by linarith : t₁ * (q.2 - p.2) = t₂ * (q.2 - p.2))
+  · -- differentiable in each coordinate
+    intro t _
+    exact ⟨by fun_prop, by fun_prop⟩
+  · -- the speed is constant, hence integrable
+    rw [speed_segmentParam]
+    exact intervalIntegrable_const
+  · simpa [segmentParam] using hp1
+  · simpa [segmentParam] using hp2
+  · simpa [segmentParam] using hq1
+  · simpa [segmentParam] using hq2
+
 end Pconstructible
