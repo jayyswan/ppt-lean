@@ -135,7 +135,7 @@ theorem dist_Pconstructible {x₀ y₀ x₁ y₁ : ℝ}
       (sq_Pconstructible (PConstructible.sub hy₁ hy₀)))
 
 /-- The linear parametrization of the segment from `p` to `q`, traced over `[0, 1]`. -/
-noncomputable def segmentParam (p q : ℝ × ℝ) : ℝ → ℝ × ℝ :=
+def segmentParam (p q : ℝ × ℝ) : ℝ → ℝ × ℝ :=
   fun t => (p.1 + t * (q.1 - p.1), p.2 + t * (q.2 - p.2))
 
 -- Theorem: a segment is traced at constant speed, namely the distance between its
