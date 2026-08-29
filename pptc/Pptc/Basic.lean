@@ -20,6 +20,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 import Pptc.Defs
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 import Mathlib.Tactic.FunProp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
@@ -200,5 +201,73 @@ theorem arcLength_segment_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstruct
   · simpa [segmentParam] using hp2
   · simpa [segmentParam] using hq1
   · simpa [segmentParam] using hq2
+
+/-! ### π is P-constructible
+
+Measuring half of the unit circle. A *full* circle cannot be used directly: `θ ↦ (cos θ,
+sin θ)` on `[0, 2π]` has `γ 0 = γ (2π)`, so it fails the injectivity side condition of
+`PConstructible.arc_length`. The upper half circle avoids that, and its two endpoints
+`(1, 0)` and `(-1, 0)` are P-constructible points, as required. Its length is `π`. -/
+
+-- Theorem: 2 is P-constructible.
+theorem two_Pconstructible : PConstructible (2 : ℝ) := by
+  convert PConstructible.add PConstructible.base_one PConstructible.base_one
+  norm_num
+
+-- Theorem: -1 is P-constructible.
+theorem neg_one_Pconstructible : PConstructible (-1 : ℝ) := by
+  convert PConstructible.sub zero_Pconstructible PConstructible.base_one
+  norm_num
+
+/-- The unit circle, obtained from the `ellipse` constructor with centre `(0, 0)` and
+bounding box `2 × 2`. -/
+theorem unitCircle_PConstructibleCurve :
+    PConstructibleCurve
+      {p : ℝ × ℝ | ((p.1 - 0) / (2 / 2)) ^ 2 + ((p.2 - 0) / (2 / 2)) ^ 2 = 1} :=
+  PConstructibleCurve.ellipse 0 0 2 2 zero_Pconstructible zero_Pconstructible
+    two_Pconstructible two_Pconstructible
+
+/-- The unit circle parametrized by angle. Restricted to `[0, π]` this traces the upper
+half circle injectively. -/
+noncomputable def circleParam : ℝ → ℝ × ℝ := fun θ => (Real.cos θ, Real.sin θ)
+
+-- Theorem: the circle is traced at unit speed, so arc length agrees with angle.
+theorem speed_circleParam (θ : ℝ) : speed circleParam θ = 1 := by
+  have hc : HasDerivAt (fun s : ℝ => (circleParam s).1) (-Real.sin θ) θ := Real.hasDerivAt_cos θ
+  have hs : HasDerivAt (fun s : ℝ => (circleParam s).2) (Real.cos θ) θ := Real.hasDerivAt_sin θ
+  rw [speed, hc.deriv, hs.deriv, neg_sq, Real.sin_sq_add_cos_sq, Real.sqrt_one]
+
+-- Theorem: the upper half of the unit circle has arc length exactly π.
+theorem arcLengthOf_circleParam : arcLengthOf circleParam 0 Real.pi = Real.pi := by
+  rw [arcLengthOf]
+  simp [speed_circleParam]
+
+-- Theorem: π is P-constructible.
+--
+-- Note this is a genuinely new number: unlike `arcLength_segment_Pconstructible`, whose
+-- conclusion was already reachable via `dist_Pconstructible`, π is transcendental and so
+-- is *not* obtainable from the arithmetic closure or from `sqrt_Pconstructible`. It
+-- enters only through `PConstructible.arc_length`.
+theorem pi_Pconstructible : PConstructible Real.pi := by
+  rw [← arcLengthOf_circleParam]
+  refine PConstructible.arc_length unitCircle_PConstructibleCurve circleParam
+    Real.pi_pos.le ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · -- the half circle lies on the unit circle
+    rintro p ⟨θ, _, rfl⟩
+    simp only [Set.mem_ofPred_eq, circleParam, sub_zero]
+    norm_num
+  · -- injective on `[0, π]`, because `cos` is
+    intro t₁ h₁ t₂ h₂ h
+    exact Real.injOn_cos h₁ h₂ (congrArg Prod.fst h)
+  · -- differentiable in each coordinate
+    intro t _
+    exact ⟨(Real.hasDerivAt_cos t).differentiableAt, (Real.hasDerivAt_sin t).differentiableAt⟩
+  · -- unit speed, hence integrable
+    rw [show speed circleParam = fun _ => (1 : ℝ) from funext speed_circleParam]
+    exact intervalIntegrable_const
+  · simpa [circleParam] using PConstructible.base_one
+  · simpa [circleParam] using zero_Pconstructible
+  · simpa [circleParam] using neg_one_Pconstructible
+  · simpa [circleParam] using zero_Pconstructible
 
 end Pconstructible
