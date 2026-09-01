@@ -23,10 +23,12 @@ import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.ArctanDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Analysis.SpecialFunctions.Arsinh
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Periodic
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.IntegrationByParts
 import Mathlib.Tactic.FunProp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
@@ -95,6 +97,12 @@ theorem zero_Pconstructible : PConstructible (0 : ℝ) := by
 -- has no negation constructor, but `0 - x` serves and this saves spelling that out.
 theorem neg_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (-x) := by
   simpa using PConstructible.sub zero_Pconstructible hx
+
+-- Theorem: the reciprocal of a P-constructible number is P-constructible. As for
+-- `neg_Pconstructible`, this is just the corresponding closure constructor with `1` on
+-- the left, restated in the form Mathlib's lemmas produce.
+theorem inv_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible x⁻¹ := by
+  simpa [one_div] using PConstructible.div PConstructible.base_one hx
 
 -- Theorem: 2 is P-constructible.
 theorem two_Pconstructible : PConstructible (2 : ℝ) := by
@@ -880,16 +888,16 @@ theorem arctan_Pconstructible {x : ℝ} (hx : PConstructible x) :
 
 /-! ### The incomplete elliptic integral of the second kind
 
-`E(φ, k) = ∫₀^φ √(1 - k² sin²θ) dθ` *is* an arc length of an ellipse, and at the right
-size it is one on the nose. Trace the ellipse with semi-axes `1` and `b = √(1 - k²)` by
+`E(φ) = ∫₀^φ √(1 - c sin²θ) dθ` *is* an arc length of an ellipse, and at the right size
+it is one on the nose. Trace the ellipse with semi-axes `1` and `b = √(1 - c)` by
 
   `γ θ = (sin θ, b cos θ)`,
 
 so `θ = 0` is the top of the ellipse and `θ` increases towards the right. Its speed is
 
-  `√(cos²θ + b² sin²θ) = √(cos²θ + (1 - k²) sin²θ) = √(1 - k² sin²θ)`,
+  `√(cos²θ + b² sin²θ) = √(cos²θ + (1 - c) sin²θ) = √(1 - c sin²θ)`,
 
-which is the integrand, so the arc swept over `[0, φ]` has length exactly `E(φ, k)`.
+which is the integrand, so the arc swept over `[0, φ]` has length exactly `E(φ)`.
 
 Both endpoints of that arc are P-constructible points of the plane: the near one is
 `(0, b)` and the far one is `(sin φ, b cos φ)`. That is where `sin_Pconstructible` and
@@ -902,35 +910,54 @@ the parameter `φ` sits, after stretching the ellipse by `1 / b` to put a `1` on
 semi-axis and dividing the measured length by that same factor afterwards. Both steps are
 ways of *locating* the far endpoint; `arc_length` only requires that endpoint to be
 P-constructible, which the sine and cosine theorems already supply. So the ellipse is used
-here at exactly the size at which its arc length is `E(φ, k)`, and nothing is rescaled.
+here at exactly the size at which its arc length is `E(φ)`, and nothing is rescaled.
 
-Mathlib does not define the elliptic integrals, so they are spelled out here. -/
+Mathlib does not define the elliptic integrals, so they are spelled out here.
 
-/-- The integrand of the elliptic integral of the second kind, `√(1 - k² sin²θ)`. -/
-noncomputable def ellipticIntegrand (k θ : ℝ) : ℝ :=
-  Real.sqrt (1 - k ^ 2 * Real.sin θ ^ 2)
+Throughout, the elliptic integrals are indexed by the **parameter** `c`, the square of the
+more familiar modulus `k`; `c < 1` is the standing hypothesis. Legendre's `E(φ, k)` is the
+case `c = k²`, recorded as `ellipticE_sq_Pconstructible` at the end of the next section.
+Allowing negative `c` is not idle generality: the reflection that carries the first-kind
+integral past `φ = π/2` lands on the complementary parameter `-c / (1 - c)`, which is
+negative whenever `c` is positive. -/
+
+/-- The integrand of the elliptic integral of the second kind, `√(1 - c sin²θ)`. It is
+also the reciprocal of the first-kind integrand, so the two share this definition. -/
+noncomputable def ellipticEIntegrand (c θ : ℝ) : ℝ :=
+  Real.sqrt (1 - c * Real.sin θ ^ 2)
 
 /-- The incomplete elliptic integral of the second kind,
-`E(φ, k) = ∫₀^φ √(1 - k² sin²θ) dθ`.
+`E(φ) = ∫₀^φ √(1 - c sin²θ) dθ`, in terms of the parameter `c = k²`. -/
+noncomputable def ellipticE (c φ : ℝ) : ℝ :=
+  ∫ θ in (0 : ℝ)..φ, ellipticEIntegrand c θ
 
-The modulus `k` is taken first, against the usual order of `E(φ, k)`, so that
-`ellipticE k` is the function of the amplitude `φ` that the periodicity lemmas below
-are about. -/
-noncomputable def ellipticE (k φ : ℝ) : ℝ :=
-  ∫ θ in (0 : ℝ)..φ, ellipticIntegrand k θ
-
--- Theorem: at `k = 0` the ellipse is the unit circle and `E(φ, 0) = φ`, the arc length
--- of the circle being its angle. A check that the definition is the right one.
+-- Theorem: at `c = 0` the ellipse is the unit circle and `E(φ) = φ`, the arc length of
+-- the circle being its angle. A check that the definition is the right one.
 theorem ellipticE_zero (φ : ℝ) : ellipticE 0 φ = φ := by
-  simp [ellipticE, ellipticIntegrand]
+  simp [ellipticE, ellipticEIntegrand]
 
-theorem continuous_ellipticIntegrand (k : ℝ) : Continuous (ellipticIntegrand k) := by
-  unfold ellipticIntegrand
+-- Theorem: for `c < 1` the integrand is strictly positive, so it is safe to invert.
+-- Both signs of `c` need saying: `c sin²θ` is at most `c` when `c ≥ 0` and at most `0`
+-- when `c ≤ 0`.
+theorem one_sub_mul_sin_sq_pos {c : ℝ} (hc : c < 1) (θ : ℝ) : 0 < 1 - c * Real.sin θ ^ 2 := by
+  rcases le_total c 0 with h | h
+  · nlinarith [sq_nonneg (Real.sin θ)]
+  · nlinarith [Real.sin_sq_le_one θ]
+
+theorem ellipticEIntegrand_pos {c : ℝ} (hc : c < 1) (θ : ℝ) : 0 < ellipticEIntegrand c θ :=
+  Real.sqrt_pos.mpr (one_sub_mul_sin_sq_pos hc θ)
+
+theorem ellipticEIntegrand_sq {c : ℝ} (hc : c < 1) (θ : ℝ) :
+    ellipticEIntegrand c θ ^ 2 = 1 - c * Real.sin θ ^ 2 :=
+  Real.sq_sqrt (one_sub_mul_sin_sq_pos hc θ).le
+
+theorem continuous_ellipticEIntegrand (c : ℝ) : Continuous (ellipticEIntegrand c) := by
+  unfold ellipticEIntegrand
   fun_prop
 
-theorem intervalIntegrable_ellipticIntegrand (k a b : ℝ) :
-    IntervalIntegrable (ellipticIntegrand k) MeasureTheory.volume a b :=
-  (continuous_ellipticIntegrand k).intervalIntegrable a b
+theorem intervalIntegrable_ellipticEIntegrand (c a b : ℝ) :
+    IntervalIntegrable (ellipticEIntegrand c) MeasureTheory.volume a b :=
+  (continuous_ellipticEIntegrand c).intervalIntegrable a b
 
 /-- The ellipse centred at the origin with horizontal semi-axis `1` and vertical
 semi-axis `b`, from the `ellipse` constructor with bounding box `2 × 2b`. -/
@@ -955,27 +982,27 @@ theorem speed_ellipseParam (b θ : ℝ) :
   congr 1
   ring
 
--- Theorem: with `b² = 1 - k²` that speed is exactly the elliptic integrand.
-theorem speed_ellipseParam_eq {k b : ℝ} (hb : b ^ 2 = 1 - k ^ 2) (θ : ℝ) :
-    speed (ellipseParam b) θ = ellipticIntegrand k θ := by
-  rw [speed_ellipseParam, hb, ellipticIntegrand]
+-- Theorem: with `b² = 1 - c` that speed is exactly the elliptic integrand.
+theorem speed_ellipseParam_eq {c b : ℝ} (hb : b ^ 2 = 1 - c) (θ : ℝ) :
+    speed (ellipseParam b) θ = ellipticEIntegrand c θ := by
+  rw [speed_ellipseParam, hb, ellipticEIntegrand]
   congr 1
   linear_combination Real.sin_sq_add_cos_sq θ
 
--- Theorem: so the arc swept over `[0, φ]` has length `E(φ, k)`.
-theorem arcLengthOf_ellipseParam {k b : ℝ} (hb : b ^ 2 = 1 - k ^ 2) (φ : ℝ) :
-    arcLengthOf (ellipseParam b) 0 φ = ellipticE k φ := by
+-- Theorem: so the arc swept over `[0, φ]` has length `E(φ)`.
+theorem arcLengthOf_ellipseParam {c b : ℝ} (hb : b ^ 2 = 1 - c) (φ : ℝ) :
+    arcLengthOf (ellipseParam b) 0 φ = ellipticE c φ := by
   rw [arcLengthOf, ellipticE]
   simp only [speed_ellipseParam_eq hb]
 
--- Theorem: `E(φ, k)` is P-constructible for `0 ≤ φ ≤ π`.
+-- Theorem: `E(φ)` is P-constructible for `0 ≤ φ ≤ π`.
 --
 -- The bound `φ ≤ π` is exactly what the injectivity side condition of
 -- `PConstructible.arc_length` needs: past a half turn the parametrization comes back over
 -- ellipse it has already covered, and the integral would stop being a length.
-theorem ellipticE_Pconstructible_of_mem_Icc {k b φ : ℝ} (hb : b ^ 2 = 1 - k ^ 2)
+theorem ellipticE_Pconstructible_of_mem_Icc {c b φ : ℝ} (hb : b ^ 2 = 1 - c)
     (hbpos : 0 < b) (hbP : PConstructible b) (hφ : PConstructible φ)
-    (h0 : 0 ≤ φ) (hpi : φ ≤ Real.pi) : PConstructible (ellipticE k φ) := by
+    (h0 : 0 ≤ φ) (hpi : φ ≤ Real.pi) : PConstructible (ellipticE c φ) := by
   rw [← arcLengthOf_ellipseParam hb φ]
   refine PConstructible.arc_length (ellipse_PConstructibleCurve hbP hbpos) (ellipseParam b)
     h0 ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
@@ -995,43 +1022,45 @@ theorem ellipticE_Pconstructible_of_mem_Icc {k b φ : ℝ} (hb : b ^ 2 = 1 - k ^
     exact ⟨(Real.hasDerivAt_sin t).differentiableAt,
       ((Real.hasDerivAt_cos t).const_mul b).differentiableAt⟩
   · -- the speed is continuous, hence integrable
-    rw [show speed (ellipseParam b) = ellipticIntegrand k from
+    rw [show speed (ellipseParam b) = ellipticEIntegrand c from
       funext (speed_ellipseParam_eq hb)]
-    exact intervalIntegrable_ellipticIntegrand k 0 φ
+    exact intervalIntegrable_ellipticEIntegrand c 0 φ
   · simpa [ellipseParam] using zero_Pconstructible
   · simpa [ellipseParam] using hbP
   · simpa [ellipseParam] using sin_Pconstructible hφ
   · simpa [ellipseParam] using PConstructible.mul hbP (cos_Pconstructible hφ)
 
 /-! Beyond a half turn the ellipse repeats, and so does `E`. Only `sin²θ` occurs in the
-integrand, so it has period `π`, and `E(φ + nπ, k) = E(φ, k) + n · E(π, k)`: reducing `φ`
-modulo `π` removes the restriction `0 ≤ φ ≤ π` above, exactly as reduction modulo `2π`
-did for `cos` and `sin`. -/
+integrand, so it has period `π`, and `E(φ + nπ) = E(φ) + n · E(π)`: reducing `φ` modulo
+`π` removes the restriction `0 ≤ φ ≤ π` above, exactly as reduction modulo `2π` did for
+`cos` and `sin`. The same two facts serve the first-kind integral in the next section,
+whose integrand is the reciprocal of this one and so has the same period. -/
 
--- Theorem: the integrand has period `π`, since `sin (θ + π) = -sin θ` is squared.
-theorem periodic_ellipticIntegrand (k : ℝ) :
-    Function.Periodic (ellipticIntegrand k) Real.pi := fun θ => by
-  simp [ellipticIntegrand, Real.sin_add_pi]
+-- Theorem: the second-kind integrand has period `π`, since `sin (θ + π) = -sin θ` is
+-- squared.
+theorem periodic_ellipticEIntegrand (c : ℝ) :
+    Function.Periodic (ellipticEIntegrand c) Real.pi := fun θ => by
+  simp [ellipticEIntegrand, Real.sin_add_pi]
 
--- Theorem: `E(φ + nπ, k) = E(φ, k) + n · E(π, k)`.
-theorem ellipticE_add_int_mul_pi (k φ : ℝ) (n : ℤ) :
-    ellipticE k (φ + n * Real.pi) = ellipticE k φ + n * ellipticE k Real.pi := by
-  have hper := periodic_ellipticIntegrand k
+-- Theorem: `E(φ + nπ) = E(φ) + n · E(π)`.
+theorem ellipticE_add_int_mul_pi (c φ : ℝ) (n : ℤ) :
+    ellipticE c (φ + n * Real.pi) = ellipticE c φ + n * ellipticE c Real.pi := by
+  have hper := periodic_ellipticEIntegrand c
   have hint : ∀ t₁ t₂ : ℝ,
-      IntervalIntegrable (ellipticIntegrand k) MeasureTheory.volume t₁ t₂ :=
-    fun t₁ t₂ => intervalIntegrable_ellipticIntegrand k t₁ t₂
-  -- the whole turns: `n` copies of one period, each of length `E(π, k)`
-  have hA : (∫ θ in (0 : ℝ)..(n : ℝ) * Real.pi, ellipticIntegrand k θ)
-      = n * ellipticE k Real.pi := by
+      IntervalIntegrable (ellipticEIntegrand c) MeasureTheory.volume t₁ t₂ :=
+    fun t₁ t₂ => intervalIntegrable_ellipticEIntegrand c t₁ t₂
+  -- the whole turns: `n` copies of one period, each of length `E(π)`
+  have hA : (∫ θ in (0 : ℝ)..(n : ℝ) * Real.pi, ellipticEIntegrand c θ)
+      = n * ellipticE c Real.pi := by
     have h := hper.intervalIntegral_add_zsmul_eq n 0 hint
     simpa [ellipticE, zsmul_eq_mul] using h
   -- the remainder: a translate of `[0, φ]` by a whole number of periods
-  have hB : (∫ θ in ((n : ℝ) * Real.pi)..(φ + (n : ℝ) * Real.pi), ellipticIntegrand k θ)
-      = ellipticE k φ := by
+  have hB : (∫ θ in ((n : ℝ) * Real.pi)..(φ + (n : ℝ) * Real.pi), ellipticEIntegrand c θ)
+      = ellipticE c φ := by
     have h := intervalIntegral.integral_comp_add_right (a := (0 : ℝ)) (b := φ)
-      (ellipticIntegrand k) ((n : ℝ) * Real.pi)
+      (ellipticEIntegrand c) ((n : ℝ) * Real.pi)
     have hshift : ∀ x : ℝ,
-        ellipticIntegrand k (x + (n : ℝ) * Real.pi) = ellipticIntegrand k x :=
+        ellipticEIntegrand c (x + (n : ℝ) * Real.pi) = ellipticEIntegrand c x :=
       fun x => hper.int_mul n x
     simp only [hshift, zero_add] at h
     rw [ellipticE, h]
@@ -1051,28 +1080,740 @@ theorem exists_int_half_turns (x : ℝ) :
     rw [div_mul_cancel₀ _ hpi.ne'] at h
     linarith
 
--- Theorem: `E(φ, k)` is P-constructible for every P-constructible `φ` and every
--- P-constructible `k` with `k² < 1`.
+-- Theorem: `E(φ)` is P-constructible for every P-constructible `φ` and every
+-- P-constructible parameter `c < 1`.
 --
--- `k² < 1` is what makes the ellipse drawable: `b = √(1 - k²)` has to be a positive
--- length. It is also exactly the range in which the integrand is real for every `θ`.
-theorem ellipticE_Pconstructible {k φ : ℝ} (hk : PConstructible k) (hφ : PConstructible φ)
-    (hk1 : k ^ 2 < 1) : PConstructible (ellipticE k φ) := by
-  have hb : Real.sqrt (1 - k ^ 2) ^ 2 = 1 - k ^ 2 := Real.sq_sqrt (by linarith)
-  have hbpos : 0 < Real.sqrt (1 - k ^ 2) := Real.sqrt_pos.mpr (by linarith)
-  have hbP : PConstructible (Real.sqrt (1 - k ^ 2)) :=
-    sqrt_Pconstructible (PConstructible.sub PConstructible.base_one (sq_Pconstructible hk))
+-- `c < 1` is what makes the ellipse drawable: `b = √(1 - c)` has to be a positive length.
+-- It is also exactly the range in which the integrand is real for every `θ`.
+theorem ellipticE_Pconstructible {c φ : ℝ} (hc : PConstructible c) (hφ : PConstructible φ)
+    (hc1 : c < 1) : PConstructible (ellipticE c φ) := by
+  have hb : Real.sqrt (1 - c) ^ 2 = 1 - c := Real.sq_sqrt (by linarith)
+  have hbpos : 0 < Real.sqrt (1 - c) := Real.sqrt_pos.mpr (by linarith)
+  have hbP : PConstructible (Real.sqrt (1 - c)) :=
+    sqrt_Pconstructible (PConstructible.sub PConstructible.base_one hc)
   obtain ⟨n, h0, hpi⟩ := exists_int_half_turns φ
   have hrP : PConstructible (φ - n * Real.pi) :=
     PConstructible.sub hφ (PConstructible.mul (int_Pconstructible n) pi_Pconstructible)
   have hr := ellipticE_Pconstructible_of_mem_Icc hb hbpos hbP hrP h0 hpi
   have hEpi := ellipticE_Pconstructible_of_mem_Icc hb hbpos hbP pi_Pconstructible
     Real.pi_pos.le le_rfl
-  have hkey : ellipticE k φ
-      = ellipticE k (φ - n * Real.pi) + n * ellipticE k Real.pi := by
-    have h := ellipticE_add_int_mul_pi k (φ - n * Real.pi) n
+  have hkey : ellipticE c φ
+      = ellipticE c (φ - n * Real.pi) + n * ellipticE c Real.pi := by
+    have h := ellipticE_add_int_mul_pi c (φ - n * Real.pi) n
     rwa [sub_add_cancel] at h
   rw [hkey]
   exact PConstructible.add hr (PConstructible.mul (int_Pconstructible n) hEpi)
+
+
+/-! ### The incomplete elliptic integral of the first kind
+
+`F(φ) = ∫₀^φ dθ/√(1 - c sin²θ)` is not the arc length of an ellipse, or of any other
+curve on the list: an arc length is `∫√(x'² + y'²)`, always a square *root* of something,
+while `F` carries its radical in the denominator. What produces `F` is one arc length
+together with an integration by parts.
+
+Take `t = tan ψ`, which turns the integrand into
+
+  `∫₀^φ dψ/√(1 - c sin²ψ) = ∫₀^{tan φ} dt/√((1 + t²)(1 + m² t²))`,  `m² = 1 - c`.
+
+The point of that substitution is the shape of the new quartic. A cubic Bézier moves with
+speed `√(x'(t)² + y'(t)²)` for quadratics `x'`, `y'`, so the quartics it can realise are
+exactly the *sums of two squares* — the ones that are non-negative everywhere. Jacobi's
+`(1 - t²)(1 - k² t²)` goes negative past `t = 1` and is therefore out of reach, but the
+tangent form is positive definite, and Brahmagupta–Fibonacci exhibits the two squares:
+
+  `(1² + t²)(1² + (mt)²) = (1 - m t²)² + (t + m t)²`.
+
+So the cubic `t ↦ (t - m t³/3, (1 + m) t²/2)` — control points `(0,0)`, `(T/3, 0)`,
+`(2T/3, (1+m)T²/6)`, `(T - mT³/3, (1+m)T²/2)`, all P-constructible — moves at exactly
+speed `√((1+t²)(1+m²t²))`, and its arc length `J` is P-constructible.
+
+Two integrations by parts then turn `J` back into `F`. Differentiating `t √P` gives
+
+  `3√P - ((1 + m²)t² + 2)/√P`,
+
+so `3J - T √P(T) = (1 + m²) I₂ + 2 F` where `I₂ = ∫₀^T t² dt/√P`; and differentiating
+`tan ψ · Δ(ψ)`, with `Δ = √(1 - c sin²ψ)`, gives `m² tan²ψ/Δ + Δ`, so
+`m² I₂ + E(φ) = tan φ · Δ(φ)`. Eliminating `I₂`:
+
+  `F(φ) = (3J + (1 + m²)/m² · E(φ) - tan φ · Δ(φ) · (1/cos²φ + (1 + m²)/m²)) / 2`.
+
+Everything on the right is P-constructible, so `F` is. At `c = 0` the formula collapses:
+`J = T + T³/3`, `Δ = 1`, `E(φ) = φ`, and the right-hand side is `φ`, as it must be.
+
+`tan φ` is what confines the construction to `|φ| < π/2`. Oddness of the integrand covers
+negative `φ`, and the reflection `ψ ↦ π/2 + ψ` carries the rest of the line into range at
+the cost of moving to the complementary parameter `-c/(1 - c)` — which is why the whole
+development is indexed by a parameter allowed to be negative. -/
+
+/-- The integrand of the elliptic integral of the first kind, `1/√(1 - c sin²θ)`. -/
+noncomputable def ellipticFIntegrand (c θ : ℝ) : ℝ := (ellipticEIntegrand c θ)⁻¹
+
+/-- The incomplete elliptic integral of the first kind,
+`F(φ) = ∫₀^φ dθ/√(1 - c sin²θ)`, in terms of the parameter `c = k²`. -/
+noncomputable def ellipticF (c φ : ℝ) : ℝ :=
+  ∫ θ in (0 : ℝ)..φ, ellipticFIntegrand c θ
+
+-- Theorem: at `c = 0` the circle again, and `F(φ) = φ`.
+theorem ellipticF_zero (φ : ℝ) : ellipticF 0 φ = φ := by
+  simp [ellipticF, ellipticFIntegrand, ellipticEIntegrand]
+
+theorem ellipticFIntegrand_pos {c : ℝ} (hc : c < 1) (θ : ℝ) : 0 < ellipticFIntegrand c θ :=
+  inv_pos.mpr (ellipticEIntegrand_pos hc θ)
+
+theorem continuous_ellipticFIntegrand {c : ℝ} (hc : c < 1) :
+    Continuous (ellipticFIntegrand c) :=
+  (continuous_ellipticEIntegrand c).inv₀ fun θ => (ellipticEIntegrand_pos hc θ).ne'
+
+theorem intervalIntegrable_ellipticFIntegrand {c : ℝ} (hc : c < 1) (a b : ℝ) :
+    IntervalIntegrable (ellipticFIntegrand c) MeasureTheory.volume a b :=
+  (continuous_ellipticFIntegrand hc).intervalIntegrable a b
+
+/-! #### The Bézier cubic and its quartic -/
+
+/-- The quartic `(1 + t²)(1 + m² t²)`, written as the sum of two squares that a cubic
+Bézier can realise as its speed. -/
+def firstKindQuartic (m t : ℝ) : ℝ := (1 - m * t ^ 2) ^ 2 + ((1 + m) * t) ^ 2
+
+-- Theorem: Brahmagupta–Fibonacci — the two squares really do multiply out to the quartic.
+theorem firstKindQuartic_eq (m t : ℝ) :
+    firstKindQuartic m t = m ^ 2 * t ^ 4 + (1 + m ^ 2) * t ^ 2 + 1 := by
+  unfold firstKindQuartic
+  ring
+
+theorem firstKindQuartic_pos (m t : ℝ) : 0 < firstKindQuartic m t := by
+  rw [show firstKindQuartic m t = (1 + t ^ 2) * (1 + m ^ 2 * t ^ 2) from by
+    rw [firstKindQuartic_eq]; ring]
+  positivity
+
+theorem sqrt_firstKindQuartic_pos (m t : ℝ) : 0 < Real.sqrt (firstKindQuartic m t) :=
+  Real.sqrt_pos.mpr (firstKindQuartic_pos m t)
+
+theorem sq_sqrt_firstKindQuartic (m t : ℝ) :
+    Real.sqrt (firstKindQuartic m t) ^ 2 = firstKindQuartic m t :=
+  Real.sq_sqrt (firstKindQuartic_pos m t).le
+
+theorem continuous_sqrt_firstKindQuartic (m : ℝ) :
+    Continuous fun t => Real.sqrt (firstKindQuartic m t) := by
+  unfold firstKindQuartic
+  fun_prop
+
+-- Theorem: at `t = tan ψ` the quartic is `Δ(ψ)² / cos⁴ψ`, so its square root is
+-- `Δ(ψ) / cos²ψ`. This is the bridge between the Bézier and the angle.
+theorem sqrt_firstKindQuartic_tan {c m ψ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hcos : Real.cos ψ ≠ 0) :
+    Real.sqrt (firstKindQuartic m (Real.tan ψ))
+      = ellipticEIntegrand c ψ / Real.cos ψ ^ 2 := by
+  have hE := ellipticEIntegrand_pos hc ψ
+  rw [show firstKindQuartic m (Real.tan ψ)
+      = (ellipticEIntegrand c ψ / Real.cos ψ ^ 2) ^ 2 from ?_]
+  · exact Real.sqrt_sq (by positivity)
+  · rw [div_pow, ellipticEIntegrand_sq hc, firstKindQuartic_eq, Real.tan_eq_sin_div_cos]
+    field_simp
+    linear_combination (1 + m ^ 2 * Real.sin ψ ^ 2 + Real.cos ψ ^ 2) *
+        Real.sin_sq_add_cos_sq ψ + Real.sin ψ ^ 2 * hm
+
+/-- The cubic `t ↦ (t - m t³/3, (1+m) t²/2)`, whose coordinate derivatives `1 - m t²` and
+`(1+m) t` are the two quadratics of `firstKindQuartic`. -/
+noncomputable def firstKindCurve (m t : ℝ) : ℝ × ℝ := (t - m * t ^ 3 / 3, (1 + m) * t ^ 2 / 2)
+
+-- Theorem: `s ↦ firstKindCurve m (T s)` is a cubic Bézier with these control points.
+theorem bezierParam_firstKind (m T s : ℝ) :
+    bezierParam (0, 0) (T / 3, 0) (2 * T / 3, (1 + m) * T ^ 2 / 6)
+        (T - m * T ^ 3 / 3, (1 + m) * T ^ 2 / 2) s
+      = firstKindCurve m (T * s) := by
+  simp only [bezierParam, firstKindCurve, Prod.mk.injEq]
+  constructor <;> ring
+
+-- Theorem: that Bézier is a constructible curve.
+theorem firstKindBezier_PConstructibleCurve {m T : ℝ} (hm : PConstructible m)
+    (hT : PConstructible T) :
+    PConstructibleCurve (bezierParam (0, 0) (T / 3, 0) (2 * T / 3, (1 + m) * T ^ 2 / 6)
+      (T - m * T ^ 3 / 3, (1 + m) * T ^ 2 / 2) '' Set.Icc 0 1) := by
+  have h3 : PConstructible (3 : ℝ) := three_Pconstructible
+  have h6 : PConstructible (6 : ℝ) := by
+    convert PConstructible.mul two_Pconstructible h3 using 1
+    norm_num
+  have hT2 : PConstructible (T ^ 2) := sq_Pconstructible hT
+  have hT3 : PConstructible (T ^ 3) := by
+    convert PConstructible.mul hT2 hT using 1
+    ring
+  have h1m : PConstructible (1 + m) := PConstructible.add PConstructible.base_one hm
+  exact PConstructibleCurve.cubic_bezier _ _ _ _
+    zero_Pconstructible zero_Pconstructible (PConstructible.div hT h3) zero_Pconstructible
+    (PConstructible.div (PConstructible.mul two_Pconstructible hT) h3)
+    (PConstructible.div (PConstructible.mul h1m hT2) h6)
+    (PConstructible.sub hT (PConstructible.div (PConstructible.mul hm hT3) h3))
+    (PConstructible.div (PConstructible.mul h1m hT2) two_Pconstructible)
+
+/-- The same cubic, parametrized by the angle `ψ` through `t = tan ψ`. Its speed is
+`Δ(ψ)/cos⁴ψ`, which is what makes its arc length an integral in `ψ`. -/
+noncomputable def firstKindTanParam (m : ℝ) : ℝ → ℝ × ℝ :=
+  fun ψ => firstKindCurve m (Real.tan ψ)
+
+theorem hasDerivAt_firstKindTanParam_fst {m ψ : ℝ} (hcos : Real.cos ψ ≠ 0) :
+    HasDerivAt (fun s : ℝ => (firstKindTanParam m s).1)
+      ((1 - m * Real.tan ψ ^ 2) * (1 / Real.cos ψ ^ 2)) ψ := by
+  have ht : HasDerivAt Real.tan (1 / Real.cos ψ ^ 2) ψ := Real.hasDerivAt_tan hcos
+  have h : HasDerivAt (fun s : ℝ => Real.tan s - m * Real.tan s ^ 3 / 3)
+      ((1 - m * Real.tan ψ ^ 2) * (1 / Real.cos ψ ^ 2)) ψ :=
+    (ht.sub (((ht.pow 3).const_mul m).div_const 3)).congr_deriv (by push_cast; ring)
+  exact h
+
+theorem hasDerivAt_firstKindTanParam_snd {m ψ : ℝ} (hcos : Real.cos ψ ≠ 0) :
+    HasDerivAt (fun s : ℝ => (firstKindTanParam m s).2)
+      ((1 + m) * Real.tan ψ * (1 / Real.cos ψ ^ 2)) ψ := by
+  have ht : HasDerivAt Real.tan (1 / Real.cos ψ ^ 2) ψ := Real.hasDerivAt_tan hcos
+  have h : HasDerivAt (fun s : ℝ => (1 + m) * Real.tan s ^ 2 / 2)
+      ((1 + m) * Real.tan ψ * (1 / Real.cos ψ ^ 2)) ψ :=
+    (((ht.pow 2).const_mul (1 + m)).div_const 2).congr_deriv (by push_cast; ring)
+  exact h
+
+-- Theorem: the cubic, read in the angle `ψ`, moves at speed `Δ(ψ)/cos⁴ψ`.
+theorem speed_firstKindTanParam {c m : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1) {ψ : ℝ}
+    (hcos : Real.cos ψ ≠ 0) :
+    speed (firstKindTanParam m) ψ = ellipticEIntegrand c ψ / Real.cos ψ ^ 4 := by
+  have hE := ellipticEIntegrand_pos hc ψ
+  rw [speed, (hasDerivAt_firstKindTanParam_fst (m := m) hcos).deriv,
+    (hasDerivAt_firstKindTanParam_snd (m := m) hcos).deriv]
+  rw [show ((1 - m * Real.tan ψ ^ 2) * (1 / Real.cos ψ ^ 2)) ^ 2
+        + ((1 + m) * Real.tan ψ * (1 / Real.cos ψ ^ 2)) ^ 2
+      = (ellipticEIntegrand c ψ / Real.cos ψ ^ 4) ^ 2 from ?_]
+  · exact Real.sqrt_sq (by positivity)
+  · have h2 : firstKindQuartic m (Real.tan ψ)
+        = (ellipticEIntegrand c ψ / Real.cos ψ ^ 2) ^ 2 := by
+      rw [← sqrt_firstKindQuartic_tan hm hc hcos, sq_sqrt_firstKindQuartic]
+    have hexp : ((1 - m * Real.tan ψ ^ 2) * (1 / Real.cos ψ ^ 2)) ^ 2
+        + ((1 + m) * Real.tan ψ * (1 / Real.cos ψ ^ 2)) ^ 2
+        = firstKindQuartic m (Real.tan ψ) * (1 / Real.cos ψ ^ 2) ^ 2 := by
+      unfold firstKindQuartic
+      ring
+    rw [hexp, h2]
+    field_simp
+
+/-! #### The change of variables `t = tan ψ` -/
+
+-- Theorem: on the interval between `0` and any `φ` with `|φ| < π/2`, the cosine is
+-- positive — so `tan` is smooth there and the substitution below is legitimate.
+theorem cos_pos_of_mem_uIcc {φ ψ : ℝ} (hφ : |φ| < Real.pi / 2)
+    (hψ : ψ ∈ Set.uIcc (0 : ℝ) φ) : 0 < Real.cos ψ := by
+  have hpi := Real.pi_pos
+  rw [abs_lt] at hφ
+  refine Real.cos_pos_of_mem_Ioo ⟨?_, ?_⟩ <;>
+    rcases Set.mem_uIcc.mp hψ with ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩ <;> linarith
+
+-- Theorem: `t = tan ψ` carries an integral over `[0, tan φ]` back to one over `[0, φ]`.
+theorem integral_comp_tan {φ : ℝ} (hφ : |φ| < Real.pi / 2) {g : ℝ → ℝ} (hg : Continuous g) :
+    (∫ ψ in (0 : ℝ)..φ, (1 / Real.cos ψ ^ 2) * g (Real.tan ψ))
+      = ∫ t in (0 : ℝ)..Real.tan φ, g t := by
+  have hd : ∀ ψ ∈ Set.uIcc (0 : ℝ) φ, HasDerivAt Real.tan (1 / Real.cos ψ ^ 2) ψ :=
+    fun ψ hψ => Real.hasDerivAt_tan (cos_pos_of_mem_uIcc hφ hψ).ne'
+  have hc' : ContinuousOn (fun ψ => 1 / Real.cos ψ ^ 2) (Set.uIcc (0 : ℝ) φ) := by
+    refine ContinuousOn.div continuousOn_const (Continuous.continuousOn (by fun_prop))
+      fun ψ hψ => pow_ne_zero 2 (cos_pos_of_mem_uIcc hφ hψ).ne'
+  simpa [Real.tan_zero] using intervalIntegral.integral_deriv_smul_comp hd hc' hg
+
+/-! #### The two integrations by parts -/
+
+-- Theorem: differentiating `t √P` gives `3√P - ((1+m²)t² + 2)/√P`. This is the
+-- integration by parts that converts the Bézier's arc length into first-kind integrals.
+theorem hasDerivAt_mul_sqrt_firstKindQuartic (m t : ℝ) :
+    HasDerivAt (fun s : ℝ => s * Real.sqrt (firstKindQuartic m s))
+      (3 * Real.sqrt (firstKindQuartic m t)
+        - ((1 + m ^ 2) * t ^ 2 + 2) / Real.sqrt (firstKindQuartic m t)) t := by
+  have hpos := sqrt_firstKindQuartic_pos m t
+  have hsq := sq_sqrt_firstKindQuartic m t
+  have hP : HasDerivAt (firstKindQuartic m) (4 * m ^ 2 * t ^ 3 + 2 * (1 + m ^ 2) * t) t := by
+    rw [show firstKindQuartic m = fun s : ℝ => m ^ 2 * s ^ 4 + (1 + m ^ 2) * s ^ 2 + 1 from
+      funext (firstKindQuartic_eq m)]
+    exact ((((hasDerivAt_pow 4 t).const_mul (m ^ 2)).add
+      ((hasDerivAt_pow 2 t).const_mul (1 + m ^ 2))).add_const 1).congr_deriv (by push_cast; ring)
+  have hs := hP.sqrt (firstKindQuartic_pos m t).ne'
+  have hsq' : Real.sqrt (firstKindQuartic m t) ^ 2
+      = m ^ 2 * t ^ 4 + (1 + m ^ 2) * t ^ 2 + 1 := by
+    rw [hsq, firstKindQuartic_eq]
+  refine ((hasDerivAt_id t).mul hs).congr_deriv ?_
+  simp only [id_eq]
+  field_simp
+  linear_combination (-4 : ℝ) * hsq'
+
+-- Theorem: differentiating `tan ψ · Δ(ψ)` gives `m² tan²ψ/Δ + Δ`. This is the
+-- integration by parts that brings in the second-kind integral.
+theorem hasDerivAt_tan_mul_ellipticEIntegrand {c m : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    {ψ : ℝ} (hcos : Real.cos ψ ≠ 0) :
+    HasDerivAt (fun s : ℝ => Real.tan s * ellipticEIntegrand c s)
+      (m ^ 2 * Real.tan ψ ^ 2 * ellipticFIntegrand c ψ + ellipticEIntegrand c ψ) ψ := by
+  have hE := ellipticEIntegrand_pos hc ψ
+  have hEsq := ellipticEIntegrand_sq hc ψ
+  have ht : HasDerivAt Real.tan (1 / Real.cos ψ ^ 2) ψ := Real.hasDerivAt_tan hcos
+  have hu : HasDerivAt (fun s : ℝ => 1 - c * Real.sin s ^ 2)
+      (-(2 * c * Real.sin ψ * Real.cos ψ)) ψ :=
+    ((((Real.hasDerivAt_sin ψ).pow 2).const_mul c).const_sub 1).congr_deriv
+      (by push_cast; ring)
+  have hD : HasDerivAt (ellipticEIntegrand c)
+      (-(2 * c * Real.sin ψ * Real.cos ψ) / (2 * ellipticEIntegrand c ψ)) ψ :=
+    hu.sqrt (one_sub_mul_sin_sq_pos hc ψ).ne'
+  refine (ht.mul hD).congr_deriv ?_
+  simp only [ellipticFIntegrand]
+  rw [Real.tan_eq_sin_div_cos]
+  field_simp
+  linear_combination (2 - 2 * Real.cos ψ ^ 2 - Real.sin ψ ^ 2) * hEsq
+    - Real.sin ψ ^ 2 * hm
+    + (ellipticEIntegrand c ψ ^ 2 + c * Real.sin ψ ^ 2 - 2) * Real.sin_sq_add_cos_sq ψ
+
+
+/-! #### The arc length of the Bézier -/
+
+-- Theorem: read in the angle, the Bézier's arc length is `∫₀^{tan φ} √P`.
+theorem arcLengthOf_firstKindTanParam {c m : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1) {φ : ℝ}
+    (hφ : |φ| < Real.pi / 2) :
+    arcLengthOf (firstKindTanParam m) 0 φ
+      = ∫ t in (0 : ℝ)..Real.tan φ, Real.sqrt (firstKindQuartic m t) := by
+  rw [arcLengthOf, ← integral_comp_tan hφ (continuous_sqrt_firstKindQuartic m)]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have hcos := cos_pos_of_mem_uIcc hφ hψ
+  rw [speed_firstKindTanParam hm hc hcos.ne', sqrt_firstKindQuartic_tan hm hc hcos.ne']
+  field_simp
+
+-- Theorem: that arc length is P-constructible. This is the one place the geometry is
+-- used; everything after it is calculus.
+theorem arcLength_firstKind_Pconstructible {c m φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hmpos : 0 < m) (hmP : PConstructible m) (hφP : PConstructible φ)
+    (h0 : 0 < φ) (hlt : φ < Real.pi / 2) :
+    PConstructible (arcLengthOf (firstKindTanParam m) 0 φ) := by
+  have hpi := Real.pi_pos
+  have habs : |φ| < Real.pi / 2 := by rw [abs_lt]; constructor <;> linarith
+  have hTpos : 0 < Real.tan φ := by
+    have := Real.tan_lt_tan_of_nonneg_of_lt_pi_div_two le_rfl hlt h0
+    rwa [Real.tan_zero] at this
+  have hTP : PConstructible (Real.tan φ) := tan_Pconstructible hφP
+  have hmemI : ∀ ψ ∈ Set.Icc (0 : ℝ) φ, 0 < Real.cos ψ := fun ψ hψ =>
+    cos_pos_of_mem_uIcc habs (by rwa [Set.uIcc_of_le h0.le])
+  have htan_nonneg : ∀ ψ ∈ Set.Icc (0 : ℝ) φ, 0 ≤ Real.tan ψ := fun ψ hψ => by
+    rw [Real.tan_eq_sin_div_cos]
+    exact div_nonneg (Real.sin_nonneg_of_nonneg_of_le_pi hψ.1 (by linarith [hψ.2]))
+      (hmemI ψ hψ).le
+  refine PConstructible.arc_length (firstKindBezier_PConstructibleCurve hmP hTP)
+    (firstKindTanParam m) h0.le ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · -- the arc lies on the Bézier: the parameter `tan ψ / tan φ` lands in `[0, 1]`
+    rintro p ⟨ψ, hψ, rfl⟩
+    have htanle : Real.tan ψ ≤ Real.tan φ := by
+      rcases eq_or_lt_of_le hψ.2 with rfl | h
+      · exact le_rfl
+      · exact (Real.tan_lt_tan_of_nonneg_of_lt_pi_div_two hψ.1 hlt h).le
+    refine ⟨Real.tan ψ / Real.tan φ,
+      ⟨div_nonneg (htan_nonneg ψ hψ) hTpos.le, (div_le_one hTpos).mpr htanle⟩, ?_⟩
+    rw [bezierParam_firstKind]
+    simp only [firstKindTanParam]
+    congr 1
+    field_simp
+  · -- injective: the second coordinate is increasing in `tan ψ`, and `tan` is injective
+    intro ψ₁ h₁ ψ₂ h₂ heq
+    have h1m : (1 : ℝ) + m ≠ 0 := by linarith
+    have hsq : Real.tan ψ₁ ^ 2 = Real.tan ψ₂ ^ 2 := by
+      have h : (1 + m) * Real.tan ψ₁ ^ 2 / 2 = (1 + m) * Real.tan ψ₂ ^ 2 / 2 :=
+        congrArg Prod.snd heq
+      have hz : (1 + m) * (Real.tan ψ₁ ^ 2 - Real.tan ψ₂ ^ 2) = 0 := by
+        linear_combination 2 * h
+      rcases mul_eq_zero.mp hz with h' | h'
+      · exact absurd h' h1m
+      · linarith
+    have htan : Real.tan ψ₁ = Real.tan ψ₂ := by
+      have hz : (Real.tan ψ₁ - Real.tan ψ₂) * (Real.tan ψ₁ + Real.tan ψ₂) = 0 := by
+        linear_combination hsq
+      have hn₁ := htan_nonneg ψ₁ h₁
+      have hn₂ := htan_nonneg ψ₂ h₂
+      rcases mul_eq_zero.mp hz with h | h
+      · linarith
+      · have e₁ : Real.tan ψ₁ = 0 := by linarith
+        have e₂ : Real.tan ψ₂ = 0 := by linarith
+        rw [e₁, e₂]
+    exact Real.injOn_tan ⟨by linarith [h₁.1], by linarith [h₁.2]⟩
+      ⟨by linarith [h₂.1], by linarith [h₂.2]⟩ htan
+  · -- differentiable in each coordinate
+    intro ψ hψ
+    exact ⟨(hasDerivAt_firstKindTanParam_fst (hmemI ψ hψ).ne').differentiableAt,
+      (hasDerivAt_firstKindTanParam_snd (hmemI ψ hψ).ne').differentiableAt⟩
+  · -- the speed agrees on `[0, φ]` with a continuous function, hence is integrable
+    refine ContinuousOn.intervalIntegrable (ContinuousOn.congr
+      (f := fun ψ => ellipticEIntegrand c ψ / Real.cos ψ ^ 4) ?_ ?_)
+    · exact ContinuousOn.div (continuous_ellipticEIntegrand c).continuousOn
+        (Continuous.continuousOn (by fun_prop))
+        fun ψ hψ => pow_ne_zero 4 (cos_pos_of_mem_uIcc habs hψ).ne'
+    · exact fun ψ hψ => speed_firstKindTanParam hm hc (cos_pos_of_mem_uIcc habs hψ).ne'
+  · simpa [firstKindTanParam, firstKindCurve] using zero_Pconstructible
+  · simpa [firstKindTanParam, firstKindCurve] using zero_Pconstructible
+  · have hT3 : PConstructible (Real.tan φ ^ 3) := by
+      convert PConstructible.mul (sq_Pconstructible hTP) hTP using 1
+      ring
+    simpa [firstKindTanParam, firstKindCurve] using
+      PConstructible.sub hTP (PConstructible.div (PConstructible.mul hmP hT3)
+        three_Pconstructible)
+  · simpa [firstKindTanParam, firstKindCurve] using
+      PConstructible.div (PConstructible.mul
+        (PConstructible.add PConstructible.base_one hmP) (sq_Pconstructible hTP))
+        two_Pconstructible
+
+/-! #### Eliminating the auxiliary integral
+
+Two integrations by parts. The first, in `t`, converts the Bézier's arc length into the
+two integrals `∫ dt/√P` and `∫ t² dt/√P`; the second, in `ψ`, identifies the latter with
+the second-kind integral. Together they leave `F` alone on one side. -/
+
+-- Theorem: `3J - T √P(T) = (1 + m²) I₂ + 2 I₀`, from differentiating `t √P`.
+theorem firstKind_ibp_t (m T : ℝ) :
+    3 * (∫ t in (0 : ℝ)..T, Real.sqrt (firstKindQuartic m t))
+        - (1 + m ^ 2) * (∫ t in (0 : ℝ)..T, t ^ 2 * (Real.sqrt (firstKindQuartic m t))⁻¹)
+        - 2 * ∫ t in (0 : ℝ)..T, (Real.sqrt (firstKindQuartic m t))⁻¹
+      = T * Real.sqrt (firstKindQuartic m T) := by
+  have hc1 : Continuous fun t => Real.sqrt (firstKindQuartic m t) :=
+    continuous_sqrt_firstKindQuartic m
+  have hc2 : Continuous fun t : ℝ => (Real.sqrt (firstKindQuartic m t))⁻¹ :=
+    hc1.inv₀ fun t => (sqrt_firstKindQuartic_pos m t).ne'
+  have hc3 : Continuous fun t : ℝ => t ^ 2 * (Real.sqrt (firstKindQuartic m t))⁻¹ :=
+    (continuous_pow 2).mul hc2
+  have hcD : Continuous fun t : ℝ => 3 * Real.sqrt (firstKindQuartic m t)
+      - ((1 + m ^ 2) * t ^ 2 + 2) / Real.sqrt (firstKindQuartic m t) :=
+    (hc1.const_mul 3).sub (Continuous.div (by fun_prop) hc1
+      fun t => (sqrt_firstKindQuartic_pos m t).ne')
+  have i1 : IntervalIntegrable _ MeasureTheory.volume 0 T := hc1.intervalIntegrable 0 T
+  have i2 : IntervalIntegrable _ MeasureTheory.volume 0 T := hc2.intervalIntegrable 0 T
+  have i3 : IntervalIntegrable _ MeasureTheory.volume 0 T := hc3.intervalIntegrable 0 T
+  have iD : IntervalIntegrable _ MeasureTheory.volume 0 T := hcD.intervalIntegrable 0 T
+  have hkey := intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (f := fun s : ℝ => s * Real.sqrt (firstKindQuartic m s))
+    (fun t _ => hasDerivAt_mul_sqrt_firstKindQuartic m t) iD
+  rw [zero_mul, sub_zero] at hkey
+  have e1 : (∫ t in (0 : ℝ)..T, (3 * Real.sqrt (firstKindQuartic m t)
+        - ((1 + m ^ 2) * t ^ 2 + 2) / Real.sqrt (firstKindQuartic m t)))
+      = ∫ t in (0 : ℝ)..T, (3 * Real.sqrt (firstKindQuartic m t)
+          - ((1 + m ^ 2) * (t ^ 2 * (Real.sqrt (firstKindQuartic m t))⁻¹)
+            + 2 * (Real.sqrt (firstKindQuartic m t))⁻¹)) := by
+    refine intervalIntegral.integral_congr fun t _ => ?_
+    have := (sqrt_firstKindQuartic_pos m t).ne'
+    field_simp
+  rw [e1, intervalIntegral.integral_sub (i1.const_mul 3)
+      ((i3.const_mul (1 + m ^ 2)).add (i2.const_mul 2)),
+    intervalIntegral.integral_add (i3.const_mul (1 + m ^ 2)) (i2.const_mul 2),
+    intervalIntegral.integral_const_mul, intervalIntegral.integral_const_mul,
+    intervalIntegral.integral_const_mul] at hkey
+  linarith [hkey]
+
+-- Theorem: `m² I₂ + E(φ) = tan φ · Δ(φ)`, from differentiating `tan ψ · Δ(ψ)`.
+theorem firstKind_ibp_angle {c m : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1) {φ : ℝ}
+    (hφ : |φ| < Real.pi / 2) :
+    m ^ 2 * (∫ ψ in (0 : ℝ)..φ, Real.tan ψ ^ 2 * ellipticFIntegrand c ψ) + ellipticE c φ
+      = Real.tan φ * ellipticEIntegrand c φ := by
+  have htanC : ContinuousOn (fun ψ : ℝ => Real.tan ψ ^ 2) (Set.uIcc (0 : ℝ) φ) :=
+    ContinuousOn.pow (fun ψ hψ =>
+      (Real.continuousAt_tan.mpr (cos_pos_of_mem_uIcc hφ hψ).ne').continuousWithinAt) 2
+  have i1 : IntervalIntegrable (fun ψ => Real.tan ψ ^ 2 * ellipticFIntegrand c ψ)
+      MeasureTheory.volume 0 φ :=
+    ContinuousOn.intervalIntegrable
+      (htanC.mul (continuous_ellipticFIntegrand hc).continuousOn)
+  have hcont : ContinuousOn
+      (fun ψ => m ^ 2 * Real.tan ψ ^ 2 * ellipticFIntegrand c ψ + ellipticEIntegrand c ψ)
+      (Set.uIcc (0 : ℝ) φ) :=
+    ((continuousOn_const.mul htanC).mul
+      (continuous_ellipticFIntegrand hc).continuousOn).add
+      (continuous_ellipticEIntegrand c).continuousOn
+  have hkey := intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (f := fun s : ℝ => Real.tan s * ellipticEIntegrand c s)
+    (fun ψ hψ => hasDerivAt_tan_mul_ellipticEIntegrand hm hc
+      (cos_pos_of_mem_uIcc hφ hψ).ne') hcont.intervalIntegrable
+  rw [Real.tan_zero, zero_mul, sub_zero] at hkey
+  have e1 : (∫ ψ in (0 : ℝ)..φ,
+        (m ^ 2 * Real.tan ψ ^ 2 * ellipticFIntegrand c ψ + ellipticEIntegrand c ψ))
+      = ∫ ψ in (0 : ℝ)..φ,
+        (m ^ 2 * (Real.tan ψ ^ 2 * ellipticFIntegrand c ψ) + ellipticEIntegrand c ψ) := by
+    refine intervalIntegral.integral_congr fun ψ _ => ?_
+    ring
+  rw [e1, intervalIntegral.integral_add (i1.const_mul (m ^ 2))
+      (intervalIntegrable_ellipticEIntegrand c 0 φ),
+    intervalIntegral.integral_const_mul] at hkey
+  rw [ellipticE]
+  linarith [hkey]
+
+-- Theorem: the auxiliary integral in `t` is the auxiliary integral in `ψ`.
+theorem integral_sq_div_sqrt_firstKindQuartic {c m : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    {φ : ℝ} (hφ : |φ| < Real.pi / 2) :
+    (∫ t in (0 : ℝ)..Real.tan φ, t ^ 2 * (Real.sqrt (firstKindQuartic m t))⁻¹)
+      = ∫ ψ in (0 : ℝ)..φ, Real.tan ψ ^ 2 * ellipticFIntegrand c ψ := by
+  have hg : Continuous fun t : ℝ => t ^ 2 * (Real.sqrt (firstKindQuartic m t))⁻¹ :=
+    (continuous_pow 2).mul ((continuous_sqrt_firstKindQuartic m).inv₀
+      fun t => (sqrt_firstKindQuartic_pos m t).ne')
+  rw [← integral_comp_tan hφ hg]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have hcos := cos_pos_of_mem_uIcc hφ hψ
+  have hE := ellipticEIntegrand_pos hc ψ
+  rw [sqrt_firstKindQuartic_tan hm hc hcos.ne', ellipticFIntegrand]
+  field_simp
+
+-- Theorem: the first-kind integral in `ψ` is the reciprocal-quartic integral in `t`.
+theorem integral_inv_sqrt_firstKindQuartic {c m : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    {φ : ℝ} (hφ : |φ| < Real.pi / 2) :
+    (∫ t in (0 : ℝ)..Real.tan φ, (Real.sqrt (firstKindQuartic m t))⁻¹) = ellipticF c φ := by
+  have hg : Continuous fun t : ℝ => (Real.sqrt (firstKindQuartic m t))⁻¹ :=
+    (continuous_sqrt_firstKindQuartic m).inv₀ fun t => (sqrt_firstKindQuartic_pos m t).ne'
+  rw [← integral_comp_tan hφ hg, ellipticF]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have hcos := cos_pos_of_mem_uIcc hφ hψ
+  have hE := ellipticEIntegrand_pos hc ψ
+  rw [sqrt_firstKindQuartic_tan hm hc hcos.ne', ellipticFIntegrand]
+  field_simp
+
+/-! #### The construction -/
+
+-- Theorem: `F(φ)` is P-constructible for `0 < φ < π/2`.
+--
+-- This is the construction itself. `J` is the Bézier's arc length, the only geometric
+-- input; the two integrations by parts and a division by `m²` do the rest.
+theorem ellipticF_Pconstructible_of_pos {c φ : ℝ} (hcP : PConstructible c)
+    (hφP : PConstructible φ) (hc : c < 1) (h0 : 0 < φ) (hlt : φ < Real.pi / 2) :
+    PConstructible (ellipticF c φ) := by
+  have hpi := Real.pi_pos
+  have habs : |φ| < Real.pi / 2 := by rw [abs_lt]; constructor <;> linarith
+  obtain ⟨m, hmpos, hm, hmP⟩ : ∃ m : ℝ, 0 < m ∧ m ^ 2 = 1 - c ∧ PConstructible m :=
+    ⟨Real.sqrt (1 - c), Real.sqrt_pos.mpr (by linarith), Real.sq_sqrt (by linarith),
+      sqrt_Pconstructible (PConstructible.sub PConstructible.base_one hcP)⟩
+  have hm0 : m ^ 2 ≠ 0 := by positivity
+  have hTP : PConstructible (Real.tan φ) := tan_Pconstructible hφP
+  -- the geometric input
+  have hJ := arcLength_firstKind_Pconstructible hm hc hmpos hmP hφP h0 hlt
+  rw [arcLengthOf_firstKindTanParam hm hc habs] at hJ
+  -- the two integrations by parts, transported to the angle
+  have ha := firstKind_ibp_t m (Real.tan φ)
+  rw [integral_inv_sqrt_firstKindQuartic hm hc habs,
+    integral_sq_div_sqrt_firstKindQuartic hm hc habs] at ha
+  have hb := firstKind_ibp_angle hm hc habs
+  -- solve for `F`
+  have hkey : ellipticF c φ
+      = (3 * (∫ t in (0 : ℝ)..Real.tan φ, Real.sqrt (firstKindQuartic m t))
+          - (1 + m ^ 2) * ((Real.tan φ * ellipticEIntegrand c φ - ellipticE c φ) / m ^ 2)
+          - Real.tan φ * Real.sqrt (firstKindQuartic m (Real.tan φ))) / 2 := by
+    have hI2 : (∫ ψ in (0 : ℝ)..φ, Real.tan ψ ^ 2 * ellipticFIntegrand c ψ)
+        = (Real.tan φ * ellipticEIntegrand c φ - ellipticE c φ) / m ^ 2 := by
+      field_simp
+      linarith [hb]
+    rw [hI2] at ha
+    linarith [ha]
+  rw [hkey]
+  -- and every piece of that is P-constructible
+  have hEint : PConstructible (ellipticEIntegrand c φ) := by
+    unfold ellipticEIntegrand
+    exact sqrt_Pconstructible (PConstructible.sub PConstructible.base_one
+      (PConstructible.mul hcP (sq_Pconstructible (sin_Pconstructible hφP))))
+  have hQ : PConstructible (Real.sqrt (firstKindQuartic m (Real.tan φ))) := by
+    refine sqrt_Pconstructible ?_
+    unfold firstKindQuartic
+    exact PConstructible.add
+      (sq_Pconstructible (PConstructible.sub PConstructible.base_one
+        (PConstructible.mul hmP (sq_Pconstructible hTP))))
+      (sq_Pconstructible (PConstructible.mul
+        (PConstructible.add PConstructible.base_one hmP) hTP))
+  have hE := ellipticE_Pconstructible hcP hφP hc
+  exact PConstructible.div
+    (PConstructible.sub
+      (PConstructible.sub (PConstructible.mul three_Pconstructible hJ)
+        (PConstructible.mul (PConstructible.add PConstructible.base_one (sq_Pconstructible hmP))
+          (PConstructible.div (PConstructible.sub (PConstructible.mul hTP hEint) hE)
+            (sq_Pconstructible hmP))))
+      (PConstructible.mul hTP hQ))
+    two_Pconstructible
+
+-- Theorem: `F` is odd, since its integrand is even.
+theorem ellipticF_neg (c φ : ℝ) : ellipticF c (-φ) = -ellipticF c φ := by
+  have heven : ∀ x : ℝ, ellipticFIntegrand c (-x) = ellipticFIntegrand c x := fun x => by
+    simp [ellipticFIntegrand, ellipticEIntegrand]
+  have h := intervalIntegral.integral_comp_neg (a := (0 : ℝ)) (b := -φ)
+    (ellipticFIntegrand c)
+  simp only [heven, neg_neg, neg_zero] at h
+  rw [ellipticF, h, intervalIntegral.integral_symm, ellipticF]
+
+-- Theorem: `F(φ)` is P-constructible for every `|φ| < π/2`.
+theorem ellipticF_Pconstructible_of_abs_lt {c φ : ℝ} (hcP : PConstructible c)
+    (hφP : PConstructible φ) (hc : c < 1) (hφ : |φ| < Real.pi / 2) :
+    PConstructible (ellipticF c φ) := by
+  rcases lt_trichotomy φ 0 with hneg | rfl | hpos
+  · have h := ellipticF_Pconstructible_of_pos hcP (neg_Pconstructible hφP) hc
+      (by linarith) (by rw [abs_lt] at hφ; linarith [hφ.1])
+    rw [← neg_neg φ, ellipticF_neg]
+    exact neg_Pconstructible h
+  · simpa [ellipticF] using zero_Pconstructible
+  · exact ellipticF_Pconstructible_of_pos hcP hφP hc hpos (by rw [abs_lt] at hφ; exact hφ.2)
+
+
+/-! #### Past the quarter turn
+
+`tan φ` runs out at `φ = π/2`, so the construction above stops there. Two symmetries carry
+it over the whole line. The integrand has period `π`, exactly as in the second-kind case;
+and reflecting in `π/2` sends
+
+  `1 - c sin²(π/2 + w) = 1 - c cos²w = (1 - c)(1 - c' sin²w)`,  `c' = -c/(1 - c)`,
+
+so a quarter turn past `π/2` is a quarter turn from `0` at the *complementary* parameter
+`c'`, scaled by `1/√(1 - c)`. Since `c > 0` makes `c' < 0`, this is what forces the whole
+development to be indexed by a parameter rather than a modulus `k`: there is no real `k`
+with `k² = c'`. Note `c' < 1` whenever `c < 1`, so the complementary parameter stays
+inside the hypothesis. -/
+
+-- Theorem: the complementary parameter is again admissible.
+theorem compl_param_lt_one {c : ℝ} (hc : c < 1) : -c / (1 - c) < 1 :=
+  (div_lt_one (by linarith)).mpr (by linarith)
+
+-- Theorem: reflecting the integrand in `π/2` moves to the complementary parameter.
+theorem ellipticFIntegrand_pi_div_two_add {c : ℝ} (hc : c < 1) (w : ℝ) :
+    ellipticFIntegrand c (Real.pi / 2 + w)
+      = (Real.sqrt (1 - c))⁻¹ * ellipticFIntegrand (-c / (1 - c)) w := by
+  have h1c : (0 : ℝ) < 1 - c := by linarith
+  have hsin : Real.sin (Real.pi / 2 + w) = Real.cos w := by
+    rw [show Real.pi / 2 + w = Real.pi / 2 - -w by ring, Real.sin_pi_div_two_sub, Real.cos_neg]
+  simp only [ellipticFIntegrand, ellipticEIntegrand, hsin]
+  rw [← mul_inv, ← Real.sqrt_mul h1c.le]
+  congr 2
+  field_simp
+  linear_combination (-c) * Real.sin_sq_add_cos_sq w
+
+-- Theorem: hence `F` past `π/2` is `F` at the complementary parameter.
+theorem ellipticF_pi_div_two_add {c : ℝ} (hc : c < 1) (u : ℝ) :
+    ellipticF c (Real.pi / 2 + u)
+      = ellipticF c (Real.pi / 2) + (Real.sqrt (1 - c))⁻¹ * ellipticF (-c / (1 - c)) u := by
+  have hshift : (∫ ψ in (Real.pi / 2)..(Real.pi / 2 + u), ellipticFIntegrand c ψ)
+      = (Real.sqrt (1 - c))⁻¹ * ellipticF (-c / (1 - c)) u := by
+    have h := intervalIntegral.integral_comp_add_left (a := (0 : ℝ)) (b := u)
+      (ellipticFIntegrand c) (Real.pi / 2)
+    rw [add_zero] at h
+    rw [← h, ellipticF, ← intervalIntegral.integral_const_mul]
+    exact intervalIntegral.integral_congr fun w _ => ellipticFIntegrand_pi_div_two_add hc w
+  rw [← hshift, ellipticF, ellipticF,
+    intervalIntegral.integral_add_adjacent_intervals
+      (intervalIntegrable_ellipticFIntegrand hc 0 (Real.pi / 2))
+      (intervalIntegrable_ellipticFIntegrand hc (Real.pi / 2) (Real.pi / 2 + u))]
+
+-- Theorem: the complete integral `F(π/2) = K` is P-constructible, as two quarter turns:
+-- one at `c` and one at the complementary parameter.
+theorem ellipticF_pi_div_two_Pconstructible {c : ℝ} (hcP : PConstructible c) (hc : c < 1) :
+    PConstructible (ellipticF c (Real.pi / 2)) := by
+  have hpi := Real.pi_pos
+  have hquarter : |Real.pi / 4| < Real.pi / 2 := by
+    rw [abs_of_pos (by linarith)]; linarith
+  have hpi4 : PConstructible (Real.pi / 4) := by
+    have h4 : PConstructible (4 : ℝ) := by
+      convert PConstructible.mul two_Pconstructible two_Pconstructible using 1
+      norm_num
+    exact PConstructible.div pi_Pconstructible h4
+  have hc'P : PConstructible (-c / (1 - c)) :=
+    PConstructible.div (neg_Pconstructible hcP)
+      (PConstructible.sub PConstructible.base_one hcP)
+  have h := ellipticF_pi_div_two_add hc (-(Real.pi / 4))
+  rw [show Real.pi / 2 + -(Real.pi / 4) = Real.pi / 4 by ring, ellipticF_neg] at h
+  have hkey : ellipticF c (Real.pi / 2)
+      = ellipticF c (Real.pi / 4)
+        + (Real.sqrt (1 - c))⁻¹ * ellipticF (-c / (1 - c)) (Real.pi / 4) := by
+    linear_combination -h
+  rw [hkey]
+  exact PConstructible.add
+    (ellipticF_Pconstructible_of_abs_lt hcP hpi4 hc hquarter)
+    (PConstructible.mul
+      (inv_Pconstructible
+        (sqrt_Pconstructible (PConstructible.sub PConstructible.base_one hcP)))
+      (ellipticF_Pconstructible_of_abs_lt hc'P hpi4 (compl_param_lt_one hc) hquarter))
+
+-- Theorem: `F(φ)` is P-constructible for `|φ| ≤ π/2`, the quarter turn now included.
+theorem ellipticF_Pconstructible_of_abs_le {c φ : ℝ} (hcP : PConstructible c)
+    (hφP : PConstructible φ) (hc : c < 1) (hφ : |φ| ≤ Real.pi / 2) :
+    PConstructible (ellipticF c φ) := by
+  have hpi := Real.pi_pos
+  rcases eq_or_lt_of_le hφ with h | h
+  · rcases (abs_eq (by positivity)).mp h with rfl | rfl
+    · exact ellipticF_pi_div_two_Pconstructible hcP hc
+    · rw [ellipticF_neg]
+      exact neg_Pconstructible (ellipticF_pi_div_two_Pconstructible hcP hc)
+  · exact ellipticF_Pconstructible_of_abs_lt hcP hφP hc h
+
+-- Theorem: `F(φ)` is P-constructible for `0 ≤ φ ≤ π`, one full period.
+theorem ellipticF_Pconstructible_of_mem_Icc {c φ : ℝ} (hcP : PConstructible c)
+    (hφP : PConstructible φ) (hc : c < 1) (h0 : 0 ≤ φ) (hpi : φ ≤ Real.pi) :
+    PConstructible (ellipticF c φ) := by
+  have hpipos := Real.pi_pos
+  have hc'P : PConstructible (-c / (1 - c)) :=
+    PConstructible.div (neg_Pconstructible hcP)
+      (PConstructible.sub PConstructible.base_one hcP)
+  have huP : PConstructible (φ - Real.pi / 2) :=
+    PConstructible.sub hφP (PConstructible.div pi_Pconstructible two_Pconstructible)
+  have hu : |φ - Real.pi / 2| ≤ Real.pi / 2 := by
+    rw [abs_le]; constructor <;> linarith
+  rw [show φ = Real.pi / 2 + (φ - Real.pi / 2) by ring, ellipticF_pi_div_two_add hc]
+  exact PConstructible.add (ellipticF_pi_div_two_Pconstructible hcP hc)
+    (PConstructible.mul
+      (inv_Pconstructible
+        (sqrt_Pconstructible (PConstructible.sub PConstructible.base_one hcP)))
+      (ellipticF_Pconstructible_of_abs_le hc'P huP (compl_param_lt_one hc) hu))
+
+-- Theorem: the first-kind integrand has period `π`, being the reciprocal of the
+-- second-kind one.
+theorem periodic_ellipticFIntegrand (c : ℝ) :
+    Function.Periodic (ellipticFIntegrand c) Real.pi := fun θ => by
+  simp [ellipticFIntegrand, ellipticEIntegrand, Real.sin_add_pi]
+
+-- Theorem: `F(φ + nπ) = F(φ) + n · F(π)`, exactly as for `E`.
+theorem ellipticF_add_int_mul_pi {c : ℝ} (hc : c < 1) (φ : ℝ) (n : ℤ) :
+    ellipticF c (φ + n * Real.pi) = ellipticF c φ + n * ellipticF c Real.pi := by
+  have hper := periodic_ellipticFIntegrand c
+  have hint : ∀ t₁ t₂ : ℝ,
+      IntervalIntegrable (ellipticFIntegrand c) MeasureTheory.volume t₁ t₂ :=
+    fun t₁ t₂ => intervalIntegrable_ellipticFIntegrand hc t₁ t₂
+  have hA : (∫ θ in (0 : ℝ)..(n : ℝ) * Real.pi, ellipticFIntegrand c θ)
+      = n * ellipticF c Real.pi := by
+    have h := hper.intervalIntegral_add_zsmul_eq n 0 hint
+    simpa [ellipticF, zsmul_eq_mul] using h
+  have hB : (∫ θ in ((n : ℝ) * Real.pi)..(φ + (n : ℝ) * Real.pi), ellipticFIntegrand c θ)
+      = ellipticF c φ := by
+    have h := intervalIntegral.integral_comp_add_right (a := (0 : ℝ)) (b := φ)
+      (ellipticFIntegrand c) ((n : ℝ) * Real.pi)
+    have hshift : ∀ x : ℝ,
+        ellipticFIntegrand c (x + (n : ℝ) * Real.pi) = ellipticFIntegrand c x :=
+      fun x => hper.int_mul n x
+    simp only [hshift, zero_add] at h
+    rw [ellipticF, h]
+  rw [ellipticF, ← intervalIntegral.integral_add_adjacent_intervals
+    (b := (n : ℝ) * Real.pi) (hint 0 _) (hint _ _), hA, hB]
+  ring
+
+-- Theorem: `F(φ)` is P-constructible for every P-constructible `φ` and every
+-- P-constructible parameter `c < 1`.
+--
+-- Reduction modulo `π` on top of the reflection above, so no restriction on `φ` at all —
+-- matching `ellipticE_Pconstructible`.
+theorem ellipticF_Pconstructible {c φ : ℝ} (hcP : PConstructible c) (hφP : PConstructible φ)
+    (hc : c < 1) : PConstructible (ellipticF c φ) := by
+  obtain ⟨n, h0, hpi⟩ := exists_int_half_turns φ
+  have hrP : PConstructible (φ - n * Real.pi) :=
+    PConstructible.sub hφP (PConstructible.mul (int_Pconstructible n) pi_Pconstructible)
+  have hr := ellipticF_Pconstructible_of_mem_Icc hcP hrP hc h0 hpi
+  have hFpi := ellipticF_Pconstructible_of_mem_Icc hcP pi_Pconstructible hc
+    Real.pi_pos.le le_rfl
+  have hkey : ellipticF c φ
+      = ellipticF c (φ - n * Real.pi) + n * ellipticF c Real.pi := by
+    have h := ellipticF_add_int_mul_pi hc (φ - n * Real.pi) n
+    rwa [sub_add_cancel] at h
+  rw [hkey]
+  exact PConstructible.add hr (PConstructible.mul (int_Pconstructible n) hFpi)
+
+/-! #### In terms of the modulus
+
+Legendre writes both integrals with the modulus `k`, where `c = k²`. Those are the
+statements one would quote; they are the case `c = k²` of the theorems above, and the
+hypothesis `k² < 1` is the usual `|k| < 1`. -/
+
+-- Theorem: `E(φ, k) = ∫₀^φ √(1 - k² sin²θ) dθ` is P-constructible.
+theorem ellipticE_sq_Pconstructible {k φ : ℝ} (hk : PConstructible k)
+    (hφ : PConstructible φ) (hk1 : k ^ 2 < 1) : PConstructible (ellipticE (k ^ 2) φ) :=
+  ellipticE_Pconstructible (sq_Pconstructible hk) hφ hk1
+
+-- Theorem: `F(φ, k) = ∫₀^φ dθ/√(1 - k² sin²θ)` is P-constructible.
+theorem ellipticF_sq_Pconstructible {k φ : ℝ} (hk : PConstructible k)
+    (hφ : PConstructible φ) (hk1 : k ^ 2 < 1) : PConstructible (ellipticF (k ^ 2) φ) :=
+  ellipticF_Pconstructible (sq_Pconstructible hk) hφ hk1
 
 end Pconstructible
