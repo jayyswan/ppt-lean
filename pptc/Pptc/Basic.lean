@@ -289,6 +289,61 @@ theorem arcLength_segment_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstruct
   · simpa [segmentParam] using hq1
   · simpa [segmentParam] using hq2
 
+/-! ### Cubic Bézier curves
+
+Sanity checks on the `cubic_bezier` primitive. The drawn arc really does run from the
+first control point to the last, and spacing the four control points evenly along a line
+collapses the Bernstein cubic to the straight parametrization `segmentParam`.
+
+The latter is what makes the primitive earn its place: it turns every segment between
+P-constructible endpoints into a constructible curve. That was not available before —
+`poly_graph` is a graph over `x`, so it cannot produce a vertical segment, and its
+coefficients are rational rather than merely P-constructible. -/
+
+-- Theorem: a cubic Bézier starts at its first control point.
+theorem bezierParam_zero (p₁ p₂ p₃ p₄ : ℝ × ℝ) : bezierParam p₁ p₂ p₃ p₄ 0 = p₁ := by
+  simp [bezierParam]
+
+-- Theorem: ... and ends at its last.
+theorem bezierParam_one (p₁ p₂ p₃ p₄ : ℝ × ℝ) : bezierParam p₁ p₂ p₃ p₄ 1 = p₄ := by
+  simp [bezierParam]
+
+-- Theorem: control points spaced evenly along the segment from `p` to `q` make the
+-- Bézier the linear parametrization of that segment (the Bernstein weights reproduce
+-- the identity, so the cubic terms cancel exactly).
+theorem bezierParam_eq_segmentParam (p q : ℝ × ℝ) :
+    bezierParam p (p.1 + (q.1 - p.1) / 3, p.2 + (q.2 - p.2) / 3)
+        (p.1 + 2 * (q.1 - p.1) / 3, p.2 + 2 * (q.2 - p.2) / 3) q =
+      segmentParam p q := by
+  funext t
+  simp only [bezierParam, segmentParam, Prod.mk.injEq]
+  constructor <;> ring
+
+-- Theorem: 3 is P-constructible.
+theorem three_Pconstructible : PConstructible (3 : ℝ) := by
+  convert PConstructible.add two_Pconstructible PConstructible.base_one
+  norm_num
+
+-- Theorem: the straight segment joining two P-constructible points is a constructible
+-- curve.
+theorem segment_PConstructibleCurve (p q : ℝ × ℝ)
+    (hp1 : PConstructible p.1) (hp2 : PConstructible p.2)
+    (hq1 : PConstructible q.1) (hq2 : PConstructible q.2) :
+    PConstructibleCurve (segmentParam p q '' Set.Icc 0 1) := by
+  rw [← bezierParam_eq_segmentParam]
+  -- The interior control points are P-constructible, being built from the endpoints by
+  -- `+ - * /` alone.
+  have hmid : ∀ c : ℝ, PConstructible c → ∀ a b : ℝ, PConstructible a → PConstructible b →
+      PConstructible (a + c * (b - a) / 3) := fun c hc a b ha hb =>
+    PConstructible.add ha
+      (PConstructible.div (PConstructible.mul hc (PConstructible.sub hb ha))
+        three_Pconstructible)
+  refine PConstructibleCurve.cubic_bezier _ _ _ _ hp1 hp2 ?_ ?_ ?_ ?_ hq1 hq2
+  · simpa using hmid 1 PConstructible.base_one _ _ hp1 hq1
+  · simpa using hmid 1 PConstructible.base_one _ _ hp2 hq2
+  · exact hmid 2 two_Pconstructible _ _ hp1 hq1
+  · exact hmid 2 two_Pconstructible _ _ hp2 hq2
+
 /-! ### π is P-constructible
 
 Measuring half of the unit circle. A *full* circle cannot be used directly: `θ ↦ (cos θ,

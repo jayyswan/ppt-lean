@@ -33,7 +33,8 @@ arithmetic operations (`+ - * /`) from `1`, together with intersecting a point o
 of two constructible curves, and `PConstructibleCurve : Set (ℝ × ℝ) → Prop` for
 point-sets reachable from a finite sequence of curve constructions (axis-aligned
 ellipses, axis-aligned rectangles, degree-≤7 polynomial graphs with rational
-coefficients, power laws, the exponential `y = 2 ^ x`) and the geometric operations of
+coefficients, power laws, the exponential `y = 2 ^ x`, cubic Bézier curves with
+P-constructible control points) and the geometric operations of
 stretching, rotating by whole-degree increments, cropping to a rectangular window, and
 marking off an arc of prescribed length.
 
@@ -64,6 +65,20 @@ noncomputable def speed (γ : ℝ → ℝ × ℝ) (t : ℝ) : ℝ :=
 /-- The arc length of the plane curve `γ` traced over the parameter interval `[a, b]`. -/
 noncomputable def arcLengthOf (γ : ℝ → ℝ × ℝ) (a b : ℝ) : ℝ :=
   ∫ t in a..b, speed γ t
+
+/-- The cubic Bézier curve with control points `p₁ p₂ p₃ p₄`, in Bernstein form: at
+parameter `t` it is the weighted average of the control points with weights
+`(1-t)³, 3(1-t)²t, 3(1-t)t², t³`.
+
+`p₁` and `p₄` are the endpoints (`bezierParam p₁ p₂ p₃ p₄ 0 = p₁` and `… 1 = p₄`); `p₂`
+and `p₃` are the off-curve handles that set the initial and final tangent directions.
+Only `t ∈ [0, 1]` is drawn; that is where the weights are non-negative and the curve
+stays inside the convex hull of the control points. -/
+def bezierParam (p₁ p₂ p₃ p₄ : ℝ × ℝ) (t : ℝ) : ℝ × ℝ :=
+  ((1 - t) ^ 3 * p₁.1 + 3 * (1 - t) ^ 2 * t * p₂.1
+      + 3 * (1 - t) * t ^ 2 * p₃.1 + t ^ 3 * p₄.1,
+   (1 - t) ^ 3 * p₁.2 + 3 * (1 - t) ^ 2 * t * p₂.2
+      + 3 * (1 - t) * t ^ 2 * p₃.2 + t ^ 3 * p₄.2)
 
 mutual
 
@@ -164,6 +179,26 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- logarithms reachable, by reading off the other coordinate.
   | exp_two :
       PConstructibleCurve {p : ℝ × ℝ | p.2 = (2 : ℝ) ^ p.1}
+  -- A cubic Bézier curve with `PConstructible` control points `p₁, p₂, p₃, p₄`, drawn
+  -- over the parameter interval `[0, 1]`. This is the curve tool of the drawing program:
+  -- two endpoints (`p₁`, `p₄`) plus two handles (`p₂`, `p₃`).
+  --
+  -- Unlike `poly_graph` this is a *parametric* curve, so it is genuinely new in two ways:
+  -- its coefficients are `PConstructible` rather than rational, and it need not be the
+  -- graph of a function of `x` (both coordinates move cubically in `t`, so the curve may
+  -- double back over an abscissa, or close up into a loop).
+  --
+  -- No non-degeneracy hypothesis is imposed. Coincident control points are legal input to
+  -- the drawing program and still produce a drawable stroke; with all four equal the image
+  -- is a single point, a degenerate but harmless member of the class. Contrast `ellipse`
+  -- and `rectangle`, which need positive dimensions because their defining equations would
+  -- otherwise divide by zero.
+  | cubic_bezier (p₁ p₂ p₃ p₄ : ℝ × ℝ)
+      (hx₁ : PConstructible p₁.1) (hy₁ : PConstructible p₁.2)
+      (hx₂ : PConstructible p₂.1) (hy₂ : PConstructible p₂.2)
+      (hx₃ : PConstructible p₃.1) (hy₃ : PConstructible p₃.2)
+      (hx₄ : PConstructible p₄.1) (hy₄ : PConstructible p₄.2) :
+      PConstructibleCurve (bezierParam p₁ p₂ p₃ p₄ '' Set.Icc 0 1)
   -- Closure operations (axioms, not derived from `PConstructible` on ℝ)
   -- Uniform scaling by a `PConstructible` factor.
   | stretch {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
