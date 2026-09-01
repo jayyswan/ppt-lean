@@ -22,7 +22,6 @@ import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 import Mathlib.Analysis.SpecialFunctions.Log.Base
-import Mathlib.Analysis.Complex.ExponentialBounds
 import Mathlib.Tactic.FunProp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
@@ -87,6 +86,103 @@ theorem zero_Pconstructible : PConstructible (0 : ℝ) := by
   convert PConstructible.sub PConstructible.base_one PConstructible.base_one
   simp
 
+-- Theorem: 2 is P-constructible.
+theorem two_Pconstructible : PConstructible (2 : ℝ) := by
+  convert PConstructible.add PConstructible.base_one PConstructible.base_one
+  norm_num
+
+/-! ### Reading a coordinate off a curve
+
+The two workhorses. If a vertical line at a P-constructible abscissa meets a
+constructible curve in a single point, that point's ordinate is P-constructible — and
+symmetrically for horizontal lines.
+
+No bound on the coordinate is needed. Cutting the curve requires a segment long enough
+to reach it, but by the Archimedean property some natural number exceeds the coordinate
+in absolute value, and every natural number is P-constructible, so a big enough
+rectangle always exists. Geometrically: "draw a rectangle large enough". This is what
+frees the results below from having to supply explicit bounds. -/
+
+-- Theorem: the ordinate of a single crossing with a vertical line is P-constructible.
+theorem ordinate_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {c y : ℝ} (hc : PConstructible c)
+    (h : S ∩ {p : ℝ × ℝ | p.1 = c} = {(c, y)}) :
+    PConstructible y := by
+  obtain ⟨n, hn⟩ := exists_nat_gt |y|
+  obtain ⟨hylo, hyhi⟩ := abs_lt.mp hn
+  have hn0 : (0 : ℝ) < (n : ℝ) := lt_of_le_of_lt (abs_nonneg y) hn
+  have hnP : PConstructible ((n : ℝ)) := nat_Pconstructible n
+  have hnegn : PConstructible (-(n : ℝ)) := by
+    convert PConstructible.sub zero_Pconstructible hnP
+    ring
+  have hmem : ((c, y) : ℝ × ℝ) ∈ S := by
+    have hx : ((c, y) : ℝ × ℝ) ∈ S ∩ {p : ℝ × ℝ | p.1 = c} := by
+      rw [h]; exact rfl
+    exact hx.1
+  -- Rectangle of centre `(c + 1, 0)`, width `2`, height `2n`; its left edge is the
+  -- segment `{c} × [-n, n]`, isolated by cropping to abscissae at most `c`.
+  have hRect := PConstructibleCurve.rectangle (c + 1) 0 2 (2 * (n : ℝ))
+    (PConstructible.add hc PConstructible.base_one) zero_Pconstructible
+    two_Pconstructible (PConstructible.mul two_Pconstructible hnP)
+    (by norm_num) (by linarith)
+  have hT := PConstructibleCurve.restrict hRect (c - 1) c (-(n : ℝ)) (n : ℝ)
+    (PConstructible.sub hc PConstructible.base_one) hc hnegn hnP
+  refine PConstructible.inter_y (x := c) hS hT ?_
+  ext ⟨u, v⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hSmem, hR, hb1, hb2, hb3, hb4⟩
+    have hu : u = c := by
+      rcases hR with ⟨h1, _, _⟩ | ⟨_, _, h3⟩
+      · linarith
+      · rcases h3 with h3 | h3 <;> linarith
+    have hpt : ((u, v) : ℝ × ℝ) ∈ S ∩ {p : ℝ × ℝ | p.1 = c} := ⟨hSmem, hu⟩
+    rw [h] at hpt
+    simpa using hpt
+  · rintro ⟨rfl, rfl⟩
+    exact ⟨hmem, Or.inr ⟨by linarith, by linarith, Or.inl (by ring)⟩,
+      by linarith, le_rfl, by linarith, by linarith⟩
+
+-- Theorem: the abscissa of a single crossing with a horizontal line is P-constructible.
+theorem abscissa_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {x c : ℝ} (hc : PConstructible c)
+    (h : S ∩ {p : ℝ × ℝ | p.2 = c} = {(x, c)}) :
+    PConstructible x := by
+  obtain ⟨n, hn⟩ := exists_nat_gt |x|
+  obtain ⟨hxlo, hxhi⟩ := abs_lt.mp hn
+  have hn0 : (0 : ℝ) < (n : ℝ) := lt_of_le_of_lt (abs_nonneg x) hn
+  have hnP : PConstructible ((n : ℝ)) := nat_Pconstructible n
+  have hnegn : PConstructible (-(n : ℝ)) := by
+    convert PConstructible.sub zero_Pconstructible hnP
+    ring
+  have hmem : ((x, c) : ℝ × ℝ) ∈ S := by
+    have hy : ((x, c) : ℝ × ℝ) ∈ S ∩ {p : ℝ × ℝ | p.2 = c} := by
+      rw [h]; exact rfl
+    exact hy.1
+  -- Rectangle of centre `(0, c + 1)`, width `2n`, height `2`; its bottom edge is the
+  -- segment `[-n, n] × {c}`, isolated by cropping to ordinates at most `c`.
+  have hRect := PConstructibleCurve.rectangle 0 (c + 1) (2 * (n : ℝ)) 2
+    zero_Pconstructible (PConstructible.add hc PConstructible.base_one)
+    (PConstructible.mul two_Pconstructible hnP) two_Pconstructible
+    (by linarith) (by norm_num)
+  have hT := PConstructibleCurve.restrict hRect (-(n : ℝ)) (n : ℝ) (c - 1) c
+    hnegn hnP (PConstructible.sub hc PConstructible.base_one) hc
+  refine PConstructible.inter_x (y := c) hS hT ?_
+  ext ⟨u, v⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hSmem, hR, hb1, hb2, hb3, hb4⟩
+    have hv : v = c := by
+      rcases hR with ⟨_, _, h3⟩ | ⟨h1, _, _⟩
+      · rcases h3 with h3 | h3 <;> linarith
+      · linarith
+    have hpt : ((u, v) : ℝ × ℝ) ∈ S ∩ {p : ℝ × ℝ | p.2 = c} := ⟨hSmem, hv⟩
+    rw [h] at hpt
+    simpa using hpt
+  · rintro ⟨rfl, rfl⟩
+    exact ⟨hmem, Or.inl ⟨by linarith, by linarith, Or.inl (by ring)⟩,
+      by linarith, by linarith, by linarith, le_rfl⟩
+
 -- Theorem: the square root of a P-constructible number is P-constructible.
 theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible (Real.sqrt x) := by
@@ -94,47 +190,18 @@ theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
   · rw [Real.sqrt_eq_zero_of_nonpos h]
     exact zero_Pconstructible
   · push Not at h
-    -- x > 0. A zero-width rectangle is not a drawable shape, so the vertical segment
-    -- `{x} × [-(x+1)/2, (x+1)/2]` is obtained instead as the *left edge* of a genuine
-    -- rectangle — centre `(x + 1, 0)`, width `2`, height `x + 1`, so its left edge sits
-    -- at `x` and its right edge at `x + 2` — isolated by cropping to `x`-coordinates at
-    -- most `x`. That segment meets the curve `y = t ^ (1/2)` exactly at `(x, √x)`, using
-    -- `√x ≤ (x + 1)/2` (AM-GM) to know the edge is tall enough to reach the curve.
-    have h_two : PConstructible (2 : ℝ) := by
-      convert PConstructible.add PConstructible.base_one PConstructible.base_one
-      norm_num
-    have hx1 : PConstructible (x + 1) := PConstructible.add hx PConstructible.base_one
-    have hxm1 : PConstructible (x - 1) := PConstructible.sub hx PConstructible.base_one
-    have hnx1 : PConstructible (-(x + 1)) := by
-      convert PConstructible.sub zero_Pconstructible hx1
-      ring
-    have hS := PConstructibleCurve.power_law 1 (1 / 2)
-    have hRect := PConstructibleCurve.rectangle (x + 1) 0 2 (x + 1) hx1 zero_Pconstructible
-      h_two hx1 (by norm_num) (by linarith)
-    have hT := PConstructibleCurve.restrict hRect (x - 1) x (-(x + 1)) (x + 1)
-      hxm1 hx hnx1 hx1
-    refine PConstructible.inter_y (x := x) hS hT ?_
+    -- `√x` is just the ordinate of the curve `y = t ^ (1/2)` above `t = x`. No bound on
+    -- `√x` is needed; `ordinate_Pconstructible` supplies a large enough rectangle.
+    refine ordinate_Pconstructible (PConstructibleCurve.power_law 1 (1 / 2)) hx ?_
     ext ⟨a, b⟩
     simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
     push_cast
     constructor
-    · rintro ⟨⟨ha, hb⟩, hor, hbox⟩
-      obtain ⟨hb1, hb2, _, _⟩ := hbox
-      have ha' : a = x := by
-        rcases hor with ⟨h1, h2, h3⟩ | ⟨h1, h2, h3⟩
-        · linarith
-        · rcases h3 with h3 | h3 <;> linarith
-      subst ha'
+    · rintro ⟨⟨ha, hb⟩, hline⟩
+      subst hline
       exact ⟨rfl, by rw [hb, one_mul, Real.sqrt_eq_rpow]⟩
-    · rintro ⟨ha, hb⟩
-      subst ha
-      subst hb
-      have hnn := Real.sqrt_nonneg a
-      have hamgm : Real.sqrt a ≤ (a + 1) / 2 := by
-        nlinarith [Real.sq_sqrt h.le, Real.sqrt_nonneg a, sq_nonneg (Real.sqrt a - 1)]
-      refine ⟨⟨h, by rw [one_mul, Real.sqrt_eq_rpow]⟩,
-        Or.inr ⟨by linarith, by linarith, Or.inl (by ring)⟩, ?_⟩
-      exact ⟨by linarith, le_refl a, by linarith, by linarith⟩
+    · rintro ⟨rfl, rfl⟩
+      exact ⟨⟨h, by rw [one_mul, Real.sqrt_eq_rpow]⟩, rfl⟩
 
 -- Theorem: the square of a P-constructible number is P-constructible.
 theorem sq_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (x ^ 2) := by
@@ -227,11 +294,6 @@ sin θ)` on `[0, 2π]` has `γ 0 = γ (2π)`, so it fails the injectivity side c
 `PConstructible.arc_length`. The upper half circle avoids that, and its two endpoints
 `(1, 0)` and `(-1, 0)` are P-constructible points, as required. Its length is `π`. -/
 
--- Theorem: 2 is P-constructible.
-theorem two_Pconstructible : PConstructible (2 : ℝ) := by
-  convert PConstructible.add PConstructible.base_one PConstructible.base_one
-  norm_num
-
 -- Theorem: -1 is P-constructible.
 theorem neg_one_Pconstructible : PConstructible (-1 : ℝ) := by
   convert PConstructible.sub zero_Pconstructible PConstructible.base_one
@@ -291,77 +353,21 @@ theorem pi_Pconstructible : PConstructible Real.pi := by
 /-! ### `logb 2` is P-constructible
 
 Reading off the *other* coordinate of the exponential curve. The point of `y = 2 ^ x`
-lying at height `a` sits at abscissa `logb 2 a`, so a horizontal segment at height `a`
-cuts the curve exactly there. As in `sqrt_Pconstructible`, that segment is obtained as
-the bottom edge of a genuine rectangle, isolated by cropping.
-
-The bounds `-(2/a) ≤ logb 2 a ≤ 2 * a` say the segment is long enough to reach the
-crossing; they play the role AM-GM played for square roots. -/
-
--- Theorem: `logb 2` is trapped between two P-constructible expressions on `(0, ∞)`.
--- Both bounds come from `log t ≤ t - 1` (applied to `a` and to `a⁻¹`) together with
--- `log 2 > 1/2`.
-theorem logb_two_bounds {a : ℝ} (ha : 0 < a) :
-    -(2 / a) ≤ Real.logb 2 a ∧ Real.logb 2 a ≤ 2 * a := by
-  have hl2 : (1 : ℝ) / 2 < Real.log 2 := by
-    have h := Real.log_two_gt_d9
-    norm_num at h ⊢
-    linarith
-  have hl2pos : (0 : ℝ) < Real.log 2 := by linarith
-  have hup : Real.log a ≤ a - 1 := Real.log_le_sub_one_of_pos ha
-  have hlow : 1 - 1 / a ≤ Real.log a := by
-    have hinv : Real.log a⁻¹ ≤ a⁻¹ - 1 := Real.log_le_sub_one_of_pos (inv_pos.mpr ha)
-    rw [Real.log_inv, inv_eq_one_div] at hinv
-    linarith
-  rw [Real.logb]
-  constructor
-  · rw [le_div_iff₀ hl2pos]
-    have key : -(2 / a) * Real.log 2 ≤ 1 - 1 / a := by
-      have hid : (1 - 1 / a) - -(2 / a) * Real.log 2 = (a - 1 + 2 * Real.log 2) / a := by
-        field_simp
-        ring
-      rw [← sub_nonneg, hid]
-      exact div_nonneg (by linarith) ha.le
-    linarith
-  · rw [div_le_iff₀ hl2pos]
-    nlinarith [mul_pos ha (by linarith : (0 : ℝ) < Real.log 2 - 1 / 2)]
+lying at height `a` sits at abscissa `logb 2 a`, so a horizontal line at height `a` cuts
+the curve exactly there — which is precisely what `abscissa_Pconstructible` consumes. -/
 
 -- Theorem: `logb 2 x` is P-constructible for positive P-constructible `x`.
 theorem logb_two_Pconstructible {x : ℝ} (hx : PConstructible x) (hxpos : 0 < x) :
     PConstructible (Real.logb 2 x) := by
-  obtain ⟨hlo, hhi⟩ := logb_two_bounds hxpos
-  have hinvx : PConstructible (1 / x) := PConstructible.div PConstructible.base_one hx
-  have h2x : PConstructible (2 * x) := PConstructible.mul two_Pconstructible hx
-  have h2divx : PConstructible (2 / x) := PConstructible.div two_Pconstructible hx
-  have hneg : PConstructible (-(2 / x)) := by
-    convert PConstructible.sub zero_Pconstructible h2divx
-    ring
-  -- A rectangle whose bottom edge is the horizontal segment `[-(2/x), 2x] × {x}`:
-  -- centre `(x - 1/x, x + 1)`, width `2x + 2/x`, height `2`.
-  have hRect := PConstructibleCurve.rectangle (x - 1 / x) (x + 1) (2 * x + 2 / x) 2
-    (PConstructible.sub hx hinvx) (PConstructible.add hx PConstructible.base_one)
-    (PConstructible.add h2x h2divx) two_Pconstructible (by positivity) (by norm_num)
-  -- Crop to `y ≤ x`, leaving only that bottom edge.
-  have hT := PConstructibleCurve.restrict hRect (-(2 / x)) (2 * x) (x - 1) x
-    hneg h2x (PConstructible.sub hx PConstructible.base_one) hx
-  -- The rectangle's left and right edges, in the form the constructor states them.
-  have hedgeL : x - 1 / x - (2 * x + 2 / x) / 2 = -(2 / x) := by ring
-  have hedgeR : x - 1 / x + (2 * x + 2 / x) / 2 = 2 * x := by ring
-  refine PConstructible.inter_x (y := x) PConstructibleCurve.exp_two hT ?_
+  refine abscissa_Pconstructible PConstructibleCurve.exp_two hx ?_
   ext ⟨u, v⟩
   simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
   constructor
-  · rintro ⟨hE, hR, hb1, hb2, hb3, hb4⟩
-    have hv : v = x := by
-      rcases hR with ⟨_, _, h3⟩ | ⟨h1, _, _⟩
-      · rcases h3 with h3 | h3 <;> linarith
-      · linarith
-    subst hv
+  · rintro ⟨hE, hline⟩
+    subst hline
     exact ⟨((Real.logb_eq_iff_rpow_eq (by norm_num) (by norm_num) hxpos).mpr hE.symm).symm, rfl⟩
   · rintro ⟨rfl, rfl⟩
-    refine ⟨(Real.rpow_logb (by norm_num) (by norm_num) hxpos).symm,
-      Or.inl ⟨by rw [hedgeL]; exact hlo, by rw [hedgeR]; exact hhi, Or.inl (by ring)⟩, ?_⟩
-    exact ⟨hlo, hhi, by linarith, le_rfl⟩
+    exact ⟨(Real.rpow_logb (by norm_num) (by norm_num) hxpos).symm, rfl⟩
 
 /-! ### Exponentials and general powers
 
@@ -371,42 +377,20 @@ abscissa, and `rpow_Pconstructible` then gets every positive base from
 
 -- Theorem: `2 ^ x` is P-constructible.
 --
--- The vertical segment at abscissa `x` must be tall enough to reach the curve, but
--- `2 ^ x` outgrows every polynomial in `x`, so there is no algebraic bound to use the way
--- AM-GM served `sqrt_Pconstructible`. Existence is enough, though: by the Archimedean
--- property some natural number exceeds `2 ^ x`, and every natural number is
--- P-constructible. Geometrically that is just "draw a rectangle tall enough".
+-- `2 ^ x` outgrows every polynomial in `x`, so there is no algebraic bound on it to
+-- supply. None is needed: `ordinate_Pconstructible` gets its segment from the
+-- Archimedean property rather than from a formula.
 theorem rpow_two_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible ((2 : ℝ) ^ x) := by
-  obtain ⟨n, hn⟩ := exists_nat_gt ((2 : ℝ) ^ x)
-  have hpos : (0 : ℝ) < (2 : ℝ) ^ x := Real.rpow_pos_of_pos (by norm_num) x
-  have hn0 : (0 : ℝ) < (n : ℝ) := lt_trans hpos hn
-  have hnP : PConstructible ((n : ℝ)) := nat_Pconstructible n
-  have hnegn : PConstructible (-(n : ℝ)) := by
-    convert PConstructible.sub zero_Pconstructible hnP
-    ring
-  -- Rectangle of centre `(x + 1, 0)`, width `2`, height `2n`: its left edge is the
-  -- segment `{x} × [-n, n]`, which straddles `2 ^ x`.
-  have hRect := PConstructibleCurve.rectangle (x + 1) 0 2 (2 * (n : ℝ))
-    (PConstructible.add hx PConstructible.base_one) zero_Pconstructible
-    two_Pconstructible (PConstructible.mul two_Pconstructible hnP)
-    (by norm_num) (by linarith)
-  have hT := PConstructibleCurve.restrict hRect (x - 1) x (-(n : ℝ)) (n : ℝ)
-    (PConstructible.sub hx PConstructible.base_one) hx hnegn hnP
-  refine PConstructible.inter_y (x := x) PConstructibleCurve.exp_two hT ?_
+  refine ordinate_Pconstructible PConstructibleCurve.exp_two hx ?_
   ext ⟨u, v⟩
   simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
   constructor
-  · rintro ⟨hE, hR, hb1, hb2, hb3, hb4⟩
-    have hu : u = x := by
-      rcases hR with ⟨h1, _, _⟩ | ⟨_, _, h3⟩
-      · linarith
-      · rcases h3 with h3 | h3 <;> linarith
-    subst hu
+  · rintro ⟨hE, hline⟩
+    subst hline
     exact ⟨rfl, hE⟩
   · rintro ⟨rfl, rfl⟩
-    exact ⟨rfl, Or.inr ⟨by linarith, by linarith, Or.inl (by ring)⟩,
-      by linarith, le_rfl, by linarith, by linarith⟩
+    exact ⟨rfl, rfl⟩
 
 -- Theorem: `a ^ b` is P-constructible for positive P-constructible `a` and
 -- P-constructible `b`, since `a ^ b = 2 ^ (b * logb 2 a)`.
