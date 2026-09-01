@@ -574,4 +574,197 @@ theorem exp_one_Pconstructible : PConstructible (Real.exp 1) := by
   exact rpow_Pconstructible two_Pconstructible
     (PConstructible.div PConstructible.base_one hln2) (by norm_num)
 
+
+/-! ### Sine and cosine
+
+`PConstructibleCurve.arc_of_length` used in earnest. Instead of measuring an arc whose
+endpoints are already known, lay out an arc of known *length* and ask where it ends. On
+the unit circle that question is radian measure: the arc that starts at `(1, 0)` and runs
+for length `x` ends at `(cos x, sin x)`.
+
+Reaching that far endpoint takes a second curve, cutting the first there and nowhere else,
+and the complementary arc supplies one — the arc that starts at `(-1, 0)` and runs
+backwards for length `π - x` covers the remainder of the upper half circle, so the two
+abut at the single point `(cos x, sin x)`. Both start at P-constructible points and have
+P-constructible lengths, `x` and `π - x`, the latter because `π` is P-constructible.
+
+That settles `0 ≤ x ≤ π`, and reduction mod `2π` removes the restriction. This is what
+`arc_of_length` buys: every earlier constructor locates a point of a curve by cutting it
+with another curve, never by measuring along it, so none of them can turn a length into
+an angle. -/
+
+/-- The unit circle traced from angle `u` at unit speed, in the direction `s = ±1`
+(`s = 1` counterclockwise, `s = -1` clockwise). Unit speed is what makes the parameter
+`t` double as arc length. -/
+noncomputable def circleArcParam (u s : ℝ) : ℝ → ℝ × ℝ := fun t => circleParam (u + s * t)
+
+theorem speed_circleArcParam {s : ℝ} (hs : s ^ 2 = 1) (u t : ℝ) :
+    speed (circleArcParam u s) t = 1 := by
+  have hlin : HasDerivAt (fun r : ℝ => u + s * r) s t := by
+    simpa using ((hasDerivAt_id t).const_mul s).const_add u
+  have hc : HasDerivAt (fun r : ℝ => (circleArcParam u s r).1)
+      (-Real.sin (u + s * t) * s) t := hlin.cos
+  have hsn : HasDerivAt (fun r : ℝ => (circleArcParam u s r).2)
+      (Real.cos (u + s * t) * s) t := hlin.sin
+  have hpyth : (-Real.sin (u + s * t) * s) ^ 2 + (Real.cos (u + s * t) * s) ^ 2 = 1 :=
+    calc (-Real.sin (u + s * t) * s) ^ 2 + (Real.cos (u + s * t) * s) ^ 2
+        = (Real.sin (u + s * t) ^ 2 + Real.cos (u + s * t) ^ 2) * s ^ 2 := by ring
+      _ = 1 := by rw [Real.sin_sq_add_cos_sq, hs]; ring
+  rw [speed, hc.deriv, hsn.deriv, hpyth, Real.sqrt_one]
+
+-- Theorem: the parameter of `circleArcParam` is arc length, so an arc traced over
+-- `[0, L]` has length exactly `L`.
+theorem arcLengthOf_circleArcParam {s : ℝ} (hs : s ^ 2 = 1) (u L : ℝ) :
+    arcLengthOf (circleArcParam u s) 0 L = L := by
+  rw [arcLengthOf, show speed (circleArcParam u s) = fun _ => (1 : ℝ) from
+    funext (speed_circleArcParam hs u)]
+  simp
+
+-- Theorem: two angles landing on the same point of the unit circle and differing by less
+-- than a full turn are equal. This is the injectivity behind both the side condition of
+-- `arc_of_length` and the "meet in exactly one point" hypothesis of `inter_x`/`inter_y`.
+theorem angle_eq_of_cos_eq_of_sin_eq {θ₁ θ₂ : ℝ} (hlt : |θ₁ - θ₂| < 2 * Real.pi)
+    (hc : Real.cos θ₁ = Real.cos θ₂) (hs : Real.sin θ₁ = Real.sin θ₂) : θ₁ = θ₂ := by
+  have hone : Real.cos (θ₁ - θ₂) = 1 := by
+    rw [Real.cos_sub, hc, hs]
+    nlinarith [Real.sin_sq_add_cos_sq θ₂]
+  obtain ⟨hlo, hhi⟩ := abs_lt.mp hlt
+  have := (Real.cos_eq_one_iff_of_lt_of_lt hlo hhi).mp hone
+  linarith
+
+-- Theorem: `s = ±1` is the only content of `s ^ 2 = 1`.
+theorem eq_one_or_neg_one_of_sq_eq_one {s : ℝ} (hs : s ^ 2 = 1) : s = 1 ∨ s = -1 := by
+  have h : (s - 1) * (s + 1) = 0 := by nlinarith [hs]
+  rcases mul_eq_zero.mp h with h | h
+  · exact Or.inl (by linarith)
+  · exact Or.inr (by linarith)
+
+-- Theorem: the arc of the unit circle that starts at a P-constructible point of it and
+-- runs for a P-constructible length `L ≤ π` is a P-constructible curve.
+--
+-- The bound `L ≤ π` is only what the injectivity side condition of `arc_of_length` needs
+-- (any `L < 2 * π` would do); it costs nothing below, where the arcs used are shorter
+-- than a half turn anyway.
+theorem circleArc_PConstructibleCurve {u s L : ℝ} (hs : s ^ 2 = 1)
+    (hL : 0 ≤ L) (hLpi : L ≤ Real.pi) (hLc : PConstructible L)
+    (hcu : PConstructible (Real.cos u)) (hsu : PConstructible (Real.sin u)) :
+    PConstructibleCurve (circleArcParam u s '' Set.Icc 0 L) := by
+  have hpi := Real.pi_pos
+  have hlin : ∀ t : ℝ, HasDerivAt (fun r : ℝ => u + s * r) s t := fun t => by
+    simpa using ((hasDerivAt_id t).const_mul s).const_add u
+  refine PConstructibleCurve.arc_of_length unitCircle_PConstructibleCurve (circleArcParam u s)
+    hL ?_ ?_ ?_ ?_ ?_ ?_ hLc (arcLengthOf_circleArcParam hs u L)
+  · -- the arc lies on the unit circle
+    rintro p ⟨t, _, rfl⟩
+    simp only [Set.mem_ofPred_eq, circleArcParam, circleParam, sub_zero]
+    norm_num
+  · -- injective on `[0, L]`: the angles swept differ by at most `L ≤ π < 2 * π`
+    intro t₁ ht₁ t₂ ht₂ h
+    obtain ⟨ht₁0, ht₁L⟩ := ht₁
+    obtain ⟨ht₂0, ht₂L⟩ := ht₂
+    have hc : Real.cos (u + s * t₁) = Real.cos (u + s * t₂) := congrArg Prod.fst h
+    have hsn : Real.sin (u + s * t₁) = Real.sin (u + s * t₂) := congrArg Prod.snd h
+    rcases eq_one_or_neg_one_of_sq_eq_one hs with rfl | rfl
+    · have := angle_eq_of_cos_eq_of_sin_eq
+        (by rw [abs_lt]; constructor <;> linarith) hc hsn
+      linarith
+    · have := angle_eq_of_cos_eq_of_sin_eq
+        (by rw [abs_lt]; constructor <;> linarith) hc hsn
+      linarith
+  · -- differentiable in each coordinate
+    intro t _
+    exact ⟨(hlin t).cos.differentiableAt, (hlin t).sin.differentiableAt⟩
+  · -- unit speed, hence integrable
+    rw [show speed (circleArcParam u s) = fun _ => (1 : ℝ) from
+      funext (speed_circleArcParam hs u)]
+    exact intervalIntegrable_const
+  · simpa [circleArcParam, circleParam] using hcu
+  · simpa [circleArcParam, circleParam] using hsu
+
+-- Theorem: `cos x` and `sin x` are P-constructible for P-constructible `x` in `[0, π]`.
+--
+-- The two arcs meet only at angle `x`: a point common to both is `(cos θ₁, sin θ₁)` for
+-- some `θ₁ ≤ x` and `(cos θ₂, sin θ₂)` for some `θ₂ ≥ x`, and since the two angles differ
+-- by less than a full turn they must be equal, which forces both to be `x`.
+theorem cos_sin_Pconstructible_of_mem_Icc {x : ℝ} (hx : PConstructible x)
+    (h0 : 0 ≤ x) (hpi : x ≤ Real.pi) :
+    PConstructible (Real.cos x) ∧ PConstructible (Real.sin x) := by
+  have hpipos := Real.pi_pos
+  -- The arc from `(1, 0)` of length `x`, sweeping angles `[0, x]`.
+  have hA : PConstructibleCurve (circleArcParam 0 1 '' Set.Icc 0 x) :=
+    circleArc_PConstructibleCurve (by norm_num) h0 hpi hx
+      (by simpa using PConstructible.base_one) (by simpa using zero_Pconstructible)
+  -- The arc from `(-1, 0)` of length `π - x`, sweeping angles `[x, π]` backwards.
+  have hB : PConstructibleCurve (circleArcParam Real.pi (-1) '' Set.Icc 0 (Real.pi - x)) :=
+    circleArc_PConstructibleCurve (by norm_num) (by linarith) (by linarith)
+      (PConstructible.sub pi_Pconstructible hx)
+      (by simpa using neg_one_Pconstructible) (by simpa using zero_Pconstructible)
+  have hinter : circleArcParam 0 1 '' Set.Icc 0 x ∩
+      circleArcParam Real.pi (-1) '' Set.Icc 0 (Real.pi - x) = {(Real.cos x, Real.sin x)} := by
+    ext p
+    simp only [Set.mem_inter_iff, Set.mem_image, Set.mem_Icc, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨⟨t₁, ⟨ht₁0, ht₁x⟩, rfl⟩, t₂, ⟨ht₂0, ht₂x⟩, heq⟩
+      have hc : Real.cos (Real.pi + -1 * t₂) = Real.cos (0 + 1 * t₁) := congrArg Prod.fst heq
+      have hsn : Real.sin (Real.pi + -1 * t₂) = Real.sin (0 + 1 * t₁) := congrArg Prod.snd heq
+      have hang : Real.pi + -1 * t₂ = 0 + 1 * t₁ :=
+        angle_eq_of_cos_eq_of_sin_eq (by rw [abs_lt]; constructor <;> linarith) hc hsn
+      have ht₁ : t₁ = x := by linarith
+      subst ht₁
+      simp [circleArcParam, circleParam]
+    · rintro rfl
+      exact ⟨⟨x, ⟨h0, le_rfl⟩, by simp [circleArcParam, circleParam]⟩,
+        Real.pi - x, ⟨by linarith, le_rfl⟩, by simp [circleArcParam, circleParam]⟩
+  exact ⟨PConstructible.inter_x hA hB hinter, PConstructible.inter_y hA hB hinter⟩
+
+-- Theorem: every real number sits a whole number of turns away from one in `[0, 2π)`.
+theorem exists_int_turns (x : ℝ) :
+    ∃ n : ℤ, 0 ≤ x - n * (2 * Real.pi) ∧ x - n * (2 * Real.pi) < 2 * Real.pi := by
+  have h2pi : (0 : ℝ) < 2 * Real.pi := by linarith [Real.pi_pos]
+  refine ⟨⌊x / (2 * Real.pi)⌋, ?_, ?_⟩
+  · have h := mul_le_mul_of_nonneg_right (Int.floor_le (x / (2 * Real.pi))) h2pi.le
+    rw [div_mul_cancel₀ _ h2pi.ne'] at h
+    linarith
+  · have h := mul_lt_mul_of_pos_right (Int.lt_floor_add_one (x / (2 * Real.pi))) h2pi
+    rw [div_mul_cancel₀ _ h2pi.ne'] at h
+    linarith
+
+-- Theorem: `cos x` and `sin x` are P-constructible for every P-constructible `x`.
+--
+-- Reduction mod `2π`: the residue `r = x - n * (2π)` is P-constructible because `π` is,
+-- and if it exceeds `π` the reflection `2π - r` brings it back into `[0, π]` at the cost
+-- of a sign on the sine.
+theorem cos_sin_Pconstructible {x : ℝ} (hx : PConstructible x) :
+    PConstructible (Real.cos x) ∧ PConstructible (Real.sin x) := by
+  obtain ⟨n, hr0, hr2⟩ := exists_int_turns x
+  have hrP : PConstructible (x - n * (2 * Real.pi)) :=
+    PConstructible.sub hx (PConstructible.mul (int_Pconstructible n)
+      (PConstructible.mul two_Pconstructible pi_Pconstructible))
+  rw [← Real.cos_sub_int_mul_two_pi x n, ← Real.sin_sub_int_mul_two_pi x n]
+  rcases le_total (x - n * (2 * Real.pi)) Real.pi with h | h
+  · exact cos_sin_Pconstructible_of_mem_Icc hrP hr0 h
+  · obtain ⟨hc, hsn⟩ := cos_sin_Pconstructible_of_mem_Icc
+      (PConstructible.sub (PConstructible.mul two_Pconstructible pi_Pconstructible) hrP)
+      (by linarith) (by linarith [Real.pi_pos])
+    rw [Real.cos_two_pi_sub] at hc
+    rw [Real.sin_two_pi_sub] at hsn
+    refine ⟨hc, ?_⟩
+    have h0 := PConstructible.sub zero_Pconstructible hsn
+    convert h0 using 1
+    ring
+
+-- Theorem: the cosine of a P-constructible number is P-constructible.
+theorem cos_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.cos x) :=
+  (cos_sin_Pconstructible hx).1
+
+-- Theorem: the sine of a P-constructible number is P-constructible.
+theorem sin_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.sin x) :=
+  (cos_sin_Pconstructible hx).2
+
+-- Theorem: the tangent of a P-constructible number is P-constructible. No hypothesis is
+-- needed at the poles: there `cos x = 0`, and Lean's division makes `tan x = 0`, which is
+-- P-constructible anyway.
+theorem tan_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.tan x) := by
+  rw [Real.tan_eq_sin_div_cos]
+  exact PConstructible.div (sin_Pconstructible hx) (cos_Pconstructible hx)
 end Pconstructible

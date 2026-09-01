@@ -33,8 +33,9 @@ arithmetic operations (`+ - * /`) from `1`, together with intersecting a point o
 of two constructible curves, and `PConstructibleCurve : Set (ℝ × ℝ) → Prop` for
 point-sets reachable from a finite sequence of curve constructions (axis-aligned
 ellipses, axis-aligned rectangles, degree-≤7 polynomial graphs with rational
-coefficients, power laws) and the geometric operations of stretching, rotating by
-whole-degree increments, and intersecting.
+coefficients, power laws, the exponential `y = 2 ^ x`) and the geometric operations of
+stretching, rotating by whole-degree increments, cropping to a rectangular window, and
+marking off an arc of prescribed length.
 
 The two are mutually inductive: a `PConstructibleCurve` may need `PConstructible`
 parameters (e.g. an ellipse's center and dimensions), and `PConstructible` may need
@@ -42,8 +43,11 @@ a `PConstructibleCurve` (reading off the coordinate of a curve-curve intersectio
 point, or the arc length of a piece of one), so they must be declared together.
 
 Arc length is measured by `arcLengthOf`, which integrates `speed` over a parameter
-interval. The parametrization is supplied at the point of extraction rather than being
-stored in `PConstructibleCurve`; see the comment on `PConstructible.arc_length`.
+interval, and it is used in both directions: `PConstructible.arc_length` reads the
+length of a given arc off the plane, while `PConstructibleCurve.arc_of_length` lays out
+an arc of a given length. Either way the parametrization is supplied at the point of
+use rather than being stored in `PConstructibleCurve`; see the comment on
+`PConstructible.arc_length`.
 -/
 
 namespace Pconstructible
@@ -190,6 +194,41 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
       PConstructibleCurve
         (S ∩ {p : ℝ × ℝ | xmin ≤ p.1 ∧ p.1 ≤ xmax ∧ ymin ≤ p.2 ∧ p.2 ≤ ymax})
 
+  -- Mark off an arc of prescribed `PConstructible` length `x` along a constructible
+  -- curve, starting from a `PConstructible` point of it. Modelling: pinning a string of
+  -- known length to a marked point of a drawn curve and laying it along the curve.
+  --
+  -- This is the converse of `PConstructible.arc_length`, and the two are deliberately
+  -- complementary. There one knows *both* endpoints of an arc and reads off its length;
+  -- here one knows *one* endpoint and the length, and gets the arc itself as a curve. So
+  -- the far endpoint `γ b` is emphatically not required to be `PConstructible`: that is
+  -- the whole point, since intersecting the resulting arc against another curve is what
+  -- makes the far endpoint's coordinates reachable in turn (this is how `Real.cos` and
+  -- `Real.sin` become P-constructible; see `Pptc.Basic`).
+  --
+  -- The side conditions on `γ` are exactly those of `PConstructible.arc_length`, and for
+  -- the same reasons: `hsub` and `hinj` make `γ` a genuine non-retracing tracing of a
+  -- piece of `S`, `hdiff` and `hint` make its length meaningful. Note `hdiff` also forces
+  -- `γ` to be continuous, so the arc produced is connected: a single stroke, not a
+  -- scattering of pieces of `S`.
+  --
+  -- Unlike `PConstructible.arc_length` no constraint on `b` is needed, even though `γ` is
+  -- again arbitrary and reparametrizable. Reparametrizing moves `b`, but it moves it in
+  -- lockstep with the arc's length, and that length is pinned to the `PConstructible`
+  -- number `x`; the traced set is unchanged.
+  | arc_of_length {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      (γ : ℝ → ℝ × ℝ) {a b : ℝ} (hab : a ≤ b)
+      -- `γ` traces an arc of `S`, without retracing, smoothly enough to have a length ...
+      (hsub : γ '' Set.Icc a b ⊆ S)
+      (hinj : Set.InjOn γ (Set.Icc a b))
+      (hdiff : ∀ t ∈ Set.Icc a b,
+        DifferentiableAt ℝ (fun s => (γ s).1) t ∧ DifferentiableAt ℝ (fun s => (γ s).2) t)
+      (hint : IntervalIntegrable (speed γ) MeasureTheory.volume a b)
+      -- ... starting at a P-constructible point of the plane ...
+      (hx₀ : PConstructible (γ a).1) (hy₀ : PConstructible (γ a).2)
+      -- ... and running for the P-constructible length `x`.
+      {x : ℝ} (hx : PConstructible x) (hlen : arcLengthOf γ a b = x) :
+      PConstructibleCurve (γ '' Set.Icc a b)
 end
 
 end Pconstructible
