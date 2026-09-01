@@ -155,6 +155,11 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- A power-law curve `y = a * x ^ b` for `x > 0`, with rational `a`, `b`.
   | power_law (a b : ℚ) :
       PConstructibleCurve {pt : ℝ × ℝ | 0 < pt.1 ∧ pt.2 = (a : ℝ) * pt.1 ^ (b : ℝ)}
+  -- The exponential curve `y = 2 ^ x`, with `^` real exponentiation. Unlike `power_law`
+  -- the variable is in the exponent, so this is genuinely a new family: it is what makes
+  -- logarithms reachable, by reading off the other coordinate.
+  | exp_two :
+      PConstructibleCurve {p : ℝ × ℝ | p.2 = (2 : ℝ) ^ p.1}
   -- Closure operations (axioms, not derived from `PConstructible` on ℝ)
   -- Uniform scaling by a `PConstructible` factor.
   | stretch {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)

@@ -21,6 +21,8 @@ import Pptc.Defs
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
+import Mathlib.Analysis.SpecialFunctions.Log.Base
+import Mathlib.Analysis.Complex.ExponentialBounds
 import Mathlib.Tactic.FunProp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
@@ -285,5 +287,80 @@ theorem pi_Pconstructible : PConstructible Real.pi := by
   · simpa [circleParam] using zero_Pconstructible
   · simpa [circleParam] using neg_one_Pconstructible
   · simpa [circleParam] using zero_Pconstructible
+
+/-! ### `logb 2` is P-constructible
+
+Reading off the *other* coordinate of the exponential curve. The point of `y = 2 ^ x`
+lying at height `a` sits at abscissa `logb 2 a`, so a horizontal segment at height `a`
+cuts the curve exactly there. As in `sqrt_Pconstructible`, that segment is obtained as
+the bottom edge of a genuine rectangle, isolated by cropping.
+
+The bounds `-(2/a) ≤ logb 2 a ≤ 2 * a` say the segment is long enough to reach the
+crossing; they play the role AM-GM played for square roots. -/
+
+-- Theorem: `logb 2` is trapped between two P-constructible expressions on `(0, ∞)`.
+-- Both bounds come from `log t ≤ t - 1` (applied to `a` and to `a⁻¹`) together with
+-- `log 2 > 1/2`.
+theorem logb_two_bounds {a : ℝ} (ha : 0 < a) :
+    -(2 / a) ≤ Real.logb 2 a ∧ Real.logb 2 a ≤ 2 * a := by
+  have hl2 : (1 : ℝ) / 2 < Real.log 2 := by
+    have h := Real.log_two_gt_d9
+    norm_num at h ⊢
+    linarith
+  have hl2pos : (0 : ℝ) < Real.log 2 := by linarith
+  have hup : Real.log a ≤ a - 1 := Real.log_le_sub_one_of_pos ha
+  have hlow : 1 - 1 / a ≤ Real.log a := by
+    have hinv : Real.log a⁻¹ ≤ a⁻¹ - 1 := Real.log_le_sub_one_of_pos (inv_pos.mpr ha)
+    rw [Real.log_inv, inv_eq_one_div] at hinv
+    linarith
+  rw [Real.logb]
+  constructor
+  · rw [le_div_iff₀ hl2pos]
+    have key : -(2 / a) * Real.log 2 ≤ 1 - 1 / a := by
+      have hid : (1 - 1 / a) - -(2 / a) * Real.log 2 = (a - 1 + 2 * Real.log 2) / a := by
+        field_simp
+        ring
+      rw [← sub_nonneg, hid]
+      exact div_nonneg (by linarith) ha.le
+    linarith
+  · rw [div_le_iff₀ hl2pos]
+    nlinarith [mul_pos ha (by linarith : (0 : ℝ) < Real.log 2 - 1 / 2)]
+
+-- Theorem: `logb 2 x` is P-constructible for positive P-constructible `x`.
+theorem logb_two_Pconstructible {x : ℝ} (hx : PConstructible x) (hxpos : 0 < x) :
+    PConstructible (Real.logb 2 x) := by
+  obtain ⟨hlo, hhi⟩ := logb_two_bounds hxpos
+  have hinvx : PConstructible (1 / x) := PConstructible.div PConstructible.base_one hx
+  have h2x : PConstructible (2 * x) := PConstructible.mul two_Pconstructible hx
+  have h2divx : PConstructible (2 / x) := PConstructible.div two_Pconstructible hx
+  have hneg : PConstructible (-(2 / x)) := by
+    convert PConstructible.sub zero_Pconstructible h2divx
+    ring
+  -- A rectangle whose bottom edge is the horizontal segment `[-(2/x), 2x] × {x}`:
+  -- centre `(x - 1/x, x + 1)`, width `2x + 2/x`, height `2`.
+  have hRect := PConstructibleCurve.rectangle (x - 1 / x) (x + 1) (2 * x + 2 / x) 2
+    (PConstructible.sub hx hinvx) (PConstructible.add hx PConstructible.base_one)
+    (PConstructible.add h2x h2divx) two_Pconstructible (by positivity) (by norm_num)
+  -- Crop to `y ≤ x`, leaving only that bottom edge.
+  have hT := PConstructibleCurve.restrict hRect (-(2 / x)) (2 * x) (x - 1) x
+    hneg h2x (PConstructible.sub hx PConstructible.base_one) hx
+  -- The rectangle's left and right edges, in the form the constructor states them.
+  have hedgeL : x - 1 / x - (2 * x + 2 / x) / 2 = -(2 / x) := by ring
+  have hedgeR : x - 1 / x + (2 * x + 2 / x) / 2 = 2 * x := by ring
+  refine PConstructible.inter_x (y := x) PConstructibleCurve.exp_two hT ?_
+  ext ⟨u, v⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hE, hR, hb1, hb2, hb3, hb4⟩
+    have hv : v = x := by
+      rcases hR with ⟨_, _, h3⟩ | ⟨h1, _, _⟩
+      · rcases h3 with h3 | h3 <;> linarith
+      · linarith
+    subst hv
+    exact ⟨((Real.logb_eq_iff_rpow_eq (by norm_num) (by norm_num) hxpos).mpr hE.symm).symm, rfl⟩
+  · rintro ⟨rfl, rfl⟩
+    refine ⟨(Real.rpow_logb (by norm_num) (by norm_num) hxpos).symm,
+      Or.inl ⟨by rw [hedgeL]; exact hlo, by rw [hedgeR]; exact hhi, Or.inl (by ring)⟩, ?_⟩
+    exact ⟨hlo, hhi, by linarith, le_rfl⟩
 
 end Pconstructible
