@@ -22,6 +22,8 @@ import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 import Mathlib.Analysis.SpecialFunctions.Log.Base
+import Mathlib.Analysis.SpecialFunctions.Arsinh
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 import Mathlib.Tactic.FunProp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
@@ -401,5 +403,175 @@ theorem rpow_Pconstructible {a b : ℝ} (ha : PConstructible a) (hb : PConstruct
       Real.rpow_logb (by norm_num) (by norm_num) hapos]
   rw [← key]
   exact rpow_two_Pconstructible (PConstructible.mul hb (logb_two_Pconstructible ha hapos))
+
+
+/-! ### The natural logarithm
+
+`ln a` comes out of the *arc length of a parabola*, which is the one place the geometry
+supplies a logarithm. Arc length of `y = x ^ 2` over `[0, m]` is `∫₀^m √(1 + 4t²) dt`,
+whose antiderivative carries an `arsinh`, and `arsinh` is a logarithm.
+
+Choosing `m = (a² - 1) / (4a)` makes that logarithm exactly `ln a`, because
+
+  `√(1 + 4m²) = (a² + 1) / (2a)`  and so  `2m + √(1 + 4m²) = a`.
+
+The standard parabola is used rather than a scaled one, so `poly_graph` applies directly
+and no `stretch` is needed; the scaling is absorbed into the endpoint `m` instead. -/
+
+/-- The standard parabola `y = x ^ 2`, parametrized by abscissa. -/
+def parabolaParam : ℝ → ℝ × ℝ := fun t => (t, t ^ 2)
+
+theorem speed_parabolaParam (t : ℝ) :
+    speed parabolaParam t = Real.sqrt (1 + 4 * t ^ 2) := by
+  have h1 : deriv (fun s : ℝ => (parabolaParam s).1) t = 1 := by
+    change deriv (fun s : ℝ => s) t = 1
+    simp
+  have h2 : deriv (fun s : ℝ => (parabolaParam s).2) t = 2 * t := by
+    change deriv (fun s : ℝ => s ^ 2) t = 2 * t
+    simp
+  rw [speed, h1, h2]
+  congr 1
+  ring
+
+/-- An antiderivative of `√(1 + 4t²)`. -/
+noncomputable def parabolaAntideriv (t : ℝ) : ℝ :=
+  t * Real.sqrt (1 + 4 * t ^ 2) / 2 + Real.arsinh (2 * t) / 4
+
+theorem hasDerivAt_parabolaAntideriv (t : ℝ) :
+    HasDerivAt parabolaAntideriv (Real.sqrt (1 + 4 * t ^ 2)) t := by
+  have hu : (0 : ℝ) < 1 + 4 * t ^ 2 := by positivity
+  have hspos : (0 : ℝ) < Real.sqrt (1 + 4 * t ^ 2) := Real.sqrt_pos.mpr hu
+  have hs2 : Real.sqrt (1 + 4 * t ^ 2) ^ 2 = 1 + 4 * t ^ 2 := Real.sq_sqrt hu.le
+  have hp : HasDerivAt (fun s : ℝ => s ^ 2) (2 * t) t := by simpa using hasDerivAt_pow 2 t
+  have hsq : HasDerivAt (fun s : ℝ => 1 + 4 * s ^ 2) (8 * t) t := by
+    have h2 : HasDerivAt (fun s : ℝ => 1 + 4 * s ^ 2) (4 * (2 * t)) t :=
+      (hp.const_mul (4 : ℝ)).const_add (1 : ℝ)
+    have he : (4 : ℝ) * (2 * t) = 8 * t := by ring
+    rwa [he] at h2
+  have hsqrt : HasDerivAt (fun s : ℝ => Real.sqrt (1 + 4 * s ^ 2))
+      (8 * t / (2 * Real.sqrt (1 + 4 * t ^ 2))) t := hsq.sqrt hu.ne'
+  have hterm1 : HasDerivAt (fun s : ℝ => s * Real.sqrt (1 + 4 * s ^ 2) / 2)
+      ((1 * Real.sqrt (1 + 4 * t ^ 2) + t * (8 * t / (2 * Real.sqrt (1 + 4 * t ^ 2)))) / 2) t :=
+    ((hasDerivAt_id t).mul hsqrt).div_const 2
+  have h2t : (1 : ℝ) + (2 * t) ^ 2 = 1 + 4 * t ^ 2 := by ring
+  have hterm2 : HasDerivAt (fun s : ℝ => Real.arsinh (2 * s) / 4)
+      ((Real.sqrt (1 + 4 * t ^ 2))⁻¹ * (2 * 1) / 4) t := by
+    have hc := (Real.hasDerivAt_arsinh (2 * t)).comp t ((hasDerivAt_id t).const_mul 2)
+    rw [h2t] at hc
+    exact hc.div_const 4
+  have hval : (1 * Real.sqrt (1 + 4 * t ^ 2)
+        + t * (8 * t / (2 * Real.sqrt (1 + 4 * t ^ 2)))) / 2
+      + (Real.sqrt (1 + 4 * t ^ 2))⁻¹ * (2 * 1) / 4 = Real.sqrt (1 + 4 * t ^ 2) := by
+    field_simp
+    nlinarith [hs2, hspos]
+  have hsum := hterm1.add hterm2
+  rw [hval] at hsum
+  exact hsum
+
+theorem arcLengthOf_parabolaParam (u v : ℝ) :
+    arcLengthOf parabolaParam u v = parabolaAntideriv v - parabolaAntideriv u := by
+  rw [arcLengthOf]
+  simp only [speed_parabolaParam]
+  refine intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (fun x _ => hasDerivAt_parabolaAntideriv x) ?_
+  apply Continuous.intervalIntegrable
+  fun_prop
+
+/-- The standard parabola `y = x ^ 2`, as the graph of `X ^ 2` over `ℚ`. -/
+theorem parabola_PConstructibleCurve :
+    PConstructibleCurve
+      {pt : ℝ × ℝ | pt.2 = Polynomial.aeval pt.1 ((Polynomial.X : Polynomial ℚ) ^ 2)} :=
+  PConstructibleCurve.poly_graph (Polynomial.X ^ 2) (by simp)
+
+theorem parabolaArc_Pconstructible {u v : ℝ} (hu : PConstructible u) (hv : PConstructible v)
+    (huv : u ≤ v) : PConstructible (arcLengthOf parabolaParam u v) := by
+  refine PConstructible.arc_length parabola_PConstructibleCurve parabolaParam huv
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · rintro p ⟨t, _, rfl⟩
+    simp [parabolaParam]
+  · intro t₁ _ t₂ _ h
+    exact congrArg Prod.fst h
+  · intro t _
+    refine ⟨?_, ?_⟩
+    · change DifferentiableAt ℝ (fun s : ℝ => s) t
+      exact differentiableAt_id
+    · change DifferentiableAt ℝ (fun s : ℝ => s ^ 2) t
+      exact differentiableAt_id.pow 2
+  · rw [show speed parabolaParam = fun t => Real.sqrt (1 + 4 * t ^ 2) from
+      funext speed_parabolaParam]
+    apply Continuous.intervalIntegrable
+    fun_prop
+  · simpa [parabolaParam] using hu
+  · simpa [parabolaParam] using sq_Pconstructible hu
+  · simpa [parabolaParam] using hv
+  · simpa [parabolaParam] using sq_Pconstructible hv
+
+theorem parabolaAntideriv_Pconstructible {m : ℝ} (hm : PConstructible m) :
+    PConstructible (parabolaAntideriv m) := by
+  have h0 : parabolaAntideriv 0 = 0 := by simp [parabolaAntideriv]
+  rcases le_total 0 m with hmm | hmm
+  · have h := parabolaArc_Pconstructible zero_Pconstructible hm hmm
+    rwa [arcLengthOf_parabolaParam, h0, sub_zero] at h
+  · have h := parabolaArc_Pconstructible hm zero_Pconstructible hmm
+    rw [arcLengthOf_parabolaParam, h0, zero_sub] at h
+    have h2 := PConstructible.sub zero_Pconstructible h
+    convert h2 using 1
+    ring
+
+theorem parabolaAntideriv_val {a : ℝ} (hapos : 0 < a) :
+    parabolaAntideriv ((a ^ 2 - 1) / (4 * a))
+      = (a ^ 4 - 1) / (16 * a ^ 2) + Real.log a / 4 := by
+  have ha : a ≠ 0 := hapos.ne'
+  set m := (a ^ 2 - 1) / (4 * a) with hmdef
+  have hsv : Real.sqrt (1 + 4 * m ^ 2) = (a ^ 2 + 1) / (2 * a) := by
+    rw [show (1 : ℝ) + 4 * m ^ 2 = ((a ^ 2 + 1) / (2 * a)) ^ 2 from by
+      rw [hmdef]; field_simp; ring]
+    exact Real.sqrt_sq (by positivity)
+  have hars : Real.arsinh (2 * m) = Real.log a := by
+    unfold Real.arsinh
+    rw [show (1 : ℝ) + (2 * m) ^ 2 = 1 + 4 * m ^ 2 from by ring, hsv]
+    congr 1
+    rw [hmdef]
+    field_simp
+    ring
+  rw [parabolaAntideriv, hsv, hars, hmdef]
+  field_simp
+  ring
+
+-- Theorem: the natural logarithm of a positive P-constructible number is P-constructible.
+theorem log_Pconstructible {a : ℝ} (ha : PConstructible a) (hapos : 0 < a) :
+    PConstructible (Real.log a) := by
+  have ha0 : a ≠ 0 := hapos.ne'
+  have h4 : PConstructible (4 : ℝ) := by
+    convert PConstructible.mul two_Pconstructible two_Pconstructible
+    norm_num
+  have ha2 : PConstructible (a ^ 2) := sq_Pconstructible ha
+  have ha4 : PConstructible (a ^ 4) := by
+    convert sq_Pconstructible ha2 using 1
+    ring
+  have hm : PConstructible ((a ^ 2 - 1) / (4 * a)) :=
+    PConstructible.div (PConstructible.sub ha2 PConstructible.base_one)
+      (PConstructible.mul h4 ha)
+  have hG := parabolaAntideriv_Pconstructible hm
+  rw [parabolaAntideriv_val hapos] at hG
+  have hq : PConstructible ((a ^ 4 - 1) / (4 * a ^ 2)) :=
+    PConstructible.div (PConstructible.sub ha4 PConstructible.base_one)
+      (PConstructible.mul h4 ha2)
+  have hkey : Real.log a
+      = 4 * ((a ^ 4 - 1) / (16 * a ^ 2) + Real.log a / 4) - (a ^ 4 - 1) / (4 * a ^ 2) := by
+    field_simp
+    ring
+  rw [hkey]
+  exact PConstructible.sub (PConstructible.mul h4 hG) hq
+
+-- e is P-constructible: ln is now available, so `e = 2 ^ (1 / ln 2)`.
+theorem exp_one_Pconstructible : PConstructible (Real.exp 1) := by
+  have hln2 : PConstructible (Real.log 2) := log_Pconstructible two_Pconstructible (by norm_num)
+  have h : Real.exp 1 = (2 : ℝ) ^ (1 / Real.log 2) := by
+    rw [Real.rpow_def_of_pos (by norm_num)]
+    rw [mul_one_div, div_self (Real.log_ne_zero_of_pos_of_ne_one (by norm_num) (by norm_num))]
+  rw [h]
+  exact rpow_Pconstructible two_Pconstructible
+    (PConstructible.div PConstructible.base_one hln2) (by norm_num)
 
 end Pconstructible
