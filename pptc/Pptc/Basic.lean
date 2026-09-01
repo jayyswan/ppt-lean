@@ -32,8 +32,7 @@ import Mathlib.Tactic.Ring
 Basic theorems about P-constructible numbers.
 
 `PConstructible` itself (and the mutually-inductive `PConstructibleCurve`) are
-defined in `Pptc.Defs`; this module proves the numbers reachable through the base
-arithmetic closure (`+ - * /` from `1`) alone are exactly the rationals.
+defined in `Pptc.Defs`; this module proves various facts about P-constructible numbers.
 -/
 
 namespace Pconstructible
@@ -93,19 +92,32 @@ theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
   · rw [Real.sqrt_eq_zero_of_nonpos h]
     exact zero_Pconstructible
   · push Not at h
-    -- x > 0: construct `sqrt x` as the intersection of `y = t ^ (1/2)` with the
-    -- vertical segment `t = x`, using `sqrt x ≤ (x + 1) / 2` (AM-GM) to guarantee
-    -- the segment is tall enough to actually meet the curve.
+    -- x > 0. A zero-width rectangle is not a drawable shape, so the vertical segment
+    -- `{x} × [-(x+1)/2, (x+1)/2]` is obtained instead as the *left edge* of a genuine
+    -- rectangle — centre `(x + 1, 0)`, width `2`, height `x + 1`, so its left edge sits
+    -- at `x` and its right edge at `x + 2` — isolated by cropping to `x`-coordinates at
+    -- most `x`. That segment meets the curve `y = t ^ (1/2)` exactly at `(x, √x)`, using
+    -- `√x ≤ (x + 1)/2` (AM-GM) to know the edge is tall enough to reach the curve.
+    have h_two : PConstructible (2 : ℝ) := by
+      convert PConstructible.add PConstructible.base_one PConstructible.base_one
+      norm_num
     have hx1 : PConstructible (x + 1) := PConstructible.add hx PConstructible.base_one
+    have hxm1 : PConstructible (x - 1) := PConstructible.sub hx PConstructible.base_one
+    have hnx1 : PConstructible (-(x + 1)) := by
+      convert PConstructible.sub zero_Pconstructible hx1
+      ring
     have hS := PConstructibleCurve.power_law 1 (1 / 2)
-    have hT := PConstructibleCurve.rectangle x 0 0 (x + 1) hx zero_Pconstructible
-      zero_Pconstructible hx1
+    have hRect := PConstructibleCurve.rectangle (x + 1) 0 2 (x + 1) hx1 zero_Pconstructible
+      h_two hx1 (by norm_num) (by linarith)
+    have hT := PConstructibleCurve.restrict hRect (x - 1) x (-(x + 1)) (x + 1)
+      hxm1 hx hnx1 hx1
     refine PConstructible.inter_y (x := x) hS hT ?_
     ext ⟨a, b⟩
     simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
     push_cast
     constructor
-    · rintro ⟨⟨ha, hb⟩, hor⟩
+    · rintro ⟨⟨ha, hb⟩, hor, hbox⟩
+      obtain ⟨hb1, hb2, _, _⟩ := hbox
       have ha' : a = x := by
         rcases hor with ⟨h1, h2, h3⟩ | ⟨h1, h2, h3⟩
         · linarith
@@ -114,9 +126,13 @@ theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
       exact ⟨rfl, by rw [hb, one_mul, Real.sqrt_eq_rpow]⟩
     · rintro ⟨ha, hb⟩
       subst ha
-      refine ⟨⟨h, by rw [hb, one_mul, Real.sqrt_eq_rpow]⟩, Or.inr ⟨?_, ?_, Or.inl (by ring)⟩⟩
-      · nlinarith [Real.sq_sqrt h.le, Real.sqrt_nonneg a]
-      · nlinarith [Real.sq_sqrt h.le, Real.sqrt_nonneg a, sq_nonneg (Real.sqrt a - 1)]
+      subst hb
+      have hnn := Real.sqrt_nonneg a
+      have hamgm : Real.sqrt a ≤ (a + 1) / 2 := by
+        nlinarith [Real.sq_sqrt h.le, Real.sqrt_nonneg a, sq_nonneg (Real.sqrt a - 1)]
+      refine ⟨⟨h, by rw [one_mul, Real.sqrt_eq_rpow]⟩,
+        Or.inr ⟨by linarith, by linarith, Or.inl (by ring)⟩, ?_⟩
+      exact ⟨by linarith, le_refl a, by linarith, by linarith⟩
 
 -- Theorem: the square of a P-constructible number is P-constructible.
 theorem sq_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (x ^ 2) := by
@@ -225,7 +241,7 @@ theorem unitCircle_PConstructibleCurve :
     PConstructibleCurve
       {p : ℝ × ℝ | ((p.1 - 0) / (2 / 2)) ^ 2 + ((p.2 - 0) / (2 / 2)) ^ 2 = 1} :=
   PConstructibleCurve.ellipse 0 0 2 2 zero_Pconstructible zero_Pconstructible
-    two_Pconstructible two_Pconstructible
+    two_Pconstructible two_Pconstructible (by norm_num) (by norm_num)
 
 /-- The unit circle parametrized by angle. Restricted to `[0, π]` this traces the upper
 half circle injectively. -/

@@ -124,16 +124,24 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- Base curve families
   -- An axis-aligned ellipse, given by center `(cx, cy)` and full bounding-box
   -- `width`/`height` (semi-axes `width / 2`, `height / 2`), all `PConstructible`.
+  -- `width` and `height` must be positive: a degenerate ellipse cannot be drawn, and
+  -- without this the divisions below would be by zero (which Lean evaluates to `0`,
+  -- making the whole locus meaningless rather than merely empty).
   | ellipse (cx cy width height : ℝ)
       (hcx : PConstructible cx) (hcy : PConstructible cy)
-      (hw : PConstructible width) (hh : PConstructible height) :
+      (hw : PConstructible width) (hh : PConstructible height)
+      (hw_pos : 0 < width) (hh_pos : 0 < height) :
       PConstructibleCurve
         {p : ℝ × ℝ | ((p.1 - cx) / (width / 2)) ^ 2 + ((p.2 - cy) / (height / 2)) ^ 2 = 1}
   -- An axis-aligned rectangle (its boundary), given by center `(cx, cy)` and full
   -- `width`/`height`, all `PConstructible`.
+  -- As for `ellipse`, `width` and `height` must be positive: a rectangle collapsed to a
+  -- segment or a point is not a drawable shape. Use `restrict` to cut a genuine
+  -- rectangle down to one of its edges instead.
   | rectangle (cx cy width height : ℝ)
       (hcx : PConstructible cx) (hcy : PConstructible cy)
-      (hw : PConstructible width) (hh : PConstructible height) :
+      (hw : PConstructible width) (hh : PConstructible height)
+      (hw_pos : 0 < width) (hh_pos : 0 < height) :
       PConstructibleCurve
         {p : ℝ × ℝ |
           (cx - width / 2 ≤ p.1 ∧ p.1 ≤ cx + width / 2 ∧
@@ -160,6 +168,22 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
             let θ := (n : ℝ) * (Real.pi / 180)
             (p.1 * Real.cos θ - p.2 * Real.sin θ,
              p.1 * Real.sin θ + p.2 * Real.cos θ)) '' S)
+  -- Crop a curve to an axis-aligned window with `PConstructible` bounds, modelling
+  -- cropping a shape to a rectangular frame.
+  --
+  -- This is not needed for arc length: `PConstructible.arc_length` takes `γ '' Icc a b ⊆ S`,
+  -- a *subset*, so a piece of a curve can already be measured without cutting the curve
+  -- itself. Its purpose is `inter_x` / `inter_y`, which demand that two curves meet in
+  -- exactly one point. Most natural intersections are not singletons (a line crosses a
+  -- circle twice, a polynomial can meet a line at up to `natDegree` points), so cropping
+  -- one curve until only the wanted crossing survives is what makes those constructors
+  -- usable.
+  | restrict {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      (xmin xmax ymin ymax : ℝ)
+      (hxmin : PConstructible xmin) (hxmax : PConstructible xmax)
+      (hymin : PConstructible ymin) (hymax : PConstructible ymax) :
+      PConstructibleCurve
+        (S ∩ {p : ℝ × ℝ | xmin ≤ p.1 ∧ p.1 ≤ xmax ∧ ymin ≤ p.2 ∧ p.2 ≤ ymax})
 
 end
 
