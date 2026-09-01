@@ -90,6 +90,11 @@ theorem zero_Pconstructible : PConstructible (0 : ℝ) := by
   convert PConstructible.sub PConstructible.base_one PConstructible.base_one
   simp
 
+-- Theorem: the negation of a P-constructible number is P-constructible. `PConstructible`
+-- has no negation constructor, but `0 - x` serves and this saves spelling that out.
+theorem neg_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (-x) := by
+  simpa using PConstructible.sub zero_Pconstructible hx
+
 -- Theorem: 2 is P-constructible.
 theorem two_Pconstructible : PConstructible (2 : ℝ) := by
   convert PConstructible.add PConstructible.base_one PConstructible.base_one
@@ -116,13 +121,8 @@ theorem ordinate_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve
   obtain ⟨hylo, hyhi⟩ := abs_lt.mp hn
   have hn0 : (0 : ℝ) < (n : ℝ) := lt_of_le_of_lt (abs_nonneg y) hn
   have hnP : PConstructible ((n : ℝ)) := nat_Pconstructible n
-  have hnegn : PConstructible (-(n : ℝ)) := by
-    convert PConstructible.sub zero_Pconstructible hnP
-    ring
-  have hmem : ((c, y) : ℝ × ℝ) ∈ S := by
-    have hx : ((c, y) : ℝ × ℝ) ∈ S ∩ {p : ℝ × ℝ | p.1 = c} := by
-      rw [h]; exact rfl
-    exact hx.1
+  have hnegn : PConstructible (-(n : ℝ)) := neg_Pconstructible hnP
+  have hmem : ((c, y) : ℝ × ℝ) ∈ S := (h.ge rfl).1
   -- Rectangle of centre `(c + 1, 0)`, width `2`, height `2n`; its left edge is the
   -- segment `{c} × [-n, n]`, isolated by cropping to abscissae at most `c`.
   have hRect := PConstructibleCurve.rectangle (c + 1) 0 2 (2 * (n : ℝ))
@@ -156,13 +156,8 @@ theorem abscissa_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve
   obtain ⟨hxlo, hxhi⟩ := abs_lt.mp hn
   have hn0 : (0 : ℝ) < (n : ℝ) := lt_of_le_of_lt (abs_nonneg x) hn
   have hnP : PConstructible ((n : ℝ)) := nat_Pconstructible n
-  have hnegn : PConstructible (-(n : ℝ)) := by
-    convert PConstructible.sub zero_Pconstructible hnP
-    ring
-  have hmem : ((x, c) : ℝ × ℝ) ∈ S := by
-    have hy : ((x, c) : ℝ × ℝ) ∈ S ∩ {p : ℝ × ℝ | p.2 = c} := by
-      rw [h]; exact rfl
-    exact hy.1
+  have hnegn : PConstructible (-(n : ℝ)) := neg_Pconstructible hnP
+  have hmem : ((x, c) : ℝ × ℝ) ∈ S := (h.ge rfl).1
   -- Rectangle of centre `(0, c + 1)`, width `2n`, height `2`; its bottom edge is the
   -- segment `[-n, n] × {c}`, isolated by cropping to ordinates at most `c`.
   have hRect := PConstructibleCurve.rectangle 0 (c + 1) (2 * (n : ℝ)) 2
@@ -266,12 +261,7 @@ theorem arcLength_segment_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstruct
   -- `p ≠ q` means the segment is nondegenerate in at least one coordinate, which is what
   -- makes the parametrization injective.
   have hkey : q.1 - p.1 ≠ 0 ∨ q.2 - p.2 ≠ 0 := by
-    rcases eq_or_ne (q.1 - p.1) 0 with h1 | h1
-    · refine Or.inr fun h2 => hne ?_
-      have e1 : p.1 = q.1 := by linarith
-      have e2 : p.2 = q.2 := by linarith
-      exact Prod.ext e1 e2
-    · exact Or.inl h1
+    simpa [sub_ne_zero, ne_comm, Prod.ext_iff, not_and_or, or_iff_not_imp_left] using hne
   refine PConstructible.arc_length hS _ zero_le_one hsub ?_ ?_ ?_ ?_ ?_ ?_ ?_
   · -- injective on `[0, 1]`
     intro t₁ _ t₂ _ h
@@ -354,9 +344,8 @@ sin θ)` on `[0, 2π]` has `γ 0 = γ (2π)`, so it fails the injectivity side c
 `(1, 0)` and `(-1, 0)` are P-constructible points, as required. Its length is `π`. -/
 
 -- Theorem: -1 is P-constructible.
-theorem neg_one_Pconstructible : PConstructible (-1 : ℝ) := by
-  convert PConstructible.sub zero_Pconstructible PConstructible.base_one
-  norm_num
+theorem neg_one_Pconstructible : PConstructible (-1 : ℝ) :=
+  neg_Pconstructible PConstructible.base_one
 
 /-- The unit circle, obtained from the `ellipse` constructor with centre `(0, 0)` and
 bounding box `2 × 2`. -/
@@ -526,10 +515,8 @@ theorem hasDerivAt_parabolaAntideriv (t : ℝ) :
   have hs2 : Real.sqrt (1 + 4 * t ^ 2) ^ 2 = 1 + 4 * t ^ 2 := Real.sq_sqrt hu.le
   have hp : HasDerivAt (fun s : ℝ => s ^ 2) (2 * t) t := by simpa using hasDerivAt_pow 2 t
   have hsq : HasDerivAt (fun s : ℝ => 1 + 4 * s ^ 2) (8 * t) t := by
-    have h2 : HasDerivAt (fun s : ℝ => 1 + 4 * s ^ 2) (4 * (2 * t)) t :=
-      (hp.const_mul (4 : ℝ)).const_add (1 : ℝ)
-    have he : (4 : ℝ) * (2 * t) = 8 * t := by ring
-    rwa [he] at h2
+    have h2 := (hp.const_mul (4 : ℝ)).const_add (1 : ℝ)
+    rwa [show (4 : ℝ) * (2 * t) = 8 * t from by ring] at h2
   have hsqrt : HasDerivAt (fun s : ℝ => Real.sqrt (1 + 4 * s ^ 2))
       (8 * t / (2 * Real.sqrt (1 + 4 * t ^ 2))) t := hsq.sqrt hu.ne'
   have hterm1 : HasDerivAt (fun s : ℝ => s * Real.sqrt (1 + 4 * s ^ 2) / 2)
@@ -546,9 +533,8 @@ theorem hasDerivAt_parabolaAntideriv (t : ℝ) :
       + (Real.sqrt (1 + 4 * t ^ 2))⁻¹ * (2 * 1) / 4 = Real.sqrt (1 + 4 * t ^ 2) := by
     field_simp
     nlinarith [hs2, hspos]
-  have hsum := hterm1.add hterm2
-  rw [hval] at hsum
-  exact hsum
+  rw [← hval]
+  exact hterm1.add hterm2
 
 theorem arcLengthOf_parabolaParam (u v : ℝ) :
     arcLengthOf parabolaParam u v = parabolaAntideriv v - parabolaAntideriv u := by
@@ -596,9 +582,7 @@ theorem parabolaAntideriv_Pconstructible {m : ℝ} (hm : PConstructible m) :
     rwa [arcLengthOf_parabolaParam, h0, sub_zero] at h
   · have h := parabolaArc_Pconstructible hm zero_Pconstructible hmm
     rw [arcLengthOf_parabolaParam, h0, zero_sub] at h
-    have h2 := PConstructible.sub zero_Pconstructible h
-    convert h2 using 1
-    ring
+    simpa using neg_Pconstructible h
 
 theorem parabolaAntideriv_val {a : ℝ} (hapos : 0 < a) :
     parabolaAntideriv ((a ^ 2 - 1) / (4 * a))
@@ -746,12 +730,10 @@ theorem circleArc_PConstructibleCurve {u s L : ℝ} (hs : s ^ 2 = 1)
     obtain ⟨ht₂0, ht₂L⟩ := ht₂
     have hc : Real.cos (u + s * t₁) = Real.cos (u + s * t₂) := congrArg Prod.fst h
     have hsn : Real.sin (u + s * t₁) = Real.sin (u + s * t₂) := congrArg Prod.snd h
-    rcases eq_one_or_neg_one_of_sq_eq_one hs with rfl | rfl
-    · have := angle_eq_of_cos_eq_of_sin_eq
-        (by rw [abs_lt]; constructor <;> linarith) hc hsn
-      linarith
-    · have := angle_eq_of_cos_eq_of_sin_eq
-        (by rw [abs_lt]; constructor <;> linarith) hc hsn
+    -- both signs of `s` run the same argument
+    rcases eq_one_or_neg_one_of_sq_eq_one hs with rfl | rfl <;>
+      have := angle_eq_of_cos_eq_of_sin_eq
+        (by rw [abs_lt]; constructor <;> linarith) hc hsn <;>
       linarith
   · -- differentiable in each coordinate
     intro t _
@@ -831,9 +813,7 @@ theorem cos_sin_Pconstructible {x : ℝ} (hx : PConstructible x) :
     rw [Real.cos_two_pi_sub] at hc
     rw [Real.sin_two_pi_sub] at hsn
     refine ⟨hc, ?_⟩
-    have h0 := PConstructible.sub zero_Pconstructible hsn
-    convert h0 using 1
-    ring
+    simpa using neg_Pconstructible hsn
 
 -- Theorem: the cosine of a P-constructible number is P-constructible.
 theorem cos_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.cos x) :=

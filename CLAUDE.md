@@ -37,6 +37,8 @@ restarts the LSP). Do not use it as the edit-compile-fix cycle.
 ## Gotchas
 
 - Source files use **CRLF** line endings. Preserve them when scripting edits.
+- A **100-character line-length linter** is active. `lean_multi_attempt` reports it, so
+  check candidate one-liners there before committing to them.
 - Toolchain is **Lean 4.33**. `le_or_lt` is not an identifier here — use `le_total`.
 - `speed` deliberately spells out `√(x'² + y'²)` rather than `‖deriv γ t‖`, because
   Mathlib's product norm on `ℝ × ℝ` is the *supremum* norm and would compute the wrong
