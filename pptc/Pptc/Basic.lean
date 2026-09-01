@@ -26,6 +26,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Analysis.SpecialFunctions.Arsinh
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Periodic
 import Mathlib.Tactic.FunProp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
@@ -875,5 +876,203 @@ theorem arctan_Pconstructible {x : ℝ} (hx : PConstructible x) :
   rw [Real.arctan_eq_arcsin]
   refine arcsin_Pconstructible (PConstructible.div hx (sqrt_Pconstructible ?_))
   simpa [pow_two] using PConstructible.add PConstructible.base_one (PConstructible.mul hx hx)
+
+
+/-! ### The incomplete elliptic integral of the second kind
+
+`E(φ, k) = ∫₀^φ √(1 - k² sin²θ) dθ` *is* an arc length of an ellipse, and at the right
+size it is one on the nose. Trace the ellipse with semi-axes `1` and `b = √(1 - k²)` by
+
+  `γ θ = (sin θ, b cos θ)`,
+
+so `θ = 0` is the top of the ellipse and `θ` increases towards the right. Its speed is
+
+  `√(cos²θ + b² sin²θ) = √(cos²θ + (1 - k²) sin²θ) = √(1 - k² sin²θ)`,
+
+which is the integrand, so the arc swept over `[0, φ]` has length exactly `E(φ, k)`.
+
+Both endpoints of that arc are P-constructible points of the plane: the near one is
+`(0, b)` and the far one is `(sin φ, b cos φ)`. That is where `sin_Pconstructible` and
+`cos_Pconstructible` are spent, and it is all `PConstructible.arc_length` asks for — so
+the integral is read straight off the plane, with no auxiliary curve.
+
+A drawing program cannot name the parameter `φ`, and would instead cut the arc out with a
+wedge at the centre of the ellipse of angle `arctan (tan φ / b)`, the polar angle at which
+the parameter `φ` sits, after stretching the ellipse by `1 / b` to put a `1` on the other
+semi-axis and dividing the measured length by that same factor afterwards. Both steps are
+ways of *locating* the far endpoint; `arc_length` only requires that endpoint to be
+P-constructible, which the sine and cosine theorems already supply. So the ellipse is used
+here at exactly the size at which its arc length is `E(φ, k)`, and nothing is rescaled.
+
+Mathlib does not define the elliptic integrals, so they are spelled out here. -/
+
+/-- The integrand of the elliptic integral of the second kind, `√(1 - k² sin²θ)`. -/
+noncomputable def ellipticIntegrand (k θ : ℝ) : ℝ :=
+  Real.sqrt (1 - k ^ 2 * Real.sin θ ^ 2)
+
+/-- The incomplete elliptic integral of the second kind,
+`E(φ, k) = ∫₀^φ √(1 - k² sin²θ) dθ`.
+
+The modulus `k` is taken first, against the usual order of `E(φ, k)`, so that
+`ellipticE k` is the function of the amplitude `φ` that the periodicity lemmas below
+are about. -/
+noncomputable def ellipticE (k φ : ℝ) : ℝ :=
+  ∫ θ in (0 : ℝ)..φ, ellipticIntegrand k θ
+
+-- Theorem: at `k = 0` the ellipse is the unit circle and `E(φ, 0) = φ`, the arc length
+-- of the circle being its angle. A check that the definition is the right one.
+theorem ellipticE_zero (φ : ℝ) : ellipticE 0 φ = φ := by
+  simp [ellipticE, ellipticIntegrand]
+
+theorem continuous_ellipticIntegrand (k : ℝ) : Continuous (ellipticIntegrand k) := by
+  unfold ellipticIntegrand
+  fun_prop
+
+theorem intervalIntegrable_ellipticIntegrand (k a b : ℝ) :
+    IntervalIntegrable (ellipticIntegrand k) MeasureTheory.volume a b :=
+  (continuous_ellipticIntegrand k).intervalIntegrable a b
+
+/-- The ellipse centred at the origin with horizontal semi-axis `1` and vertical
+semi-axis `b`, from the `ellipse` constructor with bounding box `2 × 2b`. -/
+theorem ellipse_PConstructibleCurve {b : ℝ} (hb : PConstructible b) (hbpos : 0 < b) :
+    PConstructibleCurve
+      {p : ℝ × ℝ | ((p.1 - 0) / (2 / 2)) ^ 2 + ((p.2 - 0) / (2 * b / 2)) ^ 2 = 1} :=
+  PConstructibleCurve.ellipse 0 0 2 (2 * b) zero_Pconstructible zero_Pconstructible
+    two_Pconstructible (PConstructible.mul two_Pconstructible hb) (by norm_num) (by positivity)
+
+/-- The ellipse with semi-axes `1` and `b`, parametrized from the top. On `[0, π]` this
+traces the right half of it injectively, since `cos` is injective there. -/
+noncomputable def ellipseParam (b : ℝ) : ℝ → ℝ × ℝ := fun θ => (Real.sin θ, b * Real.cos θ)
+
+-- Theorem: the ellipse is traced at speed `√(cos²θ + b² sin²θ)`.
+theorem speed_ellipseParam (b θ : ℝ) :
+    speed (ellipseParam b) θ = Real.sqrt (Real.cos θ ^ 2 + b ^ 2 * Real.sin θ ^ 2) := by
+  have hc : HasDerivAt (fun s : ℝ => (ellipseParam b s).1) (Real.cos θ) θ :=
+    Real.hasDerivAt_sin θ
+  have hs : HasDerivAt (fun s : ℝ => (ellipseParam b s).2) (b * -Real.sin θ) θ :=
+    (Real.hasDerivAt_cos θ).const_mul b
+  rw [speed, hc.deriv, hs.deriv]
+  congr 1
+  ring
+
+-- Theorem: with `b² = 1 - k²` that speed is exactly the elliptic integrand.
+theorem speed_ellipseParam_eq {k b : ℝ} (hb : b ^ 2 = 1 - k ^ 2) (θ : ℝ) :
+    speed (ellipseParam b) θ = ellipticIntegrand k θ := by
+  rw [speed_ellipseParam, hb, ellipticIntegrand]
+  congr 1
+  linear_combination Real.sin_sq_add_cos_sq θ
+
+-- Theorem: so the arc swept over `[0, φ]` has length `E(φ, k)`.
+theorem arcLengthOf_ellipseParam {k b : ℝ} (hb : b ^ 2 = 1 - k ^ 2) (φ : ℝ) :
+    arcLengthOf (ellipseParam b) 0 φ = ellipticE k φ := by
+  rw [arcLengthOf, ellipticE]
+  simp only [speed_ellipseParam_eq hb]
+
+-- Theorem: `E(φ, k)` is P-constructible for `0 ≤ φ ≤ π`.
+--
+-- The bound `φ ≤ π` is exactly what the injectivity side condition of
+-- `PConstructible.arc_length` needs: past a half turn the parametrization comes back over
+-- ellipse it has already covered, and the integral would stop being a length.
+theorem ellipticE_Pconstructible_of_mem_Icc {k b φ : ℝ} (hb : b ^ 2 = 1 - k ^ 2)
+    (hbpos : 0 < b) (hbP : PConstructible b) (hφ : PConstructible φ)
+    (h0 : 0 ≤ φ) (hpi : φ ≤ Real.pi) : PConstructible (ellipticE k φ) := by
+  rw [← arcLengthOf_ellipseParam hb φ]
+  refine PConstructible.arc_length (ellipse_PConstructibleCurve hbP hbpos) (ellipseParam b)
+    h0 ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · -- the arc lies on the ellipse
+    rintro p ⟨θ, _, rfl⟩
+    simp only [Set.mem_ofPred_eq, ellipseParam, sub_zero]
+    field_simp
+    linear_combination Real.sin_sq_add_cos_sq θ
+  · -- injective on `[0, φ] ⊆ [0, π]`, because `cos` is
+    intro t₁ ht₁ t₂ ht₂ h
+    have hcos : Real.cos t₁ = Real.cos t₂ :=
+      mul_left_cancel₀ hbpos.ne' (congrArg Prod.snd h)
+    exact Real.injOn_cos (Set.Icc_subset_Icc le_rfl hpi ht₁)
+      (Set.Icc_subset_Icc le_rfl hpi ht₂) hcos
+  · -- differentiable in each coordinate
+    intro t _
+    exact ⟨(Real.hasDerivAt_sin t).differentiableAt,
+      ((Real.hasDerivAt_cos t).const_mul b).differentiableAt⟩
+  · -- the speed is continuous, hence integrable
+    rw [show speed (ellipseParam b) = ellipticIntegrand k from
+      funext (speed_ellipseParam_eq hb)]
+    exact intervalIntegrable_ellipticIntegrand k 0 φ
+  · simpa [ellipseParam] using zero_Pconstructible
+  · simpa [ellipseParam] using hbP
+  · simpa [ellipseParam] using sin_Pconstructible hφ
+  · simpa [ellipseParam] using PConstructible.mul hbP (cos_Pconstructible hφ)
+
+/-! Beyond a half turn the ellipse repeats, and so does `E`. Only `sin²θ` occurs in the
+integrand, so it has period `π`, and `E(φ + nπ, k) = E(φ, k) + n · E(π, k)`: reducing `φ`
+modulo `π` removes the restriction `0 ≤ φ ≤ π` above, exactly as reduction modulo `2π`
+did for `cos` and `sin`. -/
+
+-- Theorem: the integrand has period `π`, since `sin (θ + π) = -sin θ` is squared.
+theorem periodic_ellipticIntegrand (k : ℝ) :
+    Function.Periodic (ellipticIntegrand k) Real.pi := fun θ => by
+  simp [ellipticIntegrand, Real.sin_add_pi]
+
+-- Theorem: `E(φ + nπ, k) = E(φ, k) + n · E(π, k)`.
+theorem ellipticE_add_int_mul_pi (k φ : ℝ) (n : ℤ) :
+    ellipticE k (φ + n * Real.pi) = ellipticE k φ + n * ellipticE k Real.pi := by
+  have hper := periodic_ellipticIntegrand k
+  have hint : ∀ t₁ t₂ : ℝ,
+      IntervalIntegrable (ellipticIntegrand k) MeasureTheory.volume t₁ t₂ :=
+    fun t₁ t₂ => intervalIntegrable_ellipticIntegrand k t₁ t₂
+  -- the whole turns: `n` copies of one period, each of length `E(π, k)`
+  have hA : (∫ θ in (0 : ℝ)..(n : ℝ) * Real.pi, ellipticIntegrand k θ)
+      = n * ellipticE k Real.pi := by
+    have h := hper.intervalIntegral_add_zsmul_eq n 0 hint
+    simpa [ellipticE, zsmul_eq_mul] using h
+  -- the remainder: a translate of `[0, φ]` by a whole number of periods
+  have hB : (∫ θ in ((n : ℝ) * Real.pi)..(φ + (n : ℝ) * Real.pi), ellipticIntegrand k θ)
+      = ellipticE k φ := by
+    have h := intervalIntegral.integral_comp_add_right (a := (0 : ℝ)) (b := φ)
+      (ellipticIntegrand k) ((n : ℝ) * Real.pi)
+    have hshift : ∀ x : ℝ,
+        ellipticIntegrand k (x + (n : ℝ) * Real.pi) = ellipticIntegrand k x :=
+      fun x => hper.int_mul n x
+    simp only [hshift, zero_add] at h
+    rw [ellipticE, h]
+  rw [ellipticE, ← intervalIntegral.integral_add_adjacent_intervals
+    (b := (n : ℝ) * Real.pi) (hint 0 _) (hint _ _), hA, hB]
+  ring
+
+-- Theorem: every real number sits a whole number of half-turns away from one in `[0, π)`.
+theorem exists_int_half_turns (x : ℝ) :
+    ∃ n : ℤ, 0 ≤ x - n * Real.pi ∧ x - n * Real.pi ≤ Real.pi := by
+  have hpi : (0 : ℝ) < Real.pi := Real.pi_pos
+  refine ⟨⌊x / Real.pi⌋, ?_, ?_⟩
+  · have h := mul_le_mul_of_nonneg_right (Int.floor_le (x / Real.pi)) hpi.le
+    rw [div_mul_cancel₀ _ hpi.ne'] at h
+    linarith
+  · have h := mul_lt_mul_of_pos_right (Int.lt_floor_add_one (x / Real.pi)) hpi
+    rw [div_mul_cancel₀ _ hpi.ne'] at h
+    linarith
+
+-- Theorem: `E(φ, k)` is P-constructible for every P-constructible `φ` and every
+-- P-constructible `k` with `k² < 1`.
+--
+-- `k² < 1` is what makes the ellipse drawable: `b = √(1 - k²)` has to be a positive
+-- length. It is also exactly the range in which the integrand is real for every `θ`.
+theorem ellipticE_Pconstructible {k φ : ℝ} (hk : PConstructible k) (hφ : PConstructible φ)
+    (hk1 : k ^ 2 < 1) : PConstructible (ellipticE k φ) := by
+  have hb : Real.sqrt (1 - k ^ 2) ^ 2 = 1 - k ^ 2 := Real.sq_sqrt (by linarith)
+  have hbpos : 0 < Real.sqrt (1 - k ^ 2) := Real.sqrt_pos.mpr (by linarith)
+  have hbP : PConstructible (Real.sqrt (1 - k ^ 2)) :=
+    sqrt_Pconstructible (PConstructible.sub PConstructible.base_one (sq_Pconstructible hk))
+  obtain ⟨n, h0, hpi⟩ := exists_int_half_turns φ
+  have hrP : PConstructible (φ - n * Real.pi) :=
+    PConstructible.sub hφ (PConstructible.mul (int_Pconstructible n) pi_Pconstructible)
+  have hr := ellipticE_Pconstructible_of_mem_Icc hb hbpos hbP hrP h0 hpi
+  have hEpi := ellipticE_Pconstructible_of_mem_Icc hb hbpos hbP pi_Pconstructible
+    Real.pi_pos.le le_rfl
+  have hkey : ellipticE k φ
+      = ellipticE k (φ - n * Real.pi) + n * ellipticE k Real.pi := by
+    have h := ellipticE_add_int_mul_pi k (φ - n * Real.pi) n
+    rwa [sub_add_cancel] at h
+  rw [hkey]
+  exact PConstructible.add hr (PConstructible.mul (int_Pconstructible n) hEpi)
 
 end Pconstructible
