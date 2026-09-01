@@ -21,6 +21,8 @@ import Pptc.Defs
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Analysis.SpecialFunctions.Arsinh
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
@@ -374,28 +376,38 @@ theorem speed_circleParam (θ : ℝ) : speed circleParam θ = 1 := by
   have hs : HasDerivAt (fun s : ℝ => (circleParam s).2) (Real.cos θ) θ := Real.hasDerivAt_sin θ
   rw [speed, hc.deriv, hs.deriv, neg_sq, Real.sin_sq_add_cos_sq, Real.sqrt_one]
 
--- Theorem: the upper half of the unit circle has arc length exactly π.
-theorem arcLengthOf_circleParam : arcLengthOf circleParam 0 Real.pi = Real.pi := by
+-- Theorem: `circleParam` traces the circle at unit speed, so the arc swept from angle `0`
+-- to angle `L` has length exactly `L`; the upper half circle (`L = π`) is the case used
+-- for `pi_Pconstructible`.
+theorem arcLengthOf_circleParam (L : ℝ) : arcLengthOf circleParam 0 L = L := by
   rw [arcLengthOf]
   simp [speed_circleParam]
 
--- Theorem: π is P-constructible.
+/-! ### The circular arc: `arccos` and `π`
+
+The arc of the unit circle running from `(1, 0)` to `(x, √(1 - x²))` has length exactly
+`arccos x`, and both of those endpoints are P-constructible as soon as `x` is — so
+`PConstructible.arc_length` can measure it with no auxiliary curve. Taking `x = -1`
+sweeps the entire upper half circle and so produces `π`. -/
+
+-- Theorem: `arccos x` is P-constructible for P-constructible `x` in `[-1, 1]`.
 --
--- Note this is a genuinely new number: unlike `arcLength_segment_Pconstructible`, whose
--- conclusion was already reachable via `dist_Pconstructible`, π is transcendental and so
--- is *not* obtainable from the arithmetic closure or from `sqrt_Pconstructible`. It
--- enters only through `PConstructible.arc_length`.
-theorem pi_Pconstructible : PConstructible Real.pi := by
-  rw [← arcLengthOf_circleParam]
+-- The angle `arccos x` is at most `π`, which is exactly the range on which `cos` is
+-- injective, so the arc traced over `[0, arccos x]` never doubles back and its integral
+-- is a genuine length.
+theorem arccos_Pconstructible_of_mem_Icc {x : ℝ} (hx : PConstructible x)
+    (h₁ : -1 ≤ x) (h₂ : x ≤ 1) : PConstructible (Real.arccos x) := by
+  rw [← arcLengthOf_circleParam (Real.arccos x)]
   refine PConstructible.arc_length unitCircle_PConstructibleCurve circleParam
-    Real.pi_pos.le ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
-  · -- the half circle lies on the unit circle
+    (Real.arccos_nonneg x) ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · -- the arc lies on the unit circle
     rintro p ⟨θ, _, rfl⟩
     simp only [Set.mem_ofPred_eq, circleParam, sub_zero]
     norm_num
-  · -- injective on `[0, π]`, because `cos` is
-    intro t₁ h₁ t₂ h₂ h
-    exact Real.injOn_cos h₁ h₂ (congrArg Prod.fst h)
+  · -- injective on `[0, arccos x] ⊆ [0, π]`, because `cos` is
+    intro t₁ ht₁ t₂ ht₂ h
+    exact Real.injOn_cos.mono (Set.Icc_subset_Icc le_rfl (Real.arccos_le_pi x))
+      ht₁ ht₂ (congrArg Prod.fst h)
   · -- differentiable in each coordinate
     intro t _
     exact ⟨(Real.hasDerivAt_cos t).differentiableAt, (Real.hasDerivAt_sin t).differentiableAt⟩
@@ -404,8 +416,23 @@ theorem pi_Pconstructible : PConstructible Real.pi := by
     exact intervalIntegrable_const
   · simpa [circleParam] using PConstructible.base_one
   · simpa [circleParam] using zero_Pconstructible
-  · simpa [circleParam] using neg_one_Pconstructible
-  · simpa [circleParam] using zero_Pconstructible
+  · -- the far endpoint is `(x, √(1 - x²))`
+    simpa [circleParam, Real.cos_arccos h₁ h₂] using hx
+  · simpa [circleParam, Real.sin_arccos, pow_two] using
+      sqrt_Pconstructible (PConstructible.sub PConstructible.base_one (PConstructible.mul hx hx))
+
+-- Theorem: π is P-constructible.
+--
+-- Note this is a genuinely new number: unlike `arcLength_segment_Pconstructible`, whose
+-- conclusion was already reachable via `dist_Pconstructible`, π is transcendental and so
+-- is *not* obtainable from the arithmetic closure or from `sqrt_Pconstructible`. It
+-- enters only through `PConstructible.arc_length`.
+--
+-- It is the case `x = -1` of the lemma above: the arc from `(1, 0)` round to `(-1, 0)`
+-- is the whole upper half circle, so its length is `arccos (-1) = π`.
+theorem pi_Pconstructible : PConstructible Real.pi := by
+  rw [← Real.arccos_neg_one]
+  exact arccos_Pconstructible_of_mem_Icc neg_one_Pconstructible (by norm_num) (by norm_num)
 
 /-! ### `logb 2` is P-constructible
 
@@ -822,4 +849,51 @@ theorem sin_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (R
 theorem tan_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.tan x) := by
   rw [Real.tan_eq_sin_div_cos]
   exact PConstructible.div (sin_Pconstructible hx) (cos_Pconstructible hx)
+
+/-! ### Inverse trigonometric functions
+
+`arccos_Pconstructible_of_mem_Icc`, proved above alongside `π`, already does all of the
+geometry; what is left here is bookkeeping. Note how much cheaper these are than `cos`
+and `sin`: those needed `arc_of_length` to *lay out* an arc of known length, and then a
+second curve to discover where it landed. Here both endpoints are known from the start
+and only their separation along the circle is wanted, so `PConstructible.arc_length`
+simply reads it off.
+
+All three statements come out unconditional. Mathlib clamps the inverse functions outside
+their natural domain — `arccos x` is `π` for `x ≤ -1` and `0` for `x ≥ 1` — and those
+values are P-constructible too, so the bound `-1 ≤ x ≤ 1` is needed only by the geometric
+core and not by anything built on it. -/
+
+-- Theorem: the arccosine of a P-constructible number is P-constructible. No bound on `x`
+-- is needed: outside `[-1, 1]` Mathlib's `arccos` is constantly `π` or `0`.
+theorem arccos_Pconstructible {x : ℝ} (hx : PConstructible x) :
+    PConstructible (Real.arccos x) := by
+  rcases le_total x (-1) with h | h₁
+  · rw [Real.arccos_eq_pi.mpr h]
+    exact pi_Pconstructible
+  rcases le_total x 1 with h₂ | h₂
+  · exact arccos_Pconstructible_of_mem_Icc hx h₁ h₂
+  · rw [Real.arccos_eq_zero.mpr h₂]
+    exact zero_Pconstructible
+
+-- Theorem: the arcsine of a P-constructible number is P-constructible.
+--
+-- `arccos` is *defined* in Mathlib as `π / 2 - arcsin`, so this is the previous theorem
+-- rearranged; the complementary angle costs only a subtraction and a halving.
+theorem arcsin_Pconstructible {x : ℝ} (hx : PConstructible x) :
+    PConstructible (Real.arcsin x) := by
+  have h := PConstructible.sub (PConstructible.div pi_Pconstructible two_Pconstructible)
+    (arccos_Pconstructible hx)
+  rwa [Real.arccos_eq_pi_div_two_sub_arcsin, sub_sub_cancel] at h
+
+-- Theorem: the arctangent of a P-constructible number is P-constructible.
+--
+-- Via `arctan x = arcsin (x / √(1 + x²))`. Unlike `tan_Pconstructible` there are no poles
+-- to worry about, and `1 + x²` is positive, so the square root is a genuine one.
+theorem arctan_Pconstructible {x : ℝ} (hx : PConstructible x) :
+    PConstructible (Real.arctan x) := by
+  rw [Real.arctan_eq_arcsin]
+  refine arcsin_Pconstructible (PConstructible.div hx (sqrt_Pconstructible ?_))
+  simpa [pow_two] using PConstructible.add PConstructible.base_one (PConstructible.mul hx hx)
+
 end Pconstructible
