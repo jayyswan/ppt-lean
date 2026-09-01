@@ -363,4 +363,59 @@ theorem logb_two_Pconstructible {x : ℝ} (hx : PConstructible x) (hxpos : 0 < x
       Or.inl ⟨by rw [hedgeL]; exact hlo, by rw [hedgeR]; exact hhi, Or.inl (by ring)⟩, ?_⟩
     exact ⟨hlo, hhi, by linarith, le_rfl⟩
 
+/-! ### Exponentials and general powers
+
+`rpow_two_Pconstructible` reads off the `y`-coordinate of `y = 2 ^ x` above a given
+abscissa, and `rpow_Pconstructible` then gets every positive base from
+`a ^ b = 2 ^ (b * logb 2 a)`. -/
+
+-- Theorem: `2 ^ x` is P-constructible.
+--
+-- The vertical segment at abscissa `x` must be tall enough to reach the curve, but
+-- `2 ^ x` outgrows every polynomial in `x`, so there is no algebraic bound to use the way
+-- AM-GM served `sqrt_Pconstructible`. Existence is enough, though: by the Archimedean
+-- property some natural number exceeds `2 ^ x`, and every natural number is
+-- P-constructible. Geometrically that is just "draw a rectangle tall enough".
+theorem rpow_two_Pconstructible {x : ℝ} (hx : PConstructible x) :
+    PConstructible ((2 : ℝ) ^ x) := by
+  obtain ⟨n, hn⟩ := exists_nat_gt ((2 : ℝ) ^ x)
+  have hpos : (0 : ℝ) < (2 : ℝ) ^ x := Real.rpow_pos_of_pos (by norm_num) x
+  have hn0 : (0 : ℝ) < (n : ℝ) := lt_trans hpos hn
+  have hnP : PConstructible ((n : ℝ)) := nat_Pconstructible n
+  have hnegn : PConstructible (-(n : ℝ)) := by
+    convert PConstructible.sub zero_Pconstructible hnP
+    ring
+  -- Rectangle of centre `(x + 1, 0)`, width `2`, height `2n`: its left edge is the
+  -- segment `{x} × [-n, n]`, which straddles `2 ^ x`.
+  have hRect := PConstructibleCurve.rectangle (x + 1) 0 2 (2 * (n : ℝ))
+    (PConstructible.add hx PConstructible.base_one) zero_Pconstructible
+    two_Pconstructible (PConstructible.mul two_Pconstructible hnP)
+    (by norm_num) (by linarith)
+  have hT := PConstructibleCurve.restrict hRect (x - 1) x (-(n : ℝ)) (n : ℝ)
+    (PConstructible.sub hx PConstructible.base_one) hx hnegn hnP
+  refine PConstructible.inter_y (x := x) PConstructibleCurve.exp_two hT ?_
+  ext ⟨u, v⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hE, hR, hb1, hb2, hb3, hb4⟩
+    have hu : u = x := by
+      rcases hR with ⟨h1, _, _⟩ | ⟨_, _, h3⟩
+      · linarith
+      · rcases h3 with h3 | h3 <;> linarith
+    subst hu
+    exact ⟨rfl, hE⟩
+  · rintro ⟨rfl, rfl⟩
+    exact ⟨rfl, Or.inr ⟨by linarith, by linarith, Or.inl (by ring)⟩,
+      by linarith, le_rfl, by linarith, by linarith⟩
+
+-- Theorem: `a ^ b` is P-constructible for positive P-constructible `a` and
+-- P-constructible `b`, since `a ^ b = 2 ^ (b * logb 2 a)`.
+theorem rpow_Pconstructible {a b : ℝ} (ha : PConstructible a) (hb : PConstructible b)
+    (hapos : 0 < a) : PConstructible (a ^ b) := by
+  have key : (2 : ℝ) ^ (b * Real.logb 2 a) = a ^ b := by
+    rw [mul_comm, Real.rpow_mul (by norm_num : (0 : ℝ) ≤ 2),
+      Real.rpow_logb (by norm_num) (by norm_num) hapos]
+  rw [← key]
+  exact rpow_two_Pconstructible (PConstructible.mul hb (logb_two_Pconstructible ha hapos))
+
 end Pconstructible
