@@ -29,6 +29,7 @@ import Mathlib.Analysis.SpecialFunctions.Arsinh
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Periodic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.IntegrationByParts
+import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.FieldTheory.Minpoly.Basic
 import Mathlib.RingTheory.Algebraic.Integral
 import Mathlib.Tactic.FunProp
@@ -2522,5 +2523,938 @@ theorem ellipticE_sq_Pconstructible {k φ : ℝ} (hk : PConstructible k)
 theorem ellipticF_sq_Pconstructible {k φ : ℝ} (hk : PConstructible k)
     (hφ : PConstructible φ) (hk1 : k ^ 2 < 1) : PConstructible (ellipticF (k ^ 2) φ) :=
   ellipticF_Pconstructible (sq_Pconstructible hk) hφ hk1
+
+/-! ### The complete elliptic integral of the third kind
+
+  `Π(n, c) = ∫₀^{π/2} dθ / ((1 - n sin²θ) √(1 - c sin²θ))`
+
+is the one Legendre integral that is not an arc length and cannot be made into one. An arc
+length is `∫ √(x'² + y'²)`; the third-kind integrand has a pole, at `sin θ = 1/√n`, whose
+position moves with `n`, and no drawable family has that — Béziers and polynomial graphs
+are traced at speed `√(quartic)`, ellipses at `√(1 - c sin²θ)`, and scaling, rotating and
+cropping only change which quadratic form of the velocity is taken. So `Π` has to be
+carried back to `K` and `E`, which are already P-constructible, by an identity in the
+*parameter* `n` rather than by a construction.
+
+Write `Δ(θ) = √(1 - c sin²θ)` and
+
+  `A(n) = ∫₀^{π/2} sin²θ dθ / ((1 - n sin²θ) Δ(θ))`,
+
+so that `Π(n, c) = K + n A(n)`. The cubic `P(n) = n (c - n) (1 - n)` governs `A`: for every
+`n < 1` and `θ` there is the elementary identity `hasDerivAt_thirdKindAnti`,
+
+  `P'(n) sin²θ/((1-n s²)Δ) + 2P(n) sin⁴θ/((1-n s²)²Δ) - (1-n)/Δ + Δ`
+      `= d/dθ [ n sin θ cos θ Δ(θ) / (1 - n sin²θ) ]`,
+
+whose right-hand side vanishes at `θ = 0` and at `θ = π/2`. Integrating over the quarter
+turn therefore leaves `P'(n) A(n) + 2 P(n) B(n) = (1 - n) K - E`, with `B` the same integral
+with the denominator squared. The missing relation `B = A'` is obtained not by
+differentiating under the integral sign but by moving the parameter: run `n` along a path
+`ν(τ)` carrying `Q` with `Q² = ±P(ν)`, and Fubini on `[0, π/2] × [τ₀, τ₁]` gives
+
+  `Q(τ₁) A(ν τ₁) - Q(τ₀) A(ν τ₀) = ∫_{τ₀}^{τ₁} ρ ((1 - ν) K - E)`.
+
+That is `thirdKindPath_key`, the whole analytic content; the rest is a choice of path.
+Nothing constrains `ν` beyond `Q' = ρ P'(ν)` and `Q ν' = 2 ρ P(ν)`, so paths are free.
+
+`P` has roots `0`, `c`, `1` and `√(±P)` is real only between consecutive roots, so three
+paths are needed, each starting at a root (where `Q = 0`, pinning `A`): `ν = c sin²β` on
+`(0, c)`, `ν = (c + x²)/(1 + x²)` on `(c, 1)`, and `ν = -c x²` below `0`. The last two are
+written in `x`, not in the angle they are read in, because `ν` must stay below `1` on all of
+`ℝ` and the angular form `1 - (1-c) sin²φ` hits `1` at `φ = 0`.
+
+The roots themselves are reached by no path and are done separately: `n = 0` gives `Π = K`
+by inspection, and at `n = c` the cubic vanishes, so the displayed relation has only `A` in
+it and gives `Π = E / (1 - c)`.
+
+The standing hypothesis is `0 < c < 1`. The lower bound is what makes the complementary
+parameter `1 - c` itself less than `1`, as the first- and second-kind theorems require;
+`c = 0` is the circle, where `Π(n, 0) = π / (2 √(1 - n))` is elementary. -/
+
+/-- The cubic `P(n) = n (c - n) (1 - n)`. -/
+def thirdKindCubic (c n : ℝ) : ℝ := n * (c - n) * (1 - n)
+
+/-- Its derivative in `n`. -/
+def thirdKindCubicDeriv (c n : ℝ) : ℝ := c - 2 * (c + 1) * n + 3 * n ^ 2
+
+/-- The integrand of the elliptic integral of the third kind. -/
+noncomputable def ellipticPiIntegrand (c n θ : ℝ) : ℝ :=
+  1 / ((1 - n * Real.sin θ ^ 2) * ellipticEIntegrand c θ)
+
+/-- The complete elliptic integral of the third kind. -/
+noncomputable def ellipticPi (c n : ℝ) : ℝ :=
+  ∫ θ in (0 : ℝ)..(Real.pi / 2), ellipticPiIntegrand c n θ
+
+/-- The auxiliary integral `A(n) = ∫₀^{π/2} sin²θ / ((1 - n sin²θ) Δ(θ)) dθ`. -/
+noncomputable def ellipticPiAux (c n : ℝ) : ℝ :=
+  ∫ θ in (0 : ℝ)..(Real.pi / 2),
+    Real.sin θ ^ 2 / ((1 - n * Real.sin θ ^ 2) * ellipticEIntegrand c θ)
+
+/-- The integrand that the master identity integrates. -/
+noncomputable def thirdKindMaster (c n θ : ℝ) : ℝ :=
+  thirdKindCubicDeriv c n * Real.sin θ ^ 2 / ((1 - n * Real.sin θ ^ 2) * ellipticEIntegrand c θ)
+    + 2 * thirdKindCubic c n * Real.sin θ ^ 4
+        / ((1 - n * Real.sin θ ^ 2) ^ 2 * ellipticEIntegrand c θ)
+
+/-- The elementary antiderivative in `θ` of the master identity. -/
+noncomputable def thirdKindAnti (c n θ : ℝ) : ℝ :=
+  n * Real.sin θ * Real.cos θ * ellipticEIntegrand c θ / (1 - n * Real.sin θ ^ 2)
+
+/-! #### The master identity
+
+`thirdKindAnti_alg` is the comparison of derivatives with `sin θ`, `cos θ` and `Δ(θ)`
+replaced by plain variables subject to `s² + w² = 1` and `E² = 1 - c s²`. -/
+
+theorem hasDerivAt_ellipticEIntegrand (c θ : ℝ) (h : 1 - c * Real.sin θ ^ 2 ≠ 0) :
+    HasDerivAt (ellipticEIntegrand c)
+      (-(2 * c * Real.sin θ * Real.cos θ) / (2 * ellipticEIntegrand c θ)) θ :=
+  (((((Real.hasDerivAt_sin θ).pow 2).const_mul c).const_sub 1).congr_deriv
+    (by push_cast; ring)).sqrt h
+
+theorem thirdKindAnti_alg {s w E c n : ℝ} (hw : s ^ 2 + w ^ 2 = 1) (hE : E ^ 2 = 1 - c * s ^ 2)
+    (hEne : E ≠ 0) (hu : (1 : ℝ) - n * s ^ 2 ≠ 0) :
+    (((n * w * w + n * s * -s) * E + n * s * w * (-(2 * c * s * w) / (2 * E))) * (1 - n * s ^ 2)
+        - n * s * w * E * -(2 * n * s * w)) / (1 - n * s ^ 2) ^ 2
+      = (c - 2 * (c + 1) * n + 3 * n ^ 2) * s ^ 2 / ((1 - n * s ^ 2) * E)
+        + 2 * (n * (c - n) * (1 - n)) * s ^ 4 / ((1 - n * s ^ 2) ^ 2 * E)
+        - (1 - n) / E + E := by
+  field_simp
+  linear_combination (n ^ 2 * s ^ 2 * w ^ 2 + n * s ^ 2 + n * w ^ 2 - 1) * hE
+    - n * (2 * c * s ^ 2 - n * s ^ 2 - 1) * hw
+
+-- Theorem: the master identity. `thirdKindMaster` differs from an explicit elementary derivative
+-- by the two Legendre integrands, so integrating it over a full quarter turn reduces to
+-- `K` and `E`.
+theorem hasDerivAt_thirdKindAnti {c n : ℝ} (hc : c < 1) (hn : n < 1) (θ : ℝ) :
+    HasDerivAt (thirdKindAnti c n)
+      (thirdKindMaster c n θ - (1 - n) / ellipticEIntegrand c θ + ellipticEIntegrand c θ) θ := by
+  have hE := ellipticEIntegrand_pos hc θ
+  have hEsq := ellipticEIntegrand_sq hc θ
+  have hupos := one_sub_mul_sin_sq_pos hn θ
+  have hD := hasDerivAt_ellipticEIntegrand c θ (one_sub_mul_sin_sq_pos hc θ).ne'
+  have hu : HasDerivAt (fun t : ℝ => 1 - n * Real.sin t ^ 2)
+      (-(2 * n * Real.sin θ * Real.cos θ)) θ :=
+    ((((Real.hasDerivAt_sin θ).pow 2).const_mul n).const_sub 1).congr_deriv (by push_cast; ring)
+  have hnum : HasDerivAt
+      (fun t : ℝ => n * Real.sin t * Real.cos t * ellipticEIntegrand c t)
+      ((n * Real.cos θ * Real.cos θ + n * Real.sin θ * -Real.sin θ) * ellipticEIntegrand c θ
+        + n * Real.sin θ * Real.cos θ
+            * (-(2 * c * Real.sin θ * Real.cos θ) / (2 * ellipticEIntegrand c θ))) θ := by
+    have h1 : HasDerivAt (fun t : ℝ => n * Real.sin t * Real.cos t)
+        (n * Real.cos θ * Real.cos θ + n * Real.sin θ * -Real.sin θ) θ :=
+      ((Real.hasDerivAt_sin θ).const_mul n).mul (Real.hasDerivAt_cos θ)
+    have h2 : HasDerivAt (fun t : ℝ => ellipticEIntegrand c t)
+        (-(2 * c * Real.sin θ * Real.cos θ) / (2 * ellipticEIntegrand c θ)) θ := hD
+    exact h1.mul h2
+  refine (hnum.div hu hupos.ne').congr_deriv ?_
+  simp only [thirdKindMaster, thirdKindCubic, thirdKindCubicDeriv]
+  exact thirdKindAnti_alg (Real.sin_sq_add_cos_sq θ) hEsq hE.ne' hupos.ne'
+
+theorem continuous_thirdKindMaster {c n : ℝ} (hc : c < 1) (hn : n < 1) :
+    Continuous (thirdKindMaster c n) := by
+  have hD : Continuous (ellipticEIntegrand c) := continuous_ellipticEIntegrand c
+  have hu : Continuous fun θ : ℝ => 1 - n * Real.sin θ ^ 2 := by fun_prop
+  have hune : ∀ θ : ℝ, (1 : ℝ) - n * Real.sin θ ^ 2 ≠ 0 :=
+    fun θ => (one_sub_mul_sin_sq_pos hn θ).ne'
+  have hDne : ∀ θ : ℝ, ellipticEIntegrand c θ ≠ 0 := fun θ => (ellipticEIntegrand_pos hc θ).ne'
+  unfold thirdKindMaster
+  refine Continuous.add ?_ ?_
+  · exact (by fun_prop : Continuous fun θ : ℝ => thirdKindCubicDeriv c n * Real.sin θ ^ 2).div
+      (hu.mul hD) fun θ => mul_ne_zero (hune θ) (hDne θ)
+  · exact (by fun_prop : Continuous fun θ : ℝ => 2 * thirdKindCubic c n * Real.sin θ ^ 4).div
+      ((hu.pow 2).mul hD) fun θ => mul_ne_zero (pow_ne_zero 2 (hune θ)) (hDne θ)
+
+-- Theorem: integrating the master identity over a quarter turn gives `(1 - n) K - E`.
+theorem integral_thirdKindMaster {c n : ℝ} (hc : c < 1) (hn : n < 1) :
+    (∫ θ in (0 : ℝ)..(Real.pi / 2), thirdKindMaster c n θ)
+      = (1 - n) * ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2) := by
+  have hMc := continuous_thirdKindMaster hc hn
+  have hFc := continuous_ellipticFIntegrand hc
+  have hEc := continuous_ellipticEIntegrand c
+  have hkey : (∫ θ in (0 : ℝ)..(Real.pi / 2),
+      (thirdKindMaster c n θ - (1 - n) * ellipticFIntegrand c θ + ellipticEIntegrand c θ))
+      = thirdKindAnti c n (Real.pi / 2) - thirdKindAnti c n 0 := by
+    refine intervalIntegral.integral_eq_sub_of_hasDerivAt (fun θ _ => ?_) ?_
+    · have h := hasDerivAt_thirdKindAnti hc hn θ
+      simpa [ellipticFIntegrand, div_eq_mul_inv] using h
+    · exact ((hMc.sub (hFc.const_mul _)).add hEc).intervalIntegrable _ _
+  have hzero : thirdKindAnti c n (Real.pi / 2) - thirdKindAnti c n 0 = 0 := by
+    simp [thirdKindAnti]
+  rw [hzero] at hkey
+  rw [intervalIntegral.integral_add, intervalIntegral.integral_sub,
+    intervalIntegral.integral_const_mul] at hkey
+  · rw [← ellipticF, ← ellipticE] at hkey
+    linarith
+  · exact hMc.intervalIntegrable _ _
+  · exact (hFc.const_mul _).intervalIntegrable _ _
+  · exact (hMc.sub (hFc.const_mul _)).intervalIntegrable _ _
+  · exact hEc.intervalIntegrable _ _
+
+/-! #### Carrying `A` along a path of parameters
+
+The τ-derivative of the weighted integrand is `ρ` times `thirdKindMaster`, which the master
+identity integrates in `θ` to `ρ ((1 - ν) K - E)`; Fubini does the rest. `ν t < 1` is needed
+only on `[τ₀, τ₁]`, which lets a path run up to the root `n = 1` without reaching it. -/
+
+/-- The two-variable integrand carried along a path of parameters. -/
+noncomputable def thirdKindPathIntegrand (c : ℝ) (ν Q : ℝ → ℝ) (θ τ : ℝ) : ℝ :=
+  Q τ * Real.sin θ ^ 2 / ((1 - ν τ * Real.sin θ ^ 2) * ellipticEIntegrand c θ)
+
+theorem hasDerivAt_thirdKindPathIntegrand {c : ℝ} (hc : c < 1) {ν Q ρ νd : ℝ → ℝ}
+    (hν : ∀ t, HasDerivAt ν (νd t) t)
+    (hQ : ∀ t, HasDerivAt Q (ρ t * thirdKindCubicDeriv c (ν t)) t)
+    (hrel : ∀ t, Q t * νd t = 2 * ρ t * thirdKindCubic c (ν t))
+    {τ : ℝ} (hτ : ν τ < 1) (θ : ℝ) :
+    HasDerivAt (thirdKindPathIntegrand c ν Q θ) (ρ τ * thirdKindMaster c (ν τ) θ) τ := by
+  have hDpos := ellipticEIntegrand_pos hc θ
+  have hupos := one_sub_mul_sin_sq_pos hτ θ
+  have hnum : HasDerivAt (fun σ : ℝ => Q σ * Real.sin θ ^ 2)
+      (ρ τ * thirdKindCubicDeriv c (ν τ) * Real.sin θ ^ 2) τ := (hQ τ).mul_const _
+  have hden : HasDerivAt
+      (fun σ : ℝ => (1 - ν σ * Real.sin θ ^ 2) * ellipticEIntegrand c θ)
+      (-(νd τ * Real.sin θ ^ 2) * ellipticEIntegrand c θ) τ :=
+    (((hν τ).mul_const (Real.sin θ ^ 2)).const_sub 1).mul_const _
+  refine (hnum.div hden (mul_ne_zero hupos.ne' hDpos.ne')).congr_deriv ?_
+  simp only [thirdKindMaster, thirdKindCubic, thirdKindCubicDeriv]
+  have h := hrel τ
+  simp only [thirdKindCubic] at h
+  field_simp
+  ring_nf
+  linear_combination Real.sin θ ^ 4 * h
+
+theorem continuousAt_thirdKindMaster_prod {c : ℝ} (hc : c < 1) {θ m : ℝ} (hm : m < 1) :
+    ContinuousAt (fun p : ℝ × ℝ => thirdKindMaster c p.2 p.1) (θ, m) := by
+  have hD : Continuous fun p : ℝ × ℝ => ellipticEIntegrand c p.1 :=
+    (continuous_ellipticEIntegrand c).comp continuous_fst
+  have hu : Continuous fun p : ℝ × ℝ => 1 - p.2 * Real.sin p.1 ^ 2 := by fun_prop
+  have hupos : (0 : ℝ) < 1 - m * Real.sin θ ^ 2 := one_sub_mul_sin_sq_pos hm θ
+  have hDpos := ellipticEIntegrand_pos hc θ
+  simp only [thirdKindMaster, thirdKindCubic, thirdKindCubicDeriv]
+  refine ContinuousAt.add (ContinuousAt.div (by fun_prop) (hu.mul hD).continuousAt ?_)
+    (ContinuousAt.div (by fun_prop) ((hu.pow 2).mul hD).continuousAt ?_)
+  · exact mul_ne_zero hupos.ne' hDpos.ne'
+  · exact mul_ne_zero (pow_ne_zero 2 hupos.ne') hDpos.ne'
+
+theorem continuous_thirdKindPathIntegrand {c : ℝ} (hc : c < 1) {ν Q : ℝ → ℝ} {τ : ℝ}
+    (hτ : ν τ < 1) : Continuous fun θ : ℝ => thirdKindPathIntegrand c ν Q θ τ := by
+  simp only [thirdKindPathIntegrand]
+  exact (by fun_prop : Continuous fun θ : ℝ => Q τ * Real.sin θ ^ 2).div
+    ((by fun_prop : Continuous fun θ : ℝ => 1 - ν τ * Real.sin θ ^ 2).mul
+      (continuous_ellipticEIntegrand c))
+    fun θ => mul_ne_zero (one_sub_mul_sin_sq_pos hτ θ).ne' (ellipticEIntegrand_pos hc θ).ne'
+
+theorem integral_thirdKindPathIntegrand {c : ℝ} {ν Q : ℝ → ℝ} (τ : ℝ) :
+    (∫ θ in (0 : ℝ)..(Real.pi / 2), thirdKindPathIntegrand c ν Q θ τ)
+      = Q τ * ellipticPiAux c (ν τ) := by
+  simp only [thirdKindPathIntegrand, ellipticPiAux, mul_div_assoc]
+  exact intervalIntegral.integral_const_mul _ _
+
+-- Theorem: the path lemma. Carrying the auxiliary integral `A` along any smooth path of
+-- parameters `ν`, the combination `Q · A(ν)` has an elementary derivative: all the
+-- `n`-dependence collapses into `K` and `E`.
+theorem thirdKindPath_key {c : ℝ} (hc : c < 1) {ν Q ρ νd : ℝ → ℝ}
+    (hνc : Continuous ν) (hρ : Continuous ρ)
+    (hν : ∀ t, HasDerivAt ν (νd t) t)
+    (hQ : ∀ t, HasDerivAt Q (ρ t * thirdKindCubicDeriv c (ν t)) t)
+    (hrel : ∀ t, Q t * νd t = 2 * ρ t * thirdKindCubic c (ν t))
+    {τ₀ τ₁ : ℝ} (hlt : ∀ t ∈ Set.uIcc τ₀ τ₁, ν t < 1) :
+    Q τ₁ * ellipticPiAux c (ν τ₁) - Q τ₀ * ellipticPiAux c (ν τ₀)
+      = ∫ t in τ₀..τ₁,
+          ρ t * ((1 - ν t) * ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2)) := by
+  have hcontAt : ∀ θ : ℝ, ∀ t ∈ Set.uIcc τ₀ τ₁,
+      ContinuousAt (fun s : ℝ => ρ s * thirdKindMaster c (ν s) θ) t := by
+    intro θ t ht
+    have h2 : ContinuousAt (fun s : ℝ => ((θ : ℝ), ν s)) t := by fun_prop
+    have h3 := ContinuousAt.comp (f := fun s : ℝ => ((θ : ℝ), ν s))
+      (continuousAt_thirdKindMaster_prod hc (hlt t ht)) h2
+    exact hρ.continuousAt.mul h3
+  have hstep : ∀ θ : ℝ, thirdKindPathIntegrand c ν Q θ τ₁ - thirdKindPathIntegrand c ν Q θ τ₀
+      = ∫ t in τ₀..τ₁, ρ t * thirdKindMaster c (ν t) θ := fun θ =>
+    intervalIntegral.integral_eq_sub_of_hasDerivAt
+      (fun t ht => hasDerivAt_thirdKindPathIntegrand hc hν hQ hrel (hlt t ht) θ)
+      (ContinuousOn.intervalIntegrable fun t ht => (hcontAt θ t ht).continuousWithinAt) |>.symm
+  have hswap : (∫ θ in (0 : ℝ)..(Real.pi / 2), ∫ t in τ₀..τ₁, ρ t * thirdKindMaster c (ν t) θ)
+      = ∫ t in τ₀..τ₁, ∫ θ in (0 : ℝ)..(Real.pi / 2), ρ t * thirdKindMaster c (ν t) θ := by
+    refine MeasureTheory.intervalIntegral_intervalIntegral_swap ?_
+    have hcpt : IsCompact (Set.uIcc (0 : ℝ) (Real.pi / 2) ×ˢ Set.uIcc τ₀ τ₁) :=
+      isCompact_uIcc.prod isCompact_uIcc
+    refine MeasureTheory.IntegrableOn.mono_set ?_
+      (Set.prod_mono Set.uIoc_subset_uIcc Set.uIoc_subset_uIcc)
+    refine ContinuousOn.integrableOn_compact hcpt ?_
+    simp only [Function.uncurry_def]
+    rintro ⟨θ, t⟩ ⟨-, ht⟩
+    refine ContinuousAt.continuousWithinAt ?_
+    have h2 : ContinuousAt (fun p : ℝ × ℝ => (p.1, ν p.2)) (θ, t) := by fun_prop
+    have h3 := ContinuousAt.comp (f := fun p : ℝ × ℝ => (p.1, ν p.2))
+      (continuousAt_thirdKindMaster_prod hc (hlt t ht)) h2
+    have h4 : ContinuousAt (fun p : ℝ × ℝ => ρ p.2) (θ, t) := by fun_prop
+    exact h4.mul h3
+  have hlt0 : ν τ₀ < 1 := hlt τ₀ Set.left_mem_uIcc
+  have hlt1 : ν τ₁ < 1 := hlt τ₁ Set.right_mem_uIcc
+  have hL : (∫ θ in (0 : ℝ)..(Real.pi / 2),
+        (thirdKindPathIntegrand c ν Q θ τ₁ - thirdKindPathIntegrand c ν Q θ τ₀))
+      = Q τ₁ * ellipticPiAux c (ν τ₁) - Q τ₀ * ellipticPiAux c (ν τ₀) := by
+    rw [intervalIntegral.integral_sub
+      ((continuous_thirdKindPathIntegrand hc hlt1).intervalIntegrable _ _)
+      ((continuous_thirdKindPathIntegrand hc hlt0).intervalIntegrable _ _),
+      integral_thirdKindPathIntegrand, integral_thirdKindPathIntegrand]
+  have hmid : (∫ θ in (0 : ℝ)..(Real.pi / 2),
+        (thirdKindPathIntegrand c ν Q θ τ₁ - thirdKindPathIntegrand c ν Q θ τ₀))
+      = ∫ θ in (0 : ℝ)..(Real.pi / 2), ∫ t in τ₀..τ₁, ρ t * thirdKindMaster c (ν t) θ :=
+    intervalIntegral.integral_congr fun θ _ => hstep θ
+  have hR : (∫ t in τ₀..τ₁, ∫ θ in (0 : ℝ)..(Real.pi / 2), ρ t * thirdKindMaster c (ν t) θ)
+      = ∫ t in τ₀..τ₁,
+          ρ t * ((1 - ν t) * ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2)) := by
+    refine intervalIntegral.integral_congr fun t ht => ?_
+    rw [intervalIntegral.integral_const_mul, integral_thirdKindMaster hc (hlt t ht)]
+  rw [← hL, hmid, hswap, hR]
+
+/-! #### Two tools
+
+The Legendre integrals differentiate in their upper limit, their integrands being
+continuous. This is what makes the antiderivatives below checkable by `HasDerivAt`. -/
+
+theorem hasDerivAt_ellipticE (c φ : ℝ) :
+    HasDerivAt (ellipticE c) (ellipticEIntegrand c φ) φ := by
+  refine (intervalIntegral.integral_hasStrictDerivAt_right
+    (intervalIntegrable_ellipticEIntegrand c 0 φ) ?_
+    (continuous_ellipticEIntegrand c).continuousAt).hasDerivAt
+  exact (continuous_ellipticEIntegrand c).stronglyMeasurableAtFilter _ _
+
+theorem hasDerivAt_ellipticF {c : ℝ} (hc : c < 1) (φ : ℝ) :
+    HasDerivAt (ellipticF c) (ellipticFIntegrand c φ) φ := by
+  refine (intervalIntegral.integral_hasStrictDerivAt_right
+    (intervalIntegrable_ellipticFIntegrand hc 0 φ) ?_
+    (continuous_ellipticFIntegrand hc).continuousAt).hasDerivAt
+  exact (continuous_ellipticFIntegrand hc).stronglyMeasurableAtFilter _ _
+
+theorem continuous_ellipticPiAuxIntegrand {c n : ℝ} (hc : c < 1) (hn : n < 1) :
+    Continuous fun θ : ℝ =>
+      Real.sin θ ^ 2 / ((1 - n * Real.sin θ ^ 2) * ellipticEIntegrand c θ) :=
+  (by fun_prop : Continuous fun θ : ℝ => Real.sin θ ^ 2).div
+    ((by fun_prop : Continuous fun θ : ℝ => 1 - n * Real.sin θ ^ 2).mul
+      (continuous_ellipticEIntegrand c))
+    fun θ => mul_ne_zero (one_sub_mul_sin_sq_pos hn θ).ne' (ellipticEIntegrand_pos hc θ).ne'
+
+-- Theorem: splitting off the `n = 0` part of the third-kind integrand leaves `n · A(n)`.
+theorem ellipticPi_eq_aux {c n : ℝ} (hc : c < 1) (hn : n < 1) :
+    ellipticPi c n = ellipticF c (Real.pi / 2) + n * ellipticPiAux c n := by
+  have hpt : ∀ θ : ℝ, ellipticPiIntegrand c n θ
+      = ellipticFIntegrand c θ
+        + n * (Real.sin θ ^ 2 / ((1 - n * Real.sin θ ^ 2) * ellipticEIntegrand c θ)) := by
+    intro θ
+    have h1 := (one_sub_mul_sin_sq_pos hn θ).ne'
+    have h2 := (ellipticEIntegrand_pos hc θ).ne'
+    simp only [ellipticPiIntegrand, ellipticFIntegrand]
+    field_simp
+    ring
+  unfold ellipticPi ellipticF ellipticPiAux
+  rw [← intervalIntegral.integral_const_mul,
+    ← intervalIntegral.integral_add ((continuous_ellipticFIntegrand hc).intervalIntegrable _ _)
+      (((continuous_ellipticPiAuxIntegrand hc hn).const_mul n).intervalIntegrable _ _)]
+  exact intervalIntegral.integral_congr fun θ _ => hpt θ
+
+/-! #### The parameter between `0` and `c`
+
+`P(c sin²β) = (c sin β cos β Δ(β))²` is a square outright, so `Q = c sin β cos β Δ(β)` and
+`ρ = 1/Δ(β)`; since `1 - ν = Δ(β)²`, the weight `ρ ((1 - ν) K - E)` is `Δ(β) K - E/Δ(β)`,
+which integrates to `K E(β) - E F(β)` with no substitution. -/
+
+-- Theorem: along the path `n = c sin²β` the path lemma reads off `K E(β) - E F(β)`.
+theorem ellipticPiAux_middle {c : ℝ} (hc : c < 1) (β : ℝ) :
+    c * Real.sin β * Real.cos β * ellipticEIntegrand c β
+        * ellipticPiAux c (c * Real.sin β ^ 2)
+      = ellipticF c (Real.pi / 2) * ellipticE c β
+        - ellipticE c (Real.pi / 2) * ellipticF c β := by
+  have hlt : ∀ t : ℝ, c * Real.sin t ^ 2 < 1 := fun t => by
+    have := one_sub_mul_sin_sq_pos hc t; linarith
+  have hQ : ∀ t : ℝ, HasDerivAt
+      (fun s : ℝ => c * Real.sin s * Real.cos s * ellipticEIntegrand c s)
+      (ellipticFIntegrand c t * thirdKindCubicDeriv c (c * Real.sin t ^ 2)) t := by
+    intro t
+    have hE := ellipticEIntegrand_pos hc t
+    have hEsq := ellipticEIntegrand_sq hc t
+    have h1 : HasDerivAt (fun s : ℝ => c * Real.sin s * Real.cos s)
+        (c * Real.cos t * Real.cos t + c * Real.sin t * -Real.sin t) t :=
+      ((Real.hasDerivAt_sin t).const_mul c).mul (Real.hasDerivAt_cos t)
+    have h2 : HasDerivAt (fun s : ℝ => ellipticEIntegrand c s)
+        (-(2 * c * Real.sin t * Real.cos t) / (2 * ellipticEIntegrand c t)) t :=
+      hasDerivAt_ellipticEIntegrand c t (one_sub_mul_sin_sq_pos hc t).ne'
+    refine (h1.mul h2).congr_deriv ?_
+    simp only [ellipticFIntegrand, thirdKindCubicDeriv]
+    field_simp
+    linear_combination (c * Real.cos t ^ 2 - c * Real.sin t ^ 2) * hEsq
+      + (c - 2 * c ^ 2 * Real.sin t ^ 2) * Real.sin_sq_add_cos_sq t
+  have hrel : ∀ t : ℝ,
+      c * Real.sin t * Real.cos t * ellipticEIntegrand c t * (2 * c * Real.sin t * Real.cos t)
+        = 2 * ellipticFIntegrand c t * thirdKindCubic c (c * Real.sin t ^ 2) := by
+    intro t
+    have hE := (ellipticEIntegrand_pos hc t).ne'
+    have hEsq := ellipticEIntegrand_sq hc t
+    simp only [ellipticFIntegrand, thirdKindCubic]
+    field_simp
+    linear_combination (c ^ 2 * Real.sin t ^ 2 * Real.cos t ^ 2) * hEsq
+      + (c ^ 2 * Real.sin t ^ 2 * (1 - c * Real.sin t ^ 2)) * Real.sin_sq_add_cos_sq t
+  have key := thirdKindPath_key (ν := fun s : ℝ => c * Real.sin s ^ 2)
+    (Q := fun s : ℝ => c * Real.sin s * Real.cos s * ellipticEIntegrand c s)
+    (ρ := ellipticFIntegrand c) (νd := fun s : ℝ => 2 * c * Real.sin s * Real.cos s)
+    hc (by fun_prop) (continuous_ellipticFIntegrand hc)
+    (fun t => (((Real.hasDerivAt_sin t).pow 2).const_mul c).congr_deriv (by push_cast; ring))
+    hQ hrel (τ₀ := 0) (τ₁ := β) (fun t _ => hlt t)
+  simp only [Real.sin_zero, Real.cos_zero] at key
+  norm_num at key
+  rw [key]
+  have hpt : ∀ t : ℝ,
+      ellipticFIntegrand c t * ((1 - c * Real.sin t ^ 2) * ellipticF c (Real.pi / 2)
+          - ellipticE c (Real.pi / 2))
+        = ellipticF c (Real.pi / 2) * ellipticEIntegrand c t
+          - ellipticE c (Real.pi / 2) * ellipticFIntegrand c t := by
+    intro t
+    have hE := (ellipticEIntegrand_pos hc t).ne'
+    have hEsq := ellipticEIntegrand_sq hc t
+    simp only [ellipticFIntegrand]
+    field_simp
+    linear_combination (-ellipticF c (Real.pi / 2)) * hEsq
+  rw [intervalIntegral.integral_congr (g := fun t : ℝ =>
+      ellipticF c (Real.pi / 2) * ellipticEIntegrand c t
+        - ellipticE c (Real.pi / 2) * ellipticFIntegrand c t) fun t _ => hpt t,
+    intervalIntegral.integral_sub
+      (((continuous_ellipticEIntegrand c).const_mul _).intervalIntegrable _ _)
+      (((continuous_ellipticFIntegrand hc).const_mul _).intervalIntegrable _ _),
+    intervalIntegral.integral_const_mul, intervalIntegral.integral_const_mul]
+  rfl
+
+/-! #### The parameter between `c` and `1`
+
+Here `P(ν) < 0`, so `-P` is the square. With `S = √(c + x²)` and `R = √(1 + x²)`,
+`√(-P(ν)) = (1-c) x S / R³` and `ρ = -1/(R S)`. At `ψ = π/2 - arctan x` one has `sin ψ = 1/R`,
+so the integrands at the complementary parameter `1 - c` are `S/R` and `R/S`, and the weight
+is the derivative of `(K - E) F(ψ, 1-c) - K E(ψ, 1-c)` — Heuman's `Λ₀` in the tables. -/
+
+section Upper
+
+variable {c : ℝ}
+
+/-- `√(c + x²)`, the numerator of `√ν` along the upper path. -/
+noncomputable def upperS (c x : ℝ) : ℝ := Real.sqrt (c + x ^ 2)
+
+/-- `√(1 + x²)`, its denominator. -/
+noncomputable def upperR (x : ℝ) : ℝ := Real.sqrt (1 + x ^ 2)
+
+theorem upperS_pos (hc0 : 0 < c) (x : ℝ) : 0 < upperS c x := Real.sqrt_pos.mpr (by positivity)
+
+theorem upperR_pos (x : ℝ) : 0 < upperR x := Real.sqrt_pos.mpr (by positivity)
+
+theorem upperS_sq (hc0 : 0 < c) (x : ℝ) : upperS c x ^ 2 = c + x ^ 2 :=
+  Real.sq_sqrt (by positivity)
+
+theorem upperR_sq (x : ℝ) : upperR x ^ 2 = 1 + x ^ 2 := Real.sq_sqrt (by positivity)
+
+theorem hasDerivAt_upperS (hc0 : 0 < c) (x : ℝ) :
+    HasDerivAt (upperS c) (x / upperS c x) x :=
+  ((((hasDerivAt_pow 2 x).const_add c).sqrt (by positivity)).congr_deriv (by
+    rw [upperS]; push_cast; field_simp))
+
+theorem hasDerivAt_upperR (x : ℝ) : HasDerivAt upperR (x / upperR x) x :=
+  ((((hasDerivAt_pow 2 x).const_add 1).sqrt (by positivity)).congr_deriv (by
+    rw [upperR]; push_cast; field_simp))
+
+/-- The path of parameters running from `c` up to `1`. -/
+noncomputable def upperNu (c x : ℝ) : ℝ := (c + x ^ 2) / (1 + x ^ 2)
+
+/-- The normalisation `Q` along it. -/
+noncomputable def upperQ (c x : ℝ) : ℝ :=
+  (1 - c) * x * upperS c x / ((1 + x ^ 2) * upperR x)
+
+/-- The weight `ρ` along it. -/
+noncomputable def upperRho (c x : ℝ) : ℝ := -(1 / (upperR x * upperS c x))
+
+theorem upperNu_lt_one (hc : c < 1) (x : ℝ) : upperNu c x < 1 := by
+  rw [upperNu, div_lt_one (by positivity)]
+  linarith
+
+theorem hasDerivAt_upperQ (hc0 : 0 < c) (x : ℝ) :
+    HasDerivAt (upperQ c) (upperRho c x * thirdKindCubicDeriv c (upperNu c x)) x := by
+  have hS := upperS_pos hc0 x
+  have hR := upperR_pos x
+  have hSsq := upperS_sq hc0 x
+  have hRsq := upperR_sq x
+  have hN : HasDerivAt (fun y : ℝ => (1 - c) * y * upperS c y)
+      ((1 - c) * upperS c x + (1 - c) * x * (x / upperS c x)) x := by
+    have h1 : HasDerivAt (fun y : ℝ => (1 - c) * y) (1 - c) x := by
+      simpa using (hasDerivAt_id x).const_mul (1 - c)
+    have h2 : HasDerivAt (fun y : ℝ => upperS c y) (x / upperS c x) x := hasDerivAt_upperS hc0 x
+    exact h1.mul h2
+  have hD : HasDerivAt (fun y : ℝ => (1 + y ^ 2) * upperR y)
+      (2 * x * upperR x + (1 + x ^ 2) * (x / upperR x)) x := by
+    have h1 : HasDerivAt (fun y : ℝ => 1 + y ^ 2) (2 * x) x := by
+      simpa using (hasDerivAt_pow 2 x).const_add 1
+    have h2 : HasDerivAt (fun y : ℝ => upperR y) (x / upperR x) x := hasDerivAt_upperR x
+    exact h1.mul h2
+  refine (hN.div hD (by positivity)).congr_deriv ?_
+  simp only [upperRho, upperNu, thirdKindCubicDeriv]
+  field_simp
+  linear_combination
+    ((c - 1) * (upperR x ^ 2 * x ^ 2 - upperR x ^ 2 + x ^ 4 + x ^ 2)) * hSsq
+      - x ^ 2 * (c - 1) * (c + x ^ 2) * hRsq
+
+/-- The derivative of the upper path. -/
+noncomputable def upperNuDeriv (c x : ℝ) : ℝ := 2 * (1 - c) * x / (1 + x ^ 2) ^ 2
+
+/-- The angle at the complementary parameter that the upper path lands on. -/
+noncomputable def upperAngle (x : ℝ) : ℝ := Real.pi / 2 - Real.arctan x
+
+theorem hasDerivAt_upperNu (c x : ℝ) : HasDerivAt (upperNu c) (upperNuDeriv c x) x := by
+  have h1 : HasDerivAt (fun y : ℝ => c + y ^ 2) (2 * x) x := by
+    simpa using (hasDerivAt_pow 2 x).const_add c
+  have h2 : HasDerivAt (fun y : ℝ => 1 + y ^ 2) (2 * x) x := by
+    simpa using (hasDerivAt_pow 2 x).const_add 1
+  refine (h1.div h2 (by positivity)).congr_deriv ?_
+  rw [upperNuDeriv]
+  field_simp
+  ring
+
+theorem continuous_upperNu (c : ℝ) : Continuous (upperNu c) := by
+  unfold upperNu
+  exact (by fun_prop : Continuous fun x : ℝ => c + x ^ 2).div
+    (by fun_prop) fun x => by positivity
+
+theorem continuous_upperS (c : ℝ) : Continuous (upperS c) := by
+  unfold upperS; fun_prop
+
+theorem continuous_upperR : Continuous upperR := by unfold upperR; fun_prop
+
+theorem continuous_upperRho (hc0 : 0 < c) : Continuous (upperRho c) := by
+  unfold upperRho
+  exact ((continuous_const.div ((continuous_upperR).mul (continuous_upperS c))
+    fun x => (mul_pos (upperR_pos x) (upperS_pos hc0 x)).ne')).neg
+
+theorem upperRel (hc0 : 0 < c) (x : ℝ) :
+    upperQ c x * upperNuDeriv c x = 2 * upperRho c x * thirdKindCubic c (upperNu c x) := by
+  have hS := upperS_pos hc0 x
+  have hR := upperR_pos x
+  have hSsq := upperS_sq hc0 x
+  have hRsq := upperR_sq x
+  simp only [upperQ, upperNuDeriv, upperRho, upperNu, thirdKindCubic]
+  field_simp
+  linear_combination ((1 - c) ^ 2 * x ^ 2) * hSsq
+
+-- Theorem: the integrand met along the upper path is an exact derivative, the
+-- antiderivative being a combination of the two Legendre integrals at the
+-- complementary parameter `1 - c`.
+theorem hasDerivAt_upperAnti (hc0 : 0 < c) (x : ℝ) :
+    HasDerivAt (fun y : ℝ =>
+        (ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+            * ellipticF (1 - c) (upperAngle y)
+          - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (upperAngle y))
+      (upperRho c x * ((1 - upperNu c x) * ellipticF c (Real.pi / 2)
+        - ellipticE c (Real.pi / 2))) x := by
+  have hS := upperS_pos hc0 x
+  have hR := upperR_pos x
+  have hSsq := upperS_sq hc0 x
+  have hRsq := upperR_sq x
+  have hc' : (1 : ℝ) - c < 1 := by linarith
+  have hsin : Real.sin (upperAngle x) = 1 / upperR x := by
+    rw [upperAngle, Real.sin_pi_div_two_sub, Real.cos_arctan, upperR]
+  have hEint : ellipticEIntegrand (1 - c) (upperAngle x) = upperS c x / upperR x := by
+    have h : (1 : ℝ) - (1 - c) * Real.sin (upperAngle x) ^ 2 = (c + x ^ 2) / (1 + x ^ 2) := by
+      rw [hsin, div_pow, one_pow, upperR, Real.sq_sqrt (by positivity : (0 : ℝ) ≤ 1 + x ^ 2)]
+      field_simp
+      ring
+    rw [ellipticEIntegrand, h, upperS, upperR, Real.sqrt_div (by positivity)]
+  have hFint : ellipticFIntegrand (1 - c) (upperAngle x) = upperR x / upperS c x := by
+    rw [ellipticFIntegrand, hEint, inv_div]
+  have hpsi : HasDerivAt upperAngle (-(1 / (1 + x ^ 2))) x := by
+    have := (Real.hasDerivAt_arctan x).const_sub (Real.pi / 2)
+    exact this.congr_deriv (by ring)
+  have hF := ((hasDerivAt_ellipticF hc' (upperAngle x)).comp x hpsi).const_mul
+    (ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+  have hE := ((hasDerivAt_ellipticE (1 - c) (upperAngle x)).comp x hpsi).const_mul
+    (ellipticF c (Real.pi / 2))
+  refine (hF.sub hE).congr_deriv ?_
+  rw [hEint, hFint]
+  simp only [upperRho, upperNu]
+  field_simp
+  linear_combination ellipticF c (Real.pi / 2) * hSsq
+    + (ellipticE c (Real.pi / 2) - ellipticF c (Real.pi / 2)) * hRsq
+
+-- Theorem: the path lemma along the upper path, integrated.
+theorem ellipticPiAux_upper (hc0 : 0 < c) (hc : c < 1) (X : ℝ) :
+    upperQ c X * ellipticPiAux c (upperNu c X)
+      = ((ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+            * ellipticF (1 - c) (upperAngle X)
+          - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (upperAngle X))
+        - ((ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+            * ellipticF (1 - c) (Real.pi / 2)
+          - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (Real.pi / 2)) := by
+  have key := thirdKindPath_key (ν := upperNu c) (Q := upperQ c) (ρ := upperRho c)
+    (νd := upperNuDeriv c)
+    hc (continuous_upperNu c) (continuous_upperRho hc0) (hasDerivAt_upperNu c)
+    (hasDerivAt_upperQ hc0) (upperRel hc0) (τ₀ := 0) (τ₁ := X)
+    (fun t _ => upperNu_lt_one hc t)
+  have hQ0 : upperQ c 0 = 0 := by simp [upperQ]
+  have hcont : Continuous fun t : ℝ =>
+      upperRho c t * ((1 - upperNu c t) * ellipticF c (Real.pi / 2)
+        - ellipticE c (Real.pi / 2)) :=
+    (continuous_upperRho hc0).mul
+      (((continuous_const.sub (continuous_upperNu c)).mul continuous_const).sub continuous_const)
+  have hint := intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (fun t _ => hasDerivAt_upperAnti hc0 t) (hcont.intervalIntegrable 0 X)
+  have hpsi0 : upperAngle 0 = Real.pi / 2 := by simp [upperAngle]
+  rw [hQ0, zero_mul, sub_zero, hint, hpsi0] at key
+  exact key
+
+end Upper
+
+/-! #### Negative parameters
+
+Again `-P` is the square: with `W = √((1 + x²)(1 + c x²))`, `√(-P(ν)) = c x W` and `ρ = 1/W`.
+Read at `ψ = arctan x` the complementary integrands are `W/(1+x²)` and `(1+x²)/W`, and the
+antiderivative needs an elementary term too, the `tan ψ · Δ'(ψ)` left by integrating
+`∫ Δ'/cos²ψ` by parts. -/
+
+section Lower
+
+variable {c : ℝ}
+
+/-- `√((1 + x²)(1 + c x²))`, the normalising root along the lower path. -/
+noncomputable def lowerW (c x : ℝ) : ℝ := Real.sqrt ((1 + x ^ 2) * (1 + c * x ^ 2))
+
+/-- The path of parameters running from `0` down to `-∞`. -/
+noncomputable def lowerNu (c x : ℝ) : ℝ := -(c * x ^ 2)
+
+/-- The normalisation `Q` along it. -/
+noncomputable def lowerQ (c x : ℝ) : ℝ := c * x * lowerW c x
+
+/-- The weight `ρ` along it. -/
+noncomputable def lowerRho (c x : ℝ) : ℝ := 1 / lowerW c x
+
+/-- The derivative of the lower path. -/
+noncomputable def lowerNuDeriv (c x : ℝ) : ℝ := -(2 * c * x)
+
+theorem lowerW_pos (hc0 : 0 < c) (x : ℝ) : 0 < lowerW c x :=
+  Real.sqrt_pos.mpr (by positivity)
+
+theorem lowerW_sq (hc0 : 0 < c) (x : ℝ) : lowerW c x ^ 2 = (1 + x ^ 2) * (1 + c * x ^ 2) :=
+  Real.sq_sqrt (by positivity)
+
+theorem continuous_lowerW (c : ℝ) : Continuous (lowerW c) := by unfold lowerW; fun_prop
+
+theorem continuous_lowerNu (c : ℝ) : Continuous (lowerNu c) := by unfold lowerNu; fun_prop
+
+theorem continuous_lowerRho (hc0 : 0 < c) : Continuous (lowerRho c) :=
+  continuous_const.div (continuous_lowerW c) fun x => (lowerW_pos hc0 x).ne'
+
+theorem lowerNu_lt_one (hc0 : 0 < c) (x : ℝ) : lowerNu c x < 1 := by
+  have : 0 ≤ c * x ^ 2 := by positivity
+  simp only [lowerNu]; linarith
+
+theorem hasDerivAt_lowerNu (c x : ℝ) : HasDerivAt (lowerNu c) (lowerNuDeriv c x) x := by
+  have h1 : HasDerivAt (fun y : ℝ => c * y ^ 2) (2 * c * x) x :=
+    ((hasDerivAt_pow 2 x).const_mul c).congr_deriv (by push_cast; ring)
+  exact h1.neg.congr_deriv (by rw [lowerNuDeriv])
+
+theorem hasDerivAt_lowerW (hc0 : 0 < c) (x : ℝ) :
+    HasDerivAt (lowerW c) (x * (1 + c + 2 * c * x ^ 2) / lowerW c x) x := by
+  have hV : HasDerivAt (fun y : ℝ => (1 + y ^ 2) * (1 + c * y ^ 2))
+      (2 * x * (1 + c * x ^ 2) + (1 + x ^ 2) * (2 * c * x)) x := by
+    have h1 : HasDerivAt (fun y : ℝ => 1 + y ^ 2) (2 * x) x := by
+      simpa using (hasDerivAt_pow 2 x).const_add 1
+    have h2 : HasDerivAt (fun y : ℝ => 1 + c * y ^ 2) (2 * c * x) x := by
+      have := ((hasDerivAt_pow 2 x).const_mul c).const_add 1
+      exact this.congr_deriv (by push_cast; ring)
+    exact h1.mul h2
+  have hs : (0 : ℝ) < Real.sqrt ((1 + x ^ 2) * (1 + c * x ^ 2)) :=
+    Real.sqrt_pos.mpr (by positivity)
+  refine (hV.sqrt (by positivity)).congr_deriv ?_
+  rw [lowerW]
+  field_simp
+  ring
+
+theorem hasDerivAt_lowerQ (hc0 : 0 < c) (x : ℝ) :
+    HasDerivAt (lowerQ c) (lowerRho c x * thirdKindCubicDeriv c (lowerNu c x)) x := by
+  have hW := lowerW_pos hc0 x
+  have hWsq := lowerW_sq hc0 x
+  have h1 : HasDerivAt (fun y : ℝ => c * y) c x := by
+    simpa using (hasDerivAt_id x).const_mul c
+  have h2 : HasDerivAt (fun y : ℝ => lowerW c y) (x * (1 + c + 2 * c * x ^ 2) / lowerW c x) x :=
+    hasDerivAt_lowerW hc0 x
+  refine (h1.mul h2).congr_deriv ?_
+  simp only [lowerRho, lowerNu, thirdKindCubicDeriv]
+  field_simp
+  linear_combination hWsq
+
+theorem lowerRel (hc0 : 0 < c) (x : ℝ) :
+    lowerQ c x * lowerNuDeriv c x = 2 * lowerRho c x * thirdKindCubic c (lowerNu c x) := by
+  have hW := lowerW_pos hc0 x
+  have hWsq := lowerW_sq hc0 x
+  simp only [lowerQ, lowerNuDeriv, lowerRho, lowerNu, thirdKindCubic]
+  field_simp
+  linear_combination (-x ^ 2) * hWsq
+
+theorem lowerEIntegrand_eq (hc0 : 0 < c) (x : ℝ) :
+    ellipticEIntegrand (1 - c) (Real.arctan x) = lowerW c x / (1 + x ^ 2) := by
+  have hW := lowerW_pos hc0 x
+  have h : (1 : ℝ) - (1 - c) * Real.sin (Real.arctan x) ^ 2
+      = (lowerW c x / (1 + x ^ 2)) ^ 2 := by
+    rw [Real.sin_arctan, div_pow, Real.sq_sqrt (by positivity : (0 : ℝ) ≤ 1 + x ^ 2),
+      div_pow, lowerW_sq hc0]
+    field_simp
+    ring
+  rw [ellipticEIntegrand, h, Real.sqrt_sq (by positivity)]
+
+theorem lowerFIntegrand_eq (hc0 : 0 < c) (x : ℝ) :
+    ellipticFIntegrand (1 - c) (Real.arctan x) = (1 + x ^ 2) / lowerW c x := by
+  rw [ellipticFIntegrand, lowerEIntegrand_eq hc0, inv_div]
+
+-- Theorem: the integrand met along the lower path is again an exact derivative; here the
+-- antiderivative also carries an elementary term.
+theorem hasDerivAt_lowerAnti (hc0 : 0 < c) (x : ℝ) :
+    HasDerivAt (fun y : ℝ =>
+        ellipticF c (Real.pi / 2) * (y * lowerW c y / (1 + y ^ 2))
+          + (ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+              * ellipticF (1 - c) (Real.arctan y)
+          - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (Real.arctan y))
+      (lowerRho c x * ((1 - lowerNu c x) * ellipticF c (Real.pi / 2)
+        - ellipticE c (Real.pi / 2))) x := by
+  have hW := lowerW_pos hc0 x
+  have hWsq := lowerW_sq hc0 x
+  have hc' : (1 : ℝ) - c < 1 := by linarith
+  have hnum : HasDerivAt (fun y : ℝ => y * lowerW c y)
+      (1 * lowerW c x + x * (x * (1 + c + 2 * c * x ^ 2) / lowerW c x)) x := by
+    have h1 : HasDerivAt (fun y : ℝ => y) 1 x := hasDerivAt_id x
+    have h2 : HasDerivAt (fun y : ℝ => lowerW c y) (x * (1 + c + 2 * c * x ^ 2) / lowerW c x) x :=
+      hasDerivAt_lowerW hc0 x
+    exact h1.mul h2
+  have hden : HasDerivAt (fun y : ℝ => 1 + y ^ 2) (2 * x) x := by
+    simpa using (hasDerivAt_pow 2 x).const_add 1
+  have hel := ((hnum.div hden (by positivity)).const_mul (ellipticF c (Real.pi / 2)))
+  have harctan : HasDerivAt Real.arctan (1 / (1 + x ^ 2)) x := Real.hasDerivAt_arctan x
+  have hF := (((hasDerivAt_ellipticF hc' (Real.arctan x)).comp x harctan).const_mul
+    (ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2)))
+  have hE := (((hasDerivAt_ellipticE (1 - c) (Real.arctan x)).comp x harctan).const_mul
+    (ellipticF c (Real.pi / 2)))
+  refine ((hel.add hF).sub hE).congr_deriv ?_
+  rw [lowerEIntegrand_eq hc0, lowerFIntegrand_eq hc0]
+  simp only [lowerRho, lowerNu]
+  field_simp
+  linear_combination (-(ellipticF c (Real.pi / 2)) * x ^ 2) * hWsq
+
+-- Theorem: the path lemma along the lower path, integrated.
+theorem ellipticPiAux_lower (hc0 : 0 < c) (hc : c < 1) (X : ℝ) :
+    lowerQ c X * ellipticPiAux c (lowerNu c X)
+      = ellipticF c (Real.pi / 2) * (X * lowerW c X / (1 + X ^ 2))
+        + (ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+            * ellipticF (1 - c) (Real.arctan X)
+        - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (Real.arctan X) := by
+  have key := thirdKindPath_key (ν := lowerNu c) (Q := lowerQ c) (ρ := lowerRho c)
+    (νd := lowerNuDeriv c)
+    hc (continuous_lowerNu c) (continuous_lowerRho hc0) (hasDerivAt_lowerNu c)
+    (hasDerivAt_lowerQ hc0) (lowerRel hc0) (τ₀ := 0) (τ₁ := X)
+    (fun t _ => lowerNu_lt_one hc0 t)
+  have hQ0 : lowerQ c 0 = 0 := by simp [lowerQ]
+  have hcont : Continuous fun t : ℝ =>
+      lowerRho c t * ((1 - lowerNu c t) * ellipticF c (Real.pi / 2)
+        - ellipticE c (Real.pi / 2)) :=
+    (continuous_lowerRho hc0).mul
+      (((continuous_const.sub (continuous_lowerNu c)).mul continuous_const).sub continuous_const)
+  have hint := intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (fun t _ => hasDerivAt_lowerAnti hc0 t) (hcont.intervalIntegrable 0 X)
+  rw [hQ0, zero_mul, sub_zero, hint] at key
+  simpa [ellipticF, ellipticE] using key
+
+end Lower
+
+/-! ### `Π(n, c)` in closed form
+
+The two roots of `P` in range are the two values of `n` no path reaches. At `n = 0` the
+third-kind integrand is the first-kind one; at `n = c` the cubic vanishes identically, so
+the master identity has only `A` left in it. -/
+
+-- Theorem: at `n = 0` the third-kind integral collapses to the first-kind one.
+theorem ellipticPi_zero {c : ℝ} (hc : c < 1) :
+    ellipticPi c 0 = ellipticF c (Real.pi / 2) := by
+  rw [ellipticPi_eq_aux hc (by norm_num)]; ring
+
+-- Theorem: at `n = c` the cubic `P` vanishes, the master identity has only one integral
+-- left in it, and `Π` reduces to `E / (1 - c)`.
+theorem ellipticPi_self {c : ℝ} (hc0 : 0 < c) (hc : c < 1) :
+    ellipticPi c c = ellipticE c (Real.pi / 2) / (1 - c) := by
+  have hkey := integral_thirdKindMaster hc hc
+  have hzero : thirdKindCubic c c = 0 := by simp [thirdKindCubic]
+  have hpt : ∀ θ : ℝ, thirdKindMaster c c θ
+      = thirdKindCubicDeriv c c
+        * (Real.sin θ ^ 2 / ((1 - c * Real.sin θ ^ 2) * ellipticEIntegrand c θ)) := by
+    intro θ
+    simp only [thirdKindMaster, hzero]
+    ring
+  rw [intervalIntegral.integral_congr (g := fun θ : ℝ => thirdKindCubicDeriv c c
+      * (Real.sin θ ^ 2 / ((1 - c * Real.sin θ ^ 2) * ellipticEIntegrand c θ)))
+      fun θ _ => hpt θ, intervalIntegral.integral_const_mul] at hkey
+  rw [← ellipticPiAux] at hkey
+  rw [ellipticPi_eq_aux hc hc]
+  have hcc : thirdKindCubicDeriv c c = c ^ 2 - c := by simp only [thirdKindCubicDeriv]; ring
+  rw [hcc] at hkey
+  have hne : c ^ 2 - c ≠ 0 := by nlinarith
+  have hne1 : (1 : ℝ) - c ≠ 0 := by linarith
+  rw [eq_div_iff hne1]
+  linear_combination -hkey
+
+theorem ellipticEIntegrand_Pconstructible {c θ : ℝ} (hc : PConstructible c)
+    (hθ : PConstructible θ) : PConstructible (ellipticEIntegrand c θ) :=
+  sqrt_Pconstructible (PConstructible.sub PConstructible.base_one
+    (PConstructible.mul hc (sq_Pconstructible (sin_Pconstructible hθ))))
+
+theorem pi_div_two_Pconstructible : PConstructible (Real.pi / 2) :=
+  PConstructible.div pi_Pconstructible two_Pconstructible
+
+-- Theorem: the complete elliptic integral of the third kind `Π(n, c)` is P-constructible
+-- for every P-constructible parameter `n < 1` and every P-constructible `0 < c < 1`.
+theorem ellipticPi_Pconstructible {c n : ℝ} (hcP : PConstructible c) (hnP : PConstructible n)
+    (hc0 : 0 < c) (hc : c < 1) (hn : n < 1) : PConstructible (ellipticPi c n) := by
+  have hK : PConstructible (ellipticF c (Real.pi / 2)) :=
+    ellipticF_Pconstructible hcP pi_div_two_Pconstructible hc
+  have hEE : PConstructible (ellipticE c (Real.pi / 2)) :=
+    ellipticE_Pconstructible hcP pi_div_two_Pconstructible hc
+  have hccP : PConstructible (1 - c) := PConstructible.sub PConstructible.base_one hcP
+  have hcc : (1 : ℝ) - c < 1 := by linarith
+  rcases lt_trichotomy n 0 with hneg | hzero | hpos
+  · set X := Real.sqrt (-n / c) with hXdef
+    have hXpos : 0 < X := Real.sqrt_pos.mpr (div_pos (by linarith) hc0)
+    have hX2 : X ^ 2 = -n / c := Real.sq_sqrt (div_pos (by linarith) hc0).le
+    have hnu : lowerNu c X = n := by
+      rw [lowerNu, hX2]; field_simp
+    have hkey := ellipticPiAux_lower hc0 hc X
+    rw [hnu] at hkey
+    have hQne : lowerQ c X ≠ 0 := by
+      have := lowerW_pos hc0 X
+      simp only [lowerQ]
+      positivity
+    have hA : ellipticPiAux c n
+        = (ellipticF c (Real.pi / 2) * (X * lowerW c X / (1 + X ^ 2))
+            + (ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+                * ellipticF (1 - c) (Real.arctan X)
+            - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (Real.arctan X)) / lowerQ c X := by
+      rw [eq_div_iff hQne]; linear_combination hkey
+    rw [ellipticPi_eq_aux hc hn, hA]
+    have hXP : PConstructible X :=
+      sqrt_Pconstructible (PConstructible.div (neg_Pconstructible hnP) hcP)
+    have hWP : PConstructible (lowerW c X) :=
+      sqrt_Pconstructible (PConstructible.mul
+        (PConstructible.add PConstructible.base_one (sq_Pconstructible hXP))
+        (PConstructible.add PConstructible.base_one (PConstructible.mul hcP
+          (sq_Pconstructible hXP))))
+    have hatP : PConstructible (Real.arctan X) := arctan_Pconstructible hXP
+    exact PConstructible.add hK (PConstructible.mul hnP (PConstructible.div
+      (PConstructible.sub (PConstructible.add
+        (PConstructible.mul hK (PConstructible.div (PConstructible.mul hXP hWP)
+          (PConstructible.add PConstructible.base_one (sq_Pconstructible hXP))))
+        (PConstructible.mul (PConstructible.sub hK hEE)
+          (ellipticF_Pconstructible hccP hatP hcc)))
+        (PConstructible.mul hK (ellipticE_Pconstructible hccP hatP hcc)))
+      (PConstructible.mul (PConstructible.mul hcP hXP) hWP)))
+  · rw [hzero, ellipticPi_zero hc]; exact hK
+  · rcases lt_trichotomy n c with hlt | heq | hgt
+    · set B := Real.arcsin (Real.sqrt (n / c)) with hBdef
+      have hnc1 : Real.sqrt (n / c) ≤ 1 := by
+        rw [show (1 : ℝ) = Real.sqrt 1 by simp]
+        exact Real.sqrt_le_sqrt (by rw [div_le_one hc0]; linarith)
+      have hnc0 : (0 : ℝ) < n / c := div_pos hpos hc0
+      have hsin : Real.sin B = Real.sqrt (n / c) :=
+        Real.sin_arcsin (by linarith [Real.sqrt_nonneg (n / c)]) hnc1
+      have hsinpos : 0 < Real.sin B := by
+        rw [hsin]; exact Real.sqrt_pos.mpr hnc0
+      have hsin2 : Real.sin B ^ 2 = n / c := by
+        rw [hsin]; exact Real.sq_sqrt hnc0.le
+      have hnu : c * Real.sin B ^ 2 = n := by rw [hsin2]; field_simp
+      have hcos : Real.cos B = Real.sqrt (1 - n / c) := by
+        rw [hBdef, Real.cos_arcsin, Real.sq_sqrt hnc0.le]
+      have hcospos : 0 < Real.cos B := by
+        rw [hcos]
+        exact Real.sqrt_pos.mpr (by rw [sub_pos, div_lt_one hc0]; exact hlt)
+      have hkey := ellipticPiAux_middle hc B
+      rw [hnu] at hkey
+      have hDpos := ellipticEIntegrand_pos hc B
+      have hQne : c * Real.sin B * Real.cos B * ellipticEIntegrand c B ≠ 0 := by positivity
+      have hA : ellipticPiAux c n
+          = (ellipticF c (Real.pi / 2) * ellipticE c B
+              - ellipticE c (Real.pi / 2) * ellipticF c B)
+            / (c * Real.sin B * Real.cos B * ellipticEIntegrand c B) := by
+        rw [eq_div_iff hQne]; linear_combination hkey
+      rw [ellipticPi_eq_aux hc hn, hA]
+      have hBP : PConstructible B :=
+        arcsin_Pconstructible (sqrt_Pconstructible (PConstructible.div hnP hcP))
+      exact PConstructible.add hK (PConstructible.mul hnP (PConstructible.div
+        (PConstructible.sub (PConstructible.mul hK (ellipticE_Pconstructible hcP hBP hc))
+          (PConstructible.mul hEE (ellipticF_Pconstructible hcP hBP hc)))
+        (PConstructible.mul (PConstructible.mul (PConstructible.mul hcP
+          (sin_Pconstructible hBP)) (cos_Pconstructible hBP))
+          (ellipticEIntegrand_Pconstructible hcP hBP))))
+    · rw [heq, ellipticPi_self hc0 hc]
+      exact PConstructible.div hEE hccP
+    · set X := Real.sqrt ((n - c) / (1 - n)) with hXdef
+      have hXpos : 0 < X := Real.sqrt_pos.mpr (by apply div_pos <;> linarith)
+      have hX2 : X ^ 2 = (n - c) / (1 - n) :=
+        Real.sq_sqrt (le_of_lt (by apply div_pos <;> linarith))
+      have hnu : upperNu c X = n := by
+        have h1 : (1 : ℝ) - n ≠ 0 := by linarith
+        have hden : (1 : ℝ) + X ^ 2 ≠ 0 := by positivity
+        rw [upperNu, div_eq_iff hden, hX2]
+        field_simp
+        ring
+      have hkey := ellipticPiAux_upper hc0 hc X
+      rw [hnu] at hkey
+      have hQne : upperQ c X ≠ 0 := by
+        have h1 := upperS_pos hc0 X
+        have h2 := upperR_pos X
+        have h3 : (0 : ℝ) < 1 - c := by linarith
+        simp only [upperQ]
+        positivity
+      have hA : ellipticPiAux c n
+          = (((ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+                  * ellipticF (1 - c) (upperAngle X)
+                - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (upperAngle X))
+              - ((ellipticF c (Real.pi / 2) - ellipticE c (Real.pi / 2))
+                  * ellipticF (1 - c) (Real.pi / 2)
+                - ellipticF c (Real.pi / 2) * ellipticE (1 - c) (Real.pi / 2)))
+            / upperQ c X := by
+        rw [eq_div_iff hQne]; linear_combination hkey
+      rw [ellipticPi_eq_aux hc hn, hA]
+      have hXP : PConstructible X := sqrt_Pconstructible
+        (PConstructible.div (PConstructible.sub hnP hcP)
+          (PConstructible.sub PConstructible.base_one hnP))
+      have hSP : PConstructible (upperS c X) :=
+        sqrt_Pconstructible (PConstructible.add hcP (sq_Pconstructible hXP))
+      have hRP : PConstructible (upperR X) :=
+        sqrt_Pconstructible (PConstructible.add PConstructible.base_one (sq_Pconstructible hXP))
+      have hpsiP : PConstructible (upperAngle X) :=
+        PConstructible.sub pi_div_two_Pconstructible (arctan_Pconstructible hXP)
+      have hQP : PConstructible (upperQ c X) := by
+        rw [upperQ]
+        exact PConstructible.div (PConstructible.mul (PConstructible.mul hccP hXP) hSP)
+          (PConstructible.mul (PConstructible.add PConstructible.base_one
+            (sq_Pconstructible hXP)) hRP)
+      exact PConstructible.add hK (PConstructible.mul hnP (PConstructible.div
+        (PConstructible.sub
+          (PConstructible.sub (PConstructible.mul (PConstructible.sub hK hEE)
+            (ellipticF_Pconstructible hccP hpsiP hcc))
+            (PConstructible.mul hK (ellipticE_Pconstructible hccP hpsiP hcc)))
+          (PConstructible.sub (PConstructible.mul (PConstructible.sub hK hEE)
+            (ellipticF_Pconstructible hccP pi_div_two_Pconstructible hcc))
+            (PConstructible.mul hK
+              (ellipticE_Pconstructible hccP pi_div_two_Pconstructible hcc))))
+        hQP))
+
+/-! #### In terms of the modulus
+
+As for `E` and `F`, the statement one would quote writes the parameter as the square of a
+modulus `k`; `0 < k² < 1` is the usual `0 < |k| < 1`. -/
+
+-- Theorem: `Π(n, k) = ∫₀^{π/2} dθ / ((1 - n sin²θ)√(1 - k² sin²θ))` is P-constructible for
+-- every P-constructible `n < 1` and every P-constructible modulus `k` with `0 < k² < 1`.
+theorem ellipticPi_sq_Pconstructible {k n : ℝ} (hk : PConstructible k)
+    (hn : PConstructible n) (hk0 : 0 < k ^ 2) (hk1 : k ^ 2 < 1) (hn1 : n < 1) :
+    PConstructible (ellipticPi (k ^ 2) n) :=
+  ellipticPi_Pconstructible (sq_Pconstructible hk) hn hk0 hk1 hn1
 
 end Pconstructible
