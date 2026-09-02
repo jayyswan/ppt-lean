@@ -724,6 +724,236 @@ theorem exp_one_Pconstructible : PConstructible (Real.exp 1) := by
     (PConstructible.div PConstructible.base_one hln2) (by norm_num)
 
 
+/-! ### The Lambert W function
+
+`W x` is pinned down by `W x * exp (W x) = x`, and unlike everything above it is not a
+composite of operations already available: it has no closed form in terms of `exp`, `log`
+and arithmetic. That is exactly the situation `PConstructible.inter_x` exists for. An
+implicit equation is the statement that two curves cross, and here the drawing program
+can draw both of them.
+
+Write the defining equation as `exp u = x / u`. The left-hand side is the exponential
+curve, which `PConstructibleCurve.exp_two` supplies once the `x`-axis is scaled by
+`log 2`, since `2 ^ (u / log 2) = e ^ u`. The right-hand side is a rectangular hyperbola,
+which `PConstructibleCurve.power_law` supplies as `y = u ^ (-1)` with the `y`-axis scaled
+by `x`. So `W x` is the abscissa at which an exponential curve meets a hyperbola: one
+drawing each, and one intersection.
+
+Isolating that intersection takes different work on the two halves of the principal
+branch. For `x > 0` there is nothing to do — `power_law` draws only the `u > 0` branch of
+the hyperbola, and `u * exp u` is injective there, so the curves already meet exactly
+once. For `-1/e ≤ x < 0` the equation `u * exp u = x` has two roots, one in `[-1, 0)` and
+one below `-1`, so the exponential curve is cropped to `[-1, 0] × [0, 1]` to discard the
+second. The lower branch `W₋₁` is not reachable this way and is not defined here.
+
+Everything rests on `mulExp`, the function being inverted. Its strict monotonicity on
+`[-1, ∞)` — from `(u * e ^ u)' = (1 + u) e ^ u` — is what makes the intersections
+singletons, and its minimum value `mulExp (-1) = -1/e` is what bounds the domain. Outside
+that domain `lambertW` takes the junk value `0`, in the manner of `Real.sqrt` and
+`Real.log`, so `lambertW_Pconstructible` needs no domain hypothesis. -/
+
+/-- `mulExp u = u * exp u`, the function that the Lambert W function inverts. -/
+noncomputable def mulExp (u : ℝ) : ℝ := u * Real.exp u
+
+theorem hasDerivAt_mulExp (u : ℝ) : HasDerivAt mulExp ((1 + u) * Real.exp u) u := by
+  have h : HasDerivAt (fun s : ℝ => s * Real.exp s) (1 * Real.exp u + u * Real.exp u) u :=
+    (hasDerivAt_id u).mul (Real.hasDerivAt_exp u)
+  have he : (1 + u) * Real.exp u = 1 * Real.exp u + u * Real.exp u := by ring
+  rw [he]
+  exact h
+
+-- Theorem: `u * exp u` is strictly increasing on `[-1, ∞)`, because its derivative
+-- `(1 + u) * exp u` is positive there. This is what makes the principal branch of `W`
+-- single-valued, and below it is what turns the curve crossings into singletons.
+theorem strictMonoOn_mulExp : StrictMonoOn mulExp (Set.Ici (-1)) := by
+  refine strictMonoOn_of_deriv_pos (convex_Ici _) ?_ ?_
+  · exact (continuous_id.mul Real.continuous_exp).continuousOn
+  · intro u hu
+    rw [interior_Ici, Set.mem_Ioi] at hu
+    rw [(hasDerivAt_mulExp u).deriv]
+    have h1 : (0 : ℝ) < 1 + u := by linarith
+    positivity
+
+-- Theorem: `u * exp u = x` is solvable with `u ≥ -1` exactly when `x ≥ -1/e`. The
+-- solution is found by the intermediate value theorem between `-1`, where `mulExp` takes
+-- the value `-1/e`, and `max x 0`, where it is at least `max x 0 ≥ x`.
+theorem exists_mulExp_eq {x : ℝ} (hx : -Real.exp (-1) ≤ x) :
+    ∃ w : ℝ, -1 ≤ w ∧ mulExp w = x := by
+  have hb0 : (0 : ℝ) ≤ max x 0 := le_max_right _ _
+  have hlo : mulExp (-1) ≤ x := by simpa [mulExp] using hx
+  have hhi : x ≤ mulExp (max x 0) := by
+    have h1 : (1 : ℝ) ≤ Real.exp (max x 0) := Real.one_le_exp hb0
+    have h2 : max x 0 ≤ mulExp (max x 0) := by
+      rw [mulExp]
+      nlinarith
+    exact le_trans (le_max_left _ _) h2
+  obtain ⟨w, hw, hwx⟩ :=
+    intermediate_value_Icc (by linarith : (-1 : ℝ) ≤ max x 0)
+      (continuous_id.mul Real.continuous_exp).continuousOn ⟨hlo, hhi⟩
+  exact ⟨w, hw.1, hwx⟩
+
+open Classical in
+/-- The principal branch of the Lambert W function: the unique `w ≥ -1` with
+`w * exp w = x`. For `x < -1/e` there is no such `w` and this takes the junk value `0`,
+as `Real.sqrt` and `Real.log` do outside their domains. -/
+noncomputable def lambertW (x : ℝ) : ℝ :=
+  if h : ∃ w : ℝ, -1 ≤ w ∧ mulExp w = x then h.choose else 0
+
+-- Theorem: `lambertW` is characterised by its defining equation. Any `w ≥ -1` solving
+-- `w * exp w = x` *is* `lambertW x`, since `strictMonoOn_mulExp` leaves room for only one.
+theorem lambertW_eq {x w : ℝ} (hw : -1 ≤ w) (hwx : mulExp w = x) : lambertW x = w := by
+  have hex : ∃ w : ℝ, -1 ≤ w ∧ mulExp w = x := ⟨w, hw, hwx⟩
+  rw [lambertW, dif_pos hex]
+  obtain ⟨h1, h2⟩ := hex.choose_spec
+  exact strictMonoOn_mulExp.injOn h1 hw (h2.trans hwx.symm)
+
+-- Theorem: the defining equation itself, on the domain `[-1/e, ∞)`.
+theorem lambertW_mul_exp {x : ℝ} (hx : -Real.exp (-1) ≤ x) :
+    lambertW x * Real.exp (lambertW x) = x := by
+  obtain ⟨w, hw, hwx⟩ := exists_mulExp_eq hx
+  rw [lambertW_eq hw hwx, ← mulExp, hwx]
+
+-- Theorem: below `-1/e` there is no solution at all, so `lambertW` is its junk value.
+-- `mulExp` is increasing on `[-1, ∞)`, so `-1/e = mulExp (-1)` is the least value it
+-- takes there.
+theorem lambertW_of_lt {x : ℝ} (hx : x < -Real.exp (-1)) : lambertW x = 0 := by
+  have hex : ¬ ∃ w : ℝ, -1 ≤ w ∧ mulExp w = x := by
+    rintro ⟨w, hw, rfl⟩
+    have h := strictMonoOn_mulExp.monotoneOn (Set.mem_Ici.mpr le_rfl) hw hw
+    simp only [mulExp] at h hx
+    linarith
+  rw [lambertW, dif_neg hex]
+
+/-! #### The two curves -/
+
+-- Theorem: the natural exponential curve `y = e ^ x` is constructible. The drawing
+-- program only offers base `2`, but scaling the `x`-axis by `log 2` changes the base:
+-- `2 ^ (u / log 2) = e ^ u`.
+theorem exp_PConstructibleCurve :
+    PConstructibleCurve {p : ℝ × ℝ | p.2 = Real.exp p.1} := by
+  have hlog2 : PConstructible (Real.log 2) := log_Pconstructible two_Pconstructible (by norm_num)
+  have hne : Real.log 2 ≠ 0 := Real.log_ne_zero_of_pos_of_ne_one (by norm_num) (by norm_num)
+  have h := PConstructibleCurve.scale_x PConstructibleCurve.exp_two hlog2
+  convert h using 1
+  ext ⟨u, v⟩
+  simp only [Set.mem_ofPred_eq, Set.mem_image, Prod.exists, Prod.mk.injEq]
+  constructor
+  · intro hv
+    refine ⟨u / Real.log 2, v, ?_, by field_simp, rfl⟩
+    rw [hv, Real.rpow_def_of_pos (by norm_num)]
+    congr 1
+    field_simp
+  · rintro ⟨a, b, hb, hua, rfl⟩
+    rw [hb, Real.rpow_def_of_pos (by norm_num), hua]
+
+-- Theorem: the right-hand branch of the rectangular hyperbola `y = c / x` is
+-- constructible, as the power law `y = x ^ (-1)` with the `y`-axis scaled by `c`.
+theorem hyperbola_PConstructibleCurve {c : ℝ} (hc : PConstructible c) :
+    PConstructibleCurve {p : ℝ × ℝ | 0 < p.1 ∧ p.2 = c / p.1} := by
+  have h := PConstructibleCurve.scale_y (PConstructibleCurve.power_law 1 (-1)) hc
+  convert h using 1
+  ext ⟨u, v⟩
+  simp only [Set.mem_ofPred_eq, Set.mem_image, Prod.exists, Prod.mk.injEq]
+  push_cast
+  simp [Real.rpow_neg_one, div_eq_mul_inv, eq_comm]
+
+-- Theorem: so is the left-hand branch, by reflecting the right-hand branch of `y = -c / x`
+-- in the `y`-axis. `power_law` only ever draws `x > 0`, so the two branches of a
+-- hyperbola have to be obtained separately.
+theorem hyperbola_neg_PConstructibleCurve {c : ℝ} (hc : PConstructible c) :
+    PConstructibleCurve {p : ℝ × ℝ | p.1 < 0 ∧ p.2 = c / p.1} := by
+  have h := PConstructibleCurve.scale_x (hyperbola_PConstructibleCurve (neg_Pconstructible hc))
+    (neg_Pconstructible PConstructible.base_one)
+  convert h using 1
+  ext ⟨u, v⟩
+  simp only [Set.mem_ofPred_eq, Set.mem_image, Prod.exists, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hu, hv⟩
+    refine ⟨-u, v, ⟨by linarith, ?_⟩, by ring, rfl⟩
+    rw [hv]
+    field_simp
+  · rintro ⟨a, b, ⟨ha, hb⟩, hua, rfl⟩
+    refine ⟨by linarith, ?_⟩
+    rw [hb, ← hua]
+    field_simp
+
+/-! #### The construction -/
+
+-- Theorem: `W x` is P-constructible for every P-constructible `x`. Outside `[-1/e, ∞)`
+-- this is the junk value `0`; inside it, `W x` is the abscissa where the exponential
+-- curve `y = e ^ u` meets the hyperbola `y = x / u`, since that crossing is exactly the
+-- equation `u * exp u = x`.
+theorem lambertW_Pconstructible {x : ℝ} (hx : PConstructible x) :
+    PConstructible (lambertW x) := by
+  by_cases hdom : -Real.exp (-1) ≤ x
+  · obtain ⟨w, hw1, hwx⟩ := exists_mulExp_eq hdom
+    rw [lambertW_eq hw1 hwx]
+    rw [mulExp] at hwx
+    have hexp := Real.exp_pos w
+    rcases lt_trichotomy x 0 with hneg | hzero | hpos
+    · -- `-1 ≤ w < 0`: crop the exponential curve to `[-1, 0] × [0, 1]` first, so that only
+      -- the principal root of `u * exp u = x` survives the intersection.
+      have hwneg : w < 0 := by nlinarith
+      have hE := PConstructibleCurve.restrict exp_PConstructibleCurve (-1) 0 0 1
+        (neg_Pconstructible PConstructible.base_one) zero_Pconstructible
+        zero_Pconstructible PConstructible.base_one
+      refine PConstructible.inter_x (y := Real.exp w) hE
+        (hyperbola_neg_PConstructibleCurve hx) ?_
+      ext ⟨u, v⟩
+      simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+      constructor
+      · rintro ⟨⟨hEc, hb1, hb2, -, -⟩, hu0, hH⟩
+        have hune : u ≠ 0 := hu0.ne
+        have hkey : mulExp u = x := by
+          rw [mulExp, ← hEc, hH]
+          field_simp
+        have hu : u = w := strictMonoOn_mulExp.injOn (Set.mem_Ici.mpr hb1)
+          (Set.mem_Ici.mpr hw1) (by rw [hkey, mulExp]; linarith)
+        exact ⟨hu, by rw [hEc, hu]⟩
+      · rintro ⟨rfl, rfl⟩
+        refine ⟨⟨rfl, hw1, hwneg.le, hexp.le, Real.exp_le_one_iff.mpr hwneg.le⟩, hwneg, ?_⟩
+        rw [eq_div_iff hwneg.ne, ← hwx]
+        ring
+    · -- `x = 0` forces `w = 0`, since `exp` never vanishes.
+      rcases mul_eq_zero.mp (hwx.trans hzero) with h | h
+      · rw [h]
+        exact zero_Pconstructible
+      · exact absurd h hexp.ne'
+    · -- `w > 0`: the `u > 0` branch of the hyperbola is the only one `power_law` draws,
+      -- and `mulExp` is injective there, so no cropping is needed.
+      have hwpos : 0 < w := by nlinarith
+      refine PConstructible.inter_x (y := Real.exp w) exp_PConstructibleCurve
+        (hyperbola_PConstructibleCurve hx) ?_
+      ext ⟨u, v⟩
+      simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+      constructor
+      · rintro ⟨hEc, hu0, hH⟩
+        have hune : u ≠ 0 := hu0.ne'
+        have hkey : mulExp u = x := by
+          rw [mulExp, ← hEc, hH]
+          field_simp
+        have hu : u = w := strictMonoOn_mulExp.injOn (Set.mem_Ici.mpr (by linarith))
+          (Set.mem_Ici.mpr hw1) (by rw [hkey, mulExp]; linarith)
+        exact ⟨hu, by rw [hEc, hu]⟩
+      · rintro ⟨rfl, rfl⟩
+        refine ⟨rfl, hwpos, ?_⟩
+        rw [eq_div_iff hwpos.ne', ← hwx]
+        ring
+  · push Not at hdom
+    rw [lambertW_of_lt hdom]
+    exact zero_Pconstructible
+
+-- Sanity checks that `lambertW` really is the Lambert W function and not merely some
+-- function that the construction above happens to reach: it takes the expected values at
+-- the three points where `W` is elementary, namely `W 0 = 0`, `W e = 1` and the branch
+-- point `W (-1/e) = -1`.
+example : lambertW 0 = 0 := lambertW_eq (by norm_num) (by simp [mulExp])
+
+example : lambertW (Real.exp 1) = 1 := lambertW_eq (by norm_num) (by simp [mulExp])
+
+example : lambertW (-Real.exp (-1)) = -1 := lambertW_eq le_rfl (by simp [mulExp])
+
+
 /-! ### Sine and cosine
 
 `PConstructibleCurve.arc_of_length` used in earnest. Instead of measuring an arc whose
