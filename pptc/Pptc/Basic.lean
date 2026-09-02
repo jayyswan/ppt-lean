@@ -29,6 +29,8 @@ import Mathlib.Analysis.SpecialFunctions.Arsinh
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Periodic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.IntegrationByParts
+import Mathlib.FieldTheory.Minpoly.Basic
+import Mathlib.RingTheory.Algebraic.Integral
 import Mathlib.Tactic.FunProp
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
@@ -226,6 +228,78 @@ theorem dist_Pconstructible {x₀ y₀ x₁ y₁ : ℝ}
   sqrt_Pconstructible
     (PConstructible.add (sq_Pconstructible (PConstructible.sub hx₁ hx₀))
       (sq_Pconstructible (PConstructible.sub hy₁ hy₀)))
+
+/-! ### Algebraic numbers of degree at most 7
+
+The drawing program can plot the graph of any rational polynomial of degree at most `7`,
+and that one curve family already reaches every real algebraic number of degree at
+most `7`. The construction is the obvious one: plot a polynomial that kills `x` and read
+off where its graph crosses the horizontal axis.
+
+All of the work is in making that crossing *unique*, since `abscissa_Pconstructible`
+(and behind it `PConstructible.inter_x`) demands that the two curves meet in a single
+point, while a degree-`7` polynomial may cross the axis seven times. A nonzero
+polynomial has only finitely many roots, so the roots other than `x` form a finite —
+hence closed — set that `x` avoids, and some ball of radius `ε` around `x` misses all of
+them. Cropping the graph to a window `[q₁, q₂] × [-1, 1]` whose abscissa bounds are
+rationals drawn from inside that gap therefore leaves exactly one crossing, the wanted
+one. Rationals are used for the bounds only because `PConstructibleCurve.restrict` needs
+`PConstructible` ones and `rat_Pconstructible` is the cheapest supply; any
+P-constructible pair inside the gap would serve equally well.
+
+The degree bound is inherited verbatim from `PConstructibleCurve.poly_graph`; nothing
+else in the argument is sensitive to it. -/
+
+-- Theorem: a root of a nonzero rational polynomial of degree at most 7 is
+-- P-constructible.
+theorem root_Pconstructible {x : ℝ} {p : Polynomial ℚ} (hp : p ≠ 0)
+    (hdeg : p.natDegree ≤ 7) (hroot : Polynomial.aeval x p = 0) :
+    PConstructible x := by
+  -- Move to `ℝ[X]`, where Mathlib's finiteness of the root set is stated.
+  set P : Polynomial ℝ := p.map (algebraMap ℚ ℝ) with hPdef
+  have hPne : P ≠ 0 := by
+    rw [hPdef]
+    exact (Polynomial.map_ne_zero_iff (algebraMap ℚ ℝ).injective).mpr hp
+  have heval : ∀ t : ℝ, Polynomial.aeval t p = P.eval t := by
+    intro t
+    simp [hPdef, Polynomial.eval_map, Polynomial.aeval_def]
+  -- The roots other than `x` form a finite, hence closed, set avoiding `x`, so some
+  -- ball around `x` contains no other root.
+  have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ x}.Finite :=
+    (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
+  obtain ⟨ε, hε, hball⟩ :=
+    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl x (fun h => h.2 rfl)
+  -- Rational abscissa bounds strictly inside that ball, straddling `x`.
+  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show x - ε < x by linarith)
+  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show x < x + ε by linarith)
+  have huniq : ∀ t : ℝ, Polynomial.aeval t p = 0 → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = x := by
+    intro t ht hlo hhi
+    have hmem : t ∈ Metric.ball x ε := by
+      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
+      constructor <;> linarith
+    have hnot := hball hmem
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
+    exact hnot (by rw [Polynomial.IsRoot, ← heval]; exact ht)
+  -- The graph of `p`, cropped to that window, meets the horizontal axis exactly once.
+  have hS := PConstructibleCurve.restrict (PConstructibleCurve.poly_graph p hdeg)
+    (q₁ : ℝ) (q₂ : ℝ) (-1) 1 (rat_Pconstructible q₁) (rat_Pconstructible q₂)
+    (neg_Pconstructible PConstructible.base_one) PConstructible.base_one
+  refine abscissa_Pconstructible hS zero_Pconstructible ?_
+  ext ⟨u, v⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨⟨hgraph, hb1, hb2, -, -⟩, hline⟩
+    exact ⟨huniq u (by rw [← hgraph]; exact hline) hb1 hb2, hline⟩
+  · rintro ⟨rfl, rfl⟩
+    exact ⟨⟨hroot.symm, hq₁b.le, hq₂a.le, by norm_num, by norm_num⟩, rfl⟩
+
+-- Theorem: every real algebraic number of degree at most 7 over ℚ is P-constructible.
+-- Its minimal polynomial is a nonzero rational polynomial of degree at most 7 that
+-- kills it, so `root_Pconstructible` applies directly.
+theorem algebraic_Pconstructible {x : ℝ} (hx : IsAlgebraic ℚ x)
+    (hdeg : (minpoly ℚ x).natDegree ≤ 7) :
+    PConstructible x :=
+  root_Pconstructible (minpoly.ne_zero hx.isIntegral) hdeg (minpoly.aeval ℚ x)
 
 /-- The linear parametrization of the segment from `p` to `q`, traced over `[0, 1]`. -/
 def segmentParam (p q : ℝ × ℝ) : ℝ → ℝ × ℝ :=
