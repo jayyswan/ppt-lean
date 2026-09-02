@@ -251,4 +251,134 @@ theorem ellipticPiAux_interchange {c : ℝ} (hc : c < 1) (β φ : ℝ) :
   · exact ((continuous_ellipticPiAuxIntegrand hc
       (middleNu_lt_one hc φ)).const_mul _).intervalIntegrable _ _
 
+/-! ### Investigation: where a third-kind integral could come from
+
+Everything above stops at Legendre's wall. This section records what the search for a way
+round it has found; the first step of it is proved, the rest is stated as it stands.
+
+**Every arc length available here is `∫ √(x'² + y'²)`.** Each constructor either produces
+one of the six base curves, applies a linear map, or passes to a subset (`restrict` and
+`arc_of_length` both do), so every constructible curve is contained in a linear image of a
+base curve, and the speeds are exactly those of the six families. A third-kind elliptic
+integral is one whose differential has a nonzero *residue*, so the question is which of
+those speeds can have one. Expanding `√Q` at infinity answers it:
+
+* `poly_graph` under a linear map has speed `√(A p'² + B p' + C)` for the single quadratic
+  `p'`, so `√Q` expands in powers of `1/p' ∼ 1/t²` and the residue vanishes identically;
+* the ellipse gives `∫(1 - c t²)dt/√R`, only the even moments, so no residue;
+* power laws force the degenerate exponent `b = 0` before a residue appears;
+* `exp_two` does have a residue — but its curve is rational, and that is where `log` came
+  from rather than anything elliptic;
+* **the cubic Bézier is the exception.** Its `x'` and `y'` are two *independent* quadratics,
+  so `Q = x'² + y'²` need not be even, and the residue is generally nonzero. The Bézier
+  used for `F` in `Pptc.Basic` is `firstKindQuartic m t = (1 - m t²)² + ((1 + m) t)²`, which
+  *is* even — residue exactly `0`. That is why `F` came out with no third-kind term, and it
+  means the general Bézier is an unexploited resource.
+
+The first step is the moment reduction below: `∫₀^T √Q` is an algebraic term plus a
+combination of the three moments `∫ t^j dt/√Q`, `j = 0, 1, 2`, and `∫ t dt/√Q` is precisely
+the third-kind one (`dt/√Q` is first kind, `t² dt/√Q` second, `t dt/√Q` has the residue).
+
+What numerics then say, checked to 40+ digits on random Béziers, is that the rest of the
+chain closes:
+
+* reducing `Q` to `(1 + u²)(1 + κ²u²)` by a real Möbius map `t = M(u)` and then `u = tan ψ`
+  puts everything on the Legendre curve at parameter `c = 1 - κ²`;
+* `∫dt/√Q` is `F(ψ, c)` on the nose, and `∫t dt/√Q` fits `{F(ψ,c), Π(n;ψ,c), elementary}`
+  exactly, where `n` comes from `u₀ = M⁻¹(∞)` as `n = (1 + u₀²)/u₀²`;
+* the whole arc length fits `{algebraic, 1, F, E, Π, elementary}` exactly, with a nonzero
+  coefficient on `Π`.
+
+So the arc length of a general cubic Bézier really does contain an incomplete third-kind
+integral. **But the parameter it reaches is always `n > 1`.** That is forced, not accidental:
+the arc-length differential has its poles at the point at infinity of the Bézier parameter,
+`M⁻¹(∞) = u₀` is a *real* number, so in the Legendre variable the pole lands at
+`s₀ = sin (arctan u₀)` with `|s₀| < 1`, and `n = 1/s₀² > 1`. Every one of 1486 sampled
+Béziers obeyed it. The two Legendre reductions of a single Bézier (they differ by
+`u ↦ 1/(κu)`) give parameters `n₁, n₂` satisfying `(n₁ - 1)(n₂ - 1) = 1 - c`, and between
+them `n` ranges over all of `(1, ∞)`.
+
+That is the state of it. `n > 1` is exactly the range this project's complete-integral
+theorem excludes, so it is new ground rather than a second route to old ground; and `n < 1`
+— the classical range — stays out of reach, because no constructible curve has an
+arc-length differential whose pole sits anywhere but at infinity. -/
+
+/-- A quartic in coefficient form. -/
+def quartic (q₄ q₃ q₂ q₁ q₀ t : ℝ) : ℝ := q₄ * t ^ 4 + q₃ * t ^ 3 + q₂ * t ^ 2 + q₁ * t + q₀
+
+/-- The algebraic part of the moment reduction of `∫ √Q`. -/
+noncomputable def quarticArcAnti (q₄ q₃ q₂ q₁ q₀ t : ℝ) : ℝ :=
+  (q₃ / (12 * q₄) + t / 3) * Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t)
+
+theorem quarticArc_alg {w D q₄ q₃ q₂ q₁ q₀ t : ℝ} (hw : w ≠ 0) (hq₄ : q₄ ≠ 0)
+    (hsq : w ^ 2 = q₄ * t ^ 4 + q₃ * t ^ 3 + q₂ * t ^ 2 + q₁ * t + q₀)
+    (hD : D = 4 * q₄ * t ^ 3 + 3 * q₃ * t ^ 2 + 2 * q₂ * t + q₁) :
+    1 / 3 * w + (q₃ / (12 * q₄) + t / 3) * (D / (2 * w))
+      = w - ((2 * q₀ / 3 - q₃ * q₁ / (24 * q₄))
+          + (q₁ / 2 - q₃ * q₂ / (12 * q₄)) * t
+          + (q₂ / 3 - q₃ ^ 2 / (8 * q₄)) * t ^ 2) / w := by
+  subst hD
+  field_simp
+  linear_combination (-9216 * q₄) * hsq
+
+-- Theorem: the moment reduction. `√Q` differs from an explicit algebraic derivative by
+-- `(α + β t + γ t²)/√Q`, so an arc length `∫ √Q` is an algebraic term plus a combination of
+-- the three moments. The middle one, `β ∫ t dt/√Q`, is the third-kind piece.
+theorem hasDerivAt_quarticArcAnti {q₄ q₃ q₂ q₁ q₀ : ℝ} (hq₄ : q₄ ≠ 0)
+    (hpos : ∀ s : ℝ, 0 < quartic q₄ q₃ q₂ q₁ q₀ s) (t : ℝ) :
+    HasDerivAt (quarticArcAnti q₄ q₃ q₂ q₁ q₀)
+      (Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t)
+        - ((2 * q₀ / 3 - q₃ * q₁ / (24 * q₄))
+            + (q₁ / 2 - q₃ * q₂ / (12 * q₄)) * t
+            + (q₂ / 3 - q₃ ^ 2 / (8 * q₄)) * t ^ 2)
+          / Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t)) t := by
+  have hQ := hpos t
+  have hs : 0 < Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t) := Real.sqrt_pos.mpr hQ
+  have hsq : Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t) ^ 2
+      = q₄ * t ^ 4 + q₃ * t ^ 3 + q₂ * t ^ 2 + q₁ * t + q₀ := Real.sq_sqrt hQ.le
+  have hQd : HasDerivAt (quartic q₄ q₃ q₂ q₁ q₀)
+      (4 * q₄ * t ^ 3 + 3 * q₃ * t ^ 2 + 2 * q₂ * t + q₁) t := by
+    have h4 := (hasDerivAt_pow 4 t).const_mul q₄
+    have h3 := (hasDerivAt_pow 3 t).const_mul q₃
+    have h2 := (hasDerivAt_pow 2 t).const_mul q₂
+    have h1 := (hasDerivAt_id t).const_mul q₁
+    exact ((((h4.add h3).add h2).add h1).add_const q₀).congr_deriv (by push_cast; ring)
+  have hroot := hQd.sqrt hQ.ne'
+  have hlin : HasDerivAt (fun s : ℝ => q₃ / (12 * q₄) + s / 3) (1 / 3) t := by
+    simpa using ((hasDerivAt_id t).div_const 3).const_add (q₃ / (12 * q₄))
+  exact (hlin.mul hroot).congr_deriv (quarticArc_alg hs.ne' hq₄ hsq rfl)
+
+-- Theorem: integrating it. `∫₀^T √Q` is an algebraic term plus the three moments; the
+-- coefficient of the third-kind moment `∫ t dt/√Q` is `q₁/2 - q₃q₂/(12q₄)`, which vanishes
+-- exactly when the reduction has no third-kind content.
+theorem integral_sqrt_quartic {q₄ q₃ q₂ q₁ q₀ : ℝ} (hq₄ : q₄ ≠ 0)
+    (hpos : ∀ s : ℝ, 0 < quartic q₄ q₃ q₂ q₁ q₀ s) (T : ℝ) :
+    (∫ t in (0 : ℝ)..T, Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t))
+      = (quarticArcAnti q₄ q₃ q₂ q₁ q₀ T - quarticArcAnti q₄ q₃ q₂ q₁ q₀ 0)
+        + ∫ t in (0 : ℝ)..T,
+            ((2 * q₀ / 3 - q₃ * q₁ / (24 * q₄))
+              + (q₁ / 2 - q₃ * q₂ / (12 * q₄)) * t
+              + (q₂ / 3 - q₃ ^ 2 / (8 * q₄)) * t ^ 2)
+            / Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t) := by
+  have hQc : Continuous (quartic q₄ q₃ q₂ q₁ q₀) := by unfold quartic; fun_prop
+  have hroot : Continuous fun t : ℝ => Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t) :=
+    Real.continuous_sqrt.comp hQc
+  have hne : ∀ t : ℝ, Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t) ≠ 0 :=
+    fun t => (Real.sqrt_pos.mpr (hpos t)).ne'
+  have hmom : Continuous fun t : ℝ =>
+      ((2 * q₀ / 3 - q₃ * q₁ / (24 * q₄))
+        + (q₁ / 2 - q₃ * q₂ / (12 * q₄)) * t
+        + (q₂ / 3 - q₃ ^ 2 / (8 * q₄)) * t ^ 2)
+      / Real.sqrt (quartic q₄ q₃ q₂ q₁ q₀ t) :=
+    (by fun_prop : Continuous fun t : ℝ =>
+      ((2 * q₀ / 3 - q₃ * q₁ / (24 * q₄))
+        + (q₁ / 2 - q₃ * q₂ / (12 * q₄)) * t
+        + (q₂ / 3 - q₃ ^ 2 / (8 * q₄)) * t ^ 2)).div hroot hne
+  have hkey := intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (fun t _ => hasDerivAt_quarticArcAnti hq₄ hpos t)
+    ((hroot.sub hmom).intervalIntegrable 0 T)
+  rw [intervalIntegral.integral_sub (hroot.intervalIntegrable 0 T)
+    (hmom.intervalIntegrable 0 T)] at hkey
+  linarith
+
 end Pconstructible
