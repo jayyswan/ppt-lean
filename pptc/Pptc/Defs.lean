@@ -35,8 +35,8 @@ point-sets reachable from a finite sequence of curve constructions (axis-aligned
 ellipses, axis-aligned rectangles, degree-≤7 polynomial graphs with rational
 coefficients, power laws, the exponential `y = 2 ^ x`, cubic Bézier curves with
 P-constructible control points) and the geometric operations of
-stretching, rotating by whole-degree increments, cropping to a rectangular window, and
-marking off an arc of prescribed length.
+scaling either axis, rotating by whole-degree increments, cropping to a rectangular
+window, and marking off an arc of prescribed length.
 
 The two are mutually inductive: a `PConstructibleCurve` may need `PConstructible`
 parameters (e.g. an ellipse's center and dimensions), and `PConstructible` may need
@@ -200,12 +200,28 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
       (hx₄ : PConstructible p₄.1) (hy₄ : PConstructible p₄.2) :
       PConstructibleCurve (bezierParam p₁ p₂ p₃ p₄ '' Set.Icc 0 1)
   -- Closure operations (axioms, not derived from `PConstructible` on ℝ)
-  -- Uniform scaling by a `PConstructible` factor.
-  | stretch {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+  -- Scaling the `x` axis by a `PConstructible` factor, and scaling the `y` axis by one.
+  -- These are the resize handles of the drawing program: dragging the side handle of a
+  -- shape changes its width and leaves its height alone, and vice versa. Uniform scaling
+  -- is the composite with a common factor; see `stretch_PConstructibleCurve`.
+  --
+  -- Having the two axes move independently is strictly stronger than moving them
+  -- together, and not by a little. A uniform scale and a rotation are both conformal, so
+  -- no composite of those could ever carry a circle to a non-circular ellipse. Splitting
+  -- the factors is what makes `linearMap_PConstructibleCurve` possible, and what lets
+  -- `rotate_PConstructibleCurve` reach angles that are not whole numbers of degrees.
+  | scale_x {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
       {s : ℝ} (hs : PConstructible s) :
-      PConstructibleCurve ((fun p : ℝ × ℝ => (s * p.1, s * p.2)) '' S)
-  -- Rotation by any whole number of degrees. Taken as an axiom: unlike `stretch`,
-  -- this does not require `Real.cos`/`Real.sin` of the angle to be `PConstructible`.
+      PConstructibleCurve ((fun p : ℝ × ℝ => (s * p.1, p.2)) '' S)
+  | scale_y {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      {s : ℝ} (hs : PConstructible s) :
+      PConstructibleCurve ((fun p : ℝ × ℝ => (p.1, s * p.2)) '' S)
+  -- Rotation by any whole number of degrees. Taken as an axiom: unlike `scale_x`, this
+  -- does not require `Real.cos`/`Real.sin` of the angle to be `PConstructible`.
+  --
+  -- The restriction to whole degrees restricts what is *assumed*, not what is reachable:
+  -- `rotate_PConstructibleCurve` derives rotation by every `PConstructible` angle from
+  -- this constructor together with `scale_x` and `scale_y`.
   | rotate {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S) (n : ℤ) :
       PConstructibleCurve
         ((fun p : ℝ × ℝ =>

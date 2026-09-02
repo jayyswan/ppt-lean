@@ -886,6 +886,409 @@ theorem arctan_Pconstructible {x : ℝ} (hx : PConstructible x) :
   simpa [pow_two] using PConstructible.add PConstructible.base_one (PConstructible.mul hx hx)
 
 
+/-! ### Linear transformations of the plane
+
+`PConstructibleCurve` is closed under every linear map of the plane whose four matrix
+entries are P-constructible. Three primitives do the work: `PConstructibleCurve.scale_x`
+and `PConstructibleCurve.scale_y`, which stretch the two axes independently, and
+`PConstructibleCurve.rotate`, which turns the plane through a whole number of degrees.
+
+Those are not obviously enough. A rotation and a *uniform* scale are both conformal, so no
+composite of them can carry a circle to a non-circular ellipse; it is only because
+`scale_x` and `scale_y` may be given different factors that anything beyond the
+similarities is reachable at all. And the rotations supplied form a discrete set of 360
+angles, so even rotation by a general P-constructible angle has to be built rather than
+assumed. That is done first, and the general theorem then follows from a singular value
+decomposition.
+
+#### Rotation by an angle that is not a whole number of degrees
+
+Write `Rot ψ` for rotation by `ψ` and `diag (u, v)` for the scaling that `scale_x` and
+`scale_y` compose to. The claim is that
+
+  `Rot ψ = diag (A, B) ∘ Rot 30° ∘ diag (p, 1) ∘ Rot 60° ∘ diag (1, H)`
+
+for suitable P-constructible `A, B, p, H`, whenever `|ψ| ≤ 30°`. Multiplying the five
+matrices out, the composite is
+
+  `[[A X₁, -A H X₂], [B X₃, -B H X₁]]`,  `X₁ = (√3/4)(p - 1)`,
+                                          `X₂ = (3p + 1)/4`,  `X₃ = (p + 3)/4`,
+
+so matching it against `[[cos ψ, -sin ψ], [sin ψ, cos ψ]]` fixes `A`, `B` and `H` from the
+first three entries and leaves the fourth as a single constraint on `p`, namely
+`sin²ψ · X₁² = -cos²ψ · X₂X₃`. Cleared of denominators that is the quadratic
+
+  `3p² + (16 cos²ψ - 6) p + 3 = 0`,
+
+whose discriminant `(16 cos²ψ - 6)² - 36` is non-negative exactly when `cos²ψ ≥ 3/4` —
+which is the 30° window quoted above. So the root `p` exists there, and being built from
+`cos ψ` by a square root it is P-constructible. Outside the window there is no such `p`,
+but none is needed: rounding `ψ` to the nearest whole number of degrees leaves a residue
+of at most half a degree, and the whole-degree part is a primitive.
+
+The angles `30°` and `60°` are not arbitrary. Running the same computation with a general
+pair `α, β` turns the constraint on `p` into
+
+  `p + 1/p = ((1 + t²u²) sin²ψ - (t² + u²) cos²ψ) / (tu)`,  `t = tan α`, `u = tan β`,
+
+which is solvable only when the right-hand side has absolute value at least `2`. For
+`α = β = 45°` that value is `-2 cos 2ψ`, which reaches `2` only at multiples of `90°`: the
+obvious choice is exactly the borderline one that fails, and so is `β = -α`. The pair
+`30°, 60°` clears the bar with room to spare.
+
+#### The general linear map
+
+With arbitrary rotations available the decomposition is the singular value decomposition,
+in the concrete form `M = Rot θ ∘ diag (σ₁, σ₂) ∘ Rot φ`, and it too comes out of algebra
+rather than any spectral theory. Split `M` into a rotation-like and a reflection-like
+part,
+
+  `[[a, b], [c, d]] = [[E, -G], [G, E]] + [[F, H], [H, -F]]`,
+
+where `E = (a + d)/2`, `F = (a - d)/2`, `G = (c - b)/2`, `H = (c + b)/2`. Put each part in
+polar form, `(E, G) = Q · (cos α, sin α)` and `(F, H) = R · (cos β, sin β)`, so the two
+summands are `Q · Rot α` and `R · Rot β ∘ diag (1, -1)`. Now set `θ = (α + β)/2` and
+`φ = (α - β)/2`, which makes `α = θ + φ` and `β = θ - φ`. Pulling `Rot θ` out on the left
+and `Rot φ` out on the right is then legitimate for *both* summands — the sign flip in
+`diag (1, -1)` is what turns the reflection's `Rot (-φ)` back into `Rot φ` as it passes
+through — and what is left behind is `Q · I + R · diag (1, -1) = diag (Q + R, Q - R)`.
+
+Every number in that decomposition is P-constructible: `Q` and `R` are square roots, the
+angles `α` and `β` are arccosines (`exists_polar_Pconstructible`), `θ` and `φ` are halves
+of their sum and difference, and `cos_sin_Pconstructible` then supplies the four
+trigonometric matrix entries. -/
+
+/-- The linear map of the plane with matrix `[[a, b], [c, d]]`, acting on the point
+`(x, y)` as the column vector it names: `(x, y) ↦ (a * x + b * y, c * x + d * y)`. -/
+def linearMap (a b c d : ℝ) : ℝ × ℝ → ℝ × ℝ :=
+  fun p => (a * p.1 + b * p.2, c * p.1 + d * p.2)
+
+-- Theorem: scaling `x` by `sx` and `y` by `sy` is the linear map `[[sx, 0], [0, sy]]`.
+theorem scale_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {sx sy : ℝ} (hsx : PConstructible sx) (hsy : PConstructible sy) :
+    PConstructibleCurve (linearMap sx 0 0 sy '' S) := by
+  have h := (hS.scale_x hsx).scale_y hsy
+  rw [← Set.image_comp] at h
+  have hfun : ((fun p : ℝ × ℝ => (p.1, sy * p.2)) ∘ fun p : ℝ × ℝ => (sx * p.1, p.2))
+      = linearMap sx 0 0 sy := by
+    funext p
+    simp [linearMap]
+  rwa [hfun] at h
+
+-- Theorem: uniform scaling is the two axis scalings sharing a factor. This is the single
+-- `stretch` operation the definition used to carry, now derived.
+theorem stretch_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {s : ℝ} (hs : PConstructible s) :
+    PConstructibleCurve ((fun p : ℝ × ℝ => (s * p.1, s * p.2)) '' S) := by
+  have h := scale_PConstructibleCurve hS hs hs
+  have hfun : linearMap s 0 0 s = fun p : ℝ × ℝ => (s * p.1, s * p.2) := by
+    funext p
+    simp [linearMap]
+  rwa [hfun] at h
+
+-- Theorem: rotation by a whole number of degrees, restated as a linear map. The angle is
+-- taken as a hypothesis rather than computed, so a caller may present it in whichever form
+-- is convenient -- `π / 6` rather than `30 * (π / 180)`, say.
+theorem rotate_deg_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    (n : ℤ) {θ : ℝ} (hθ : θ = (n : ℝ) * (Real.pi / 180)) :
+    PConstructibleCurve
+      (linearMap (Real.cos θ) (-Real.sin θ) (Real.sin θ) (Real.cos θ) '' S) := by
+  subst hθ
+  have hfun : (fun p : ℝ × ℝ =>
+        let φ := (n : ℝ) * (Real.pi / 180)
+        (p.1 * Real.cos φ - p.2 * Real.sin φ, p.1 * Real.sin φ + p.2 * Real.cos φ))
+      = linearMap (Real.cos ((n : ℝ) * (Real.pi / 180)))
+          (-Real.sin ((n : ℝ) * (Real.pi / 180))) (Real.sin ((n : ℝ) * (Real.pi / 180)))
+          (Real.cos ((n : ℝ) * (Real.pi / 180))) := by
+    funext p
+    simp only [linearMap, Prod.mk.injEq]
+    constructor <;> ring
+  rw [← hfun]
+  exact hS.rotate n
+
+-- Theorem: the matching quadratic `3p² + (16c² - 6)p + 3 = 0` has a P-constructible root
+-- whenever `c² ≥ 3/4`, and that root avoids the three values at which the matching would
+-- divide by zero.
+--
+-- The discriminant is `(16c² - 6)² - 36`, non-negative exactly when `16c² - 6 ≥ 6`, which is
+-- the hypothesis on `c²`. The three exclusions come out of the equation itself: `p = 1`
+-- forces `16c² - 6 = -6`, while `p = -3` and `p = -1/3` both force `16c² - 6 = 10`, that is
+-- `c² = 1`, which `s ≠ 0` rules out.
+theorem exists_rotation_param {c s : ℝ} (hcP : PConstructible c) (hsc : s ^ 2 + c ^ 2 = 1)
+    (hc2 : 3 / 4 ≤ c ^ 2) (hs0 : s ≠ 0) :
+    ∃ p : ℝ, PConstructible p ∧ 3 * p ^ 2 + (16 * c ^ 2 - 6) * p + 3 = 0 ∧
+      p - 1 ≠ 0 ∧ p + 3 ≠ 0 ∧ 3 * p + 1 ≠ 0 := by
+  have h6 : PConstructible (6 : ℝ) := by simpa using nat_Pconstructible 6
+  have h16 : PConstructible (16 : ℝ) := by simpa using nat_Pconstructible 16
+  have h36 : PConstructible (36 : ℝ) := by simpa using nat_Pconstructible 36
+  have hs2 : 0 < s ^ 2 := by positivity
+  have hw6 : (6 : ℝ) ≤ 16 * c ^ 2 - 6 := by nlinarith
+  have hw10 : 16 * c ^ 2 - 6 < 10 := by nlinarith
+  have hDnn : 0 ≤ (16 * c ^ 2 - 6) ^ 2 - 36 := by nlinarith
+  have hDsq : Real.sqrt ((16 * c ^ 2 - 6) ^ 2 - 36) ^ 2 = (16 * c ^ 2 - 6) ^ 2 - 36 :=
+    Real.sq_sqrt hDnn
+  obtain ⟨p, hp_def⟩ :
+      ∃ p : ℝ, p = (-(16 * c ^ 2 - 6) + Real.sqrt ((16 * c ^ 2 - 6) ^ 2 - 36)) / 6 := ⟨_, rfl⟩
+  have hquad : 3 * p ^ 2 + (16 * c ^ 2 - 6) * p + 3 = 0 := by
+    rw [hp_def]
+    field_simp
+    linear_combination 3 * hDsq
+  refine ⟨p, ?_, hquad, ?_, ?_, ?_⟩
+  · rw [hp_def]
+    exact PConstructible.div
+      (PConstructible.add
+        (neg_Pconstructible (PConstructible.sub
+          (PConstructible.mul h16 (sq_Pconstructible hcP)) h6))
+        (sqrt_Pconstructible (PConstructible.sub
+          (sq_Pconstructible (PConstructible.sub
+            (PConstructible.mul h16 (sq_Pconstructible hcP)) h6)) h36)))
+      h6
+  · intro h
+    have hp1 : p = 1 := by linarith
+    rw [hp1] at hquad
+    nlinarith
+  · intro h
+    have hp3 : p = -3 := by linarith
+    rw [hp3] at hquad
+    nlinarith
+  · intro h
+    have hp13 : p = -(1 / 3) := by linarith
+    rw [hp13] at hquad
+    nlinarith
+
+-- Theorem: rotation by a P-constructible angle of at most 30° either way is a constructible
+-- transformation. This is the geometric core of the section; the five factors and the
+-- quadratic in `p` are explained above.
+theorem rotate_small_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {ψ : ℝ} (hψ : PConstructible ψ) (hcos : Real.sqrt 3 / 2 ≤ Real.cos ψ) :
+    PConstructibleCurve
+      (linearMap (Real.cos ψ) (-Real.sin ψ) (Real.sin ψ) (Real.cos ψ) '' S) := by
+  have h3 : Real.sqrt 3 ^ 2 = 3 := Real.sq_sqrt (by norm_num)
+  have h3pos : 0 < Real.sqrt 3 := Real.sqrt_pos.mpr (by norm_num)
+  have hrP : PConstructible (Real.sqrt 3) := sqrt_Pconstructible three_Pconstructible
+  have hcP : PConstructible (Real.cos ψ) := cos_Pconstructible hψ
+  have hsP : PConstructible (Real.sin ψ) := sin_Pconstructible hψ
+  set c := Real.cos ψ with hc_def
+  set s := Real.sin ψ with hs_def
+  have hsc : s ^ 2 + c ^ 2 = 1 := Real.sin_sq_add_cos_sq ψ
+  have hcpos : 0 < c := lt_of_lt_of_le (by positivity) hcos
+  have hc2 : 3 / 4 ≤ c ^ 2 := by nlinarith
+  rcases eq_or_ne s 0 with hs0 | hs0
+  · have hc1 : c = 1 := by nlinarith
+    have hid : linearMap c (-s) s c = id := by
+      funext z
+      simp [linearMap, hc1, hs0]
+    rw [hid, Set.image_id]
+    exact hS
+  obtain ⟨p, hpP, hquad, hX1, hX3, hX2⟩ := exists_rotation_param hcP hsc hc2 hs0
+  have hrne : Real.sqrt 3 ≠ 0 := ne_of_gt h3pos
+  have hcne : c ≠ 0 := ne_of_gt hcpos
+  have h4P : PConstructible (4 : ℝ) := by simpa using nat_Pconstructible 4
+  obtain ⟨A, hA_def⟩ : ∃ A : ℝ, A = 4 * c / (Real.sqrt 3 * (p - 1)) := ⟨_, rfl⟩
+  obtain ⟨B, hB_def⟩ : ∃ B : ℝ, B = 4 * s / (p + 3) := ⟨_, rfl⟩
+  obtain ⟨H, hH_def⟩ : ∃ H : ℝ, H = s * Real.sqrt 3 * (p - 1) / (c * (3 * p + 1)) := ⟨_, rfl⟩
+  have hX1' : -1 + p ≠ 0 := fun h => hX1 (by linarith)
+  have hX2' : 1 + p * 3 ≠ 0 := fun h => hX2 (by linarith)
+  have hX2'' : p * 3 + 1 ≠ 0 := fun h => hX2 (by linarith)
+  have hX3' : 3 + p ≠ 0 := fun h => hX3 (by linarith)
+  have e1 : A * (Real.sqrt 3 / 4 * (p - 1)) = c := by
+    rw [hA_def]; field_simp [hrne, hX1, hX1']
+  have e2 : A * H * ((3 * p + 1) / 4) = s := by
+    rw [hA_def, hH_def]; field_simp [hrne, hX1, hX1', hX2, hX2', hcne]
+  have e3 : B * ((p + 3) / 4) = s := by
+    rw [hB_def]; field_simp [hX3, hX3']
+  have e4 : B * H * (Real.sqrt 3 / 4 * (p - 1)) = -c := by
+    rw [hB_def, hH_def]; field_simp [hX3, hX3', hX2, hX2', hcne]
+    linear_combination (s ^ 2 * (p - 1) ^ 2) * h3 + hquad + (3 * (p - 1) ^ 2) * hsc
+  have hAP : PConstructible A := by
+    rw [hA_def]
+    exact PConstructible.div (PConstructible.mul h4P hcP)
+      (PConstructible.mul hrP (PConstructible.sub hpP PConstructible.base_one))
+  have hBP : PConstructible B := by
+    rw [hB_def]
+    exact PConstructible.div (PConstructible.mul h4P hsP)
+      (PConstructible.add hpP three_Pconstructible)
+  have hHP : PConstructible H := by
+    rw [hH_def]
+    exact PConstructible.div
+      (PConstructible.mul (PConstructible.mul hsP hrP)
+        (PConstructible.sub hpP PConstructible.base_one))
+      (PConstructible.mul hcP
+        (PConstructible.add (PConstructible.mul three_Pconstructible hpP)
+          PConstructible.base_one))
+  have hM : linearMap c (-s) s c =
+      linearMap A 0 0 B ∘
+        linearMap (Real.sqrt 3 / 2) (-(1 / 2)) (1 / 2) (Real.sqrt 3 / 2) ∘
+          linearMap p 0 0 1 ∘
+            linearMap (1 / 2) (-(Real.sqrt 3 / 2)) (Real.sqrt 3 / 2) (1 / 2) ∘
+              linearMap 1 0 0 H := by
+    funext z
+    simp only [Function.comp_apply, linearMap, Prod.mk.injEq]
+    constructor
+    · linear_combination -(z.1 * e1) + z.2 * e2 + (A * p * H * z.2 / 4) * h3
+    · linear_combination -(z.1 * e3) + z.2 * e4 - (B * z.1 / 4) * h3
+  have hstep1 := scale_PConstructibleCurve hS PConstructible.base_one hHP
+  have hstep2 := rotate_deg_PConstructibleCurve hstep1 60 (by push_cast; ring :
+    Real.pi / 3 = ((60 : ℤ) : ℝ) * (Real.pi / 180))
+  rw [Real.cos_pi_div_three, Real.sin_pi_div_three] at hstep2
+  have hstep3 := scale_PConstructibleCurve hstep2 hpP PConstructible.base_one
+  have hstep4 := rotate_deg_PConstructibleCurve hstep3 30 (by push_cast; ring :
+    Real.pi / 6 = ((30 : ℤ) : ℝ) * (Real.pi / 180))
+  rw [Real.cos_pi_div_six, Real.sin_pi_div_six] at hstep4
+  have hstep5 := scale_PConstructibleCurve hstep4 hAP hBP
+  rw [hM]
+  simp only [Set.image_comp]
+  exact hstep5
+
+-- Theorem: every real number sits within half a degree of a whole number of degrees.
+theorem exists_int_degrees (x : ℝ) :
+    ∃ n : ℤ, |x - n * (Real.pi / 180)| ≤ Real.pi / 360 := by
+  have hd : (0 : ℝ) < Real.pi / 180 := by positivity
+  refine ⟨round (x / (Real.pi / 180)), ?_⟩
+  have h := abs_sub_round (x / (Real.pi / 180))
+  have hrw : x - (round (x / (Real.pi / 180)) : ℝ) * (Real.pi / 180)
+      = Real.pi / 180 * (x / (Real.pi / 180) - (round (x / (Real.pi / 180)) : ℝ)) := by
+    field_simp
+  rw [hrw, abs_mul, abs_of_pos hd]
+  nlinarith [abs_nonneg (x / (Real.pi / 180) - (round (x / (Real.pi / 180)) : ℝ))]
+
+-- Theorem: rotation by *any* P-constructible angle is a constructible transformation,
+-- even though only whole-degree rotations are assumed. Rounding to the nearest whole
+-- degree leaves a residue of at most half a degree, comfortably inside the 30° window of
+-- `rotate_small_PConstructibleCurve`, and the whole-degree part is a primitive.
+theorem rotate_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {ψ : ℝ} (hψ : PConstructible ψ) :
+    PConstructibleCurve
+      (linearMap (Real.cos ψ) (-Real.sin ψ) (Real.sin ψ) (Real.cos ψ) '' S) := by
+  have h180 : PConstructible (180 : ℝ) := by simpa using nat_Pconstructible 180
+  obtain ⟨n, hn⟩ := exists_int_degrees ψ
+  obtain ⟨φ, hφ_def⟩ : ∃ φ : ℝ, φ = ψ - n * (Real.pi / 180) := ⟨_, rfl⟩
+  have hφP : PConstructible φ := by
+    rw [hφ_def]
+    exact PConstructible.sub hψ (PConstructible.mul (int_Pconstructible n)
+      (PConstructible.div pi_Pconstructible h180))
+  have habs : |φ| ≤ Real.pi / 360 := by rw [hφ_def]; exact hn
+  have hcos : Real.sqrt 3 / 2 ≤ Real.cos φ := by
+    have hpi := Real.pi_pos
+    have h1 : |φ| ≤ Real.pi / 6 := by linarith
+    have h2 := Real.cos_le_cos_of_nonneg_of_le_pi (abs_nonneg φ) (by linarith) h1
+    rwa [Real.cos_pi_div_six, Real.cos_abs] at h2
+  have hdeg := rotate_deg_PConstructibleCurve
+    (rotate_small_PConstructibleCurve hS hφP hcos) n rfl
+  rw [← Set.image_comp] at hdeg
+  have hsum : ψ = (n : ℝ) * (Real.pi / 180) + φ := by rw [hφ_def]; ring
+  have hfun :
+      (linearMap (Real.cos ((n : ℝ) * (Real.pi / 180)))
+          (-Real.sin ((n : ℝ) * (Real.pi / 180))) (Real.sin ((n : ℝ) * (Real.pi / 180)))
+          (Real.cos ((n : ℝ) * (Real.pi / 180))) ∘
+        linearMap (Real.cos φ) (-Real.sin φ) (Real.sin φ) (Real.cos φ))
+      = linearMap (Real.cos ψ) (-Real.sin ψ) (Real.sin ψ) (Real.cos ψ) := by
+    rw [hsum, Real.cos_add, Real.sin_add]
+    funext z
+    simp only [Function.comp_apply, linearMap, Prod.mk.injEq]
+    constructor <;> ring
+  rwa [hfun] at hdeg
+
+-- Theorem: a point of the plane with P-constructible coordinates has P-constructible polar
+-- coordinates -- a radius `r` and an angle `ψ`, both P-constructible, with
+-- `(u, v) = r * (cos ψ, sin ψ)`.
+--
+-- The radius is `√(u² + v²)` and the angle is `± arccos (u / r)`, the sign chosen to match
+-- the sign of `v`: `arccos` only ever returns an angle in `[0, π]`, so on its own it can
+-- never reach the lower half plane. The degenerate case `r = 0` forces `u = v = 0`, where
+-- any angle will do.
+theorem exists_polar_Pconstructible {u v : ℝ} (hu : PConstructible u) (hv : PConstructible v) :
+    ∃ r ψ : ℝ, PConstructible r ∧ PConstructible ψ ∧
+      r * Real.cos ψ = u ∧ r * Real.sin ψ = v := by
+  have hrP : PConstructible (Real.sqrt (u ^ 2 + v ^ 2)) :=
+    sqrt_Pconstructible (PConstructible.add (sq_Pconstructible hu) (sq_Pconstructible hv))
+  set r := Real.sqrt (u ^ 2 + v ^ 2) with hr_def
+  have hr0 : 0 ≤ r := Real.sqrt_nonneg _
+  have hrsq : r ^ 2 = u ^ 2 + v ^ 2 := Real.sq_sqrt (by positivity)
+  rcases hr0.eq_or_lt with hr | hrpos
+  · refine ⟨r, 0, hrP, zero_Pconstructible, ?_, ?_⟩
+    · have hu0 : u = 0 := by nlinarith [sq_nonneg u, sq_nonneg v]
+      simp [← hr, hu0]
+    · have hv0 : v = 0 := by nlinarith [sq_nonneg u, sq_nonneg v]
+      simp [← hr, hv0]
+  · have habs : |u / r| ≤ 1 := by
+      rw [abs_div, abs_of_pos hrpos, div_le_one hrpos, abs_le]
+      constructor <;> nlinarith [sq_nonneg v]
+    obtain ⟨hc1, hc2⟩ := abs_le.mp habs
+    have hcos : Real.cos (Real.arccos (u / r)) = u / r := Real.cos_arccos hc1 hc2
+    have hsin : Real.sin (Real.arccos (u / r)) = |v| / r := by
+      rw [Real.sin_arccos, show 1 - (u / r) ^ 2 = (v / r) ^ 2 by field_simp; nlinarith,
+        Real.sqrt_sq_eq_abs, abs_div, abs_of_pos hrpos]
+    have harc : PConstructible (Real.arccos (u / r)) :=
+      arccos_Pconstructible (PConstructible.div hu hrP)
+    rcases le_or_gt 0 v with hv0 | hv0
+    · refine ⟨r, Real.arccos (u / r), hrP, harc, ?_, ?_⟩
+      · rw [hcos]; field_simp
+      · rw [hsin, abs_of_nonneg hv0]; field_simp
+    · refine ⟨r, -Real.arccos (u / r), hrP, neg_Pconstructible harc, ?_, ?_⟩
+      · rw [Real.cos_neg, hcos]; field_simp
+      · rw [Real.sin_neg, hsin, abs_of_neg hv0]; field_simp
+
+-- Theorem: `PConstructibleCurve` is closed under every linear transformation of the plane
+-- whose four matrix entries are P-constructible. Three steps do it: rotate by `φ`, scale
+-- the axes by `Q + R` and `Q - R`, then rotate by `θ`.
+theorem linearMap_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {a b c d : ℝ} (ha : PConstructible a) (hb : PConstructible b)
+    (hc : PConstructible c) (hd : PConstructible d) :
+    PConstructibleCurve (linearMap a b c d '' S) := by
+  obtain ⟨Q, α, hQP, hαP, hQc, hQs⟩ :=
+    exists_polar_Pconstructible
+      (PConstructible.div (PConstructible.add ha hd) two_Pconstructible)
+      (PConstructible.div (PConstructible.sub hc hb) two_Pconstructible)
+  obtain ⟨R, β, hRP, hβP, hRc, hRs⟩ :=
+    exists_polar_Pconstructible
+      (PConstructible.div (PConstructible.sub ha hd) two_Pconstructible)
+      (PConstructible.div (PConstructible.add hc hb) two_Pconstructible)
+  obtain ⟨θ, hθ_def⟩ : ∃ t : ℝ, t = (α + β) / 2 := ⟨_, rfl⟩
+  obtain ⟨φ, hφ_def⟩ : ∃ f : ℝ, f = (α - β) / 2 := ⟨_, rfl⟩
+  have hθP : PConstructible θ := by
+    rw [hθ_def]
+    exact PConstructible.div (PConstructible.add hαP hβP) two_Pconstructible
+  have hφP : PConstructible φ := by
+    rw [hφ_def]
+    exact PConstructible.div (PConstructible.sub hαP hβP) two_Pconstructible
+  have hα : α = θ + φ := by rw [hθ_def, hφ_def]; ring
+  have hβ : β = θ - φ := by rw [hθ_def, hφ_def]; ring
+  rw [hα, Real.cos_add] at hQc
+  rw [hα, Real.sin_add] at hQs
+  rw [hβ, Real.cos_sub] at hRc
+  rw [hβ, Real.sin_sub] at hRs
+  have hstep := rotate_PConstructibleCurve
+    (scale_PConstructibleCurve (rotate_PConstructibleCurve hS hφP)
+      (PConstructible.add hQP hRP) (PConstructible.sub hQP hRP)) hθP
+  have hfun :
+      linearMap a b c d =
+        linearMap (Real.cos θ) (-Real.sin θ) (Real.sin θ) (Real.cos θ) ∘
+          linearMap (Q + R) 0 0 (Q - R) ∘
+            linearMap (Real.cos φ) (-Real.sin φ) (Real.sin φ) (Real.cos φ) := by
+    funext z
+    simp only [Function.comp_apply, linearMap, Prod.mk.injEq]
+    constructor
+    · linear_combination -(z.1 * hQc) - z.1 * hRc + z.2 * hQs - z.2 * hRs
+    · linear_combination -(z.1 * hQs) - z.1 * hRs - z.2 * hQc + z.2 * hRc
+  rw [hfun]
+  simp only [Set.image_comp]
+  exact hstep
+
+-- Theorem: a shear is a constructible transformation. Not an interesting map in itself,
+-- but it is exactly the kind that no composite of rotations and *uniform* scalings can
+-- produce, so it is the shortest witness that the theorem above has real content.
+theorem shear_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {k : ℝ} (hk : PConstructible k) :
+    PConstructibleCurve ((fun p : ℝ × ℝ => (p.1 + k * p.2, p.2)) '' S) := by
+  have h := linearMap_PConstructibleCurve hS PConstructible.base_one hk
+    zero_Pconstructible PConstructible.base_one
+  have hfun : linearMap 1 k 0 1 = fun p : ℝ × ℝ => (p.1 + k * p.2, p.2) := by
+    funext p
+    simp [linearMap]
+  rwa [hfun] at h
+
+
 /-! ### The incomplete elliptic integral of the second kind
 
 `E(φ) = ∫₀^φ √(1 - c sin²θ) dθ` *is* an arc length of an ellipse, and at the right size
