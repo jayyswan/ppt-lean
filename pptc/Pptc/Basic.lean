@@ -249,11 +249,12 @@ one. Rationals are used for the bounds only because `PConstructibleCurve.restric
 P-constructible pair inside the gap would serve equally well.
 
 The degree bound is inherited verbatim from `PConstructibleCurve.poly_graph`; nothing
-else in the argument is sensitive to it. -/
+else in the argument is sensitive to it — and the next section lifts it to `9` by bringing
+a second curve family to the crossing. -/
 
 -- Theorem: a root of a nonzero rational polynomial of degree at most 7 is
 -- P-constructible.
-theorem root_Pconstructible {x : ℝ} {p : Polynomial ℚ} (hp : p ≠ 0)
+theorem root_Pconstructible_le_seven {x : ℝ} {p : Polynomial ℚ} (hp : p ≠ 0)
     (hdeg : p.natDegree ≤ 7) (hroot : Polynomial.aeval x p = 0) :
     PConstructible x := by
   -- Move to `ℝ[X]`, where Mathlib's finiteness of the root set is stated.
@@ -296,11 +297,255 @@ theorem root_Pconstructible {x : ℝ} {p : Polynomial ℚ} (hp : p ≠ 0)
 
 -- Theorem: every real algebraic number of degree at most 7 over ℚ is P-constructible.
 -- Its minimal polynomial is a nonzero rational polynomial of degree at most 7 that
--- kills it, so `root_Pconstructible` applies directly.
-theorem algebraic_Pconstructible {x : ℝ} (hx : IsAlgebraic ℚ x)
+-- kills it, so `root_Pconstructible_le_seven` applies directly.
+theorem algebraic_Pconstructible_le_seven {x : ℝ} (hx : IsAlgebraic ℚ x)
     (hdeg : (minpoly ℚ x).natDegree ≤ 7) :
     PConstructible x :=
-  root_Pconstructible (minpoly.ne_zero hx.isIntegral) hdeg (minpoly.aeval ℚ x)
+  root_Pconstructible_le_seven (minpoly.ne_zero hx.isIntegral) hdeg (minpoly.aeval ℚ x)
+
+/-! ### Algebraic numbers of degree at most 9
+
+The degree-7 ceiling above belongs to `poly_graph`, not to the drawing program.
+`power_law` will plot `y = x ^ n` for any `n`, and that one extra curve family lifts the
+ceiling by two.
+
+Cross `y = x ^ 8` with the graph of a rational `p` of degree at most 7: the crossings are
+the roots of `x ^ 8 - p x`, and as `p` ranges over the rational polynomials of degree at
+most 7 that is *every* monic rational octic. The power curve supplies the leading term and
+the graph supplies everything below it, so nothing is asked of `poly_graph` beyond what it
+draws. A leading coefficient other than `1` costs nothing either, since `power_law` carries
+its own factor `a`.
+
+Degree 9 needs one more idea. Crossing `y = x ^ 9` with a degree-7 graph reaches the nonics
+whose `X ^ 8` coefficient vanishes — but that coefficient can always be removed first.
+Substituting `X = Z - c₈ / (9 c₉)` shifts every root by a rational and kills the second
+coefficient, and a rational shift costs nothing in P-constructibility. That substitution is
+`Polynomial.taylor`, and `taylor_coeff_eight` below is the computation that it works.
+
+Degree 10 is where this stops. Crossing `y = x ^ 10` with a degree-7 graph would need the
+`X ^ 9` *and* `X ^ 8` coefficients to vanish, and one shift kills only one of them. Getting
+past it needs a graph of degree 8 or more, which is exactly what `poly_graph` will not draw.
+
+One wrinkle throughout: `power_law` draws only the branch `x > 0`. A negative root is
+reached by reflecting the whole picture in the `y` axis, which replaces `p` by `p (-X)` and
+leaves the degree bound intact. -/
+
+section PowerLaw
+
+open Polynomial
+
+-- Theorem: the power curve `y = a * x ^ n` meets the graph of a rational polynomial `p` of
+-- degree at most 7 exactly where `a * x ^ n = p x`. A *positive* root is P-constructible.
+theorem powerLaw_root_pos_Pconstructible {n : ℕ} (hn : 7 < n) {a : ℚ} (ha : a ≠ 0)
+    {p : Polynomial ℚ} (hdeg : p.natDegree ≤ 7) {β : ℝ} (hβ : 0 < β)
+    (heq : (a : ℝ) * β ^ n = aeval β p) :
+    PConstructible β := by
+  -- `a * X ^ n - p` is nonzero, because `n` exceeds the degree of `p`.
+  set P : Polynomial ℝ := C (a : ℝ) * X ^ n - p.map (algebraMap ℚ ℝ) with hPdef
+  have hane : (a : ℝ) ≠ 0 := by exact_mod_cast ha
+  have hmapdeg : (p.map (algebraMap ℚ ℝ)).natDegree ≤ 7 := by
+    rw [Polynomial.natDegree_map]; exact hdeg
+  have hPne : P ≠ 0 := by
+    intro h
+    have hEq : (C (a : ℝ) * X ^ n : Polynomial ℝ) = p.map (algebraMap ℚ ℝ) := by
+      rwa [hPdef, sub_eq_zero] at h
+    have h1 : (C (a : ℝ) * X ^ n : Polynomial ℝ).natDegree = n := by
+      rw [Polynomial.natDegree_C_mul hane, Polynomial.natDegree_X_pow]
+    rw [hEq] at h1
+    omega
+  have hevalP : ∀ t : ℝ, P.eval t = (a : ℝ) * t ^ n - aeval t p := by
+    intro t
+    simp [hPdef, Polynomial.eval_map, ← Polynomial.aeval_def]
+  have hroot : P.IsRoot β := by
+    rw [Polynomial.IsRoot, hevalP, heq, sub_self]
+  -- Isolate `β` from the finitely many other roots, keeping the window inside `x > 0`.
+  have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ β}.Finite :=
+    (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
+  obtain ⟨ε, hε, hball⟩ :=
+    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl β (fun h => h.2 rfl)
+  have hδ : 0 < min ε β := lt_min hε hβ
+  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show β - min ε β < β by linarith)
+  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show β < β + min ε β by linarith)
+  have hq₁pos : (0 : ℝ) < q₁ := by
+    have : min ε β ≤ β := min_le_right _ _
+    linarith
+  have huniq : ∀ t : ℝ, P.IsRoot t → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = β := by
+    intro t ht hlo hhi
+    have hδε : min ε β ≤ ε := min_le_left _ _
+    have hmem : t ∈ Metric.ball β ε := by
+      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
+      constructor <;> linarith
+    have hnot := hball hmem
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
+    exact hnot ht
+  -- A window tall enough to hold the crossing, whichever sign `a` has.
+  obtain ⟨M, hM⟩ := exists_nat_gt (|(a : ℝ)| * (q₂ : ℝ) ^ n)
+  have hS := PConstructibleCurve.restrict (PConstructibleCurve.power_law a (n : ℚ))
+    (q₁ : ℝ) (q₂ : ℝ) (-(M : ℝ)) (M : ℝ) (rat_Pconstructible q₁) (rat_Pconstructible q₂)
+    (neg_Pconstructible (nat_Pconstructible M)) (nat_Pconstructible M)
+  refine PConstructible.inter_x hS (PConstructibleCurve.poly_graph p hdeg)
+    (x := β) (y := (a : ℝ) * β ^ n) ?_
+  have hpow : ∀ u : ℝ, 0 < u → u ^ (((n : ℚ) : ℝ)) = u ^ n := by
+    intro u hu
+    push_cast
+    exact Real.rpow_natCast u n
+  have hbound : |(a : ℝ) * β ^ n| < (M : ℝ) := by
+    have h1 : β ^ n ≤ (q₂ : ℝ) ^ n := pow_le_pow_left₀ hβ.le hq₂a.le n
+    have h2 : (0 : ℝ) < β ^ n := pow_pos hβ n
+    calc |(a : ℝ) * β ^ n| = |(a : ℝ)| * β ^ n := by rw [abs_mul, abs_of_pos h2]
+      _ ≤ |(a : ℝ)| * (q₂ : ℝ) ^ n := mul_le_mul_of_nonneg_left h1 (abs_nonneg _)
+      _ < (M : ℝ) := hM
+  obtain ⟨hlo, hhi⟩ := abs_lt.mp hbound
+  have hmem : ((β, (a : ℝ) * β ^ n) : ℝ × ℝ) ∈
+      ({pt : ℝ × ℝ | 0 < pt.1 ∧ pt.2 = (a : ℝ) * pt.1 ^ (((n : ℚ)) : ℝ)} ∩
+        {pt : ℝ × ℝ | (q₁ : ℝ) ≤ pt.1 ∧ pt.1 ≤ (q₂ : ℝ) ∧
+          -(M : ℝ) ≤ pt.2 ∧ pt.2 ≤ (M : ℝ)}) ∩
+      {pt : ℝ × ℝ | pt.2 = aeval pt.1 p} :=
+    ⟨⟨⟨hβ, by rw [hpow β hβ]⟩, hq₁b.le, hq₂a.le, hlo.le, hhi.le⟩, heq⟩
+  ext ⟨u, v⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨⟨⟨hupos, hv⟩, hb1, hb2, -, -⟩, hgraph⟩
+    rw [hpow u hupos] at hv
+    have hru : P.IsRoot u := by
+      rw [Polynomial.IsRoot, hevalP, ← hgraph, ← hv, sub_self]
+    have hu : u = β := huniq u hru hb1 hb2
+    exact ⟨hu, by rw [hv, hu]⟩
+  · rintro ⟨rfl, rfl⟩
+    exact hmem
+
+-- Theorem: the same for a negative root. `power_law` only ever draws `x > 0`, so the
+-- left-hand crossing is found by reflecting the picture in the `y` axis, which replaces
+-- `p` by `p (-X)`.
+theorem powerLaw_root_Pconstructible {n : ℕ} (hn : 7 < n) {a : ℚ} (ha : a ≠ 0)
+    {p : Polynomial ℚ} (hdeg : p.natDegree ≤ 7) {β : ℝ} (hβ : β ≠ 0)
+    (heq : (a : ℝ) * β ^ n = aeval β p) :
+    PConstructible β := by
+  rcases lt_or_gt_of_ne hβ with hneg | hpos
+  · have hγ : 0 < -β := by linarith
+    have hdeg' : (p.comp (-X)).natDegree ≤ 7 := by
+      rw [Polynomial.natDegree_comp]
+      simpa using hdeg
+    have hane : a * (-1) ^ n ≠ 0 := mul_ne_zero ha (pow_ne_zero n (by norm_num))
+    have heq' : ((a * (-1) ^ n : ℚ) : ℝ) * (-β) ^ n = aeval (-β) (p.comp (-X)) := by
+      rw [Polynomial.aeval_comp]
+      simp only [map_neg, Polynomial.aeval_X, neg_neg]
+      rw [neg_pow, ← heq]
+      push_cast
+      have hsq : ((-1 : ℝ)) ^ n * ((-1 : ℝ)) ^ n = 1 := by
+        rw [← pow_add, ← two_mul, pow_mul]; norm_num
+      linear_combination ((a : ℝ) * β ^ n) * hsq
+    have h := powerLaw_root_pos_Pconstructible hn hane hdeg' hγ heq'
+    simpa using neg_Pconstructible h
+  · exact powerLaw_root_pos_Pconstructible hn ha hdeg hpos heq
+
+-- Theorem: every real root of a nonzero rational polynomial of degree at most 8 is
+-- P-constructible.
+theorem root_Pconstructible_le_eight {x : ℝ} {q : Polynomial ℚ} (hq : q ≠ 0)
+    (hdeg : q.natDegree ≤ 8) (hroot : aeval x q = 0) :
+    PConstructible x := by
+  by_cases h7 : q.natDegree ≤ 7
+  · exact root_Pconstructible_le_seven hq h7 hroot
+  · have h8' : q.natDegree = 8 := by omega
+    rcases eq_or_ne x 0 with rfl | hx0
+    · exact zero_Pconstructible
+    · set a : ℚ := q.leadingCoeff with hadef
+      have ha : a ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hq
+      have hq8 : q.coeff 8 = a := by rw [hadef, Polynomial.leadingCoeff, h8']
+      set p : Polynomial ℚ := C a * X ^ 8 - q with hpdef
+      have hpdeg : p.natDegree ≤ 7 := by
+        rw [Polynomial.natDegree_le_iff_coeff_eq_zero]
+        intro N hN
+        rcases eq_or_lt_of_le (Nat.succ_le_of_lt hN) with h | h
+        · simp [hpdef, ← h, hq8]
+        · have hqN : q.coeff N = 0 := Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)
+          simp [hpdef, hqN, Polynomial.coeff_X_pow, show N ≠ 8 by omega]
+      have heq : (a : ℝ) * x ^ 8 = aeval x p := by
+        rw [hpdef]
+        simp [hroot]
+      exact powerLaw_root_Pconstructible (by norm_num) ha hpdeg hx0 heq
+
+-- Theorem: the coefficient of `X ^ 8` in the shifted polynomial `q (X + s)`.
+theorem taylor_coeff_eight {q : Polynomial ℚ} (h9 : q.natDegree = 9) (s : ℚ) :
+    (taylor s q).coeff 8 = q.coeff 8 + 9 * q.coeff 9 * s := by
+  rw [Polynomial.taylor_coeff]
+  have hd : (Polynomial.hasseDeriv 8 q).natDegree < 2 := by
+    have := Polynomial.natDegree_hasseDeriv_le q 8
+    omega
+  rw [Polynomial.eval_eq_sum_range' hd]
+  simp [Finset.sum_range_succ, Polynomial.hasseDeriv_coeff]
+
+-- Theorem: shifting does not disturb the leading coefficient.
+theorem taylor_coeff_nine {q : Polynomial ℚ} (h9 : q.natDegree = 9) (s : ℚ) :
+    (taylor s q).coeff 9 = q.coeff 9 := by
+  rw [Polynomial.taylor_coeff]
+  have hd : (Polynomial.hasseDeriv 9 q).natDegree < 1 := by
+    have := Polynomial.natDegree_hasseDeriv_le q 9
+    omega
+  rw [Polynomial.eval_eq_sum_range' hd]
+  simp [Polynomial.hasseDeriv_coeff]
+
+-- Theorem: every real root of a nonzero rational polynomial of degree at most 9 is
+-- P-constructible.
+theorem root_Pconstructible_le_nine {x : ℝ} {q : Polynomial ℚ} (hq : q ≠ 0)
+    (hdeg : q.natDegree ≤ 9) (hroot : aeval x q = 0) :
+    PConstructible x := by
+  by_cases h8 : q.natDegree ≤ 8
+  · exact root_Pconstructible_le_eight hq h8 hroot
+  · have h9 : q.natDegree = 9 := by omega
+    have ha : q.coeff 9 ≠ 0 := by
+      rw [← h9]
+      exact Polynomial.leadingCoeff_ne_zero.mpr hq
+    set s : ℚ := -(q.coeff 8) / (9 * q.coeff 9) with hsdef
+    set r : Polynomial ℚ := taylor s q with hrdef
+    have hr9 : r.coeff 9 = q.coeff 9 := taylor_coeff_nine h9 s
+    have hr8 : r.coeff 8 = 0 := by
+      rw [hrdef, taylor_coeff_eight h9 s, hsdef]
+      field_simp
+      ring
+    have hrdeg : r.natDegree = 9 := by rw [hrdef, Polynomial.natDegree_taylor]; exact h9
+    -- `z = x - s` is a root of `r`, and `r` has no `X ^ 8` term.
+    have hrz : aeval (x - s) r = 0 := by
+      rw [hrdef, Polynomial.taylor_apply, Polynomial.aeval_comp]
+      simp only [map_add, Polynomial.aeval_X, Polynomial.aeval_C, eq_ratCast]
+      rw [show x - (s : ℝ) + (s : ℝ) = x by ring]
+      exact hroot
+    rcases eq_or_ne (x - s) 0 with hz | hz
+    · have : x = (s : ℝ) := by linarith [hz]
+      rw [this]
+      exact rat_Pconstructible s
+    · set p : Polynomial ℚ := C (q.coeff 9) * X ^ 9 - r with hpdef
+      have hpdeg : p.natDegree ≤ 7 := by
+        rw [Polynomial.natDegree_le_iff_coeff_eq_zero]
+        intro N hN
+        rcases eq_or_lt_of_le (Nat.succ_le_of_lt hN) with h | h
+        · simp [hpdef, ← h, hr8]
+        · rcases eq_or_lt_of_le (Nat.succ_le_of_lt h) with h' | h'
+          · simp [hpdef, ← h', hr9]
+          · have hrN : r.coeff N = 0 := Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)
+            simp [hpdef, hrN, Polynomial.coeff_X_pow, show N ≠ 9 by omega]
+      have heq : ((q.coeff 9 : ℚ) : ℝ) * (x - s) ^ 9 = aeval (x - s) p := by
+        rw [hpdef]
+        simp [hrz]
+      have hzP := powerLaw_root_Pconstructible (by norm_num) ha hpdeg hz heq
+      have : x = (x - (s : ℝ)) + (s : ℝ) := by ring
+      rw [this]
+      exact PConstructible.add hzP (rat_Pconstructible s)
+
+-- Theorem: every real algebraic number of degree at most 8 over ℚ is P-constructible.
+theorem algebraic_Pconstructible_le_eight {x : ℝ} (hx : IsAlgebraic ℚ x)
+    (hdeg : (minpoly ℚ x).natDegree ≤ 8) :
+    PConstructible x :=
+  root_Pconstructible_le_eight (minpoly.ne_zero hx.isIntegral) hdeg (minpoly.aeval ℚ x)
+
+-- Theorem: and every one of degree at most 9.
+theorem algebraic_Pconstructible_le_nine {x : ℝ} (hx : IsAlgebraic ℚ x)
+    (hdeg : (minpoly ℚ x).natDegree ≤ 9) :
+    PConstructible x :=
+  root_Pconstructible_le_nine (minpoly.ne_zero hx.isIntegral) hdeg (minpoly.aeval ℚ x)
+
+end PowerLaw
+
 
 /-- The linear parametrization of the segment from `p` to `q`, traced over `[0, 1]`. -/
 def segmentParam (p q : ℝ × ℝ) : ℝ → ℝ × ℝ :=
