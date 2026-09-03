@@ -955,6 +955,301 @@ example : lambertW (Real.exp 1) = 1 := lambertW_eq (by norm_num) (by simp [mulEx
 example : lambertW (-Real.exp (-1)) = -1 := lambertW_eq le_rfl (by simp [mulExp])
 
 
+/-! ### Translating a curve
+
+`PConstructibleCurve.translate_x` and `translate_y` slide a curve along one axis; used
+together they move it anywhere. They are the only operations here that do not fix the
+origin, and what they buy is not new *pictures* — a translated ellipse was always
+available, since `ellipse` carries its own centre — but the curves that were pinned to
+the axes. `power_law` draws `y = c / x` and nothing else, so until now both branches of
+every hyperbola straddled the origin. Together with `linearMap_PConstructibleCurve` below
+they also close the class under every *affine* map of the plane, not merely the linear
+ones. -/
+
+-- Theorem: a curve may be translated by any P-constructible vector, by translating along
+-- each axis in turn.
+theorem translate_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {u v : ℝ} (hu : PConstructible u) (hv : PConstructible v) :
+    PConstructibleCurve ((fun p : ℝ × ℝ => (p.1 + u, p.2 + v)) '' S) := by
+  simpa [Set.image_image] using
+    PConstructibleCurve.translate_y (PConstructibleCurve.translate_x hS hu) hv
+
+-- Theorem: the right-hand branch of a hyperbola with an arbitrary P-constructible centre
+-- `(u, v)` is constructible.
+theorem hyperbola_shift_PConstructibleCurve {c u v : ℝ} (hc : PConstructible c)
+    (hu : PConstructible u) (hv : PConstructible v) :
+    PConstructibleCurve {p : ℝ × ℝ | u < p.1 ∧ p.2 = c / (p.1 - u) + v} := by
+  have h := translate_PConstructibleCurve (hyperbola_PConstructibleCurve hc) hu hv
+  convert h using 1
+  ext ⟨a, b⟩
+  simp only [Set.mem_ofPred_eq, Set.mem_image, Prod.exists, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hlt, hb⟩
+    exact ⟨a - u, c / (a - u), ⟨by linarith, rfl⟩, by ring, by rw [hb]⟩
+  · rintro ⟨x, y, ⟨hx, rfl⟩, rfl, rfl⟩
+    refine ⟨by linarith, ?_⟩
+    rw [show x + u - u = x by ring]
+
+/-! ### The Laplace limit
+
+Kepler's equation `M = E - e · sin E` ties the mean anomaly `M` of a body on an elliptic
+orbit to its eccentric anomaly `E`. Lagrange inverted it as a power series in the
+eccentricity `e`, and that series converges precisely for `e` below the *Laplace limit*
+`λ = 0.66274…`, the unique positive root of
+
+  `λ · exp √(1 + λ²) = 1 + √(1 + λ²)`.
+
+That root is P-constructible, and what makes it so is `PConstructibleCurve.translate_y`.
+Substituting `m = 2(√(1 + λ²) - 1)` turns the defining equation into
+
+  `m · eᵐ = (m + 4) / e²`,
+
+a *generalized* Lambert equation: `lambertW` above solves `w · eʷ = x` for a right-hand
+side that stays constant, whereas here it moves with `m`. That construction read its root
+off a crossing of the exponential curve with a hyperbola, and this one does the same,
+crossing `y = eˣ` with
+
+  `y = (x + 4) / (e² x) = (4 / e²) / x + 1 / e²`.
+
+The second curve is that hyperbola lifted `1 / e²` off the axis, and lifting is precisely
+what was missing: `power_law` draws `y = c / x`, whose asymptote *is* the axis. The whole
+distance between `W` and the generalization needed here is the height of that asymptote.
+
+The crossing is unique for `x > 0`, since `eˣ` climbs where the hyperbola falls. There is
+a second crossing near `x = -4.3`, and cropping to `[1/10, 1]` — the interval across which
+`laplaceAux` changes sign — leaves only the wanted one. Turning `m` back into `λ` is then
+algebra: `√(1 + λ²)` works out to `(m + 2)/2`, and squaring the defining equation makes
+both of its sides `(m + 4)/2`. -/
+
+/-- `e² · x · eˣ - (x + 4)`, whose unique positive root carries the Laplace limit. -/
+noncomputable def laplaceAux (x : ℝ) : ℝ := Real.exp 2 * (x * Real.exp x) - (x + 4)
+
+-- Theorem: `laplaceAux` is continuous, so the intermediate value theorem applies to it.
+theorem continuous_laplaceAux : Continuous laplaceAux :=
+  (continuous_const.mul (continuous_id.mul Real.continuous_exp)).sub
+    (continuous_id.add continuous_const)
+
+-- Theorem: 4 is P-constructible.
+theorem four_Pconstructible : PConstructible (4 : ℝ) := by
+  convert PConstructible.add three_Pconstructible PConstructible.base_one
+  norm_num
+
+-- Theorem: `2 < e`, straight from `x + 1 < eˣ` at `x = 1`.
+theorem two_lt_exp_one : (2 : ℝ) < Real.exp 1 := by
+  have := Real.add_one_lt_exp (x := 1) (by norm_num)
+  linarith
+
+-- Theorem: `e < 16/5`. The same inequality at `x = -1/4` gives `3/4 < e^(-1/4)`, which
+-- inverts to `e^(1/4) < 4/3`; a fourth power turns that into `e < 256/81 < 16/5`. Mathlib's
+-- sharp decimal bounds live in `Mathlib.Analysis.Complex.ExponentialBounds`, which this file
+-- does not import; these two crude bounds are all the construction needs.
+theorem exp_one_lt : Real.exp 1 < 16 / 5 := by
+  have h : (-(1 / 4) : ℝ) + 1 < Real.exp (-(1 / 4)) := Real.add_one_lt_exp (by norm_num)
+  have hmul : Real.exp (-(1 / 4)) * Real.exp (1 / 4) = 1 := by
+    rw [← Real.exp_add]; norm_num
+  have hq : Real.exp (1 / 4) < 4 / 3 := by
+    nlinarith [Real.exp_pos ((1 : ℝ) / 4), Real.exp_pos (-((1 : ℝ) / 4))]
+  have he : Real.exp 1 = Real.exp (1 / 4) ^ 4 := by
+    have h : Real.exp (1 / 4) ^ 4 = Real.exp (1 / 4 + 1 / 4 + 1 / 4 + 1 / 4) := by
+      rw [Real.exp_add, Real.exp_add, Real.exp_add]; ring
+    rw [h]; norm_num
+  have h2 : Real.exp (1 / 4) ^ 2 < 16 / 9 := by
+    nlinarith [Real.exp_pos ((1 : ℝ) / 4)]
+  have h4 : Real.exp (1 / 4) ^ 4 < 256 / 81 := by
+    nlinarith [sq_nonneg (Real.exp (1 / 4)), Real.exp_pos ((1 : ℝ) / 4)]
+  rw [he]
+  linarith
+
+-- Theorem: `e³ < 41`, with room to spare, from `e < 16/5`.
+theorem exp_three_lt : Real.exp 3 < 41 := by
+  have he : Real.exp 3 = Real.exp 1 * Real.exp 1 * Real.exp 1 := by
+    rw [show (3 : ℝ) = 1 + 1 + 1 by norm_num, Real.exp_add, Real.exp_add]
+  have h2 : Real.exp 1 * Real.exp 1 < 256 / 25 := by
+    nlinarith [exp_one_lt, Real.exp_pos (1 : ℝ)]
+  rw [he]
+  nlinarith [exp_one_lt, Real.exp_pos (1 : ℝ)]
+
+-- Theorem: `e³ > 8`, from `e > 2`.
+theorem exp_three_gt : (8 : ℝ) < Real.exp 3 := by
+  have he : Real.exp 3 = Real.exp 1 * Real.exp 1 * Real.exp 1 := by
+    rw [show (3 : ℝ) = 1 + 1 + 1 by norm_num, Real.exp_add, Real.exp_add]
+  rw [he]
+  nlinarith [two_lt_exp_one, Real.exp_pos (1 : ℝ)]
+
+-- Theorem: `laplaceAux` is negative at `1/10`, because `e^2.1 ≤ e³ < 41` leaves the first
+-- term below `4.1`.
+theorem laplaceAux_neg : laplaceAux (1 / 10) < 0 := by
+  have h1 : Real.exp 2 * ((1 / 10) * Real.exp (1 / 10)) = (1 / 10) * Real.exp (2 + 1 / 10) := by
+    rw [Real.exp_add]; ring
+  have h2 : Real.exp (2 + 1 / 10) < 41 :=
+    lt_of_le_of_lt (Real.exp_le_exp.mpr (by norm_num)) exp_three_lt
+  rw [laplaceAux, h1]
+  linarith
+
+-- Theorem: and positive at `1`, where the first term is `e³ > 8 > 5`.
+theorem laplaceAux_pos : 0 < laplaceAux 1 := by
+  have h1 : Real.exp 2 * (1 * Real.exp 1) = Real.exp 3 := by
+    rw [show (3 : ℝ) = 2 + 1 by norm_num, Real.exp_add]; ring
+  rw [laplaceAux, h1]
+  linarith [exp_three_gt]
+
+-- Theorem: so it vanishes somewhere in `[1/10, 1]`, by the intermediate value theorem.
+theorem exists_laplaceRoot : ∃ x ∈ Set.Icc (1 / 10 : ℝ) 1, laplaceAux x = 0 := by
+  have h := intermediate_value_Icc (by norm_num : (1 / 10 : ℝ) ≤ 1)
+    continuous_laplaceAux.continuousOn
+  have hmem : (0 : ℝ) ∈ Set.Icc (laplaceAux (1 / 10)) (laplaceAux 1) :=
+    ⟨laplaceAux_neg.le, laplaceAux_pos.le⟩
+  obtain ⟨x, hx, hx0⟩ := h hmem
+  exact ⟨x, hx, hx0⟩
+
+-- The crossing is unique because `eˣ` climbs while `4/e²/x + 1/e²` falls: cross-multiply
+-- the two equations by the other root and the exponentials cancel, leaving `b < a`.
+theorem laplaceAux_cross {a b : ℝ} (ha : 0 < a) (hb : 0 < b)
+    (hA : laplaceAux a = 0) (hB : laplaceAux b = 0) (hab : a < b) : b < a := by
+  have hlt : Real.exp a < Real.exp b := Real.exp_lt_exp.mpr hab
+  rw [laplaceAux, sub_eq_zero] at hA hB
+  have key : Real.exp 2 * (a * b) * Real.exp a < Real.exp 2 * (a * b) * Real.exp b :=
+    mul_lt_mul_of_pos_left hlt (by positivity)
+  have e1 : Real.exp 2 * (a * b) * Real.exp a = b * (a + 4) := by rw [← hA]; ring
+  have e2 : Real.exp 2 * (a * b) * Real.exp b = a * (b + 4) := by rw [← hB]; ring
+  rw [e1, e2] at key
+  nlinarith [key]
+
+-- Theorem: at most one positive root, by the previous lemma applied both ways round.
+theorem laplaceRoot_unique {a b : ℝ} (ha : 0 < a) (hb : 0 < b)
+    (hA : laplaceAux a = 0) (hB : laplaceAux b = 0) : a = b := by
+  rcases lt_trichotomy a b with hab | hab | hab
+  · exact absurd (laplaceAux_cross ha hb hA hB hab) (by linarith)
+  · exact hab
+  · exact absurd (laplaceAux_cross hb ha hB hA hab) (by linarith)
+
+open Classical in
+/-- The unique positive root of `e² · x · eˣ = x + 4`, the generalized Lambert equation
+carrying the Laplace limit. Outside that equation there is nothing to choose, so the
+junk-value branch never fires; `laplaceRoot_mem` discharges it. -/
+noncomputable def laplaceRoot : ℝ :=
+  if h : ∃ x : ℝ, 0 < x ∧ laplaceAux x = 0 then h.choose else 0
+
+-- Theorem: `laplaceRoot` is the root just found — uniqueness pins the choice — so it
+-- satisfies the equation and lies in `[1/10, 1]`.
+theorem laplaceRoot_mem : laplaceRoot ∈ Set.Icc (1 / 10 : ℝ) 1 ∧ laplaceAux laplaceRoot = 0 := by
+  obtain ⟨x, hx, hx0⟩ := exists_laplaceRoot
+  have hxpos : 0 < x := lt_of_lt_of_le (by norm_num) hx.1
+  have hex : ∃ x : ℝ, 0 < x ∧ laplaceAux x = 0 := ⟨x, hxpos, hx0⟩
+  have hchoose := hex.choose_spec
+  have : laplaceRoot = x := by
+    rw [laplaceRoot, dif_pos hex]
+    exact laplaceRoot_unique hchoose.1 hxpos hchoose.2 hx0
+  rw [this]
+  exact ⟨hx, hx0⟩
+
+-- Theorem: in particular it is positive.
+theorem laplaceRoot_pos : 0 < laplaceRoot :=
+  lt_of_lt_of_le (by norm_num) laplaceRoot_mem.1.1
+
+/-- The Laplace limit `0.66274…`: the eccentricity at which Lagrange's series for the
+solution of Kepler's equation stops converging, characterised by `laplaceLimit_spec`. -/
+noncomputable def laplaceLimit : ℝ := Real.sqrt (laplaceRoot * (laplaceRoot + 4)) / 2
+
+-- Theorem: the Laplace limit is positive.
+theorem laplaceLimit_pos : 0 < laplaceLimit := by
+  have h := laplaceRoot_pos
+  have hp : 0 < laplaceRoot * (laplaceRoot + 4) := by nlinarith
+  rw [laplaceLimit]
+  exact div_pos (Real.sqrt_pos.mpr hp) (by norm_num)
+
+-- Theorem: its square is `m(m + 4)/4`.
+theorem laplaceLimit_sq : laplaceLimit ^ 2 = laplaceRoot * (laplaceRoot + 4) / 4 := by
+  have h := laplaceRoot_pos
+  have hnn : 0 ≤ laplaceRoot * (laplaceRoot + 4) := by nlinarith
+  rw [laplaceLimit, div_pow, Real.sq_sqrt hnn]
+  norm_num
+
+-- Theorem: `√(1 + λ²) = (m + 2)/2`, the substitution `m = 2(√(1 + λ²) - 1)` read backwards.
+-- This is what makes the exponential in the defining equation elementary in `m`.
+theorem sqrt_one_add_laplaceLimit_sq :
+    Real.sqrt (1 + laplaceLimit ^ 2) = (laplaceRoot + 2) / 2 := by
+  have h := laplaceRoot_pos
+  rw [laplaceLimit_sq, show 1 + laplaceRoot * (laplaceRoot + 4) / 4
+    = ((laplaceRoot + 2) / 2) ^ 2 by ring]
+  exact Real.sqrt_sq (by linarith)
+
+-- Theorem: the number constructed really is the Laplace limit.
+theorem laplaceLimit_spec :
+    laplaceLimit * Real.exp (Real.sqrt (1 + laplaceLimit ^ 2))
+      = 1 + Real.sqrt (1 + laplaceLimit ^ 2) := by
+  have hm := laplaceRoot_mem.2
+  have hpos := laplaceRoot_pos
+  rw [laplaceAux, sub_eq_zero] at hm
+  rw [sqrt_one_add_laplaceLimit_sq]
+  have hE : Real.exp ((laplaceRoot + 2) / 2) ^ 2 = Real.exp 2 * Real.exp laplaceRoot := by
+    rw [sq, ← Real.exp_add, ← Real.exp_add]
+    ring_nf
+  have hsq : (laplaceLimit * Real.exp ((laplaceRoot + 2) / 2)) ^ 2
+      = ((laplaceRoot + 4) / 2) ^ 2 := by
+    rw [mul_pow, laplaceLimit_sq, hE]
+    linear_combination ((laplaceRoot + 4) / 4) * hm
+  have h1 : 0 ≤ laplaceLimit * Real.exp ((laplaceRoot + 2) / 2) :=
+    mul_nonneg laplaceLimit_pos.le (Real.exp_pos _).le
+  have h2 : (0 : ℝ) ≤ (laplaceRoot + 4) / 2 := by linarith
+  have := congrArg Real.sqrt hsq
+  rw [Real.sqrt_sq h1, Real.sqrt_sq h2] at this
+  rw [this]
+  ring
+
+-- Theorem: the root is P-constructible.
+theorem laplaceRoot_Pconstructible : PConstructible laplaceRoot := by
+  have hE : PConstructible (Real.exp 2) := by
+    rw [show (2 : ℝ) = 1 + 1 by norm_num, Real.exp_add]
+    exact PConstructible.mul exp_one_Pconstructible exp_one_Pconstructible
+  have hEpos : (0 : ℝ) < Real.exp 2 := Real.exp_pos 2
+  have h4 : PConstructible (4 : ℝ) := four_Pconstructible
+  have hc : PConstructible (4 / Real.exp 2) := PConstructible.div h4 hE
+  have hv : PConstructible (1 / Real.exp 2) := PConstructible.div PConstructible.base_one hE
+  have h110 : PConstructible (1 / 10 : ℝ) := by
+    have := rat_Pconstructible ((1 : ℚ) / 10)
+    push_cast at this
+    exact this
+  have hHyp := hyperbola_shift_PConstructibleCurve hc zero_Pconstructible hv
+  simp only [sub_zero] at hHyp
+  have hT := PConstructibleCurve.restrict hHyp (1 / 10) 1 0 (Real.exp 2)
+    h110 PConstructible.base_one zero_Pconstructible hE
+  -- The exponential curve meets that cropped hyperbola exactly at the root.
+  have hpos := laplaceRoot_pos
+  have hmem := laplaceRoot_mem
+  have ha0 : laplaceRoot ≠ 0 := ne_of_gt hpos
+  have hE0 : Real.exp 2 ≠ 0 := ne_of_gt hEpos
+  have hroot : Real.exp laplaceRoot = 4 / Real.exp 2 / laplaceRoot + 1 / Real.exp 2 := by
+    have h := hmem.2
+    rw [laplaceAux, sub_eq_zero] at h
+    field_simp
+    linarith [h]
+  refine PConstructible.inter_x exp_PConstructibleCurve hT
+    (x := laplaceRoot) (y := Real.exp laplaceRoot) ?_
+  ext ⟨a, b⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨hb, ⟨hapos, hhyp⟩, -, -, -, -⟩
+    have hane : a ≠ 0 := ne_of_gt hapos
+    have hkey : laplaceAux a = 0 := by
+      rw [laplaceAux, sub_eq_zero, ← hb, hhyp]
+      field_simp
+      ring
+    have : a = laplaceRoot := laplaceRoot_unique hapos hpos hkey hmem.2
+    exact ⟨this, by rw [hb, this]⟩
+  · rintro ⟨rfl, rfl⟩
+    have hle : Real.exp laplaceRoot ≤ Real.exp 2 :=
+      Real.exp_le_exp.mpr (by linarith [hmem.1.2])
+    exact ⟨rfl, ⟨hpos, hroot⟩, hmem.1.1, hmem.1.2, (Real.exp_pos _).le, hle⟩
+
+-- Theorem: the Laplace limit is P-constructible.
+theorem laplaceLimit_Pconstructible : PConstructible laplaceLimit :=
+  PConstructible.div
+    (sqrt_Pconstructible (PConstructible.mul laplaceRoot_Pconstructible
+      (PConstructible.add laplaceRoot_Pconstructible four_Pconstructible)))
+    two_Pconstructible
+
+
 /-! ### Sine and cosine
 
 `PConstructibleCurve.arc_of_length` used in earnest. Instead of measuring an arc whose

@@ -35,9 +35,9 @@ point-sets reachable from a finite sequence of curve constructions (axis-aligned
 ellipses, axis-aligned rectangles, degree-≤7 polynomial graphs with rational
 coefficients, power laws, the exponential `y = 2 ^ x`, cubic Bézier curves with
 P-constructible control points) and the geometric operations of
-scaling either axis, rotating by whole-degree increments, cropping to a rectangular
-window, marking off an arc of prescribed length, and offsetting an arc sideways by a
-fixed normal distance.
+translating along either axis, scaling either axis, rotating by whole-degree increments,
+cropping to a rectangular window, marking off an arc of prescribed length, and offsetting
+an arc sideways by a fixed normal distance.
 
 The two are mutually inductive: a `PConstructibleCurve` may need `PConstructible`
 parameters (e.g. an ellipse's center and dimensions), and `PConstructible` may need
@@ -223,6 +223,22 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
       (hx₄ : PConstructible p₄.1) (hy₄ : PConstructible p₄.2) :
       PConstructibleCurve (bezierParam p₁ p₂ p₃ p₄ '' Set.Icc 0 1)
   -- Closure operations (axioms, not derived from `PConstructible` on ℝ)
+  -- Translating along the `x` axis by a `PConstructible` distance, and along the `y`
+  -- axis by one. These are the plainest operation the drawing program has: picking a
+  -- shape up and dropping it somewhere else.
+  --
+  -- Every other operation here fixes the origin — `scale_x`, `scale_y` and `rotate` all
+  -- hold it still — so without these two the only curves that could be placed anywhere
+  -- were `ellipse` and `rectangle`, which carry their own centre. Adding them is what
+  -- closes the class under *affine* maps of the plane rather than merely linear ones,
+  -- and it is what puts a hyperbola anywhere but astride the axes: `power_law` draws
+  -- `y = c / x` and nothing else, while `y = c / (x - u) + v` needs a genuine move.
+  | translate_x {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      {u : ℝ} (hu : PConstructible u) :
+      PConstructibleCurve ((fun p : ℝ × ℝ => (p.1 + u, p.2)) '' S)
+  | translate_y {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      {v : ℝ} (hv : PConstructible v) :
+      PConstructibleCurve ((fun p : ℝ × ℝ => (p.1, p.2 + v)) '' S)
   -- Scaling the `x` axis by a `PConstructible` factor, and scaling the `y` axis by one.
   -- These are the resize handles of the drawing program: dragging the side handle of a
   -- shape changes its width and leaves its height alone, and vice versa. Uniform scaling
