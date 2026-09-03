@@ -36,7 +36,8 @@ ellipses, axis-aligned rectangles, degree-≤7 polynomial graphs with rational
 coefficients, power laws, the exponential `y = 2 ^ x`, cubic Bézier curves with
 P-constructible control points) and the geometric operations of
 scaling either axis, rotating by whole-degree increments, cropping to a rectangular
-window, and marking off an arc of prescribed length.
+window, marking off an arc of prescribed length, and offsetting an arc sideways by a
+fixed normal distance.
 
 The two are mutually inductive: a `PConstructibleCurve` may need `PConstructible`
 parameters (e.g. an ellipse's center and dimensions), and `PConstructible` may need
@@ -49,6 +50,11 @@ length of a given arc off the plane, while `PConstructibleCurve.arc_of_length` l
 an arc of a given length. Either way the parametrization is supplied at the point of
 use rather than being stored in `PConstructibleCurve`; see the comment on
 `PConstructible.arc_length`.
+
+`PConstructibleCurve.offset` follows the same convention for the same reason: it takes a
+tracing `γ` of an arc and pushes every point of it a fixed signed distance along the
+`unitNormal` there, so it too needs a parametrization at the point of use, and it needs
+that parametrization to be regular (nonvanishing `speed`) for the normal to exist at all.
 -/
 
 namespace Pconstructible
@@ -79,6 +85,23 @@ def bezierParam (p₁ p₂ p₃ p₄ : ℝ × ℝ) (t : ℝ) : ℝ × ℝ :=
       + 3 * (1 - t) * t ^ 2 * p₃.1 + t ^ 3 * p₄.1,
    (1 - t) ^ 3 * p₁.2 + 3 * (1 - t) ^ 2 * t * p₂.2
       + 3 * (1 - t) * t ^ 2 * p₃.2 + t ^ 3 * p₄.2)
+
+/-- The unit normal of a plane curve `γ` at parameter `t`: the velocity vector turned a
+quarter turn counterclockwise and rescaled to length one.
+
+As in `speed`, the coordinates are written out rather than routed through Mathlib's norm
+on `ℝ × ℝ`, which is the supremum norm and would rescale by the wrong quantity. At a
+singular parameter (`speed γ t = 0`) the divisions evaluate to `0`; nothing below relies
+on that junk value, as every use carries a regularity hypothesis ruling the case out. -/
+noncomputable def unitNormal (γ : ℝ → ℝ × ℝ) (t : ℝ) : ℝ × ℝ :=
+  (-deriv (fun s => (γ s).2) t / speed γ t, deriv (fun s => (γ s).1) t / speed γ t)
+
+/-- The curve `γ` displaced by the fixed signed distance `d`: each point is pushed `d`
+along the `unitNormal` there, so the new curve runs alongside the old one at constant
+clearance `|d|`. Positive `d` moves to the left of the direction of travel, negative `d`
+to the right, and `d = 0` reproduces the curve. -/
+noncomputable def offsetParam (γ : ℝ → ℝ × ℝ) (d : ℝ) (t : ℝ) : ℝ × ℝ :=
+  ((γ t).1 + d * (unitNormal γ t).1, (γ t).2 + d * (unitNormal γ t).2)
 
 mutual
 
@@ -280,6 +303,56 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
       -- ... and running for the P-constructible length `x`.
       {x : ℝ} (hx : PConstructible x) (hlen : arcLengthOf γ a b = x) :
       PConstructibleCurve (γ '' Set.Icc a b)
+
+  -- Offset an arc of a constructible curve sideways by a fixed `PConstructible` normal
+  -- distance `d`: push every point of the arc `d` units along its unit normal
+  -- (`offsetParam`). Modelling: the parallel-copy or outline operation of the drawing
+  -- program, the stroke that runs alongside a drawn path at constant clearance. That is
+  -- not a scaled copy — scaling moves points along rays from a centre, so the clearance
+  -- it leaves varies from place to place, while this one is the same everywhere.
+  --
+  -- `d` is required to be `PConstructible` but not positive. Its sign chooses which side
+  -- of the path the copy runs on, and both sides are equally drawable.
+  --
+  -- The arc is presented by a tracing `γ`, as in `PConstructible.arc_length` and
+  -- `arc_of_length`, with the same `hsub` and `hinj` making `γ` a genuine non-retracing
+  -- tracing of a piece of `S`. Nothing is integrated here, so `hint` is absent; two
+  -- hypotheses take its place, both about the *velocity*, which is what the offset moves
+  -- with:
+  --
+  -- * `hreg` says the arc is regular, its speed never vanishing. This is what gives the
+  --   arc a tangent direction at every parameter, and so makes `unitNormal` an honest
+  --   unit vector rather than the `0` that dividing by `0` would return. A curve may stop
+  --   dead in `arc_of_length`, where it merely contributes no length; here stopping dead
+  --   would leave the offset direction undefined.
+  -- * `hC1` says the two velocity components are continuous, so the normal turns
+  --   continuously and the offset is a single connected stroke. For `arc_of_length` that
+  --   came for free, `hdiff` alone forcing `γ` continuous; mere differentiability lets
+  --   the derivative jump about, which would scatter the offset into pieces.
+  --
+  -- The result is geometric, depending on the arc only as a subset of the plane: a
+  -- reparametrization leaves each point's tangent line alone, hence its unit normal up to
+  -- sign, and reversing the direction of travel flips exactly that sign — which changes
+  -- nothing about what is reachable, since `-d` is `PConstructible` whenever `d` is.
+  --
+  -- No injectivity is claimed of the offset itself, and it can genuinely fail: pushed
+  -- further than the radius of curvature, a parallel copy folds over and acquires cusps
+  -- and self-crossings. That is what the operation draws, so it is not excluded.
+  | offset {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      (γ : ℝ → ℝ × ℝ) {a b : ℝ} (hab : a ≤ b)
+      -- `γ` traces an arc of `S` without retracing it ...
+      (hsub : γ '' Set.Icc a b ⊆ S)
+      (hinj : Set.InjOn γ (Set.Icc a b))
+      -- ... and does so with a continuous, nowhere-vanishing velocity, so that the arc
+      -- has a continuously turning unit normal at every point.
+      (hdiff : ∀ t ∈ Set.Icc a b,
+        DifferentiableAt ℝ (fun s => (γ s).1) t ∧ DifferentiableAt ℝ (fun s => (γ s).2) t)
+      (hreg : ∀ t ∈ Set.Icc a b, speed γ t ≠ 0)
+      (hC1 : ContinuousOn (deriv (fun s => (γ s).1)) (Set.Icc a b) ∧
+        ContinuousOn (deriv (fun s => (γ s).2)) (Set.Icc a b))
+      -- The displacement is a P-constructible signed distance, of either sign.
+      {d : ℝ} (hd : PConstructible d) :
+      PConstructibleCurve (offsetParam γ d '' Set.Icc a b)
 end
 
 end Pconstructible
