@@ -691,4 +691,167 @@ theorem thirdKindMoment_one {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
   have := hden ψ hψ
   field_simp
 
+/-! #### The general Bézier as a drawable curve
+
+Everything above is calculus. This is the geometric input: the cubic is a Bézier with
+P-constructible control points, and the arc swept over `[0, Φ]` is injective and smooth, so
+`PConstructible.arc_length` applies. The standing hypotheses are `0 < Φ < π/2` and
+`(1 + h²) sin²Φ < 1` — the second says the arc stops short of the pole of `Π(1 + h²; ·, c)`,
+and it is what keeps `D(ψ)` positive. -/
+
+theorem thirdKindBezier_PConstructibleCurve {m h T : ℝ} (hm : PConstructible m)
+    (hh : PConstructible h) (hT : PConstructible T) :
+    PConstructibleCurve (bezierParam (0, 0) (T / 3, 0)
+      (2 * T / 3 - h * T ^ 2 / 3, (1 + m) * T ^ 2 / 6)
+      (T - h * T ^ 2 + (h ^ 2 - m) * T ^ 3 / 3, (1 + m) * (T ^ 2 / 2 - h * T ^ 3 / 3)) ''
+      Set.Icc 0 1) := by
+  have h3 : PConstructible (3 : ℝ) := three_Pconstructible
+  have h6 : PConstructible (6 : ℝ) := by
+    convert PConstructible.mul two_Pconstructible h3 using 1; norm_num
+  have hT2 : PConstructible (T ^ 2) := sq_Pconstructible hT
+  have hT3 : PConstructible (T ^ 3) := by
+    convert PConstructible.mul hT2 hT using 1; ring
+  have h1m : PConstructible (1 + m) := PConstructible.add PConstructible.base_one hm
+  exact PConstructibleCurve.cubic_bezier _ _ _ _
+    zero_Pconstructible zero_Pconstructible (PConstructible.div hT h3) zero_Pconstructible
+    (PConstructible.sub (PConstructible.div (PConstructible.mul two_Pconstructible hT) h3)
+      (PConstructible.div (PConstructible.mul hh hT2) h3))
+    (PConstructible.div (PConstructible.mul h1m hT2) h6)
+    (PConstructible.add (PConstructible.sub hT (PConstructible.mul hh hT2))
+      (PConstructible.div (PConstructible.mul (PConstructible.sub (sq_Pconstructible hh) hm)
+        hT3) h3))
+    (PConstructible.mul h1m (PConstructible.sub (PConstructible.div hT2 two_Pconstructible)
+      (PConstructible.div (PConstructible.mul hh hT3) h3)))
+
+-- Theorem: below the pole and inside a quarter turn, `D(ψ)` is positive.
+theorem thirdKindDen_pos {h ψ : ℝ} (hcos : 0 < Real.cos ψ)
+    (hp : (1 + h ^ 2) * Real.sin ψ ^ 2 < 1) : 0 < thirdKindDen h ψ := by
+  have hprod : thirdKindDen h ψ * (Real.cos ψ - h * Real.sin ψ)
+      = 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 := thirdKindDen_mul_conj h ψ
+  have hsum : thirdKindDen h ψ + (Real.cos ψ - h * Real.sin ψ) = 2 * Real.cos ψ := by
+    rw [thirdKindDen]; ring
+  rcases lt_trichotomy (thirdKindDen h ψ) 0 with hneg | hzero | hpos
+  · exfalso
+    rcases le_total 0 (Real.cos ψ - h * Real.sin ψ) with hc | hc
+    · nlinarith
+    · nlinarith
+  · exfalso; rw [hzero, zero_mul] at hprod; linarith
+  · exact hpos
+
+-- Theorem: the pole condition propagates from the endpoint to the whole arc.
+theorem thirdKindPole_of_mem {h Φ : ℝ} (h0 : 0 ≤ Φ) (hlt : Φ < Real.pi / 2)
+    (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) {ψ : ℝ} (hψ : ψ ∈ Set.Icc (0 : ℝ) Φ) :
+    (1 + h ^ 2) * Real.sin ψ ^ 2 < 1 := by
+  have hpi := Real.pi_pos
+  have hs : Real.sin ψ ≤ Real.sin Φ :=
+    Real.sin_le_sin_of_le_of_le_pi_div_two (by linarith [hψ.1]) (by linarith) hψ.2
+  have hs0 : 0 ≤ Real.sin ψ :=
+    Real.sin_nonneg_of_nonneg_of_le_pi hψ.1 (by linarith [hψ.2])
+  have hsq : Real.sin ψ ^ 2 ≤ Real.sin Φ ^ 2 := by nlinarith
+  nlinarith [sq_nonneg h]
+
+theorem thirdKindCos_pos {Φ : ℝ} (hlt : Φ < Real.pi / 2) {ψ : ℝ}
+    (hψ : ψ ∈ Set.Icc (0 : ℝ) Φ) : 0 < Real.cos ψ :=
+  Real.cos_pos_of_mem_Ioo ⟨by linarith [hψ.1, Real.pi_pos], by linarith [hψ.2]⟩
+
+theorem strictMonoOn_thirdKindTan {h Φ : ℝ} (hlt : Φ < Real.pi / 2)
+    (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) (h0 : 0 ≤ Φ) :
+    StrictMonoOn (thirdKindTan h) (Set.Icc 0 Φ) := by
+  have hD : ∀ ψ ∈ Set.Icc (0 : ℝ) Φ, 0 < thirdKindDen h ψ := fun ψ hψ =>
+    thirdKindDen_pos (thirdKindCos_pos hlt hψ) (thirdKindPole_of_mem h0 hlt hp hψ)
+  refine strictMonoOn_of_deriv_pos (convex_Icc 0 Φ) ?_ ?_
+  · exact fun ψ hψ =>
+      ((hasDerivAt_thirdKindTan (hD ψ hψ).ne').continuousAt).continuousWithinAt
+  · intro ψ hψ
+    have hψ' : ψ ∈ Set.Icc (0 : ℝ) Φ := interior_subset hψ
+    rw [(hasDerivAt_thirdKindTan (hD ψ hψ').ne').deriv]
+    have := hD ψ hψ'
+    positivity
+
+-- Theorem: the arc length of the general cubic Bézier, over `[0, Φ]`, is P-constructible.
+-- This is the geometric input; everything else in this section is calculus.
+theorem arcLength_thirdKind_Pconstructible {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hmpos : 0 < m) (hmP : PConstructible m) (hhP : PConstructible h)
+    (hΦP : PConstructible Φ) (h0 : 0 < Φ) (hlt : Φ < Real.pi / 2)
+    (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) :
+    PConstructible (arcLengthOf (thirdKindTanParam m h) 0 Φ) := by
+  have hpi := Real.pi_pos
+  have hD : ∀ ψ ∈ Set.Icc (0 : ℝ) Φ, 0 < thirdKindDen h ψ := fun ψ hψ =>
+    thirdKindDen_pos (thirdKindCos_pos hlt hψ) (thirdKindPole_of_mem h0.le hlt hp hψ)
+  have hsinpos : 0 < Real.sin Φ := Real.sin_pos_of_pos_of_lt_pi h0 (by linarith)
+  set T := thirdKindTan h Φ with hTdef
+  have hTpos : 0 < T := by
+    rw [hTdef, thirdKindTan]
+    exact div_pos hsinpos (hD Φ ⟨h0.le, le_rfl⟩)
+  have hmono := strictMonoOn_thirdKindTan hlt hp h0.le
+  have hzero : thirdKindTan h 0 = 0 := by simp [thirdKindTan, thirdKindDen]
+  have hrange : ∀ ψ ∈ Set.Icc (0 : ℝ) Φ, thirdKindTan h ψ ∈ Set.Icc (0 : ℝ) T := by
+    intro ψ hψ
+    constructor
+    · rcases eq_or_lt_of_le hψ.1 with h' | h'
+      · rw [← h', hzero]
+      · rw [← hzero]
+        exact (hmono ⟨le_rfl, h0.le⟩ hψ h').le
+    · rcases eq_or_lt_of_le hψ.2 with h' | h'
+      · rw [h']
+      · exact (hmono hψ ⟨h0.le, le_rfl⟩ h').le
+  have hTP : PConstructible T := by
+    rw [hTdef, thirdKindTan, thirdKindDen]
+    exact PConstructible.div (sin_Pconstructible hΦP)
+      (PConstructible.add (cos_Pconstructible hΦP)
+        (PConstructible.mul hhP (sin_Pconstructible hΦP)))
+  refine PConstructible.arc_length (thirdKindBezier_PConstructibleCurve hmP hhP hTP)
+    (thirdKindTanParam m h) h0.le ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · rintro p ⟨ψ, hψ, rfl⟩
+    obtain ⟨h1, h2⟩ := hrange ψ hψ
+    refine ⟨thirdKindTan h ψ / T, ⟨div_nonneg h1 hTpos.le, (div_le_one hTpos).mpr h2⟩, ?_⟩
+    rw [bezierParam_thirdKind]
+    simp only [thirdKindTanParam]
+    congr 1
+    field_simp
+  · -- injective: the second coordinate is strictly increasing
+    have hsnd : StrictMonoOn (fun ψ => (thirdKindTanParam m h ψ).2) (Set.Icc 0 Φ) := by
+      refine strictMonoOn_of_deriv_pos (convex_Icc 0 Φ) ?_ ?_
+      · exact fun ψ hψ =>
+          ((hasDerivAt_thirdKindTanParam_snd (hD ψ hψ).ne').continuousAt).continuousWithinAt
+      · intro ψ hψ
+        have hψ' : ψ ∈ Set.Icc (0 : ℝ) Φ := interior_subset hψ
+        rw [interior_Icc] at hψ
+        have hDψ := hD ψ hψ'
+        rw [(hasDerivAt_thirdKindTanParam_snd hDψ.ne').deriv,
+          one_sub_mul_thirdKindTan hDψ.ne', thirdKindTan]
+        have hs : 0 < Real.sin ψ := Real.sin_pos_of_pos_of_lt_pi hψ.1 (by linarith [hψ.2])
+        have hcos := thirdKindCos_pos hlt hψ'
+        have : 0 < 1 + m := by linarith
+        positivity
+    exact fun ψ₁ h₁ ψ₂ h₂ heq => hsnd.injOn h₁ h₂ (congrArg Prod.snd heq)
+  · intro ψ hψ
+    exact ⟨(hasDerivAt_thirdKindTanParam_fst (hD ψ hψ).ne').differentiableAt,
+      (hasDerivAt_thirdKindTanParam_snd (hD ψ hψ).ne').differentiableAt⟩
+  · refine ContinuousOn.intervalIntegrable (ContinuousOn.congr
+      (f := fun ψ => ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 4) ?_ ?_)
+    · refine ContinuousOn.div (continuous_ellipticEIntegrand c).continuousOn
+        (Continuous.continuousOn (by unfold thirdKindDen; fun_prop)) fun ψ hψ => ?_
+      rw [Set.uIcc_of_le h0.le] at hψ
+      exact pow_ne_zero 4 (hD ψ hψ).ne'
+    · intro ψ hψ
+      rw [Set.uIcc_of_le h0.le] at hψ
+      exact speed_thirdKindTanParam hm hc (hD ψ hψ).ne'
+  · simpa [thirdKindTanParam, thirdKindCurve, hzero] using zero_Pconstructible
+  · simpa [thirdKindTanParam, thirdKindCurve, hzero] using zero_Pconstructible
+  · have hT2 : PConstructible (T ^ 2) := sq_Pconstructible hTP
+    have hT3 : PConstructible (T ^ 3) := by
+      convert PConstructible.mul hT2 hTP using 1; ring
+    simpa [thirdKindTanParam, thirdKindCurve, ← hTdef] using
+      PConstructible.add (PConstructible.sub hTP (PConstructible.mul hhP hT2))
+        (PConstructible.div (PConstructible.mul
+          (PConstructible.sub (sq_Pconstructible hhP) hmP) hT3) three_Pconstructible)
+  · have hT2 : PConstructible (T ^ 2) := sq_Pconstructible hTP
+    have hT3 : PConstructible (T ^ 3) := by
+      convert PConstructible.mul hT2 hTP using 1; ring
+    simpa [thirdKindTanParam, thirdKindCurve, ← hTdef] using
+      PConstructible.mul (PConstructible.add PConstructible.base_one hmP)
+        (PConstructible.sub (PConstructible.div hT2 two_Pconstructible)
+          (PConstructible.div (PConstructible.mul hhP hT3) three_Pconstructible))
+
 end Pconstructible
