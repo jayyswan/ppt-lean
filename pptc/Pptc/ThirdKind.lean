@@ -381,4 +381,314 @@ theorem integral_sqrt_quartic {q₄ q₃ q₂ q₁ q₀ : ℝ} (hq₄ : q₄ ≠
     (hmom.intervalIntegrable 0 T)] at hkey
   linarith
 
+/-! ### The general cubic Bézier, in one extra parameter
+
+The `firstKind` family in `Pptc.Basic` uses the quartic `(1 - m t²)² + ((1+m) t)²`, which is
+even, and that is exactly why it carries no third-kind content. Replacing the constant `1`
+by a linear form `1 - h t` — and keeping Brahmagupta–Fibonacci, so the quartic is still
+visibly a sum of two squares of quadratics, i.e. still the speed of a cubic Bézier — gives
+the general case in *one* extra parameter `h`. Setting `h = 0` recovers the old family.
+
+The whole reduction survives the change. Writing `D(ψ) = cos ψ + h sin ψ`, the substitution
+`t = sin ψ / D(ψ)` (which is `t = tan ψ` when `h = 0`) gives
+
+  `√Q = Δ(ψ) / D(ψ)²`,   `dt/dψ = 1 / D(ψ)²`,   so   `speed dψ = Δ(ψ) dψ / D(ψ)⁴`,
+
+against the old `Δ(ψ) dψ / cos⁴ψ`. Since `D(ψ) = √(1+h²)·cos(ψ - ψ₀)` with `tan ψ₀ = h`, the
+arc length of a general cubic Bézier is the old integral **shifted by an angle** `ψ₀`, and
+rationalising `1/D⁴` produces the factor `1 - n sin²ψ` with
+
+  `n = 1 + h² = sec² ψ₀`.
+
+That is the whole story of the third kind in this framework, in one line: the parameter
+reached is `sec²` of a real angle, hence always `> 1`, and `h = 0` is the degenerate `n = 1`
+that the old family sat on. -/
+
+/-- The quartic met by a general cubic Bézier: `firstKindQuartic` with `1` replaced by the
+linear form `1 - h t`. -/
+def thirdKindQuartic (m h t : ℝ) : ℝ :=
+  ((1 - h * t) ^ 2 - m * t ^ 2) ^ 2 + ((1 + m) * (1 - h * t) * t) ^ 2
+
+-- Theorem: Brahmagupta–Fibonacci again — the sum of two squares splits.
+theorem thirdKindQuartic_eq (m h t : ℝ) :
+    thirdKindQuartic m h t
+      = ((1 - h * t) ^ 2 + t ^ 2) * ((1 - h * t) ^ 2 + m ^ 2 * t ^ 2) := by
+  unfold thirdKindQuartic; ring
+
+-- Theorem: `h = 0` is the family already in `Pptc.Basic`.
+theorem thirdKindQuartic_zero (m t : ℝ) : thirdKindQuartic m 0 t = firstKindQuartic m t := by
+  unfold thirdKindQuartic firstKindQuartic; ring
+
+theorem thirdKindQuartic_pos {m : ℝ} (hm : m ≠ 0) (h t : ℝ) : 0 < thirdKindQuartic m h t := by
+  rw [thirdKindQuartic_eq]
+  have h1 : 0 < (1 - h * t) ^ 2 + t ^ 2 := by
+    rcases eq_or_ne t 0 with rfl | ht
+    · norm_num
+    · positivity
+  have h2 : 0 < (1 - h * t) ^ 2 + m ^ 2 * t ^ 2 := by
+    rcases eq_or_ne t 0 with rfl | ht
+    · norm_num
+    · positivity
+  positivity
+
+/-- The cubic curve whose speed is `√(thirdKindQuartic m h ·)`: the componentwise
+antiderivative of `((1 - h t)² - m t², (1+m)(1 - h t) t)`. -/
+noncomputable def thirdKindCurve (m h t : ℝ) : ℝ × ℝ :=
+  (t - h * t ^ 2 + (h ^ 2 - m) * t ^ 3 / 3, (1 + m) * (t ^ 2 / 2 - h * t ^ 3 / 3))
+
+-- Theorem: `h = 0` is the curve already in `Pptc.Basic`.
+theorem thirdKindCurve_zero (m t : ℝ) : thirdKindCurve m 0 t = firstKindCurve m t := by
+  simp only [thirdKindCurve, firstKindCurve, Prod.mk.injEq]
+  constructor <;> ring
+
+-- Theorem: it is a cubic Bézier, with these control points — the `h = 0` case is
+-- `bezierParam_firstKind`.
+theorem bezierParam_thirdKind (m h T s : ℝ) :
+    bezierParam (0, 0) (T / 3, 0) (2 * T / 3 - h * T ^ 2 / 3, (1 + m) * T ^ 2 / 6)
+        (T - h * T ^ 2 + (h ^ 2 - m) * T ^ 3 / 3, (1 + m) * (T ^ 2 / 2 - h * T ^ 3 / 3)) s
+      = thirdKindCurve m h (T * s) := by
+  simp only [bezierParam, thirdKindCurve, Prod.mk.injEq]
+  constructor <;> ring
+
+/-- The denominator `D(ψ) = cos ψ + h sin ψ` that replaces `cos ψ`. -/
+noncomputable def thirdKindDen (h ψ : ℝ) : ℝ := Real.cos ψ + h * Real.sin ψ
+
+/-- The substitution `t = sin ψ / D(ψ)`, which is `t = tan ψ` when `h = 0`. -/
+noncomputable def thirdKindTan (h ψ : ℝ) : ℝ := Real.sin ψ / thirdKindDen h ψ
+
+-- Theorem: the linear form pulls back to `cos ψ / D(ψ)`.
+theorem one_sub_mul_thirdKindTan {h ψ : ℝ} (hD : thirdKindDen h ψ ≠ 0) :
+    1 - h * thirdKindTan h ψ = Real.cos ψ / thirdKindDen h ψ := by
+  rw [thirdKindTan, thirdKindDen] at *
+  field_simp
+  ring
+
+-- Theorem: the substitution has derivative `1 / D(ψ)²`.
+theorem hasDerivAt_thirdKindTan {h ψ : ℝ} (hD : thirdKindDen h ψ ≠ 0) :
+    HasDerivAt (thirdKindTan h) (1 / thirdKindDen h ψ ^ 2) ψ := by
+  have hden : HasDerivAt (thirdKindDen h) (-Real.sin ψ + h * Real.cos ψ) ψ := by
+    have := (Real.hasDerivAt_cos ψ).add ((Real.hasDerivAt_sin ψ).const_mul h)
+    exact this.congr_deriv (by ring)
+  refine ((Real.hasDerivAt_sin ψ).div hden hD).congr_deriv ?_
+  rw [thirdKindDen] at hD ⊢
+  field_simp
+  linear_combination Real.sin_sq_add_cos_sq ψ
+
+-- Theorem: the key substitution identity. `√Q` at `t = sin ψ / D(ψ)` is `Δ(ψ) / D(ψ)²`,
+-- generalising `sqrt_firstKindQuartic_tan`.
+theorem sqrt_thirdKindQuartic_tan {c m h ψ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hD : thirdKindDen h ψ ≠ 0) :
+    Real.sqrt (thirdKindQuartic m h (thirdKindTan h ψ))
+      = ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 2 := by
+  have hE := ellipticEIntegrand_pos hc ψ
+  have hEsq := ellipticEIntegrand_sq hc ψ
+  have hkey : thirdKindQuartic m h (thirdKindTan h ψ)
+      = (ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 2) ^ 2 := by
+    rw [thirdKindQuartic_eq, one_sub_mul_thirdKindTan hD, thirdKindTan]
+    rw [thirdKindDen] at hD ⊢
+    field_simp
+    linear_combination (-1 : ℝ) * hEsq
+      + (1 + m ^ 2 * Real.sin ψ ^ 2 + Real.cos ψ ^ 2) * Real.sin_sq_add_cos_sq ψ
+      + Real.sin ψ ^ 2 * hm
+  rw [hkey, Real.sqrt_sq (by positivity)]
+
+/-- The general cubic Bézier, read in the angle `ψ`. -/
+noncomputable def thirdKindTanParam (m h : ℝ) : ℝ → ℝ × ℝ :=
+  fun ψ => thirdKindCurve m h (thirdKindTan h ψ)
+
+theorem hasDerivAt_thirdKindTanParam_fst {m h ψ : ℝ} (hD : thirdKindDen h ψ ≠ 0) :
+    HasDerivAt (fun s : ℝ => (thirdKindTanParam m h s).1)
+      (((1 - h * thirdKindTan h ψ) ^ 2 - m * thirdKindTan h ψ ^ 2)
+        * (1 / thirdKindDen h ψ ^ 2)) ψ := by
+  set t := thirdKindTan h ψ with ht
+  have hg : HasDerivAt (fun s : ℝ => s - h * s ^ 2 + (h ^ 2 - m) * s ^ 3 / 3)
+      ((1 - h * t) ^ 2 - m * t ^ 2) t := by
+    have h1 := hasDerivAt_id t
+    have h2 := (hasDerivAt_pow 2 t).const_mul h
+    have h3 := ((hasDerivAt_pow 3 t).const_mul (h ^ 2 - m)).div_const 3
+    exact ((h1.sub h2).add h3).congr_deriv (by push_cast; ring)
+  exact hg.comp ψ (hasDerivAt_thirdKindTan hD)
+
+theorem hasDerivAt_thirdKindTanParam_snd {m h ψ : ℝ} (hD : thirdKindDen h ψ ≠ 0) :
+    HasDerivAt (fun s : ℝ => (thirdKindTanParam m h s).2)
+      (((1 + m) * (1 - h * thirdKindTan h ψ) * thirdKindTan h ψ)
+        * (1 / thirdKindDen h ψ ^ 2)) ψ := by
+  set t := thirdKindTan h ψ with ht
+  have hg : HasDerivAt (fun s : ℝ => (1 + m) * (s ^ 2 / 2 - h * s ^ 3 / 3))
+      ((1 + m) * (1 - h * t) * t) t := by
+    have h2 := (hasDerivAt_pow 2 t).div_const 2
+    have h3 := ((hasDerivAt_pow 3 t).const_mul h).div_const 3
+    exact ((h2.sub h3).const_mul (1 + m)).congr_deriv (by push_cast; ring)
+  have hcomp := hg.comp ψ (hasDerivAt_thirdKindTan hD)
+  exact hcomp
+
+-- Theorem: **the general Bézier, read in the angle.** Its speed is `Δ(ψ)/D(ψ)⁴`, against
+-- `Δ(ψ)/cos⁴ψ` for the family already in `Pptc.Basic`. Since `D(ψ) = √(1+h²) cos(ψ - ψ₀)`
+-- with `tan ψ₀ = h`, a general cubic Bézier's arc length is the old integral shifted by a
+-- real angle — and that shift is the entire source of third-kind content.
+theorem speed_thirdKindTanParam {c m h : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1) {ψ : ℝ}
+    (hD : thirdKindDen h ψ ≠ 0) :
+    speed (thirdKindTanParam m h) ψ
+      = ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 4 := by
+  have hE := ellipticEIntegrand_pos hc ψ
+  have hm0 : m ≠ 0 := by
+    intro h0; rw [h0] at hm; nlinarith
+  have hQpos := thirdKindQuartic_pos hm0 h (thirdKindTan h ψ)
+  have hQ : thirdKindQuartic m h (thirdKindTan h ψ)
+      = (ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 2) ^ 2 := by
+    rw [← sqrt_thirdKindQuartic_tan hm hc hD, Real.sq_sqrt hQpos.le]
+  rw [speed, (hasDerivAt_thirdKindTanParam_fst hD).deriv,
+    (hasDerivAt_thirdKindTanParam_snd hD).deriv]
+  have hsum : (((1 - h * thirdKindTan h ψ) ^ 2 - m * thirdKindTan h ψ ^ 2)
+        * (1 / thirdKindDen h ψ ^ 2)) ^ 2
+      + (((1 + m) * (1 - h * thirdKindTan h ψ) * thirdKindTan h ψ)
+        * (1 / thirdKindDen h ψ ^ 2)) ^ 2
+      = (ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 4) ^ 2 := by
+    have hbase : ((1 - h * thirdKindTan h ψ) ^ 2 - m * thirdKindTan h ψ ^ 2) ^ 2
+        + ((1 + m) * (1 - h * thirdKindTan h ψ) * thirdKindTan h ψ) ^ 2
+        = (ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 2) ^ 2 := hQ
+    calc (((1 - h * thirdKindTan h ψ) ^ 2 - m * thirdKindTan h ψ ^ 2)
+            * (1 / thirdKindDen h ψ ^ 2)) ^ 2
+          + (((1 + m) * (1 - h * thirdKindTan h ψ) * thirdKindTan h ψ)
+            * (1 / thirdKindDen h ψ ^ 2)) ^ 2
+        = (((1 - h * thirdKindTan h ψ) ^ 2 - m * thirdKindTan h ψ ^ 2) ^ 2
+            + ((1 + m) * (1 - h * thirdKindTan h ψ) * thirdKindTan h ψ) ^ 2)
+          * (1 / thirdKindDen h ψ ^ 2) ^ 2 := by ring
+      _ = (ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 2) ^ 2
+          * (1 / thirdKindDen h ψ ^ 2) ^ 2 := by rw [hbase]
+      _ = (ellipticEIntegrand c ψ / thirdKindDen h ψ ^ 4) ^ 2 := by field_simp
+  rw [hsum]
+  exact Real.sqrt_sq (by positivity)
+
+-- Theorem: the parameter the shift produces. Rationalising `1/D(ψ)²` throws up the factor
+-- `1 - n sin²ψ` with `n = 1 + h²`, and `1 + h² > 1` for every real `h`. This is the whole
+-- obstruction in one line: the reachable parameter is `sec²` of a real angle.
+theorem thirdKindDen_mul_conj (h ψ : ℝ) :
+    thirdKindDen h ψ * (Real.cos ψ - h * Real.sin ψ)
+      = 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 := by
+  rw [thirdKindDen]
+  linear_combination Real.sin_sq_add_cos_sq ψ
+
+/-! #### The change of variables, and the three moments
+
+`integral_sqrt_quartic` splits an arc length `∫√Q` into an algebraic term and the three
+moments `∫ tʲ dt/√Q`, `j = 0, 1, 2`. Pulling those back along `t = sin ψ / D(ψ)` puts each
+into Legendre form, and the middle one — the third-kind moment — is where `Π` appears.
+
+The two proved here are the point of the whole exercise:
+
+* `j = 0` gives `F(Φ, c)` exactly, nothing bolted on;
+* `j = 1` gives `∫ sin ψ (cos ψ - h sin ψ) dψ / ((1 - n sin²ψ) Δ(ψ))` with `n = 1 + h²`,
+  whose second half is `-h` times the auxiliary integral `A(n, ·)` of `Pptc.Basic` — and
+  `Π = F + n·A`. So the third kind really does appear, at parameter `n = 1 + h²`.
+
+The standing hypothesis is that `1 - n sin²ψ` does not vanish on the interval, which is
+exactly the statement that the path stops short of the pole of `Π(n; ·, c)`. It implies
+`D(ψ) ≠ 0`, since `D(ψ)·(cos ψ - h sin ψ) = 1 - n sin²ψ`. -/
+
+theorem thirdKindDen_ne_zero {h ψ : ℝ} (hn : 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 ≠ 0) :
+    thirdKindDen h ψ ≠ 0 := by
+  intro h0
+  exact hn (by rw [← thirdKindDen_mul_conj, h0, zero_mul])
+
+theorem thirdKindConj_ne_zero {h ψ : ℝ} (hn : 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 ≠ 0) :
+    Real.cos ψ - h * Real.sin ψ ≠ 0 := by
+  intro h0
+  exact hn (by rw [← thirdKindDen_mul_conj, h0, mul_zero])
+
+theorem integral_comp_thirdKindTan {h Φ : ℝ}
+    (hD : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen h ψ ≠ 0)
+    {g : ℝ → ℝ} (hg : Continuous g) :
+    (∫ ψ in (0 : ℝ)..Φ, (1 / thirdKindDen h ψ ^ 2) * g (thirdKindTan h ψ))
+      = ∫ t in (0 : ℝ)..thirdKindTan h Φ, g t := by
+  have hd : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ,
+      HasDerivAt (thirdKindTan h) (1 / thirdKindDen h ψ ^ 2) ψ :=
+    fun ψ hψ => hasDerivAt_thirdKindTan (hD ψ hψ)
+  have hc' : ContinuousOn (fun ψ => 1 / thirdKindDen h ψ ^ 2) (Set.uIcc (0 : ℝ) Φ) := by
+    refine ContinuousOn.div continuousOn_const
+      (Continuous.continuousOn (by unfold thirdKindDen; fun_prop))
+      fun ψ hψ => pow_ne_zero 2 (hD ψ hψ)
+  have h0 : thirdKindTan h 0 = 0 := by simp [thirdKindTan, thirdKindDen]
+  simpa [h0] using intervalIntegral.integral_deriv_smul_comp hd hc' hg
+
+theorem continuous_thirdKindQuartic (m h : ℝ) : Continuous (thirdKindQuartic m h) := by
+  unfold thirdKindQuartic; fun_prop
+
+-- Theorem: the zeroth moment is `F` on the nose. The general Bézier meets the first-kind
+-- integral exactly as the special one did.
+theorem integral_inv_sqrt_thirdKindQuartic {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hD : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen h ψ ≠ 0) :
+    (∫ t in (0 : ℝ)..thirdKindTan h Φ, 1 / Real.sqrt (thirdKindQuartic m h t))
+      = ellipticF c Φ := by
+  have hm0 : m ≠ 0 := by intro h0; rw [h0] at hm; nlinarith
+  have hgc : Continuous fun t : ℝ => 1 / Real.sqrt (thirdKindQuartic m h t) :=
+    continuous_const.div (Real.continuous_sqrt.comp (continuous_thirdKindQuartic m h))
+      fun t => (Real.sqrt_pos.mpr (thirdKindQuartic_pos hm0 h t)).ne'
+  rw [← integral_comp_thirdKindTan hD hgc, ellipticF]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have hE := ellipticEIntegrand_pos hc ψ
+  have hDψ := hD ψ hψ
+  rw [sqrt_thirdKindQuartic_tan hm hc hDψ, ellipticFIntegrand]
+  field_simp
+
+-- Theorem: the first moment, pulled back. This is the third-kind moment: the factor
+-- `1 - (1 + h²) sin²ψ` in the denominator is the characteristic of `Π` at `n = 1 + h²`.
+theorem integral_mul_inv_sqrt_thirdKindQuartic {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hn : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 ≠ 0) :
+    (∫ t in (0 : ℝ)..thirdKindTan h Φ, t / Real.sqrt (thirdKindQuartic m h t))
+      = ∫ ψ in (0 : ℝ)..Φ, Real.sin ψ * (Real.cos ψ - h * Real.sin ψ)
+          / ((1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ) := by
+  have hm0 : m ≠ 0 := by intro h0; rw [h0] at hm; nlinarith
+  have hD : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen h ψ ≠ 0 :=
+    fun ψ hψ => thirdKindDen_ne_zero (hn ψ hψ)
+  have hgc : Continuous fun t : ℝ => t / Real.sqrt (thirdKindQuartic m h t) :=
+    continuous_id.div (Real.continuous_sqrt.comp (continuous_thirdKindQuartic m h))
+      fun t => (Real.sqrt_pos.mpr (thirdKindQuartic_pos hm0 h t)).ne'
+  rw [← integral_comp_thirdKindTan hD hgc]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have hE := ellipticEIntegrand_pos hc ψ
+  have hDψ := hD ψ hψ
+  have hcj := thirdKindConj_ne_zero (hn ψ hψ)
+  have hcj2 : -(Real.sin ψ * h) + Real.cos ψ ≠ 0 := by intro h0; exact hcj (by linarith)
+  rw [sqrt_thirdKindQuartic_tan hm hc hDψ, thirdKindTan,
+    show (1 : ℝ) - (1 + h ^ 2) * Real.sin ψ ^ 2
+      = thirdKindDen h ψ * (Real.cos ψ - h * Real.sin ψ) from
+      (thirdKindDen_mul_conj h ψ).symm]
+  have hcj3 : Real.cos ψ - Real.sin ψ * h ≠ 0 := by intro h0; exact hcj (by linarith)
+  field_simp
+
+-- Theorem: **the third kind, isolated.** Splitting the first moment by partial fractions
+-- leaves an elementary integral and exactly `-h · A(1 + h², Φ)`, where `A` is the auxiliary
+-- integral of `Pptc.Basic`. Since `Π = F + n·A`, a general cubic Bézier's arc length
+-- contains the incomplete elliptic integral of the third kind at parameter `n = 1 + h²`,
+-- and at no other. `h = 0` is the file's old family, where the term is absent.
+theorem thirdKindMoment_one {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hn : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 ≠ 0) :
+    (∫ t in (0 : ℝ)..thirdKindTan h Φ, t / Real.sqrt (thirdKindQuartic m h t))
+      = (∫ ψ in (0 : ℝ)..Φ, Real.sin ψ * Real.cos ψ
+            / ((1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ))
+        - h * ellipticPiAux c (1 + h ^ 2) Φ := by
+  have hden : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ,
+      (1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ ≠ 0 :=
+    fun ψ hψ => mul_ne_zero (hn ψ hψ) (ellipticEIntegrand_pos hc ψ).ne'
+  have hcd : ContinuousOn (fun ψ : ℝ =>
+      (1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ) (Set.uIcc (0 : ℝ) Φ) :=
+    (Continuous.continuousOn (by fun_prop)).mul
+      (continuous_ellipticEIntegrand c).continuousOn
+  have hi1 : IntervalIntegrable (fun ψ : ℝ => Real.sin ψ * Real.cos ψ
+      / ((1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ))
+      MeasureTheory.volume 0 Φ :=
+    ContinuousOn.intervalIntegrable
+      ((Continuous.continuousOn (by fun_prop)).div hcd hden)
+  have hi2 : IntervalIntegrable (fun ψ : ℝ => h * (Real.sin ψ ^ 2
+      / ((1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ)))
+      MeasureTheory.volume 0 Φ :=
+    ContinuousOn.intervalIntegrable
+      (continuousOn_const.mul ((Continuous.continuousOn (by fun_prop)).div hcd hden))
+  rw [integral_mul_inv_sqrt_thirdKindQuartic hm hc hn, ellipticPiAux,
+    ← intervalIntegral.integral_const_mul, ← intervalIntegral.integral_sub hi1 hi2]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have := hden ψ hψ
+  field_simp
+
 end Pconstructible
