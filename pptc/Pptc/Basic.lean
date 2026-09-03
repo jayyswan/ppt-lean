@@ -1556,7 +1556,11 @@ through — and what is left behind is `Q · I + R · diag (1, -1) = diag (Q + R
 Every number in that decomposition is P-constructible: `Q` and `R` are square roots, the
 angles `α` and `β` are arccosines (`exists_polar_Pconstructible`), `θ` and `φ` are halves
 of their sum and difference, and `cos_sin_Pconstructible` then supplies the four
-trigonometric matrix entries. -/
+trigonometric matrix entries.
+
+`PConstructibleCurve.translate_x` and `translate_y` extend all of this from the linear
+maps to the *affine* ones, since an affine map is a linear map followed by a translation
+and the two halves are now separately available. -/
 
 /-- The linear map of the plane with matrix `[[a, b], [c, d]]`, acting on the point
 `(x, y)` as the column vector it names: `(x, y) ↦ (a * x + b * y, c * x + d * y)`. -/
@@ -1887,6 +1891,44 @@ theorem shear_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCur
     funext p
     simp [linearMap]
   rwa [hfun] at h
+
+/-- The affine map of the plane with linear part `[[a, b], [c, d]]` and translation
+`(u, v)`: `(x, y) ↦ (a * x + b * y + u, c * x + d * y + v)`. -/
+def affineMap (a b c d u v : ℝ) : ℝ × ℝ → ℝ × ℝ :=
+  fun p => (a * p.1 + b * p.2 + u, c * p.1 + d * p.2 + v)
+
+-- Theorem: `PConstructibleCurve` is closed under every affine transformation of the plane
+-- with P-constructible coefficients. An affine map is a linear map followed by a
+-- translation, and each half is now available on its own: `linearMap_PConstructibleCurve`
+-- for the matrix and `translate_PConstructibleCurve` for the shift.
+--
+-- Together with the linear theorem this says the class is closed under the whole affine
+-- group. Where an invertible linear map is pinned down by where it sends two independent
+-- vectors, an invertible affine map is pinned down by where it sends three non-collinear
+-- points, so any triangle may be carried to any other and any curve dragged along with it.
+theorem affineMap_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    {a b c d u v : ℝ} (ha : PConstructible a) (hb : PConstructible b)
+    (hc : PConstructible c) (hd : PConstructible d)
+    (hu : PConstructible u) (hv : PConstructible v) :
+    PConstructibleCurve (affineMap a b c d u v '' S) := by
+  have h := translate_PConstructibleCurve (linearMap_PConstructibleCurve hS ha hb hc hd) hu hv
+  have hfun : (fun p : ℝ × ℝ => (p.1 + u, p.2 + v)) ∘ linearMap a b c d
+      = affineMap a b c d u v := by
+    funext z
+    simp [linearMap, affineMap]
+  rwa [← Set.image_comp, hfun] at h
+
+-- Theorem: the affine maps really do contain both halves they were assembled from. With
+-- the identity linear part `affineMap` is a plain translation, and with no shift it is
+-- `linearMap`, so nothing was lost in the packaging.
+theorem affineMap_id_left {u v : ℝ} :
+    affineMap 1 0 0 1 u v = fun p : ℝ × ℝ => (p.1 + u, p.2 + v) := by
+  funext p
+  simp [affineMap]
+
+theorem affineMap_zero_right {a b c d : ℝ} : affineMap a b c d 0 0 = linearMap a b c d := by
+  funext p
+  simp [affineMap, linearMap]
 
 
 /-! ### The incomplete elliptic integral of the second kind
