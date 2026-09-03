@@ -31,17 +31,39 @@ survives is `thirdKindAnti c n φ`. Two things follow.
 
 * At the three roots `n ∈ {0, c, 1}` of `P(n) = n (c - n) (1 - n)` the cubic drops out of
   the master identity, exactly as it did at `n = c` in the complete case, and `Π` reduces
-  to `F`, `E` and elementary terms — for *every* `φ`. Those three families are proved
-  P-constructible here. (`n = 1` turns out not to need the master identity at all: its
-  antiderivative is `F(φ) + (tan φ Δ(φ) - E(φ))/(1 - c)`, one line of calculus.)
+  to `F`, `E` and elementary terms — for *every* `φ`. (`n = 1` turns out not to need the
+  master identity at all: its antiderivative is `F(φ) + (tan φ Δ(φ) - E(φ))/(1 - c)`.)
 * For general `n` the surviving term is itself an incomplete `Π` with the parameter and
-  the argument *interchanged*, so the system does not close. What comes out instead is
-  Legendre's interchange relation, `ellipticPiAux_interchange`. It is antisymmetric under
-  swapping the two angles, hence vacuous on the diagonal, and so gives no value of `Π`.
+  the argument *interchanged*, so the system does not close on its own. What comes out is
+  Legendre's interchange relation, `ellipticPiAux_interchange` — antisymmetric, hence
+  vacuous on the diagonal, so it gives no value of `Π`.
+* **For every `n > 1` it is nevertheless P-constructible**
+  (`ellipticPiInc_Pconstructible_gt_one`), by a construction that has nothing to do with
+  the master identity's boundary term. That is the second half of this file.
 
-That is the honest boundary: the incomplete third kind is Legendre's irreducible case, and
-no reduction to `F` and `E` exists. Reaching it would need a genuinely new construction.
-The last section records what the search for one has turned up. -/
+The construction rests on a fact about the framework worth stating on its own. Every
+constructible curve is a subset of a linear image of one of the six base curves, so every
+arc length available is `∫√(x'² + y'²)` for one of those six; a third-kind integral needs a
+differential with a nonzero *residue*, and of the six only the cubic Bézier can supply one.
+The Bézier used for `F` in `Pptc.Basic` has speed-quartic `(1 - m t²)² + ((1+m) t)²`, which
+is even — residue exactly `0`, which is why `F` came out with no third-kind term. Replacing
+the constant `1` by a linear form `1 - h t` gives the general cubic Bézier in one extra
+parameter, and its arc length does contain a third-kind integral, at
+
+  `n = 1 + h² = sec² ψ₀`,   where `tan ψ₀ = h`.
+
+That is the whole shape of the result, and of its limit: the parameter reached is `sec²` of
+a *real* angle, so it is always `> 1`, and `h = 0` is the degenerate `n = 1` that the old
+family sat on. Nothing here reaches `n < 1`.
+
+The construction runs: the general Bézier's arc length is P-constructible by
+`arc_length`; the moment reduction splits it into an algebraic term and `∫ tʲ dt/√Q` for
+`j = 0, 1, 2`; the substitution `t = sin ψ / (cos ψ + h sin ψ)` puts those in Legendre form,
+with the `j = 0` moment landing on `F(Φ, c)` exactly; and *adding the arc lengths for `h`
+and `-h`* cancels the two elementary integrals that would otherwise have to be evaluated,
+leaving `Π` with the coefficient `thirdKindPiCoeff`. That coefficient vanishes only on the
+locus `(n-1)² = 1 - c`, where the two Legendre reductions of the same Bézier coincide; that
+locus is the one hypothesis of the headline theorem beyond the natural domain. -/
 
 namespace Pconstructible
 
@@ -95,7 +117,8 @@ theorem thirdKindAnti_self {c : ℝ} (hc : c < 1) (φ : ℝ) :
 theorem ellipticPiInc_self {c : ℝ} (hc : c < 1) (φ : ℝ) :
     ellipticPiInc c c φ
       = (ellipticE c φ - c * Real.sin φ * Real.cos φ / ellipticEIntegrand c φ) / (1 - c) := by
-  have hkey := integral_thirdKindMaster hc hc φ
+  have hkey := integral_thirdKindMaster hc φ
+    (fun θ _ => (one_sub_mul_sin_sq_pos hc θ).ne')
   have hzero : thirdKindCubic c c = 0 := by simp [thirdKindCubic]
   have hpt : ∀ θ : ℝ, thirdKindMaster c c θ
       = thirdKindCubicDeriv c c
@@ -853,5 +876,562 @@ theorem arcLength_thirdKind_Pconstructible {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c)
       PConstructible.mul (PConstructible.add PConstructible.base_one hmP)
         (PConstructible.sub (PConstructible.div hT2 two_Pconstructible)
           (PConstructible.div (PConstructible.mul hhP hT3) three_Pconstructible))
+
+theorem thirdKindDen_ne_zero_of_mem {h Φ : ℝ} (h0 : 0 ≤ Φ) (hlt : Φ < Real.pi / 2)
+    (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) {ψ : ℝ} (hψ : ψ ∈ Set.uIcc (0 : ℝ) Φ) :
+    thirdKindDen h ψ ≠ 0 := by
+  rw [Set.uIcc_of_le h0] at hψ
+  exact (thirdKindDen_pos (thirdKindCos_pos hlt hψ) (thirdKindPole_of_mem h0 hlt hp hψ)).ne'
+
+theorem thirdKindPole_ne_zero_of_mem {h Φ : ℝ} (h0 : 0 ≤ Φ) (hlt : Φ < Real.pi / 2)
+    (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) {ψ : ℝ} (hψ : ψ ∈ Set.uIcc (0 : ℝ) Φ) :
+    1 - (1 + h ^ 2) * Real.sin ψ ^ 2 ≠ 0 := by
+  rw [Set.uIcc_of_le h0] at hψ
+  have := thirdKindPole_of_mem h0 hlt hp hψ
+  linarith
+
+-- Theorem: the arc length is the `t`-integral of `√Q`, so `integral_sqrt_quartic` applies.
+theorem arcLengthOf_thirdKindTanParam {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (h0 : 0 ≤ Φ) (hlt : Φ < Real.pi / 2) (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) :
+    arcLengthOf (thirdKindTanParam m h) 0 Φ
+      = ∫ t in (0 : ℝ)..thirdKindTan h Φ, Real.sqrt (thirdKindQuartic m h t) := by
+  have hD : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen h ψ ≠ 0 :=
+    fun ψ hψ => thirdKindDen_ne_zero_of_mem h0 hlt hp hψ
+  have hgc : Continuous fun t : ℝ => Real.sqrt (thirdKindQuartic m h t) :=
+    Real.continuous_sqrt.comp (continuous_thirdKindQuartic m h)
+  rw [arcLengthOf, ← integral_comp_thirdKindTan hD
+    (g := fun t : ℝ => Real.sqrt (thirdKindQuartic m h t)) hgc]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have hE := ellipticEIntegrand_pos hc ψ
+  have hDψ := hD ψ hψ
+  rw [speed_thirdKindTanParam hm hc hDψ, sqrt_thirdKindQuartic_tan hm hc hDψ]
+  field_simp
+
+/-! #### Symmetrising over `±h`
+
+Replacing `h` by `-h` fixes the quartic's even coefficients and flips the odd ones, so in the
+moment reduction `α` and `γ` are unchanged while `β` changes sign. Adding the two arc lengths
+therefore cancels the two elementary integrals that would otherwise have to be evaluated,
+and leaves `Π` with the coefficient below. It vanishes only when `h = 0` (the old family),
+`h⁴ = m²`, or `m² = 1` (that is, `c = 0`). -/
+
+/-- The quartic's coefficients, in the order `integral_sqrt_quartic` wants them. -/
+noncomputable def thirdKindQ4 (m h : ℝ) : ℝ := (h ^ 2 + 1) * (h ^ 2 + m ^ 2)
+noncomputable def thirdKindQ3 (m h : ℝ) : ℝ := -2 * h * (2 * h ^ 2 + 1 + m ^ 2)
+noncomputable def thirdKindQ2 (m h : ℝ) : ℝ := 6 * h ^ 2 + 1 + m ^ 2
+noncomputable def thirdKindQ1 (h : ℝ) : ℝ := -4 * h
+
+theorem thirdKindQuartic_eq_quartic (m h t : ℝ) :
+    thirdKindQuartic m h t
+      = quartic (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h) (thirdKindQ1 h) 1 t := by
+  unfold thirdKindQuartic quartic thirdKindQ4 thirdKindQ3 thirdKindQ2 thirdKindQ1
+  ring
+
+/-- The coefficient with which `Π` survives the symmetrisation. -/
+noncomputable def thirdKindPiCoeff (m h : ℝ) : ℝ :=
+  h ^ 2 * (h ^ 4 - m ^ 2) * (m ^ 2 - 1) ^ 2 / ((h ^ 2 + 1) ^ 2 * (h ^ 2 + m ^ 2) ^ 2)
+
+-- Theorem: the coefficient, computed. `α` drops out, `β` enters with a factor `-2h` from
+-- the sign flip, and `γ` enters through the reduction of the squared-denominator moment.
+theorem thirdKindPiCoeff_eq {m h : ℝ} (hQ4 : thirdKindQ4 m h ≠ 0) :
+    -2 * h * (thirdKindQ1 h / 2
+        - thirdKindQ3 m h * thirdKindQ2 m h / (12 * thirdKindQ4 m h))
+      + 2 * (thirdKindQ2 m h / 3 - thirdKindQ3 m h ^ 2 / (8 * thirdKindQ4 m h))
+        * (1 - thirdKindCubicDeriv (1 - m ^ 2) (1 + h ^ 2) / thirdKindQ4 m h)
+      = thirdKindPiCoeff m h := by
+  rw [thirdKindQ4] at hQ4
+  unfold thirdKindQ4 thirdKindQ3 thirdKindQ2 thirdKindQ1 thirdKindCubicDeriv thirdKindPiCoeff
+  have h1 : (h ^ 2 + 1) ≠ 0 := by positivity
+  have h2 : (h ^ 2 + m ^ 2) ≠ 0 := fun h0 => hQ4 (by rw [h0, mul_zero])
+  field_simp
+  ring
+
+/-- The three moment coefficients of `integral_sqrt_quartic`, for this quartic. -/
+noncomputable def thirdKindAlpha (m h : ℝ) : ℝ :=
+  2 / 3 - thirdKindQ3 m h * thirdKindQ1 h / (24 * thirdKindQ4 m h)
+noncomputable def thirdKindBeta (m h : ℝ) : ℝ :=
+  thirdKindQ1 h / 2 - thirdKindQ3 m h * thirdKindQ2 m h / (12 * thirdKindQ4 m h)
+noncomputable def thirdKindGamma (m h : ℝ) : ℝ :=
+  thirdKindQ2 m h / 3 - thirdKindQ3 m h ^ 2 / (8 * thirdKindQ4 m h)
+
+theorem thirdKindQ4_pos {m : ℝ} (hm0 : m ≠ 0) (h : ℝ) : 0 < thirdKindQ4 m h := by
+  rw [thirdKindQ4]; positivity
+
+theorem thirdKindQ4_neg (m h : ℝ) : thirdKindQ4 m (-h) = thirdKindQ4 m h := by
+  unfold thirdKindQ4; ring
+theorem thirdKindQ3_neg (m h : ℝ) : thirdKindQ3 m (-h) = -thirdKindQ3 m h := by
+  unfold thirdKindQ3; ring
+theorem thirdKindQ2_neg (m h : ℝ) : thirdKindQ2 m (-h) = thirdKindQ2 m h := by
+  unfold thirdKindQ2; ring
+theorem thirdKindQ1_neg (h : ℝ) : thirdKindQ1 (-h) = -thirdKindQ1 h := by
+  unfold thirdKindQ1; ring
+theorem thirdKindAlpha_neg (m h : ℝ) : thirdKindAlpha m (-h) = thirdKindAlpha m h := by
+  unfold thirdKindAlpha; rw [thirdKindQ4_neg, thirdKindQ3_neg, thirdKindQ1_neg]; ring
+theorem thirdKindBeta_neg (m h : ℝ) : thirdKindBeta m (-h) = -thirdKindBeta m h := by
+  unfold thirdKindBeta
+  rw [thirdKindQ4_neg, thirdKindQ3_neg, thirdKindQ2_neg, thirdKindQ1_neg]; ring
+theorem thirdKindGamma_neg (m h : ℝ) : thirdKindGamma m (-h) = thirdKindGamma m h := by
+  unfold thirdKindGamma; rw [thirdKindQ4_neg, thirdKindQ3_neg, thirdKindQ2_neg]; ring
+
+-- Theorem: the arc length, with the moment reduction applied and pulled back to the angle.
+-- The `1/D²` from the substitution cancels the `D²` in `√Q`, so the integrand is simply the
+-- moment polynomial over `Δ(ψ)`.
+theorem arcLength_thirdKind_pullback {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1)
+    (hm0 : m ≠ 0) (h0 : 0 ≤ Φ) (hlt : Φ < Real.pi / 2)
+    (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) :
+    arcLengthOf (thirdKindTanParam m h) 0 Φ
+      = (quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+            (thirdKindQ1 h) 1 (thirdKindTan h Φ)
+          - quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+            (thirdKindQ1 h) 1 0)
+        + ∫ ψ in (0 : ℝ)..Φ, (thirdKindAlpha m h + thirdKindBeta m h * thirdKindTan h ψ
+            + thirdKindGamma m h * thirdKindTan h ψ ^ 2) / ellipticEIntegrand c ψ := by
+  have hQ4 := (thirdKindQ4_pos hm0 h).ne'
+  have hpos : ∀ s : ℝ, 0 < quartic (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+      (thirdKindQ1 h) 1 s := by
+    intro s
+    rw [← thirdKindQuartic_eq_quartic]
+    exact thirdKindQuartic_pos hm0 h s
+  have hD : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen h ψ ≠ 0 :=
+    fun ψ hψ => thirdKindDen_ne_zero_of_mem h0 hlt hp hψ
+  rw [arcLengthOf_thirdKindTanParam hm hc h0 hlt hp]
+  have hq : ∀ t : ℝ, Real.sqrt (thirdKindQuartic m h t)
+      = Real.sqrt (quartic (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+          (thirdKindQ1 h) 1 t) := fun t => by rw [thirdKindQuartic_eq_quartic]
+  simp only [hq]
+  rw [integral_sqrt_quartic hQ4 hpos]
+  congr 1
+  set A0 : ℝ := 2 * 1 / 3 - thirdKindQ3 m h * thirdKindQ1 h / (24 * thirdKindQ4 m h) with hA0
+  set A1 : ℝ := thirdKindQ1 h / 2
+    - thirdKindQ3 m h * thirdKindQ2 m h / (12 * thirdKindQ4 m h) with hA1
+  set A2 : ℝ := thirdKindQ2 m h / 3
+    - thirdKindQ3 m h ^ 2 / (8 * thirdKindQ4 m h) with hA2
+  have hgc : Continuous fun t : ℝ => (A0 + A1 * t + A2 * t ^ 2)
+      / Real.sqrt (quartic (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+        (thirdKindQ1 h) 1 t) := by
+    refine Continuous.div (by fun_prop) ?_ fun t => (Real.sqrt_pos.mpr (hpos t)).ne'
+    exact Real.continuous_sqrt.comp (by unfold quartic; fun_prop)
+  rw [← integral_comp_thirdKindTan hD (g := fun t : ℝ => (A0 + A1 * t + A2 * t ^ 2)
+    / Real.sqrt (quartic (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+      (thirdKindQ1 h) 1 t)) hgc]
+  refine intervalIntegral.integral_congr fun ψ hψ => ?_
+  have hE := ellipticEIntegrand_pos hc ψ
+  have hDψ := hD ψ hψ
+  have hAlpha : thirdKindAlpha m h = A0 := by rw [thirdKindAlpha, hA0]; ring
+  have hBeta : thirdKindBeta m h = A1 := by rw [thirdKindBeta, hA1]
+  have hGamma : thirdKindGamma m h = A2 := by rw [thirdKindGamma, hA2]
+  rw [hAlpha, hBeta, hGamma, ← thirdKindQuartic_eq_quartic,
+    sqrt_thirdKindQuartic_tan hm hc hDψ]
+  field_simp
+
+theorem thirdKindCubic_eq (m h : ℝ) :
+    thirdKindCubic (1 - m ^ 2) (1 + h ^ 2) = h ^ 2 * thirdKindQ4 m h := by
+  unfold thirdKindCubic thirdKindQ4; ring
+
+theorem thirdKind_tan_diff_alg {S p q u hh : ℝ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (hpq : p * q = u) (hqp : q - p = -2 * hh * S) :
+    S / p - S / q = -2 * hh * S ^ 2 / u := by
+  subst hpq
+  field_simp
+  linear_combination S * hqp
+
+theorem thirdKind_tan_sq_alg {S p q u hh : ℝ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (hpq : p * q = u) (hqp : q - p = -2 * hh * S) :
+    (S / p) ^ 2 + (S / q) ^ 2 = 2 * S ^ 2 / u + 4 * hh ^ 2 * S ^ 4 / u ^ 2 := by
+  subst hpq
+  field_simp
+  linear_combination (S ^ 2 * (q - p - 2 * hh * S)) * hqp
+
+theorem thirdKind_sum_alg {S u E A B G Q4 Pd hpar tp tm : ℝ}
+    (hu : u ≠ 0) (hE : E ≠ 0) (hQ4 : Q4 ≠ 0)
+    (hdiff : tp - tm = -2 * hpar * S ^ 2 / u)
+    (hsum : tp ^ 2 + tm ^ 2 = 2 * S ^ 2 / u + 4 * hpar ^ 2 * S ^ 4 / u ^ 2) :
+    (A + B * tp + G * tp ^ 2) / E + (A + -B * tm + G * tm ^ 2) / E
+      = 2 * A * E⁻¹
+        + (-2 * hpar * B + 2 * G * (1 - Pd / Q4)) * (S ^ 2 / (u * E))
+        + 2 * G / Q4 * (Pd * S ^ 2 / (u * E)
+            + 2 * (hpar ^ 2 * Q4) * S ^ 4 / (u ^ 2 * E)) := by
+  have key : (A + B * tp + G * tp ^ 2) / E + (A + -B * tm + G * tm ^ 2) / E
+      = (2 * A + B * (tp - tm) + G * (tp ^ 2 + tm ^ 2)) / E := by ring
+  rw [key, hdiff, hsum]
+  field_simp
+  ring
+
+-- Theorem: the pointwise identity behind the symmetrisation. Adding the two integrands (for
+-- `h` and `-h`) kills the odd part, and what is left is a combination of the first-kind
+-- integrand, the auxiliary integrand `A`, and the master integrand.
+theorem thirdKind_sum_integrand {c m h : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1) (hm0 : m ≠ 0)
+    {ψ : ℝ} (hDh : thirdKindDen h ψ ≠ 0) (hDm : thirdKindDen (-h) ψ ≠ 0)
+    (hu : 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 ≠ 0) :
+    (thirdKindAlpha m h + thirdKindBeta m h * thirdKindTan h ψ
+        + thirdKindGamma m h * thirdKindTan h ψ ^ 2) / ellipticEIntegrand c ψ
+      + (thirdKindAlpha m (-h) + thirdKindBeta m (-h) * thirdKindTan (-h) ψ
+        + thirdKindGamma m (-h) * thirdKindTan (-h) ψ ^ 2) / ellipticEIntegrand c ψ
+      = 2 * thirdKindAlpha m h * ellipticFIntegrand c ψ
+        + thirdKindPiCoeff m h * (Real.sin ψ ^ 2
+            / ((1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ))
+        + 2 * thirdKindGamma m h / thirdKindQ4 m h
+            * thirdKindMaster c (1 + h ^ 2) ψ := by
+  have hcm : c = 1 - m ^ 2 := by linarith
+  subst hcm
+  have hE := (ellipticEIntegrand_pos hc ψ).ne'
+  have hQ4 := (thirdKindQ4_pos hm0 h).ne'
+  have hDh' : Real.cos ψ + h * Real.sin ψ ≠ 0 := by rw [thirdKindDen] at hDh; exact hDh
+  have hDm' : Real.cos ψ - h * Real.sin ψ ≠ 0 := by
+    rw [thirdKindDen] at hDm; intro h0; exact hDm (by linarith)
+  have hfac : (Real.cos ψ + h * Real.sin ψ) * (Real.cos ψ - h * Real.sin ψ)
+      = 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 := by
+    linear_combination Real.sin_sq_add_cos_sq ψ
+  have hqp : (Real.cos ψ - h * Real.sin ψ) - (Real.cos ψ + h * Real.sin ψ)
+      = -2 * h * Real.sin ψ := by ring
+  have htp : thirdKindTan h ψ = Real.sin ψ / (Real.cos ψ + h * Real.sin ψ) := by
+    rw [thirdKindTan, thirdKindDen]
+  have htq : thirdKindTan (-h) ψ = Real.sin ψ / (Real.cos ψ - h * Real.sin ψ) := by
+    rw [thirdKindTan, thirdKindDen]; ring_nf
+  have hdiff : thirdKindTan h ψ - thirdKindTan (-h) ψ
+      = -2 * h * Real.sin ψ ^ 2 / (1 - (1 + h ^ 2) * Real.sin ψ ^ 2) := by
+    rw [htp, htq]
+    exact thirdKind_tan_diff_alg hDh' hDm' hfac hqp
+  have hsum : thirdKindTan h ψ ^ 2 + thirdKindTan (-h) ψ ^ 2
+      = 2 * Real.sin ψ ^ 2 / (1 - (1 + h ^ 2) * Real.sin ψ ^ 2)
+        + 4 * h ^ 2 * Real.sin ψ ^ 4 / (1 - (1 + h ^ 2) * Real.sin ψ ^ 2) ^ 2 := by
+    rw [htp, htq]
+    exact thirdKind_tan_sq_alg hDh' hDm' hfac hqp
+  rw [thirdKindAlpha_neg, thirdKindBeta_neg, thirdKindGamma_neg,
+    ← thirdKindPiCoeff_eq hQ4, thirdKindMaster, thirdKindCubic_eq, ellipticFIntegrand]
+  unfold thirdKindBeta thirdKindGamma
+  exact thirdKind_sum_alg hu hE hQ4 hdiff hsum
+
+-- Theorem: **the symmetrised arc length.** Adding the arc lengths of the Béziers for `h`
+-- and `-h` gives an algebraic term, a multiple of `F`, a multiple of `Π`'s auxiliary
+-- integral, and a multiple of the master identity's right-hand side. Everything but the
+-- `Π` term is already known to be P-constructible.
+theorem thirdKind_sum_key {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c) (hc : c < 1) (hm0 : m ≠ 0)
+    (h0 : 0 ≤ Φ) (hlt : Φ < Real.pi / 2) (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) :
+    arcLengthOf (thirdKindTanParam m h) 0 Φ + arcLengthOf (thirdKindTanParam m (-h)) 0 Φ
+      = ((quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+              (thirdKindQ1 h) 1 (thirdKindTan h Φ)
+            - quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+              (thirdKindQ1 h) 1 0)
+          + (quarticArcAnti (thirdKindQ4 m (-h)) (thirdKindQ3 m (-h)) (thirdKindQ2 m (-h))
+              (thirdKindQ1 (-h)) 1 (thirdKindTan (-h) Φ)
+            - quarticArcAnti (thirdKindQ4 m (-h)) (thirdKindQ3 m (-h)) (thirdKindQ2 m (-h))
+              (thirdKindQ1 (-h)) 1 0))
+        + (2 * thirdKindAlpha m h * ellipticF c Φ
+          + thirdKindPiCoeff m h * ellipticPiAux c (1 + h ^ 2) Φ
+          + 2 * thirdKindGamma m h / thirdKindQ4 m h
+            * ((1 - (1 + h ^ 2)) * ellipticF c Φ - ellipticE c Φ
+              + thirdKindAnti c (1 + h ^ 2) Φ)) := by
+  have hpn : (1 + (-h) ^ 2) * Real.sin Φ ^ 2 < 1 := by
+    rw [show (-h) ^ 2 = h ^ 2 from by ring]; exact hp
+  have hne : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, 1 - (1 + h ^ 2) * Real.sin ψ ^ 2 ≠ 0 :=
+    fun ψ hψ => thirdKindPole_ne_zero_of_mem h0 hlt hp hψ
+  have hDh : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen h ψ ≠ 0 :=
+    fun ψ hψ => thirdKindDen_ne_zero_of_mem h0 hlt hp hψ
+  have hDm : ∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen (-h) ψ ≠ 0 :=
+    fun ψ hψ => thirdKindDen_ne_zero_of_mem h0 hlt hpn hψ
+  have hEne : ∀ ψ : ℝ, ellipticEIntegrand c ψ ≠ 0 :=
+    fun ψ => (ellipticEIntegrand_pos hc ψ).ne'
+  have hmom : ∀ k : ℝ, (∀ ψ ∈ Set.uIcc (0 : ℝ) Φ, thirdKindDen k ψ ≠ 0) →
+      ContinuousOn (fun ψ => (thirdKindAlpha m k + thirdKindBeta m k * thirdKindTan k ψ
+        + thirdKindGamma m k * thirdKindTan k ψ ^ 2) / ellipticEIntegrand c ψ)
+        (Set.uIcc (0 : ℝ) Φ) := by
+    intro k hk
+    have ht : ContinuousOn (thirdKindTan k) (Set.uIcc (0 : ℝ) Φ) :=
+      fun ψ hψ => ((hasDerivAt_thirdKindTan (hk ψ hψ)).continuousAt).continuousWithinAt
+    exact ((continuousOn_const.add (continuousOn_const.mul ht)).add
+      (continuousOn_const.mul (ht.pow 2))).div
+      (continuous_ellipticEIntegrand c).continuousOn fun ψ _ => hEne ψ
+  have hauxc : ContinuousOn (fun ψ : ℝ => Real.sin ψ ^ 2
+      / ((1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ))
+      (Set.uIcc (0 : ℝ) Φ) :=
+    (Continuous.continuousOn (by fun_prop)).div
+      ((Continuous.continuousOn (by fun_prop)).mul
+        (continuous_ellipticEIntegrand c).continuousOn)
+      fun ψ hψ => mul_ne_zero (hne ψ hψ) (hEne ψ)
+  have hmasterc : ContinuousOn (thirdKindMaster c (1 + h ^ 2)) (Set.uIcc (0 : ℝ) Φ) :=
+    continuousOn_thirdKindMaster hc hne
+  rw [arcLength_thirdKind_pullback hm hc hm0 h0 hlt hp,
+    arcLength_thirdKind_pullback hm hc hm0 h0 hlt hpn]
+  rw [show ∀ a b x y : ℝ, a + x + (b + y) = a + b + (x + y) from fun a b x y => by ring]
+  congr 1
+  rw [← intervalIntegral.integral_add ((hmom h hDh).intervalIntegrable)
+    ((hmom (-h) hDm).intervalIntegrable)]
+  rw [intervalIntegral.integral_congr (g := fun ψ =>
+      2 * thirdKindAlpha m h * ellipticFIntegrand c ψ
+        + thirdKindPiCoeff m h * (Real.sin ψ ^ 2
+            / ((1 - (1 + h ^ 2) * Real.sin ψ ^ 2) * ellipticEIntegrand c ψ))
+        + 2 * thirdKindGamma m h / thirdKindQ4 m h * thirdKindMaster c (1 + h ^ 2) ψ)
+    fun ψ hψ => thirdKind_sum_integrand hm hc hm0 (hDh ψ hψ) (hDm ψ hψ) (hne ψ hψ)]
+  rw [intervalIntegral.integral_add
+      (((continuous_ellipticFIntegrand hc).const_mul _).intervalIntegrable _ _ |>.add
+        ((hauxc.const_smul (thirdKindPiCoeff m h)).intervalIntegrable.congr
+          (fun ψ _ => by simp [smul_eq_mul])))
+      ((hmasterc.const_smul (2 * thirdKindGamma m h / thirdKindQ4 m h)).intervalIntegrable.congr
+        (fun ψ _ => by simp [smul_eq_mul])),
+    intervalIntegral.integral_add
+      (((continuous_ellipticFIntegrand hc).const_mul _).intervalIntegrable _ _)
+      ((hauxc.const_smul (thirdKindPiCoeff m h)).intervalIntegrable.congr
+        (fun ψ _ => by simp [smul_eq_mul])),
+    intervalIntegral.integral_const_mul, intervalIntegral.integral_const_mul,
+    intervalIntegral.integral_const_mul, ← ellipticF, ← ellipticPiAux,
+    integral_thirdKindMaster hc Φ hne]
+
+/-! #### P-constructibility of the pieces -/
+
+theorem twelve_Pconstructible : PConstructible (12 : ℝ) := by
+  have h := nat_Pconstructible 12
+  norm_num at h
+  exact h
+
+theorem pow_Pconstructible {x : ℝ} (hx : PConstructible x) : ∀ n : ℕ, PConstructible (x ^ n)
+  | 0 => by simpa using PConstructible.base_one
+  | n + 1 => by
+    have := PConstructible.mul (pow_Pconstructible hx n) hx
+    simpa [pow_succ] using this
+
+theorem quarticArcAnti_Pconstructible {q4 q3 q2 q1 q0 t : ℝ}
+    (h4 : PConstructible q4) (h3 : PConstructible q3) (h2 : PConstructible q2)
+    (h1 : PConstructible q1) (h0 : PConstructible q0) (ht : PConstructible t) :
+    PConstructible (quarticArcAnti q4 q3 q2 q1 q0 t) := by
+  unfold quarticArcAnti quartic
+  refine PConstructible.mul (PConstructible.add
+    (PConstructible.div h3 (PConstructible.mul twelve_Pconstructible h4))
+    (PConstructible.div ht three_Pconstructible)) (sqrt_Pconstructible ?_)
+  exact PConstructible.add (PConstructible.add (PConstructible.add
+    (PConstructible.add (PConstructible.mul h4 (pow_Pconstructible ht 4))
+      (PConstructible.mul h3 (pow_Pconstructible ht 3)))
+      (PConstructible.mul h2 (pow_Pconstructible ht 2)))
+      (PConstructible.mul h1 ht)) h0
+
+theorem thirdKindQs_Pconstructible {m h : ℝ} (hmP : PConstructible m)
+    (hhP : PConstructible h) :
+    PConstructible (thirdKindQ4 m h) ∧ PConstructible (thirdKindQ3 m h)
+      ∧ PConstructible (thirdKindQ2 m h) ∧ PConstructible (thirdKindQ1 h) := by
+  have h2 := sq_Pconstructible hhP
+  have hm2 := sq_Pconstructible hmP
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · exact PConstructible.mul (PConstructible.add h2 PConstructible.base_one)
+      (PConstructible.add h2 hm2)
+  · exact PConstructible.mul (PConstructible.mul (neg_Pconstructible two_Pconstructible) hhP)
+      (PConstructible.add (PConstructible.add
+        (PConstructible.mul two_Pconstructible h2) PConstructible.base_one) hm2)
+  · exact PConstructible.add (PConstructible.add
+      (PConstructible.mul (nat_six) h2) PConstructible.base_one) hm2
+  · exact PConstructible.mul (neg_Pconstructible (nat_four)) hhP
+where
+  nat_six : PConstructible (6 : ℝ) := by
+    have h := nat_Pconstructible 6; norm_num at h; exact h
+  nat_four : PConstructible (4 : ℝ) := by
+    have h := nat_Pconstructible 4; norm_num at h; exact h
+
+theorem thirdKindTan_Pconstructible {h Φ : ℝ} (hhP : PConstructible h)
+    (hΦP : PConstructible Φ) : PConstructible (thirdKindTan h Φ) := by
+  rw [thirdKindTan, thirdKindDen]
+  exact PConstructible.div (sin_Pconstructible hΦP)
+    (PConstructible.add (cos_Pconstructible hΦP)
+      (PConstructible.mul hhP (sin_Pconstructible hΦP)))
+
+theorem thirdKindAnti_Pconstructible {c n Φ : ℝ} (hcP : PConstructible c)
+    (hnP : PConstructible n) (hΦP : PConstructible Φ) :
+    PConstructible (thirdKindAnti c n Φ) := by
+  rw [thirdKindAnti]
+  exact PConstructible.div (PConstructible.mul (PConstructible.mul
+    (PConstructible.mul hnP (sin_Pconstructible hΦP)) (cos_Pconstructible hΦP))
+    (ellipticEIntegrand_Pconstructible hcP hΦP))
+    (PConstructible.sub PConstructible.base_one
+      (PConstructible.mul hnP (sq_Pconstructible (sin_Pconstructible hΦP))))
+
+theorem eight_Pconstructible : PConstructible (8 : ℝ) := by
+  have h := nat_Pconstructible 8; norm_num at h; exact h
+theorem twentyfour_Pconstructible : PConstructible (24 : ℝ) := by
+  have h := nat_Pconstructible 24; norm_num at h; exact h
+
+theorem thirdKindAlpha_Pconstructible {m h : ℝ} (hmP : PConstructible m)
+    (hhP : PConstructible h) : PConstructible (thirdKindAlpha m h) := by
+  obtain ⟨h4, h3, h2, h1⟩ := thirdKindQs_Pconstructible hmP hhP
+  rw [thirdKindAlpha]
+  exact PConstructible.sub (PConstructible.div two_Pconstructible three_Pconstructible)
+    (PConstructible.div (PConstructible.mul h3 h1)
+      (PConstructible.mul twentyfour_Pconstructible h4))
+
+theorem thirdKindGamma_Pconstructible {m h : ℝ} (hmP : PConstructible m)
+    (hhP : PConstructible h) : PConstructible (thirdKindGamma m h) := by
+  obtain ⟨h4, h3, h2, h1⟩ := thirdKindQs_Pconstructible hmP hhP
+  rw [thirdKindGamma]
+  exact PConstructible.sub (PConstructible.div h2 three_Pconstructible)
+    (PConstructible.div (sq_Pconstructible h3)
+      (PConstructible.mul eight_Pconstructible h4))
+
+theorem thirdKindPiCoeff_Pconstructible {m h : ℝ} (hmP : PConstructible m)
+    (hhP : PConstructible h) : PConstructible (thirdKindPiCoeff m h) := by
+  have h2 := sq_Pconstructible hhP
+  have hm2 := sq_Pconstructible hmP
+  have h4 : PConstructible (h ^ 4) := pow_Pconstructible hhP 4
+  rw [thirdKindPiCoeff]
+  exact PConstructible.div
+    (PConstructible.mul (PConstructible.mul h2 (PConstructible.sub h4 hm2))
+      (sq_Pconstructible (PConstructible.sub hm2 PConstructible.base_one)))
+    (PConstructible.mul (sq_Pconstructible (PConstructible.add h2 PConstructible.base_one))
+      (sq_Pconstructible (PConstructible.add h2 hm2)))
+
+theorem thirdKindPiCoeff_ne_zero {m h : ℝ} (hm0 : m ≠ 0) (hh0 : h ≠ 0)
+    (hne4 : h ^ 4 ≠ m ^ 2) (hm1 : m ^ 2 ≠ 1) : thirdKindPiCoeff m h ≠ 0 := by
+  have hpos : (0 : ℝ) < h ^ 2 + m ^ 2 := by positivity
+  rw [thirdKindPiCoeff]
+  refine div_ne_zero (mul_ne_zero (mul_ne_zero (pow_ne_zero 2 hh0)
+    (sub_ne_zero.mpr hne4)) (pow_ne_zero 2 (sub_ne_zero.mpr hm1))) ?_
+  exact mul_ne_zero (pow_ne_zero 2 (by positivity)) (pow_ne_zero 2 hpos.ne')
+
+/-! ### The incomplete third kind, for `n > 1`
+
+Solving the symmetrised identity for the auxiliary integral. Every other term in it is
+P-constructible — two Bézier arc lengths, an algebraic term, `F`, `E`, and the elementary
+boundary term of the master identity — so the auxiliary integral is, and with it `Π`. -/
+
+theorem ellipticPiAux_Pconstructible_gt_one {c m h Φ : ℝ}
+    (hm : m ^ 2 = 1 - c) (hc : c < 1) (hc0 : 0 < c) (hmpos : 0 < m)
+    (hcP : PConstructible c) (hmP : PConstructible m) (hhP : PConstructible h)
+    (hΦP : PConstructible Φ) (h0 : 0 < Φ) (hlt : Φ < Real.pi / 2)
+    (hp : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1) (hh0 : h ≠ 0) (hne4 : h ^ 4 ≠ m ^ 2) :
+    PConstructible (ellipticPiAux c (1 + h ^ 2) Φ) := by
+  have hm0 : m ≠ 0 := hmpos.ne'
+  have hm1 : m ^ 2 ≠ 1 := by rw [hm]; intro hx; linarith
+  have hcoeff := thirdKindPiCoeff_ne_zero hm0 hh0 hne4 hm1
+  have hcoeffP := thirdKindPiCoeff_Pconstructible hmP hhP
+  have hpn : (1 + (-h) ^ 2) * Real.sin Φ ^ 2 < 1 := by
+    rw [show (-h) ^ 2 = h ^ 2 from by ring]; exact hp
+  have hkey := thirdKind_sum_key hm hc hm0 h0.le hlt hp
+  obtain ⟨hQ4, hQ3, hQ2, hQ1⟩ := thirdKindQs_Pconstructible hmP hhP
+  obtain ⟨hQ4', hQ3', hQ2', hQ1'⟩ := thirdKindQs_Pconstructible hmP (neg_Pconstructible hhP)
+  have hnP : PConstructible (1 + h ^ 2) :=
+    PConstructible.add PConstructible.base_one (sq_Pconstructible hhP)
+  have hFP : PConstructible (ellipticF c Φ) := ellipticF_Pconstructible hcP hΦP hc
+  have hEP : PConstructible (ellipticE c Φ) := ellipticE_Pconstructible hcP hΦP hc
+  have hArc : PConstructible (arcLengthOf (thirdKindTanParam m h) 0 Φ) :=
+    arcLength_thirdKind_Pconstructible hm hc hmpos hmP hhP hΦP h0 hlt hp
+  have hArc' : PConstructible (arcLengthOf (thirdKindTanParam m (-h)) 0 Φ) :=
+    arcLength_thirdKind_Pconstructible hm hc hmpos hmP (neg_Pconstructible hhP) hΦP h0 hlt hpn
+  have hone : PConstructible (1 : ℝ) := PConstructible.base_one
+  have hzero : PConstructible (0 : ℝ) := zero_Pconstructible
+  have hRHS : PConstructible
+      ((arcLengthOf (thirdKindTanParam m h) 0 Φ
+          + arcLengthOf (thirdKindTanParam m (-h)) 0 Φ)
+        - ((quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+              (thirdKindQ1 h) 1 (thirdKindTan h Φ)
+            - quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+              (thirdKindQ1 h) 1 0)
+          + (quarticArcAnti (thirdKindQ4 m (-h)) (thirdKindQ3 m (-h)) (thirdKindQ2 m (-h))
+              (thirdKindQ1 (-h)) 1 (thirdKindTan (-h) Φ)
+            - quarticArcAnti (thirdKindQ4 m (-h)) (thirdKindQ3 m (-h)) (thirdKindQ2 m (-h))
+              (thirdKindQ1 (-h)) 1 0))
+        - 2 * thirdKindAlpha m h * ellipticF c Φ
+        - 2 * thirdKindGamma m h / thirdKindQ4 m h
+          * ((1 - (1 + h ^ 2)) * ellipticF c Φ - ellipticE c Φ
+            + thirdKindAnti c (1 + h ^ 2) Φ)) := by
+    refine PConstructible.sub (PConstructible.sub (PConstructible.sub
+      (PConstructible.add hArc hArc') (PConstructible.add
+        (PConstructible.sub
+          (quarticArcAnti_Pconstructible hQ4 hQ3 hQ2 hQ1 hone
+            (thirdKindTan_Pconstructible hhP hΦP))
+          (quarticArcAnti_Pconstructible hQ4 hQ3 hQ2 hQ1 hone hzero))
+        (PConstructible.sub
+          (quarticArcAnti_Pconstructible hQ4' hQ3' hQ2' hQ1' hone
+            (thirdKindTan_Pconstructible (neg_Pconstructible hhP) hΦP))
+          (quarticArcAnti_Pconstructible hQ4' hQ3' hQ2' hQ1' hone hzero))))
+      (PConstructible.mul (PConstructible.mul two_Pconstructible
+        (thirdKindAlpha_Pconstructible hmP hhP)) hFP)) ?_
+    exact PConstructible.mul (PConstructible.div (PConstructible.mul two_Pconstructible
+      (thirdKindGamma_Pconstructible hmP hhP)) hQ4)
+      (PConstructible.add (PConstructible.sub
+        (PConstructible.mul (PConstructible.sub hone hnP) hFP) hEP)
+        (thirdKindAnti_Pconstructible hcP hnP hΦP))
+  have heq : thirdKindPiCoeff m h * ellipticPiAux c (1 + h ^ 2) Φ
+      = (arcLengthOf (thirdKindTanParam m h) 0 Φ
+          + arcLengthOf (thirdKindTanParam m (-h)) 0 Φ)
+        - ((quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+              (thirdKindQ1 h) 1 (thirdKindTan h Φ)
+            - quarticArcAnti (thirdKindQ4 m h) (thirdKindQ3 m h) (thirdKindQ2 m h)
+              (thirdKindQ1 h) 1 0)
+          + (quarticArcAnti (thirdKindQ4 m (-h)) (thirdKindQ3 m (-h)) (thirdKindQ2 m (-h))
+              (thirdKindQ1 (-h)) 1 (thirdKindTan (-h) Φ)
+            - quarticArcAnti (thirdKindQ4 m (-h)) (thirdKindQ3 m (-h)) (thirdKindQ2 m (-h))
+              (thirdKindQ1 (-h)) 1 0))
+        - 2 * thirdKindAlpha m h * ellipticF c Φ
+        - 2 * thirdKindGamma m h / thirdKindQ4 m h
+          * ((1 - (1 + h ^ 2)) * ellipticF c Φ - ellipticE c Φ
+            + thirdKindAnti c (1 + h ^ 2) Φ) := by
+    linear_combination -hkey
+  have hdiv := PConstructible.div (heq ▸ hRHS) hcoeffP
+  rwa [mul_div_cancel_left₀ _ hcoeff] at hdiv
+
+theorem continuousOn_ellipticPiAuxIntegrand {c n : ℝ} (hc : c < 1) {s : Set ℝ}
+    (hne : ∀ θ ∈ s, 1 - n * Real.sin θ ^ 2 ≠ 0) :
+    ContinuousOn (fun θ : ℝ =>
+      Real.sin θ ^ 2 / ((1 - n * Real.sin θ ^ 2) * ellipticEIntegrand c θ)) s :=
+  (Continuous.continuousOn (by fun_prop)).div
+    ((Continuous.continuousOn (by fun_prop)).mul
+      (continuous_ellipticEIntegrand c).continuousOn)
+    fun θ hθ => mul_ne_zero (hne θ hθ) (ellipticEIntegrand_pos hc θ).ne'
+
+-- Theorem: `Π = F + n·A` on any interval avoiding the pole, so the restriction `n < 1` of
+-- `ellipticPiInc_eq_aux` was only ever about integrability.
+theorem ellipticPiInc_eq_aux_of_ne {c n φ : ℝ} (hc : c < 1)
+    (hne : ∀ θ ∈ Set.uIcc (0 : ℝ) φ, 1 - n * Real.sin θ ^ 2 ≠ 0) :
+    ellipticPiInc c n φ = ellipticF c φ + n * ellipticPiAux c n φ := by
+  have hpt : ∀ θ ∈ Set.uIcc (0 : ℝ) φ, ellipticPiIntegrand c n θ
+      = ellipticFIntegrand c θ
+        + n * (Real.sin θ ^ 2 / ((1 - n * Real.sin θ ^ 2) * ellipticEIntegrand c θ)) := by
+    intro θ hθ
+    have h1 := hne θ hθ
+    have h2 := (ellipticEIntegrand_pos hc θ).ne'
+    simp only [ellipticPiIntegrand, ellipticFIntegrand]
+    field_simp
+    ring
+  unfold ellipticPiInc ellipticF ellipticPiAux
+  rw [← intervalIntegral.integral_const_mul,
+    ← intervalIntegral.integral_add ((continuous_ellipticFIntegrand hc).intervalIntegrable _ _)
+      (((continuousOn_ellipticPiAuxIntegrand hc hne).const_smul n).intervalIntegrable.congr
+        (fun ψ _ => by simp [smul_eq_mul]))]
+  exact intervalIntegral.integral_congr hpt
+
+/-! ### The headline
+
+For a genuine modulus `0 < c < 1` and a characteristic `n > 1`, the incomplete elliptic
+integral of the third kind is P-constructible, on the whole of its natural domain — up to
+the exceptional locus `(n - 1)² = 1 - c`, where the two Legendre reductions of the Bézier
+coincide and the coefficient with which `Π` survives the symmetrisation vanishes. -/
+
+-- Theorem: **the incomplete elliptic integral of the third kind is P-constructible for
+-- `n > 1`.** The upper limit ranges over the whole interval on which the integral converges,
+-- namely up to the pole at `sin Φ = 1/√n`.
+theorem ellipticPiInc_Pconstructible_gt_one {c n Φ : ℝ}
+    (hcP : PConstructible c) (hnP : PConstructible n) (hΦP : PConstructible Φ)
+    (hc0 : 0 < c) (hc : c < 1) (hn : 1 < n) (h0 : 0 < Φ) (hlt : Φ < Real.pi / 2)
+    (hp : n * Real.sin Φ ^ 2 < 1) (hgen : (n - 1) ^ 2 ≠ 1 - c) :
+    PConstructible (ellipticPiInc c n Φ) := by
+  set h := Real.sqrt (n - 1) with hhdef
+  set m := Real.sqrt (1 - c) with hmdef
+  have hh2 : h ^ 2 = n - 1 := Real.sq_sqrt (by linarith)
+  have hm2 : m ^ 2 = 1 - c := Real.sq_sqrt (by linarith)
+  have hn' : (1 : ℝ) + h ^ 2 = n := by rw [hh2]; ring
+  have hmpos : 0 < m := Real.sqrt_pos.mpr (by linarith)
+  have hh0 : h ≠ 0 := (Real.sqrt_pos.mpr (by linarith)).ne'
+  have hne4 : h ^ 4 ≠ m ^ 2 := by
+    rw [show h ^ 4 = (h ^ 2) ^ 2 from by ring, hh2, hm2]; exact hgen
+  have hhP : PConstructible h :=
+    sqrt_Pconstructible (PConstructible.sub hnP PConstructible.base_one)
+  have hmP : PConstructible m :=
+    sqrt_Pconstructible (PConstructible.sub PConstructible.base_one hcP)
+  have hp' : (1 + h ^ 2) * Real.sin Φ ^ 2 < 1 := by rw [hn']; exact hp
+  have hne : ∀ θ ∈ Set.uIcc (0 : ℝ) Φ, 1 - n * Real.sin θ ^ 2 ≠ 0 := by
+    intro θ hθ
+    have := thirdKindPole_ne_zero_of_mem (h := h) h0.le hlt hp' hθ
+    rwa [hn'] at this
+  rw [ellipticPiInc_eq_aux_of_ne hc hne, ← hn']
+  refine PConstructible.add (ellipticF_Pconstructible hcP hΦP hc)
+    (PConstructible.mul (hn' ▸ hnP) ?_)
+  exact ellipticPiAux_Pconstructible_gt_one hm2 hc hc0 hmpos hcP hmP hhP hΦP h0 hlt hp'
+    hh0 hne4
 
 end Pconstructible

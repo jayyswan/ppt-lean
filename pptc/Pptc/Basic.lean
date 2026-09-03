@@ -2625,12 +2625,12 @@ theorem thirdKindAnti_alg {s w E c n : ℝ} (hw : s ^ 2 + w ^ 2 = 1) (hE : E ^ 2
 -- Theorem: the master identity. `thirdKindMaster` differs from an explicit elementary derivative
 -- by the two Legendre integrands, so integrating it over a full quarter turn reduces to
 -- `K` and `E`.
-theorem hasDerivAt_thirdKindAnti {c n : ℝ} (hc : c < 1) (hn : n < 1) (θ : ℝ) :
+theorem hasDerivAt_thirdKindAnti {c n : ℝ} (hc : c < 1)
+    {θ : ℝ} (hune : 1 - n * Real.sin θ ^ 2 ≠ 0) :
     HasDerivAt (thirdKindAnti c n)
       (thirdKindMaster c n θ - (1 - n) / ellipticEIntegrand c θ + ellipticEIntegrand c θ) θ := by
   have hE := ellipticEIntegrand_pos hc θ
   have hEsq := ellipticEIntegrand_sq hc θ
-  have hupos := one_sub_mul_sin_sq_pos hn θ
   have hD := hasDerivAt_ellipticEIntegrand c θ (one_sub_mul_sin_sq_pos hc θ).ne'
   have hu : HasDerivAt (fun t : ℝ => 1 - n * Real.sin t ^ 2)
       (-(2 * n * Real.sin θ * Real.cos θ)) θ :=
@@ -2646,9 +2646,9 @@ theorem hasDerivAt_thirdKindAnti {c n : ℝ} (hc : c < 1) (hn : n < 1) (θ : ℝ
     have h2 : HasDerivAt (fun t : ℝ => ellipticEIntegrand c t)
         (-(2 * c * Real.sin θ * Real.cos θ) / (2 * ellipticEIntegrand c θ)) θ := hD
     exact h1.mul h2
-  refine (hnum.div hu hupos.ne').congr_deriv ?_
+  refine (hnum.div hu hune).congr_deriv ?_
   simp only [thirdKindMaster, thirdKindCubic, thirdKindCubicDeriv]
-  exact thirdKindAnti_alg (Real.sin_sq_add_cos_sq θ) hEsq hE.ne' hupos.ne'
+  exact thirdKindAnti_alg (Real.sin_sq_add_cos_sq θ) hEsq hE.ne' hune
 
 theorem continuous_thirdKindMaster {c n : ℝ} (hc : c < 1) (hn : n < 1) :
     Continuous (thirdKindMaster c n) := by
@@ -2664,6 +2664,20 @@ theorem continuous_thirdKindMaster {c n : ℝ} (hc : c < 1) (hn : n < 1) :
   · exact (by fun_prop : Continuous fun θ : ℝ => 2 * thirdKindCubic c n * Real.sin θ ^ 4).div
       ((hu.pow 2).mul hD) fun θ => mul_ne_zero (pow_ne_zero 2 (hune θ)) (hDne θ)
 
+-- Theorem: the master integrand is continuous wherever `1 - n sin²θ` does not vanish.
+theorem continuousOn_thirdKindMaster {c n : ℝ} (hc : c < 1) {s : Set ℝ}
+    (hs : ∀ θ ∈ s, 1 - n * Real.sin θ ^ 2 ≠ 0) : ContinuousOn (thirdKindMaster c n) s := by
+  have hD : Continuous (ellipticEIntegrand c) := continuous_ellipticEIntegrand c
+  have hu : Continuous fun θ : ℝ => 1 - n * Real.sin θ ^ 2 := by fun_prop
+  have hDne : ∀ θ : ℝ, ellipticEIntegrand c θ ≠ 0 := fun θ => (ellipticEIntegrand_pos hc θ).ne'
+  unfold thirdKindMaster
+  refine ContinuousOn.add ?_ ?_
+  · exact ContinuousOn.div (Continuous.continuousOn (by fun_prop))
+      (Continuous.continuousOn (hu.mul hD)) fun θ hθ => mul_ne_zero (hs θ hθ) (hDne θ)
+  · exact ContinuousOn.div (Continuous.continuousOn (by fun_prop))
+      (Continuous.continuousOn ((hu.pow 2).mul hD))
+      fun θ hθ => mul_ne_zero (pow_ne_zero 2 (hs θ hθ)) (hDne θ)
+
 -- Theorem: the antiderivative vanishes at the quarter turn, since `cos (π/2) = 0`.
 theorem thirdKindAnti_pi_div_two (c n : ℝ) : thirdKindAnti c n (Real.pi / 2) = 0 := by
   simp [thirdKindAnti]
@@ -2672,28 +2686,31 @@ theorem thirdKindAnti_pi_div_two (c n : ℝ) : thirdKindAnti c n (Real.pi / 2) =
 -- boundary value of the elementary antiderivative. Over a quarter turn that boundary term
 -- vanishes, which is exactly what makes the *complete* integral reducible and the
 -- incomplete one not.
-theorem integral_thirdKindMaster {c n : ℝ} (hc : c < 1) (hn : n < 1) (φ : ℝ) :
+theorem integral_thirdKindMaster {c n : ℝ} (hc : c < 1) (φ : ℝ)
+    (hune : ∀ θ ∈ Set.uIcc (0 : ℝ) φ, 1 - n * Real.sin θ ^ 2 ≠ 0) :
     (∫ θ in (0 : ℝ)..φ, thirdKindMaster c n θ)
       = (1 - n) * ellipticF c φ - ellipticE c φ + thirdKindAnti c n φ := by
-  have hMc := continuous_thirdKindMaster hc hn
+  have hMc : IntervalIntegrable (thirdKindMaster c n) MeasureTheory.volume 0 φ :=
+    (continuousOn_thirdKindMaster hc hune).intervalIntegrable
   have hFc := continuous_ellipticFIntegrand hc
   have hEc := continuous_ellipticEIntegrand c
   have hkey : (∫ θ in (0 : ℝ)..φ,
       (thirdKindMaster c n θ - (1 - n) * ellipticFIntegrand c θ + ellipticEIntegrand c θ))
       = thirdKindAnti c n φ - thirdKindAnti c n 0 := by
-    refine intervalIntegral.integral_eq_sub_of_hasDerivAt (fun θ _ => ?_) ?_
-    · have h := hasDerivAt_thirdKindAnti hc hn θ
+    refine intervalIntegral.integral_eq_sub_of_hasDerivAt (fun θ hθ => ?_) ?_
+    · have h := hasDerivAt_thirdKindAnti hc (hune θ hθ)
       simpa [ellipticFIntegrand, div_eq_mul_inv] using h
-    · exact ((hMc.sub (hFc.const_mul _)).add hEc).intervalIntegrable _ _
+    · exact (hMc.sub ((hFc.const_mul _).intervalIntegrable _ _)).add
+        (hEc.intervalIntegrable _ _)
   have hzero : thirdKindAnti c n 0 = 0 := by simp [thirdKindAnti]
   rw [hzero, sub_zero] at hkey
   rw [intervalIntegral.integral_add, intervalIntegral.integral_sub,
     intervalIntegral.integral_const_mul] at hkey
   · rw [← ellipticF, ← ellipticE] at hkey
     linarith
-  · exact hMc.intervalIntegrable _ _
+  · exact hMc
   · exact (hFc.const_mul _).intervalIntegrable _ _
-  · exact (hMc.sub (hFc.const_mul _)).intervalIntegrable _ _
+  · exact hMc.sub ((hFc.const_mul _).intervalIntegrable _ _)
   · exact hEc.intervalIntegrable _ _
 
 /-! #### Carrying `A` along a path of parameters
@@ -2814,7 +2831,9 @@ theorem thirdKindPath_key {c : ℝ} (hc : c < 1) {ν Q ρ νd : ℝ → ℝ}
           ρ t * ((1 - ν t) * ellipticF c φ - ellipticE c φ
             + thirdKindAnti c (ν t) φ) := by
     refine intervalIntegral.integral_congr fun t ht => ?_
-    rw [intervalIntegral.integral_const_mul, integral_thirdKindMaster hc (hlt t ht) φ]
+    rw [intervalIntegral.integral_const_mul,
+      integral_thirdKindMaster hc φ
+        (fun θ _ => (one_sub_mul_sin_sq_pos (hlt t ht) θ).ne')]
   rw [← hL, hmid, hswap, hR]
 
 /-! #### Two tools
@@ -3309,7 +3328,8 @@ theorem ellipticPi_zero {c : ℝ} (hc : c < 1) :
 -- left in it, and `Π` reduces to `E / (1 - c)`.
 theorem ellipticPi_self {c : ℝ} (hc0 : 0 < c) (hc : c < 1) :
     ellipticPi c c = ellipticE c (Real.pi / 2) / (1 - c) := by
-  have hkey := integral_thirdKindMaster hc hc (Real.pi / 2)
+  have hkey := integral_thirdKindMaster hc (Real.pi / 2)
+    (fun θ _ => (one_sub_mul_sin_sq_pos hc θ).ne')
   rw [thirdKindAnti_pi_div_two, add_zero] at hkey
   have hzero : thirdKindCubic c c = 0 := by simp [thirdKindCubic]
   have hpt : ∀ θ : ℝ, thirdKindMaster c c θ
