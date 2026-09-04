@@ -933,10 +933,11 @@ and `n-3` all vanish, so that the surviving tail has degree at most `n - 4`. The
 conditions are the first three elementary symmetric functions of the transformed roots,
 hence of degrees `1`, `2` and `3` in `(a, b, c)`, so they are solved in turn by a linear
 equation, a square root and a cubic — every step P-constructible, as is the recovery of `x`
-from `z`, which is one more cubic.
+from `z`, which is one more cubic. The cubic tail below caps this at `n ≤ 7`; killing a
+fourth coefficient is exactly where the classical theory stops.
 
 Classical (Bring 1786, Jerrard 1834) and not in Mathlib; taken on trust here. -/
-theorem bringJerrard {n : ℕ} (hn : 4 ≤ n) {p : Polynomial ℝ} (hp : p ≠ 0)
+theorem bringJerrard {n : ℕ} (hn : 4 ≤ n) (hn7 : n ≤ 7) {p : Polynomial ℝ} (hp : p ≠ 0)
     (hdeg : p.natDegree = n) (hcoeff : ∀ i, PConstructible (p.coeff i)) {β : ℝ}
     (hroot : p.eval β = 0) :
     ∃ z c₀ c₁ c₂ c₃ : ℝ,
@@ -969,7 +970,7 @@ theorem root_Pconstructible_le_seven_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
     exact cubicVal_root_Pconstructible (hcoeff 0) (hcoeff 1) (hcoeff 2) (hcoeff 3) hne hval
   · -- Degree 4 to 7: reduce and cross.
     obtain ⟨z, c₀, c₁, c₂, c₃, h₀, h₁, h₂, h₃, hz, hrec⟩ :=
-      bringJerrard (n := p.natDegree) (by omega) hp rfl hcoeff hroot
+      bringJerrard (n := p.natDegree) (by omega) (by omega) hp rfl hcoeff hroot
     exact hrec (powerLaw_cubic_root_Pconstructible (by omega) h₀ h₁ h₂ h₃ hz)
 
 end BezierGraph
