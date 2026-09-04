@@ -665,6 +665,321 @@ theorem segment_PConstructibleCurve (p q : ℝ × ℝ)
   · exact hmid 2 two_Pconstructible _ _ hp1 hq1
   · exact hmid 2 two_Pconstructible _ _ hp2 hq2
 
+/-! ### Polynomials with P-constructible coefficients
+
+Everything above solves polynomials with *rational* coefficients, because that is all
+`poly_graph` will draw. `cubic_bezier` will draw more: its control points are
+P-constructible, and the Bernstein basis is an invertible rational change of basis, so
+choosing the four abscissae in arithmetic progression makes the curve the graph of an
+*arbitrary* cubic with P-constructible coefficients, over any interval with P-constructible
+endpoints. That is `cubicGraph_PConstructibleCurve`, and it is what lets the coefficients
+leave ℚ.
+
+Two constructions come out of it. Crossing that graph with the horizontal axis solves any
+cubic; crossing it with the power curve `y = x ^ n` solves `x ^ n = c x` for any `n > 3`.
+The second is the useful one, because of the Bring–Jerrard reduction: a Tschirnhaus
+substitution `z = x³ + a x² + b x + c` kills the three coefficients below the leading one,
+and the three conditions are the first three elementary symmetric functions of the new
+roots — degrees `1`, `2`, `3` in `(a, b, c)` — so they are solved by a linear equation, a
+square root and a cubic, all P-constructible. A polynomial of degree `n` is thereby reduced
+to `z ^ n = (tail of degree n - 4)`, and a cubic tail covers `n ≤ 7`.
+
+The pattern behind both this section and the last is the same. Solving `x ^ n = p x` needs
+the coefficients between the tail and the leading term to vanish, so with a graph of degree
+`d` and `r` coefficients removable by a change of variable,
+
+  `n ≤ d + r + 1`.
+
+Over ℚ that reads `7 + 1 + 1 = 9`: `poly_graph` gives `d = 7`, and only the depression is
+rational. Here it reads `3 + 3 + 1 = 7`: the Bézier gives `d = 3`, and Bring–Jerrard gives
+`r = 3`. Degree 8 over the P-constructible field would need a fourth coefficient removed,
+which is where the classical theory stops — the fourth condition is quartic and the system
+ceases to be triangular — or a P-constructible *quartic* graph, which `cubic_bezier` does
+not draw.
+
+Unlike the degree-9 theorem this one takes P-constructible coefficients, so it iterates:
+the P-constructible reals are closed under solving any polynomial of degree at most 7 over
+themselves. -/
+
+section BezierGraph
+
+open Polynomial
+
+theorem pow_Pconstructible {x : ℝ} (hx : PConstructible x) :
+    ∀ n : ℕ, PConstructible (x ^ n)
+  | 0 => by simpa using PConstructible.base_one
+  | n + 1 => by rw [pow_succ]; exact PConstructible.mul (pow_Pconstructible hx n) hx
+
+/-- The cubic `c₃ x³ + c₂ x² + c₁ x + c₀`. -/
+def cubicVal (c₀ c₁ c₂ c₃ x : ℝ) : ℝ := c₃ * x ^ 3 + c₂ * x ^ 2 + c₁ * x + c₀
+
+/-- Its derivative, which is where the Bézier handles go. -/
+def cubicDer (c₁ c₂ c₃ x : ℝ) : ℝ := 3 * c₃ * x ^ 2 + 2 * c₂ * x + c₁
+
+/-- The graph of that cubic over the interval `[u, v]`. -/
+def cubicGraph (c₀ c₁ c₂ c₃ u v : ℝ) : Set (ℝ × ℝ) :=
+  {p : ℝ × ℝ | u ≤ p.1 ∧ p.1 ≤ v ∧ p.2 = cubicVal c₀ c₁ c₂ c₃ p.1}
+
+theorem cubicVal_Pconstructible {c₀ c₁ c₂ c₃ x : ℝ} (h₀ : PConstructible c₀)
+    (h₁ : PConstructible c₁) (h₂ : PConstructible c₂) (h₃ : PConstructible c₃)
+    (hx : PConstructible x) : PConstructible (cubicVal c₀ c₁ c₂ c₃ x) :=
+  PConstructible.add (PConstructible.add (PConstructible.add
+    (PConstructible.mul h₃ (pow_Pconstructible hx 3))
+    (PConstructible.mul h₂ (pow_Pconstructible hx 2)))
+    (PConstructible.mul h₁ hx)) h₀
+
+theorem cubicDer_Pconstructible {c₁ c₂ c₃ x : ℝ} (h₁ : PConstructible c₁)
+    (h₂ : PConstructible c₂) (h₃ : PConstructible c₃) (hx : PConstructible x) :
+    PConstructible (cubicDer c₁ c₂ c₃ x) :=
+  PConstructible.add (PConstructible.add
+    (PConstructible.mul (PConstructible.mul three_Pconstructible h₃)
+      (pow_Pconstructible hx 2))
+    (PConstructible.mul (PConstructible.mul two_Pconstructible h₂) hx)) h₁
+
+-- Theorem: the graph of a cubic with P-constructible coefficients, over any interval with
+-- P-constructible endpoints, is a constructible curve. The control points are the two
+-- endpoints of the arc together with the two handles at a third of the tangent.
+theorem cubicGraph_PConstructibleCurve {c₀ c₁ c₂ c₃ u v : ℝ}
+    (h₀ : PConstructible c₀) (h₁ : PConstructible c₁) (h₂ : PConstructible c₂)
+    (h₃ : PConstructible c₃) (hu : PConstructible u) (hv : PConstructible v)
+    (huv : u < v) :
+    PConstructibleCurve (cubicGraph c₀ c₁ c₂ c₃ u v) := by
+  have hvu : v - u ≠ 0 := by linarith
+  have hh : PConstructible (v - u) := PConstructible.sub hv hu
+  have hthree : PConstructible (3 : ℝ) := three_Pconstructible
+  set P₁ : ℝ × ℝ := (u, cubicVal c₀ c₁ c₂ c₃ u) with hP₁
+  set P₂ : ℝ × ℝ :=
+    (u + (v - u) / 3, cubicVal c₀ c₁ c₂ c₃ u + (v - u) * cubicDer c₁ c₂ c₃ u / 3) with hP₂
+  set P₃ : ℝ × ℝ :=
+    (v - (v - u) / 3, cubicVal c₀ c₁ c₂ c₃ v - (v - u) * cubicDer c₁ c₂ c₃ v / 3) with hP₃
+  set P₄ : ℝ × ℝ := (v, cubicVal c₀ c₁ c₂ c₃ v) with hP₄
+  have hbez := PConstructibleCurve.cubic_bezier P₁ P₂ P₃ P₄
+    hu (cubicVal_Pconstructible h₀ h₁ h₂ h₃ hu)
+    (PConstructible.add hu (PConstructible.div hh hthree))
+    (PConstructible.add (cubicVal_Pconstructible h₀ h₁ h₂ h₃ hu)
+      (PConstructible.div (PConstructible.mul hh (cubicDer_Pconstructible h₁ h₂ h₃ hu))
+        hthree))
+    (PConstructible.sub hv (PConstructible.div hh hthree))
+    (PConstructible.sub (cubicVal_Pconstructible h₀ h₁ h₂ h₃ hv)
+      (PConstructible.div (PConstructible.mul hh (cubicDer_Pconstructible h₁ h₂ h₃ hv))
+        hthree))
+    hv (cubicVal_Pconstructible h₀ h₁ h₂ h₃ hv)
+  -- The Bézier traces exactly the graph: its abscissa is affine in `t` and its ordinate is
+  -- the cubic of that abscissa.
+  have hparam : ∀ t : ℝ, bezierParam P₁ P₂ P₃ P₄ t =
+      (u + (v - u) * t, cubicVal c₀ c₁ c₂ c₃ (u + (v - u) * t)) := by
+    intro t
+    simp only [bezierParam, hP₁, hP₂, hP₃, hP₄, cubicVal, cubicDer, Prod.mk.injEq]
+    constructor <;> ring
+  convert hbez using 1
+  ext ⟨a, b⟩
+  simp only [cubicGraph, Set.mem_ofPred_eq, Set.mem_image]
+  constructor
+  · rintro ⟨hle, hge, hb⟩
+    refine ⟨(a - u) / (v - u), ⟨div_nonneg (by linarith) (by linarith), ?_⟩, ?_⟩
+    · rw [div_le_one (by linarith)]; linarith
+    · rw [hparam]
+      have hx : u + (v - u) * ((a - u) / (v - u)) = a := by field_simp; ring
+      rw [hx, ← hb]
+  · rintro ⟨t, ⟨ht0, ht1⟩, hpt⟩
+    rw [hparam t, Prod.mk.injEq] at hpt
+    obtain ⟨ha, hb⟩ := hpt
+    subst ha
+    subst hb
+    exact ⟨by nlinarith, by nlinarith, rfl⟩
+
+-- Theorem: crossing the power curve `y = x ^ n` with the graph of a cubic whose
+-- coefficients are P-constructible solves `x ^ n = c x`, for a positive root.
+theorem powerLaw_cubic_root_pos_Pconstructible {n : ℕ} (hn : 3 < n) {c₀ c₁ c₂ c₃ β : ℝ}
+    (h₀ : PConstructible c₀) (h₁ : PConstructible c₁) (h₂ : PConstructible c₂)
+    (h₃ : PConstructible c₃) (hβ : 0 < β) (heq : β ^ n = cubicVal c₀ c₁ c₂ c₃ β) :
+    PConstructible β := by
+  set P : Polynomial ℝ :=
+    X ^ n - (C c₃ * X ^ 3 + C c₂ * X ^ 2 + C c₁ * X + C c₀) with hPdef
+  have hevalP : ∀ t : ℝ, P.eval t = t ^ n - cubicVal c₀ c₁ c₂ c₃ t := by
+    intro t
+    simp [hPdef, cubicVal]
+  have hPne : P ≠ 0 := by
+    intro hc
+    have hcn : P.coeff n = 1 := by
+      simp [hPdef, Polynomial.coeff_X_pow, Polynomial.coeff_C, Polynomial.coeff_X,
+        show n ≠ 3 by omega, show n ≠ 2 by omega, show n ≠ 0 by omega,
+        show (1 : ℕ) ≠ n by omega]
+    rw [hc] at hcn
+    simp at hcn
+  have hroot : P.IsRoot β := by
+    rw [Polynomial.IsRoot, hevalP, heq, sub_self]
+  have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ β}.Finite :=
+    (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
+  obtain ⟨ε, hε, hball⟩ :=
+    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl β (fun h => h.2 rfl)
+  have hδ : 0 < min ε β := lt_min hε hβ
+  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show β - min ε β < β by linarith)
+  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show β < β + min ε β by linarith)
+  have hq₁pos : (0 : ℝ) < q₁ := by
+    have : min ε β ≤ β := min_le_right _ _
+    linarith
+  have huniq : ∀ t : ℝ, P.IsRoot t → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = β := by
+    intro t ht hlo hhi
+    have hδε : min ε β ≤ ε := min_le_left _ _
+    have hmem : t ∈ Metric.ball β ε := by
+      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
+      constructor <;> linarith
+    have hnot := hball hmem
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
+    exact hnot ht
+  have hT := cubicGraph_PConstructibleCurve h₀ h₁ h₂ h₃
+    (rat_Pconstructible q₁) (rat_Pconstructible q₂) (by linarith : (q₁ : ℝ) < q₂)
+  refine PConstructible.inter_x (PConstructibleCurve.power_law 1 (n : ℚ)) hT
+    (x := β) (y := β ^ n) ?_
+  have hpow : ∀ t : ℝ, 0 < t → t ^ (((n : ℚ) : ℝ)) = t ^ n := by
+    intro t ht
+    push_cast
+    exact Real.rpow_natCast t n
+  have hmem : ((β, β ^ n) : ℝ × ℝ) ∈
+      {pt : ℝ × ℝ | 0 < pt.1 ∧ pt.2 = ((1 : ℚ) : ℝ) * pt.1 ^ (((n : ℚ)) : ℝ)} ∩
+        cubicGraph c₀ c₁ c₂ c₃ (q₁ : ℝ) (q₂ : ℝ) := by
+    refine ⟨⟨hβ, ?_⟩, hq₁b.le, hq₂a.le, heq⟩
+    rw [hpow β hβ]
+    push_cast
+    ring
+  ext ⟨a, b⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, cubicGraph, Set.mem_singleton_iff,
+    Prod.mk.injEq]
+  constructor
+  · rintro ⟨⟨hapos, hb⟩, hlo, hhi, hgraph⟩
+    rw [hpow a hapos] at hb
+    norm_num at hb
+    have hra : P.IsRoot a := by
+      rw [Polynomial.IsRoot, hevalP, ← hgraph, ← hb, sub_self]
+    have ha : a = β := huniq a hra hlo hhi
+    exact ⟨ha, by rw [hb, ha]⟩
+  · rintro ⟨rfl, rfl⟩
+    exact hmem
+
+-- Theorem: the same for any root, positive, negative or zero. Reflecting in the `y` axis
+-- turns the cubic `c` into `x ↦ (-1) ^ n * c (-x)`, whose coefficients are again
+-- P-constructible.
+theorem powerLaw_cubic_root_Pconstructible {n : ℕ} (hn : 3 < n) {c₀ c₁ c₂ c₃ β : ℝ}
+    (h₀ : PConstructible c₀) (h₁ : PConstructible c₁) (h₂ : PConstructible c₂)
+    (h₃ : PConstructible c₃) (heq : β ^ n = cubicVal c₀ c₁ c₂ c₃ β) :
+    PConstructible β := by
+  rcases lt_trichotomy β 0 with hneg | rfl | hpos
+  · have hsign : PConstructible (((-1 : ℝ)) ^ n) :=
+      pow_Pconstructible (neg_Pconstructible PConstructible.base_one) n
+    have heq' : (-β) ^ n =
+        cubicVal ((-1) ^ n * c₀) ((-1) ^ n * (-c₁)) ((-1) ^ n * c₂) ((-1) ^ n * (-c₃)) (-β) := by
+      simp only [cubicVal] at heq ⊢
+      have hb : (-β) ^ n = (-1 : ℝ) ^ n * β ^ n := by
+        rw [← neg_one_mul, mul_pow]
+      rw [hb, heq]
+      ring
+    have := powerLaw_cubic_root_pos_Pconstructible hn
+      (PConstructible.mul hsign h₀) (PConstructible.mul hsign (neg_Pconstructible h₁))
+      (PConstructible.mul hsign h₂) (PConstructible.mul hsign (neg_Pconstructible h₃))
+      (by linarith : (0 : ℝ) < -β) heq'
+    simpa using neg_Pconstructible this
+  · exact zero_Pconstructible
+  · exact powerLaw_cubic_root_pos_Pconstructible hn h₀ h₁ h₂ h₃ hpos heq
+
+-- Theorem: a cubic with P-constructible coefficients has P-constructible real roots — its
+-- graph is a constructible curve, and the roots are where that curve crosses the axis.
+theorem cubicVal_root_Pconstructible {c₀ c₁ c₂ c₃ β : ℝ} (h₀ : PConstructible c₀)
+    (h₁ : PConstructible c₁) (h₂ : PConstructible c₂) (h₃ : PConstructible c₃)
+    (hne : c₃ ≠ 0 ∨ c₂ ≠ 0 ∨ c₁ ≠ 0 ∨ c₀ ≠ 0)
+    (hroot : cubicVal c₀ c₁ c₂ c₃ β = 0) :
+    PConstructible β := by
+  set P : Polynomial ℝ := C c₃ * X ^ 3 + C c₂ * X ^ 2 + C c₁ * X + C c₀ with hPdef
+  have hevalP : ∀ t : ℝ, P.eval t = cubicVal c₀ c₁ c₂ c₃ t := by
+    intro t
+    simp [hPdef, cubicVal]
+  have hPne : P ≠ 0 := by
+    intro hc
+    have e3 : P.coeff 3 = c₃ := by simp [hPdef]
+    have e2 : P.coeff 2 = c₂ := by simp [hPdef]
+    have e1 : P.coeff 1 = c₁ := by simp [hPdef]
+    have e0 : P.coeff 0 = c₀ := by simp [hPdef]
+    rw [hc] at e3 e2 e1 e0
+    simp only [Polynomial.coeff_zero] at e3 e2 e1 e0
+    rcases hne with h | h | h | h
+    exacts [h e3.symm, h e2.symm, h e1.symm, h e0.symm]
+  have hrootP : P.IsRoot β := by rw [Polynomial.IsRoot, hevalP, hroot]
+  have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ β}.Finite :=
+    (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
+  obtain ⟨ε, hε, hball⟩ :=
+    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl β (fun h => h.2 rfl)
+  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show β - ε < β by linarith)
+  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show β < β + ε by linarith)
+  have huniq : ∀ t : ℝ, P.IsRoot t → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = β := by
+    intro t ht hlo hhi
+    have hmem : t ∈ Metric.ball β ε := by
+      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
+      constructor <;> linarith
+    have hnot := hball hmem
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
+    exact hnot ht
+  have hS := cubicGraph_PConstructibleCurve h₀ h₁ h₂ h₃
+    (rat_Pconstructible q₁) (rat_Pconstructible q₂) (by linarith : (q₁ : ℝ) < q₂)
+  refine abscissa_Pconstructible hS zero_Pconstructible ?_
+  ext ⟨a, b⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, cubicGraph, Set.mem_singleton_iff,
+    Prod.mk.injEq]
+  constructor
+  · rintro ⟨⟨hlo, hhi, hgraph⟩, hzero⟩
+    have hra : P.IsRoot a := by
+      rw [Polynomial.IsRoot, hevalP, ← hgraph, hzero]
+    exact ⟨huniq a hra hlo hhi, hzero⟩
+  · rintro ⟨rfl, rfl⟩
+    exact ⟨⟨hq₁b.le, hq₂a.le, hroot.symm⟩, rfl⟩
+
+/-- **The Bring–Jerrard reduction.** A Tschirnhaus substitution `z = x³ + a x² + b x + c`
+carries a polynomial of degree `n ≥ 4` to one whose coefficients in degrees `n-1`, `n-2`
+and `n-3` all vanish, so that the surviving tail has degree at most `n - 4`. The three
+conditions are the first three elementary symmetric functions of the transformed roots,
+hence of degrees `1`, `2` and `3` in `(a, b, c)`, so they are solved in turn by a linear
+equation, a square root and a cubic — every step P-constructible, as is the recovery of `x`
+from `z`, which is one more cubic.
+
+Classical (Bring 1786, Jerrard 1834) and not in Mathlib; taken on trust here. -/
+theorem bringJerrard {n : ℕ} (hn : 4 ≤ n) {p : Polynomial ℝ} (hp : p ≠ 0)
+    (hdeg : p.natDegree = n) (hcoeff : ∀ i, PConstructible (p.coeff i)) {β : ℝ}
+    (hroot : p.eval β = 0) :
+    ∃ z c₀ c₁ c₂ c₃ : ℝ,
+      PConstructible c₀ ∧ PConstructible c₁ ∧ PConstructible c₂ ∧ PConstructible c₃ ∧
+      z ^ n = cubicVal c₀ c₁ c₂ c₃ z ∧ (PConstructible z → PConstructible β) := by
+  sorry
+
+-- Theorem: every real root of every polynomial of degree at most 7 whose coefficients are
+-- P-constructible is itself P-constructible. Degrees up to 3 are read straight off the
+-- cubic graph; from 4 to 7 the Bring–Jerrard reduction shortens the tail to a cubic, and
+-- the power curve `y = x ^ n` supplies the leading term.
+theorem root_Pconstructible_le_seven_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
+    (hdeg : p.natDegree ≤ 7) (hcoeff : ∀ i, PConstructible (p.coeff i)) {β : ℝ}
+    (hroot : p.eval β = 0) :
+    PConstructible β := by
+  by_cases h3 : p.natDegree ≤ 3
+  · -- Degree at most 3: the graph of `p` is a Bézier, and `β` is where it meets the axis.
+    have hval : cubicVal (p.coeff 0) (p.coeff 1) (p.coeff 2) (p.coeff 3) β = 0 := by
+      rw [← hroot, Polynomial.eval_eq_sum_range' (n := 4) (by omega)]
+      simp [cubicVal, Finset.sum_range_succ]
+      ring
+    have hne : p.coeff 3 ≠ 0 ∨ p.coeff 2 ≠ 0 ∨ p.coeff 1 ≠ 0 ∨ p.coeff 0 ≠ 0 := by
+      by_contra hcon
+      push Not at hcon
+      obtain ⟨e3, e2, e1, e0⟩ := hcon
+      refine hp (Polynomial.ext fun i => ?_)
+      rcases lt_or_ge i 4 with hi | hi
+      · interval_cases i <;> simp [e0, e1, e2, e3]
+      · exact Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)
+    exact cubicVal_root_Pconstructible (hcoeff 0) (hcoeff 1) (hcoeff 2) (hcoeff 3) hne hval
+  · -- Degree 4 to 7: reduce and cross.
+    obtain ⟨z, c₀, c₁, c₂, c₃, h₀, h₁, h₂, h₃, hz, hrec⟩ :=
+      bringJerrard (n := p.natDegree) (by omega) hp rfl hcoeff hroot
+    exact hrec (powerLaw_cubic_root_Pconstructible (by omega) h₀ h₁ h₂ h₃ hz)
+
+end BezierGraph
+
+
 /-! ### π is P-constructible
 
 Measuring half of the unit circle. A *full* circle cannot be used directly: `θ ↦ (cos θ,

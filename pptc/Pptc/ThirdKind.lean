@@ -1184,12 +1184,6 @@ theorem twelve_Pconstructible : PConstructible (12 : ℝ) := by
   norm_num at h
   exact h
 
-theorem pow_Pconstructible {x : ℝ} (hx : PConstructible x) : ∀ n : ℕ, PConstructible (x ^ n)
-  | 0 => by simpa using PConstructible.base_one
-  | n + 1 => by
-    have := PConstructible.mul (pow_Pconstructible hx n) hx
-    simpa [pow_succ] using this
-
 theorem quarticArcAnti_Pconstructible {q4 q3 q2 q1 q0 t : ℝ}
     (h4 : PConstructible q4) (h3 : PConstructible q3) (h2 : PConstructible q2)
     (h1 : PConstructible q1) (h0 : PConstructible q0) (ht : PConstructible t) :
