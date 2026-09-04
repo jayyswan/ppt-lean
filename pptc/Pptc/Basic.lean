@@ -671,13 +671,12 @@ endpoints. That is `cubicGraph_PConstructibleCurve`, and it is what lets the coe
 leave ℚ.
 
 Two constructions come out of it. Crossing that graph with the horizontal axis solves any
-cubic; crossing it with the power curve `y = x ^ n` solves `x ^ n = c x` for any `n > 3`.
-The second is the useful one, because of the Bring–Jerrard reduction: a Tschirnhaus
-substitution `z = x³ + a x² + b x + c` kills the three coefficients below the leading one,
-and the three conditions are the first three elementary symmetric functions of the new
-roots — degrees `1`, `2`, `3` in `(a, b, c)` — so they are solved by a linear equation, a
-square root and a cubic, all P-constructible. A polynomial of degree `n` is thereby reduced
-to `z ^ n = (tail of degree n - 4)`, and a cubic tail covers `n ≤ 7`.
+cubic; crossing it with the power curve `y = x ^ n` solves `x ^ n = (cubic in x)` for any
+`n > 3`. Together they reach every polynomial of degree at most `5`. Degree `4` needs
+nothing beyond a division by the leading coefficient, since everything below `x ^ 4` is
+already a cubic. Degree `5` first shifts the variable by `s = p₄ / (5 p₅)` to remove the
+`X ^ 4` term — the ordinary depression, which costs nothing in P-constructibility — and
+that is what leaves a cubic tail behind.
 
 The pattern behind both this section and the last is the same. Solving `x ^ n = p x` needs
 the coefficients between the tail and the leading term to vanish, so with a graph of degree
@@ -686,14 +685,12 @@ the coefficients between the tail and the leading term to vanish, so with a grap
   `n ≤ d + r + 1`.
 
 Over ℚ that reads `6 + 1 + 1 = 8`: `poly_graph` gives `d = 6`, and only the depression is
-rational. Here it reads `3 + 3 + 1 = 7`: the Bézier gives `d = 3`, and Bring–Jerrard gives
-`r = 3`. Degree 8 over the P-constructible field would need a fourth coefficient removed,
-which is where the classical theory stops — the fourth condition is quartic and the system
-ceases to be triangular — or a P-constructible *quartic* graph, which `cubic_bezier` does
-not draw.
+rational. Here it reads `3 + 1 + 1 = 5`: the Bézier gives `d = 3`, and the depression again
+gives `r = 1`. The Bézier is a cubic graph, so `d` cannot be pushed higher without a new
+curve family, and one shift removes one coefficient.
 
 Unlike the degree-8 theorem this one takes P-constructible coefficients, so it iterates:
-the P-constructible reals are closed under solving any polynomial of degree at most 7 over
+the P-constructible reals are closed under solving any polynomial of degree at most 5 over
 themselves. -/
 
 section BezierGraph
@@ -927,30 +924,57 @@ theorem cubicVal_root_Pconstructible {c₀ c₁ c₂ c₃ β : ℝ} (h₀ : PCon
   · rintro ⟨rfl, rfl⟩
     exact ⟨⟨hq₁b.le, hq₂a.le, hroot.symm⟩, rfl⟩
 
-/-- **The Bring–Jerrard reduction.** A Tschirnhaus substitution `z = x³ + a x² + b x + c`
-carries a polynomial of degree `n ≥ 4` to one whose coefficients in degrees `n-1`, `n-2`
-and `n-3` all vanish, so that the surviving tail has degree at most `n - 4`. The three
-conditions are the first three elementary symmetric functions of the transformed roots,
-hence of degrees `1`, `2` and `3` in `(a, b, c)`, so they are solved in turn by a linear
-equation, a square root and a cubic — every step P-constructible, as is the recovery of `x`
-from `z`, which is one more cubic. The cubic tail below caps this at `n ≤ 7`; killing a
-fourth coefficient is exactly where the classical theory stops.
+/-! Past degree 3 the tail of the polynomial has to be carried by the cubic graph while the
+power curve `y = x ^ n` supplies the leading term. Two things are needed for that: the
+coefficients must stay P-constructible under the polynomial operations involved — evaluating
+at a point, and shifting the variable — and the root equation must be rearranged into the
+form `w ^ n = (cubic in w)` that `powerLaw_cubic_root_Pconstructible` expects. -/
 
-Classical (Bring 1786, Jerrard 1834) and not in Mathlib; taken on trust here. -/
-theorem bringJerrard {n : ℕ} (hn : 4 ≤ n) (hn7 : n ≤ 7) {p : Polynomial ℝ} (hp : p ≠ 0)
-    (hdeg : p.natDegree = n) (hcoeff : ∀ i, PConstructible (p.coeff i)) {β : ℝ}
-    (hroot : p.eval β = 0) :
-    ∃ z c₀ c₁ c₂ c₃ : ℝ,
-      PConstructible c₀ ∧ PConstructible c₁ ∧ PConstructible c₂ ∧ PConstructible c₃ ∧
-      z ^ n = cubicVal c₀ c₁ c₂ c₃ z ∧ (PConstructible z → PConstructible β) := by
-  sorry
+-- Theorem: a polynomial whose coefficients are all P-constructible takes P-constructible
+-- values at P-constructible points.
+theorem eval_Pconstructible {q : Polynomial ℝ} (hq : ∀ i, PConstructible (q.coeff i))
+    {x : ℝ} (hx : PConstructible x) : PConstructible (q.eval x) := by
+  rw [Polynomial.eval_eq_sum_range]
+  refine Finset.sum_induction _ PConstructible (fun _ _ ha hb => PConstructible.add ha hb)
+    zero_Pconstructible (fun i _ => ?_)
+  exact PConstructible.mul (hq i) (pow_Pconstructible hx i)
 
--- Theorem: every real root of every polynomial of degree at most 7 whose coefficients are
+-- Theorem: shifting the variable by a P-constructible amount keeps every coefficient
+-- P-constructible. `Polynomial.taylor s q` is `q (X + s)`, and its `i`th coefficient is the
+-- `i`th Hasse derivative evaluated at `s`, whose own coefficients are natural multiples of
+-- those of `q`.
+theorem taylor_coeff_Pconstructible {q : Polynomial ℝ}
+    (hq : ∀ i, PConstructible (q.coeff i)) {s : ℝ} (hs : PConstructible s) (i : ℕ) :
+    PConstructible ((Polynomial.taylor s q).coeff i) := by
+  rw [Polynomial.taylor_coeff]
+  refine eval_Pconstructible (fun j => ?_) hs
+  rw [Polynomial.hasseDeriv_coeff]
+  exact PConstructible.mul (nat_Pconstructible _) (hq _)
+
+-- Theorem: a quartic relation rearranges into `w ^ 4 = (cubic in w)`.
+theorem quartic_eq_cubicVal {a₀ a₁ a₂ a₃ a₄ w : ℝ} (ha : a₄ ≠ 0)
+    (h : a₀ + a₁ * w + a₂ * w ^ 2 + a₃ * w ^ 3 + a₄ * w ^ 4 = 0) :
+    w ^ 4 = cubicVal (-a₀ / a₄) (-a₁ / a₄) (-a₂ / a₄) (-a₃ / a₄) w := by
+  rw [cubicVal]
+  field_simp
+  linear_combination h
+
+-- Theorem: and a quintic one whose quartic term is absent into `w ^ 5 = (cubic in w)`.
+theorem quintic_eq_cubicVal {a₀ a₁ a₂ a₃ a₅ w : ℝ} (ha : a₅ ≠ 0)
+    (h : a₀ + a₁ * w + a₂ * w ^ 2 + a₃ * w ^ 3 + a₅ * w ^ 5 = 0) :
+    w ^ 5 = cubicVal (-a₀ / a₅) (-a₁ / a₅) (-a₂ / a₅) (-a₃ / a₅) w := by
+  rw [cubicVal]
+  field_simp
+  linear_combination h
+
+-- Theorem: every real root of every polynomial of degree at most 5 whose coefficients are
 -- P-constructible is itself P-constructible. Degrees up to 3 are read straight off the
--- cubic graph; from 4 to 7 the Bring–Jerrard reduction shortens the tail to a cubic, and
--- the power curve `y = x ^ n` supplies the leading term.
-theorem root_Pconstructible_le_seven_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
-    (hdeg : p.natDegree ≤ 7) (hcoeff : ∀ i, PConstructible (p.coeff i)) {β : ℝ}
+-- cubic graph. Degree 4 needs nothing further: dividing by the leading coefficient leaves
+-- `x ^ 4 = (cubic)`, and the power curve meets the cubic graph there. Degree 5 first shifts
+-- the variable by `s = p₄ / (5 p₅)` to kill the `X ^ 4` coefficient, which is exactly what
+-- leaves a cubic tail behind.
+theorem root_Pconstructible_le_five_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
+    (hdeg : p.natDegree ≤ 5) (hcoeff : ∀ i, PConstructible (p.coeff i)) {β : ℝ}
     (hroot : p.eval β = 0) :
     PConstructible β := by
   by_cases h3 : p.natDegree ≤ 3
@@ -968,10 +992,70 @@ theorem root_Pconstructible_le_seven_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
       · interval_cases i <;> simp [e0, e1, e2, e3]
       · exact Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)
     exact cubicVal_root_Pconstructible (hcoeff 0) (hcoeff 1) (hcoeff 2) (hcoeff 3) hne hval
-  · -- Degree 4 to 7: reduce and cross.
-    obtain ⟨z, c₀, c₁, c₂, c₃, h₀, h₁, h₂, h₃, hz, hrec⟩ :=
-      bringJerrard (n := p.natDegree) (by omega) (by omega) hp rfl hcoeff hroot
-    exact hrec (powerLaw_cubic_root_Pconstructible (by omega) h₀ h₁ h₂ h₃ hz)
+  · by_cases h4 : p.natDegree = 4
+    · -- Degree 4: the tail below `x ^ 4` is already a cubic.
+      have ha : p.coeff 4 ≠ 0 := by
+        rw [← h4]; exact Polynomial.leadingCoeff_ne_zero.mpr hp
+      have hval : p.coeff 0 + p.coeff 1 * β + p.coeff 2 * β ^ 2 + p.coeff 3 * β ^ 3
+          + p.coeff 4 * β ^ 4 = 0 := by
+        rw [← hroot, Polynomial.eval_eq_sum_range' (n := 5) (by omega)]
+        simp [Finset.sum_range_succ]
+      exact powerLaw_cubic_root_Pconstructible (by norm_num)
+        (PConstructible.div (neg_Pconstructible (hcoeff 0)) (hcoeff 4))
+        (PConstructible.div (neg_Pconstructible (hcoeff 1)) (hcoeff 4))
+        (PConstructible.div (neg_Pconstructible (hcoeff 2)) (hcoeff 4))
+        (PConstructible.div (neg_Pconstructible (hcoeff 3)) (hcoeff 4))
+        (quartic_eq_cubicVal ha hval)
+    · -- Degree 5: kill the `X ^ 4` coefficient by a shift, then cross as before.
+      have h5 : p.natDegree = 5 := by omega
+      have ha : p.coeff 5 ≠ 0 := by
+        rw [← h5]; exact Polynomial.leadingCoeff_ne_zero.mpr hp
+      have h5R : PConstructible (5 : ℝ) := by simpa using nat_Pconstructible 5
+      set s : ℝ := p.coeff 4 / (5 * p.coeff 5) with hsdef
+      have hs : PConstructible s := by
+        rw [hsdef]
+        exact PConstructible.div (hcoeff 4) (PConstructible.mul h5R (hcoeff 5))
+      set r : Polynomial ℝ := Polynomial.taylor (-s) p with hrdef
+      have hrcoeff : ∀ i, PConstructible (r.coeff i) := fun i =>
+        taylor_coeff_Pconstructible hcoeff (neg_Pconstructible hs) i
+      have hr5 : r.coeff 5 = p.coeff 5 := by
+        rw [hrdef, Polynomial.taylor_coeff]
+        have hd : (Polynomial.hasseDeriv 5 p).natDegree < 1 := by
+          have := Polynomial.natDegree_hasseDeriv_le p 5
+          omega
+        rw [Polynomial.eval_eq_sum_range' hd]
+        simp [Polynomial.hasseDeriv_coeff]
+      have hr5ne : r.coeff 5 ≠ 0 := by rw [hr5]; exact ha
+      have hr4 : r.coeff 4 = 0 := by
+        rw [hrdef, Polynomial.taylor_coeff]
+        have hd : (Polynomial.hasseDeriv 4 p).natDegree < 2 := by
+          have := Polynomial.natDegree_hasseDeriv_le p 4
+          omega
+        rw [Polynomial.eval_eq_sum_range' hd]
+        simp [Finset.sum_range_succ, Polynomial.hasseDeriv_coeff, hsdef]
+        field_simp
+        ring
+      have hrdeg : r.natDegree = 5 := by
+        rw [hrdef, Polynomial.natDegree_taylor]; exact h5
+      have hrz : r.eval (β + s) = 0 := by
+        rw [hrdef, Polynomial.taylor_apply, Polynomial.eval_comp]
+        simp only [Polynomial.eval_add, Polynomial.eval_X, Polynomial.eval_C]
+        rw [show β + s + -s = β by ring]
+        exact hroot
+      have hval : r.coeff 0 + r.coeff 1 * (β + s) + r.coeff 2 * (β + s) ^ 2
+          + r.coeff 3 * (β + s) ^ 3 + r.coeff 5 * (β + s) ^ 5 = 0 := by
+        rw [← hrz, Polynomial.eval_eq_sum_range' (n := 6) (by omega)]
+        simp [Finset.sum_range_succ, hr4]
+      have hz : PConstructible (β + s) :=
+        powerLaw_cubic_root_Pconstructible (by norm_num)
+          (PConstructible.div (neg_Pconstructible (hrcoeff 0)) (hrcoeff 5))
+          (PConstructible.div (neg_Pconstructible (hrcoeff 1)) (hrcoeff 5))
+          (PConstructible.div (neg_Pconstructible (hrcoeff 2)) (hrcoeff 5))
+          (PConstructible.div (neg_Pconstructible (hrcoeff 3)) (hrcoeff 5))
+          (quintic_eq_cubicVal hr5ne hval)
+      have hβ : β = (β + s) - s := by ring
+      rw [hβ]
+      exact PConstructible.sub hz hs
 
 end BezierGraph
 
