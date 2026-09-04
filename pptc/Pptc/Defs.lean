@@ -33,8 +33,8 @@ arithmetic operations (`+ - * /`) from `1`, together with intersecting a point o
 of two constructible curves, and `PConstructibleCurve : Set (ℝ × ℝ) → Prop` for
 point-sets reachable from a finite sequence of curve constructions (axis-aligned
 ellipses, axis-aligned rectangles, degree-≤6 polynomial graphs with rational
-coefficients, power laws, the exponential `y = 2 ^ x`, cubic Bézier curves with
-P-constructible control points) and the geometric operations of
+coefficients, power laws, the exponential `y = 2 ^ x`, the sine curve `y = sin x`,
+cubic Bézier curves with P-constructible control points) and the geometric operations of
 translating along either axis, scaling either axis, rotating by whole-degree increments,
 cropping to a rectangular window, marking off an arc of prescribed length, and offsetting
 an arc sideways by a fixed normal distance.
@@ -202,6 +202,21 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- logarithms reachable, by reading off the other coordinate.
   | exp_two :
       PConstructibleCurve {p : ℝ × ℝ | p.2 = (2 : ℝ) ^ p.1}
+  -- The sine curve `y = sin x`. Like `exp_two` this is a single fixed curve rather than a
+  -- family: the drawing program offers one wave shape, and everything else about a sinusoid
+  -- is reached by moving and resizing it. `scale_y` sets the amplitude, `scale_x` the
+  -- frequency, `translate_x` the phase and `translate_y` the vertical offset, so the general
+  -- `y = A * sin (ω * x + φ) + c` with `PConstructible` `A, ω, φ, c` follows from this
+  -- constructor together with the closure operations below.
+  --
+  -- Individual values `Real.sin x` are already reachable without this: `sin_Pconstructible`
+  -- in `Pptc.Basic` gets them one at a time off a circular arc. But a point is not a curve,
+  -- and only a curve can be crossed by `inter_x` / `inter_y` or measured by `arc_length`.
+  -- What this adds is the whole graph at once — the transcendental counterpart of
+  -- `poly_graph` — bringing solutions of mixed equations such as `sin x = x / 2` within
+  -- reach, once `restrict` has cut the two graphs down to a single crossing.
+  | sine :
+      PConstructibleCurve {p : ℝ × ℝ | p.2 = Real.sin p.1}
   -- A cubic Bézier curve with `PConstructible` control points `p₁, p₂, p₃, p₄`, drawn
   -- over the parameter interval `[0, 1]`. This is the curve tool of the drawing program:
   -- two endpoints (`p₁`, `p₄`) plus two handles (`p₂`, `p₃`).

@@ -2060,6 +2060,142 @@ theorem tan_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (R
   rw [Real.tan_eq_sin_div_cos]
   exact PConstructible.div (sin_Pconstructible hx) (cos_Pconstructible hx)
 
+
+section Dottie
+/-! ### The Dottie number
+
+The Dottie number is the unique real fixed point of the cosine: the number `d ≈ 0.739085`
+with `cos d = d`, the value a pocket calculator settles on when `cos` is pressed over and
+over from any starting number.
+
+It is not reached by anything above. `cos_Pconstructible` evaluates the cosine at a number
+already in hand, and `arccos_Pconstructible_of_mem_Icc` inverts it; neither solves an
+equation that mixes the cosine with the identity, and `d` is defined by exactly such an
+equation — it is transcendental, so the algebraic constructions of the earlier sections
+cannot reach it either.
+
+Solving a mixed equation is what a *crossing* is for, and this is what
+`PConstructibleCurve.sine` buys. Slid a quarter period to the left the sine graph becomes
+the cosine graph; the diagonal `y = x` is a `poly_graph`; and `d` is the abscissa of the
+point where they meet, read off by `PConstructible.inter_x`.
+
+The geometry is that short because the crossing is unique on the nose, with no `restrict`
+needed to isolate it — and that uniqueness is the real content, since `inter_x` refuses to
+fire without it. It comes from two facts pulling the same way: a fixed point must lie in
+`[0, 1]` (it is a value of `cos`, so at most `1`, and it cannot be negative because `cos`
+is positive there), and on `[0, 1]` the cosine is decreasing while the identity increases,
+so the two can agree at most once.
+-/
+
+-- Theorem: the graph of the cosine is a P-constructible curve.
+--
+-- It is the sine graph translated a quarter period to the left, `cos t = sin (t + π / 2)`.
+-- Only `translate_x` is used, so this is genuinely just the sine wave slid along; the
+-- amplitude and frequency are untouched.
+theorem cos_graph_PConstructibleCurve :
+    PConstructibleCurve {p : ℝ × ℝ | p.2 = Real.cos p.1} := by
+  have hu : PConstructible (-(Real.pi / 2)) :=
+    neg_Pconstructible (PConstructible.div pi_Pconstructible two_Pconstructible)
+  have h := PConstructibleCurve.translate_x PConstructibleCurve.sine hu
+  have hset : (fun p : ℝ × ℝ => (p.1 + -(Real.pi / 2), p.2)) ''
+      {p : ℝ × ℝ | p.2 = Real.sin p.1} = {p : ℝ × ℝ | p.2 = Real.cos p.1} := by
+    ext ⟨u, v⟩
+    constructor
+    · rintro ⟨⟨x, y⟩, hxy, heq⟩
+      simp only [Prod.mk.injEq] at heq
+      obtain ⟨rfl, rfl⟩ := heq
+      simp only [Set.mem_ofPred_eq] at hxy ⊢
+      rw [hxy, show x + -(Real.pi / 2) = x - Real.pi / 2 by ring, Real.cos_sub_pi_div_two]
+    · intro hv
+      simp only [Set.mem_ofPred_eq] at hv
+      refine ⟨(u + Real.pi / 2, v), ?_, ?_⟩
+      · simp only [Set.mem_ofPred_eq]
+        rw [hv, Real.sin_add_pi_div_two]
+      · simp
+  rwa [hset] at h
+
+-- Theorem: the diagonal `y = x` is a P-constructible curve.
+theorem diagonal_PConstructibleCurve :
+    PConstructibleCurve {p : ℝ × ℝ | p.2 = p.1} := by
+  simpa using PConstructibleCurve.poly_graph (Polynomial.X : Polynomial ℚ) (by simp)
+
+-- Theorem: the cosine has a fixed point, and it lies in `[0, 1]`.
+--
+-- `cos x - x` is `1` at `x = 0` and at most `0` at `x = 1`, so it vanishes in between.
+theorem exists_cos_fixed_point : ∃ d ∈ Set.Icc (0 : ℝ) 1, Real.cos d = d := by
+  have hcont : ContinuousOn (fun x : ℝ => Real.cos x - x) (Set.Icc 0 1) :=
+    (Real.continuous_cos.sub continuous_id).continuousOn
+  have hmem : (0 : ℝ) ∈ Set.Icc (Real.cos 1 - 1) (Real.cos 0 - 0) := by
+    constructor
+    · linarith [Real.cos_le_one 1]
+    · simp
+  obtain ⟨d, hd, hfd⟩ := intermediate_value_Icc' (by norm_num : (0 : ℝ) ≤ 1) hcont hmem
+  exact ⟨d, hd, by simp only at hfd; linarith⟩
+
+-- Theorem: the cosine has at most one fixed point.
+--
+-- Every fixed point lies in `[0, 1]`, and there the cosine is decreasing while the
+-- identity is increasing, so two of them would have to compare both ways at once.
+theorem cos_fixed_point_unique {x y : ℝ} (hx : Real.cos x = x) (hy : Real.cos y = y) :
+    x = y := by
+  have hpi : (2 : ℝ) ≤ Real.pi := Real.two_le_pi
+  have key : ∀ z : ℝ, Real.cos z = z → 0 ≤ z ∧ z ≤ 1 := by
+    intro z hz
+    have h1 : z ≤ 1 := by rw [← hz]; exact Real.cos_le_one z
+    refine ⟨?_, h1⟩
+    by_contra hneg
+    have hlt : z < 0 := not_le.mp hneg
+    have hge : -1 ≤ z := by rw [← hz]; exact Real.neg_one_le_cos z
+    -- `z` lies in `[-1, 0)`, hence in `[-π/2, π/2]`, where the cosine is non-negative.
+    have hpos : 0 ≤ Real.cos z :=
+      Real.cos_nonneg_of_mem_Icc ⟨by linarith, by linarith⟩
+    rw [hz] at hpos
+    linarith
+  obtain ⟨hx0, hx1⟩ := key x hx
+  obtain ⟨hy0, hy1⟩ := key y hy
+  rcases le_total x y with h | h
+  · have hle := Real.cos_le_cos_of_nonneg_of_le_pi hx0 (by linarith) h
+    rw [hx, hy] at hle
+    linarith
+  · have hle := Real.cos_le_cos_of_nonneg_of_le_pi hy0 (by linarith) h
+    rw [hx, hy] at hle
+    linarith
+
+/-- The Dottie number: the unique real solution of `cos x = x`, approximately `0.739085`. -/
+noncomputable def dottie : ℝ := Classical.choose exists_cos_fixed_point
+
+-- Theorem: the Dottie number is a fixed point of the cosine.
+theorem cos_dottie : Real.cos dottie = dottie :=
+  (Classical.choose_spec exists_cos_fixed_point).2
+
+-- Theorem: the Dottie number lies in `[0, 1]`.
+theorem dottie_mem_Icc : dottie ∈ Set.Icc (0 : ℝ) 1 :=
+  (Classical.choose_spec exists_cos_fixed_point).1
+
+-- Theorem: the Dottie number is the only fixed point of the cosine.
+theorem eq_dottie {x : ℝ} (hx : Real.cos x = x) : x = dottie :=
+  cos_fixed_point_unique hx cos_dottie
+
+-- Theorem: the Dottie number is P-constructible.
+--
+-- The cosine graph and the diagonal `y = x` meet exactly at `(d, d)`: a point of both is a
+-- point `(u, v)` with `v = cos u` and `v = u`, hence a fixed point of the cosine, hence `d`
+-- by `eq_dottie`. That singleton is what `PConstructible.inter_x` needs.
+theorem dottie_Pconstructible : PConstructible dottie := by
+  refine PConstructible.inter_x (y := dottie) cos_graph_PConstructibleCurve
+    diagonal_PConstructibleCurve ?_
+  ext ⟨u, v⟩
+  simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
+  constructor
+  · rintro ⟨h1, h2⟩
+    have hfix : Real.cos u = u := by rw [← h1]; exact h2
+    have hu : u = dottie := eq_dottie hfix
+    exact ⟨hu, by rw [h2, hu]⟩
+  · rintro ⟨rfl, rfl⟩
+    exact ⟨cos_dottie.symm, rfl⟩
+
+end Dottie
+
 /-! ### Inverse trigonometric functions
 
 `arccos_Pconstructible_of_mem_Icc`, proved above alongside `π`, already does all of the
