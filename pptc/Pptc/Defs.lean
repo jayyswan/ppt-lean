@@ -32,7 +32,7 @@ Core definitions for the Pptc (PowerPoint Constructibility) project:
 arithmetic operations (`+ - * /`) from `1`, together with intersecting a point out
 of two constructible curves, and `PConstructibleCurve : Set (ℝ × ℝ) → Prop` for
 point-sets reachable from a finite sequence of curve constructions (axis-aligned
-ellipses, axis-aligned rectangles, degree-≤7 polynomial graphs with rational
+ellipses, axis-aligned rectangles, degree-≤6 polynomial graphs with rational
 coefficients, power laws, the exponential `y = 2 ^ x`, cubic Bézier curves with
 P-constructible control points) and the geometric operations of
 translating along either axis, scaling either axis, rotating by whole-degree increments,
@@ -190,9 +190,9 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
             (p.2 = cy - height / 2 ∨ p.2 = cy + height / 2)) ∨
           (cy - height / 2 ≤ p.2 ∧ p.2 ≤ cy + height / 2 ∧
             (p.1 = cx - width / 2 ∨ p.1 = cx + width / 2))}
-  -- The graph of a polynomial of degree ≤ 7 with rational (not merely
+  -- The graph of a polynomial of degree ≤ 6 with rational (not merely
   -- `PConstructible`) coefficients.
-  | poly_graph (p : Polynomial ℚ) (hdeg : p.natDegree ≤ 7) :
+  | poly_graph (p : Polynomial ℚ) (hdeg : p.natDegree ≤ 6) :
       PConstructibleCurve {pt : ℝ × ℝ | pt.2 = Polynomial.aeval pt.1 p}
   -- A power-law curve `y = a * x ^ b` for `x > 0`, with rational `a`, `b`.
   | power_law (a b : ℚ) :
