@@ -56,32 +56,32 @@ half-integers and nothing more, since `Γ(1/2) = √π` is itself elementary; th
 `Gamma_intCast_div_two_Pconstructible`. Every finer denominator needs one genuinely new
 number from outside the functional equations, and the natural source is the elliptic
 integrals, which `Pptc.Basic` has already shown to be P-constructible in all three kinds.
-The relevant classical identities are
+Two such inputs are **proved** here, each by a change of variables in Mathlib's Beta
+integral that lands the answer on `ellipticF`:
 
-    Γ(1/4) ^ 2 = 4 √π · K(1/√2)                              (the lemniscatic case)
-    Γ(1/3) ^ 3 = 2 ^ (7/3) π · K(k₃) / 3 ^ (1/4),   k₃ = sin (π / 12)
+    Γ(1/3) ^ 3 = 2 π · 2 ^ (1/3) · 3 ^ (1/4) · F(arccos (2 - √3), (2 + √3)/4)
+    Γ(1/4) ^ 2 = 4 √π · K(1/√2)
 
-and a companion at the second singular value `k₂ = √2 - 1` giving `Γ(1/8) Γ(3/8)`.
+The second is the lemniscatic case, and its substitution is the single elementary
+`x = cos⁴ t`. The first is the equianharmonic one: `Β(1/3, 1/2)` is `3 ∫₀¹ du/√(1 - u³)`,
+and reducing that cubic to Legendre form takes a genuine Weierstrass reduction — the
+rational map `v = √3 (1 - cos θ)/(1 + cos θ)` applied to `v = 1 - u`, which is a
+correspondence between curves rather than a substitution in `u`. The familiar textbook
+right-hand side `2 ^ (7/3) π K(sin (π/12)) / 3 ^ (1/4)` is a Landen transformation away
+from the incomplete integral written above; P-constructibility does not care which side of
+that transformation the value is written on, since `ellipticF_Pconstructible` accepts every
+P-constructible parameter below `1` and every P-constructible amplitude.
 
-The first of these is **proved** here, in the section on `Γ(1/4)`: it is the one of the
-three whose change of variables is elementary, a single substitution `x = cos⁴ t` in
-Mathlib's Beta integral. That makes denominators `2` and `4` unconditional families, and
-leaves `Γ(1/3)` and `Γ(1/8)` as the two named hypotheses still carried below.
+Between them these settle denominators `1`, `2`, `3`, `4` and `6` unconditionally: `Γ(1/3)`
+alone gives denominator `3` *and* denominator `6`, since duplication at `s = 1/6` reads
+`Γ(1/6)` off `Γ(1/3)` and `Γ(2/3)`.
 
-Both remaining inputs are harder for the same reason: their change of variables is not a
-substitution but an algebraic correspondence between curves. For `Γ(1/3)` the target is
-`∫₀¹ dt/√(1 - t³) = 2 · K(sin (π/12)) / 3 ^ (3/4)`, a cubic reduced to Legendre form; for
-`Γ(1/8)` the relevant curve is not even elliptic on the nose, and the classical derivation
-goes through complex multiplication at discriminant `-8` rather than through any integral
-identity Mathlib can currently reach.
-
-What the two surviving hypotheses buy is more than the bare inputs suggest:
-
-* `Γ(1/3)` alone gives every rational with denominator `3` *and* every one with
-  denominator `6`, since duplication at `s = 1/6` reads `Γ(1/6)` off `Γ(1/3)` and `Γ(2/3)`.
-* `Γ(1/8)` alone gives every rational with denominator `8`; in particular `Γ(3/8)` is
-  *derived*, not assumed, by duplication at `s = 3/8` against the now-unconditional
-  `Γ(3/4)`. Equally, `Γ(3/8)` alone would do, by the same identity read backwards.
+One named hypothesis survives, `Γ(1/8)`, for the family at denominator `8`. Its curve is
+not even elliptic on the nose, and the classical derivation goes through complex
+multiplication at discriminant `-8` rather than through any integral identity Mathlib can
+currently reach. What it buys is more than the bare input suggests: `Γ(3/8)` is *derived*,
+not assumed, by duplication at `s = 3/8` against the unconditional `Γ(3/4)`, and equally
+`Γ(3/8)` alone would do, by the same identity read backwards.
 
 Doubling the denominator again does need a new input each time: from denominator `8` the
 duplication formula only ever delivers the *ratio* `Γ(1/16) / Γ(7/16)`, never either factor,
@@ -318,30 +318,478 @@ theorem Gamma_intCast_div_two_Pconstructible (n : ℤ) :
   · rw [show ((1 : ℕ) : ℝ) / ((2 : ℕ) : ℝ) = 1 / 2 by norm_num]
     exact Gamma_one_half_Pconstructible
 
+/-! ### The equianharmonic value `Γ(1/3)`
+
+The first transcendental input. Like the lemniscatic value below it is *proved* here rather
+than assumed, but the change of variables is a genuine reduction of a cubic to Legendre
+form rather than a single substitution.
+
+The route is Mathlib's Beta integral. `Γ(1/3) Γ(1/2) = Γ(5/6) Β(1/3, 1/2)` together with
+duplication at `s = 1/3` and reflection at `x = 1/3` turns everything into a statement
+about
+
+    Β(1/3, 1/2) = ∫₀¹ x ^ (-2/3) (1 - x) ^ (-1/2) dx,
+
+which is `3 ∫₀¹ du / √(1 - u³)` under `x = u³`: the elliptic integral attached to the
+cubic `1 - u³`.
+
+**Reducing the cubic.** Write `v = 1 - u`, so that `1 - u³ = v (v² - 3v + 3)` and the cubic
+carries its real root at the origin. The quadratic factor has complex roots `(3 ± i√3)/2`,
+of modulus `A = √3`, and the classical reduction to Legendre form for a cubic with one real
+root is the *rational* substitution
+
+    v = A (1 - cos θ) / (1 + cos θ),
+
+which is `cubicV` below. It is not a substitution in `u` at all, and that is the sense in
+which this is harder than the `x = cos⁴ t` of the lemniscatic case. What it buys is a
+complete collapse: writing `P = 1 + cos θ` and `c = (2 + √3)/4`,
+
+    v = √3 (1 - cos θ) / P    and    v² - 3v + 3 = 12 (1 - c sin²θ) / P²,
+
+the second because `P² - √3 (1 - cos θ) P + (1 - cos θ)² = 4 - (2 + √3) sin²θ`. Since
+`1 - cos θ = sin²θ / P`, the product is `12 √3 sin²θ (1 - c sin²θ) / P⁴` — a perfect square
+times the first-kind integrand. The factor `sin θ` cancels against the Jacobian
+`2 √3 sin θ / P²`, and nothing algebraic survives.
+
+The modulus is `√c = cos (π/12)`, the *complement* of the classical singular value
+`k₃ = sin (π/12)`, and the amplitude `arccos (2 - √3)` falls short of the quarter turn. The
+textbook form of the identity applies a Landen transformation to trade this incomplete
+integral at `cos (π/12)` for a complete one at `sin (π/12)`; nothing here needs that, since
+`ellipticF_Pconstructible` accepts any P-constructible parameter below `1` and any
+P-constructible amplitude whatever.
+
+The rest is bookkeeping identical to the lemniscatic case below: the `x`-integrand blows up
+at both endpoints, so the substitution is performed by the measure-theoretic
+`integral_image_eq_integral_abs_deriv_smul` over the open interval, which asks for a
+derivative and injectivity and for no integrability at all. -/
+
+section Equianharmonic
+
+open MeasureTheory Set
+
+/-- The parameter of the elliptic integral the cubic reduces to, `c = (2 + √3)/4`. Its
+modulus `√c` is `cos (π/12)`. -/
+noncomputable def cubicPar : ℝ := (2 + Real.sqrt 3) / 4
+
+/-- The amplitude at which the reduced integral stops, `arccos (2 - √3)`: the angle at
+which the Weierstrass parameter reaches `1` and so `x` reaches `0`. -/
+noncomputable def cubicAmp : ℝ := Real.arccos (2 - Real.sqrt 3)
+
+/-- The Weierstrass parameter `v = √3 (1 - cos θ) / (1 + cos θ)`, the rational map that
+straightens the cubic `v (v² - 3v + 3)`. -/
+noncomputable def cubicV (θ : ℝ) : ℝ := Real.sqrt 3 * ((1 - Real.cos θ) / (1 + Real.cos θ))
+
+/-- The substitution itself, `x = (1 - v)³`, carrying `Ioo 0 cubicAmp` onto `Ioo 0 1`. -/
+noncomputable def cubicSub (θ : ℝ) : ℝ := (1 - cubicV θ) ^ 3
+
+/-- The derivative of `cubicV`, namely `2 √3 sin θ / (1 + cos θ)²`. -/
+noncomputable def cubicVDer (θ : ℝ) : ℝ :=
+  Real.sqrt 3 * (2 * Real.sin θ / (1 + Real.cos θ) ^ 2)
+
+/-- The derivative of `cubicSub`. -/
+noncomputable def cubicSubDer (θ : ℝ) : ℝ := -(3 * (1 - cubicV θ) ^ 2 * cubicVDer θ)
+
+/-! #### `√3` and the interval of amplitudes -/
+
+-- Theorem: `√3` squares to `3`.
+theorem sq_sqrt_three : Real.sqrt 3 ^ 2 = 3 := Real.sq_sqrt (by norm_num)
+
+-- Theorem: `1 < √3`.
+theorem one_lt_sqrt_three : 1 < Real.sqrt 3 := by
+  nlinarith [sq_sqrt_three, Real.sqrt_nonneg 3]
+
+-- Theorem: `√3 < 2`.
+theorem sqrt_three_lt_two : Real.sqrt 3 < 2 := by
+  nlinarith [sq_sqrt_three, Real.sqrt_nonneg 3]
+
+-- Theorem: the parameter is below `1`, so the elliptic integrand is real and positive.
+theorem cubicPar_lt_one : cubicPar < 1 := by
+  rw [cubicPar]; linarith [sqrt_three_lt_two]
+
+-- Theorem: the parameter is P-constructible.
+theorem cubicPar_Pconstructible : PConstructible cubicPar :=
+  PConstructible.div
+    (PConstructible.add two_Pconstructible (sqrt_Pconstructible three_Pconstructible))
+    four_Pconstructible
+
+-- Theorem: the amplitude is P-constructible, being an arccosine.
+theorem cubicAmp_Pconstructible : PConstructible cubicAmp :=
+  arccos_Pconstructible
+    (PConstructible.sub two_Pconstructible (sqrt_Pconstructible three_Pconstructible))
+
+-- Theorem: the amplitude is positive, since `2 - √3 < 1`.
+theorem cubicAmp_pos : 0 < cubicAmp :=
+  Real.arccos_pos.mpr (by linarith [one_lt_sqrt_three])
+
+-- Theorem: the amplitude falls short of the quarter turn, since `2 - √3 > 0`.
+theorem cubicAmp_lt_pi_div_two : cubicAmp < Real.pi / 2 :=
+  Real.arccos_lt_pi_div_two.mpr (by linarith [sqrt_three_lt_two])
+
+-- Theorem: and so it is below `π`.
+theorem cubicAmp_le_pi : cubicAmp ≤ Real.pi := Real.arccos_le_pi _
+
+-- Theorem: the cosine of the amplitude is `2 - √3` — its defining property.
+theorem cos_cubicAmp : Real.cos cubicAmp = 2 - Real.sqrt 3 :=
+  Real.cos_arccos (by linarith [sqrt_three_lt_two]) (by linarith [one_lt_sqrt_three])
+
+-- Theorem: on the closed interval of amplitudes `cos θ` stays at or above `2 - √3`.
+theorem cos_ge_of_mem_Icc {θ : ℝ} (hθ : θ ∈ Icc 0 cubicAmp) :
+    2 - Real.sqrt 3 ≤ Real.cos θ :=
+  cos_cubicAmp ▸ Real.cos_le_cos_of_nonneg_of_le_pi hθ.1 cubicAmp_le_pi hθ.2
+
+-- Theorem: on the open interval the inequality is strict, `cos` being strictly decreasing.
+theorem cos_gt_of_mem_Ioo {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) :
+    2 - Real.sqrt 3 < Real.cos θ := by
+  have h := Real.strictAntiOn_cos (a := θ) (b := cubicAmp)
+    ⟨hθ.1.le, le_trans hθ.2.le cubicAmp_le_pi⟩ ⟨cubicAmp_pos.le, cubicAmp_le_pi⟩ hθ.2
+  rwa [cos_cubicAmp] at h
+
+-- Theorem: and `cos θ < 1`, the other end of the same monotonicity.
+theorem cos_lt_one_of_mem_Ioo {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) : Real.cos θ < 1 := by
+  have h := Real.strictAntiOn_cos (a := 0) (b := θ)
+  simpa using h ⟨le_refl 0, Real.pi_pos.le⟩
+    ⟨hθ.1.le, le_trans hθ.2.le cubicAmp_le_pi⟩ hθ.1
+
+-- Theorem: the amplitudes lie in the first quadrant, so `sin θ > 0`.
+theorem sin_pos_of_mem_Ioo_cubicAmp {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) : 0 < Real.sin θ :=
+  Real.sin_pos_of_pos_of_lt_pi hθ.1
+    (lt_of_lt_of_le hθ.2 (le_trans cubicAmp_lt_pi_div_two.le (by linarith [Real.pi_pos])))
+
+-- Theorem: the denominator `1 + cos θ` of the substitution never vanishes there.
+theorem one_add_cos_pos {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) : 0 < 1 + Real.cos θ := by
+  have := cos_gt_of_mem_Ioo hθ
+  have := sqrt_three_lt_two
+  linarith
+
+/-! #### The Weierstrass parameter runs from `0` to `1` -/
+
+-- Theorem: `v > 0`, because `cos θ < 1`.
+theorem cubicV_pos {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) : 0 < cubicV θ :=
+  mul_pos (by linarith [one_lt_sqrt_three])
+    (div_pos (by linarith [cos_lt_one_of_mem_Ioo hθ]) (one_add_cos_pos hθ))
+
+-- Theorem: `v < 1`, because `cos θ > 2 - √3` — and `2 - √3` is exactly the cosine at which
+-- `√3 (1 - cos θ)` and `1 + cos θ` agree. This is the computation that fixes the amplitude.
+theorem cubicV_lt_one {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) : cubicV θ < 1 := by
+  have hP := one_add_cos_pos hθ
+  have hc := cos_gt_of_mem_Ioo hθ
+  have hr : (0 : ℝ) < Real.sqrt 3 := by linarith [one_lt_sqrt_three]
+  have hkey : Real.sqrt 3 * (1 - Real.cos θ) < 1 + Real.cos θ := by
+    nlinarith [sq_sqrt_three, mul_pos hr (sub_pos.mpr hc)]
+  rw [cubicV, show Real.sqrt 3 * ((1 - Real.cos θ) / (1 + Real.cos θ))
+    = Real.sqrt 3 * (1 - Real.cos θ) / (1 + Real.cos θ) by ring, div_lt_one hP]
+  exact hkey
+
+-- Theorem: hence the substitution takes values in `(0, 1)`.
+theorem cubicSub_mem {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) : cubicSub θ ∈ Ioo (0 : ℝ) 1 := by
+  have h0 := cubicV_pos hθ
+  have h1 := cubicV_lt_one hθ
+  refine ⟨pow_pos (by linarith) 3, ?_⟩
+  calc cubicSub θ = (1 - cubicV θ) ^ 3 := rfl
+    _ < 1 ^ 3 := by gcongr; linarith
+    _ = 1 := one_pow 3
+
+/-! #### The endpoints, and the substitution as a bijection -/
+
+-- Theorem: at `θ = 0` the parameter is `0`, so `x = 1`.
+theorem cubicSub_zero : cubicSub 0 = 1 := by simp [cubicSub, cubicV]
+
+-- Theorem: at `θ = cubicAmp` the parameter is `1`, so `x = 0`.
+theorem cubicSub_cubicAmp : cubicSub cubicAmp = 0 := by
+  have h3 : (0 : ℝ) < 3 - Real.sqrt 3 := by linarith [sqrt_three_lt_two]
+  have hv : cubicV cubicAmp = 1 := by
+    rw [cubicV, cos_cubicAmp, show (1 : ℝ) - (2 - Real.sqrt 3) = Real.sqrt 3 - 1 by ring,
+      show (1 : ℝ) + (2 - Real.sqrt 3) = 3 - Real.sqrt 3 by ring]
+    field_simp
+    linear_combination sq_sqrt_three
+  rw [cubicSub, hv]; norm_num
+
+-- Theorem: the substitution is continuous on the closed interval, the denominator being
+-- bounded away from zero there.
+theorem continuousOn_cubicSub : ContinuousOn cubicSub (Icc 0 cubicAmp) := by
+  have h : ∀ θ ∈ Icc (0 : ℝ) cubicAmp, 1 + Real.cos θ ≠ 0 := by
+    intro θ hθ
+    have := cos_ge_of_mem_Icc hθ
+    have := sqrt_three_lt_two
+    linarith
+  unfold cubicSub cubicV
+  refine ContinuousOn.pow (ContinuousOn.sub continuousOn_const
+    (ContinuousOn.mul continuousOn_const (ContinuousOn.div ?_ ?_ h))) 3
+  · exact continuousOn_const.sub Real.continuous_cos.continuousOn
+  · exact continuousOn_const.add Real.continuous_cos.continuousOn
+
+-- Theorem: `cubicSub` maps the open interval of amplitudes *onto* `(0, 1)`. The forward
+-- inclusion is the bound above; the reverse is the intermediate value theorem, run
+-- backwards because the substitution is decreasing.
+theorem cubicSub_image_Ioo : cubicSub '' (Ioo 0 cubicAmp) = Ioo (0 : ℝ) 1 := by
+  apply Set.Subset.antisymm
+  · rintro _ ⟨θ, hθ, rfl⟩
+    exact cubicSub_mem hθ
+  · have h := intermediate_value_Ioo' (a := 0) (b := cubicAmp) cubicAmp_pos.le
+      continuousOn_cubicSub
+    rwa [cubicSub_zero, cubicSub_cubicAmp] at h
+
+-- Theorem: the derivative of the Weierstrass parameter. The quotient rule collapses,
+-- because `sin θ (1 + cos θ) + (1 - cos θ) sin θ = 2 sin θ`.
+theorem hasDerivAt_cubicV {θ : ℝ} (h : 1 + Real.cos θ ≠ 0) :
+    HasDerivAt cubicV (cubicVDer θ) θ := by
+  have hnum : HasDerivAt (fun t : ℝ => 1 - Real.cos t) (Real.sin θ) θ := by
+    have hc := (Real.hasDerivAt_cos θ).const_sub (1 : ℝ)
+    rwa [neg_neg] at hc
+  have hden : HasDerivAt (fun t : ℝ => 1 + Real.cos t) (-Real.sin θ) θ :=
+    (Real.hasDerivAt_cos θ).const_add (1 : ℝ)
+  have hdiv := (hnum.div hden h).const_mul (Real.sqrt 3)
+  have heq : Real.sqrt 3 * ((Real.sin θ * (1 + Real.cos θ)
+      - (1 - Real.cos θ) * -Real.sin θ) / (1 + Real.cos θ) ^ 2) = cubicVDer θ := by
+    rw [cubicVDer]; field_simp; ring
+  rw [← heq]
+  exact hdiv
+
+-- Theorem: the derivative of the substitution, by the chain rule on the cube.
+theorem hasDerivAt_cubicSub {θ : ℝ} (h : 1 + Real.cos θ ≠ 0) :
+    HasDerivAt cubicSub (cubicSubDer θ) θ := by
+  have hpow := ((hasDerivAt_const θ (1 : ℝ)).sub (hasDerivAt_cubicV h)).pow 3
+  have heq : ((3 : ℕ) : ℝ) * (1 - cubicV θ) ^ (3 - 1) * (0 - cubicVDer θ)
+      = cubicSubDer θ := by
+    rw [cubicSubDer]; push_cast; ring
+  rw [← heq]
+  exact hpow
+
+-- Theorem: the substitution is strictly decreasing: `cos` decreases, so `v` increases,
+-- so `1 - v` decreases through positive values, and cubing preserves that.
+theorem cubicSub_strictAntiOn : StrictAntiOn cubicSub (Ioo 0 cubicAmp) := by
+  intro x hx y hy hxy
+  have hPx := one_add_cos_pos hx
+  have hPy := one_add_cos_pos hy
+  have hr : (0 : ℝ) < Real.sqrt 3 := by linarith [one_lt_sqrt_three]
+  have hcos : Real.cos y < Real.cos x :=
+    Real.strictAntiOn_cos ⟨hx.1.le, le_trans hx.2.le cubicAmp_le_pi⟩
+      ⟨hy.1.le, le_trans hy.2.le cubicAmp_le_pi⟩ hxy
+  have hv : cubicV x < cubicV y := by
+    rw [cubicV, cubicV, show Real.sqrt 3 * ((1 - Real.cos x) / (1 + Real.cos x))
+        = Real.sqrt 3 * (1 - Real.cos x) / (1 + Real.cos x) by ring,
+      show Real.sqrt 3 * ((1 - Real.cos y) / (1 + Real.cos y))
+        = Real.sqrt 3 * (1 - Real.cos y) / (1 + Real.cos y) by ring,
+      div_lt_div_iff₀ hPx hPy]
+    nlinarith [hcos, hr]
+  have hy1 : 0 < 1 - cubicV y := by linarith [cubicV_lt_one hy]
+  exact pow_lt_pow_left₀ (by linarith) hy1.le (by norm_num)
+
+-- Theorem: injectivity, which is what the change-of-variables lemma actually wants.
+theorem cubicSub_injOn : InjOn cubicSub (Ioo 0 cubicAmp) := cubicSub_strictAntiOn.injOn
+
+/-! #### The collapse of the integrand -/
+
+-- Theorem: the factorization that makes the reduction work. With `P = 1 + cos θ`,
+--
+--     1 - (1 - v)³ = v (v² - 3v + 3) = 12 √3 sin²θ (1 - c sin²θ) / P⁴,
+--
+-- a perfect square times the first-kind integrand at parameter `c = (2 + √3)/4`. The
+-- leftover factor `v` contributes `√3 (1 - cos θ)/P = √3 sin²θ / P²`, and the quadratic
+-- contributes `12 (1 - c sin²θ)/P²`.
+theorem one_sub_cubicSub_eq {θ : ℝ} (hP : 1 + Real.cos θ ≠ 0) :
+    1 - cubicSub θ = 12 * Real.sqrt 3 * Real.sin θ ^ 2
+      * (1 - cubicPar * Real.sin θ ^ 2) / (1 + Real.cos θ) ^ 4 := by
+  have hs2 : Real.sin θ ^ 2 = (1 - Real.cos θ) * (1 + Real.cos θ) := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  rw [cubicSub, cubicV, cubicPar, hs2]
+  field_simp
+  linear_combination (4 * (1 - Real.cos θ) ^ 3 * Real.sqrt 3) * sq_sqrt_three
+
+-- Theorem: consequently `√(1 - x)` is the elliptic integrand times an elementary factor.
+-- The perfect square that `one_sub_cubicSub_eq` exhibits has square root
+-- `2 · 3 ^ (3/4) · sin θ · √(1 - c sin²θ) / P²`, and `3 ^ (3/4)` is written `√3 · √√3` so
+-- that no `rpow` enters the computation.
+theorem sqrt_one_sub_cubicSub {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) :
+    Real.sqrt (1 - cubicSub θ)
+      = 2 * (Real.sqrt 3 * Real.sqrt (Real.sqrt 3)) * Real.sin θ
+          * Real.sqrt (1 - cubicPar * Real.sin θ ^ 2) / (1 + Real.cos θ) ^ 2 := by
+  have hs := sin_pos_of_mem_Ioo_cubicAmp hθ
+  have hP := one_add_cos_pos hθ
+  have hr : (0 : ℝ) < Real.sqrt 3 := by linarith [one_lt_sqrt_three]
+  have hq2 : Real.sqrt (Real.sqrt 3) ^ 2 = Real.sqrt 3 := Real.sq_sqrt hr.le
+  have hWpos : (0 : ℝ) < Real.sqrt (1 - cubicPar * Real.sin θ ^ 2) :=
+    Real.sqrt_pos.mpr (one_sub_mul_sin_sq_pos cubicPar_lt_one θ)
+  have hWsq : Real.sqrt (1 - cubicPar * Real.sin θ ^ 2) ^ 2
+      = 1 - cubicPar * Real.sin θ ^ 2 :=
+    Real.sq_sqrt (one_sub_mul_sin_sq_pos cubicPar_lt_one θ).le
+  have hsq : (2 * (Real.sqrt 3 * Real.sqrt (Real.sqrt 3)) * Real.sin θ
+        * Real.sqrt (1 - cubicPar * Real.sin θ ^ 2) / (1 + Real.cos θ) ^ 2) ^ 2
+      = 1 - cubicSub θ := by
+    rw [one_sub_cubicSub_eq hP.ne', div_pow,
+      show ((1 + Real.cos θ) ^ 2) ^ 2 = (1 + Real.cos θ) ^ 4 by ring]
+    congr 1
+    linear_combination
+      (4 * Real.sqrt 3 ^ 2 * Real.sqrt (Real.sqrt 3) ^ 2 * Real.sin θ ^ 2) * hWsq
+      + (4 * Real.sqrt 3 ^ 2 * Real.sin θ ^ 2 * (1 - cubicPar * Real.sin θ ^ 2)) * hq2
+      + (4 * Real.sqrt 3 * Real.sin θ ^ 2 * (1 - cubicPar * Real.sin θ ^ 2)) * sq_sqrt_three
+  rw [← hsq, Real.sqrt_sq]
+  exact div_nonneg (mul_nonneg (mul_nonneg (by positivity) hs.le) hWpos.le) (by positivity)
+
+-- Theorem: the heart of the reduction. Under `x = cubicSub θ` the Beta integrand times the
+-- Jacobian collapses completely: the factor `(1 - v)⁻²` coming from `x ^ (-2/3)` cancels
+-- against the `(1 - v)²` in the Jacobian, and the `2 sin θ / P²` left over cancels against
+-- the same factor inside `√(1 - x)`, leaving `3 / (3 ^ (1/4) √(1 - c sin²θ))`.
+theorem cubicSub_integrand_eq {θ : ℝ} (hθ : θ ∈ Ioo 0 cubicAmp) :
+    |cubicSubDer θ| • (cubicSub θ ^ (-(2 : ℝ) / 3) * (1 - cubicSub θ) ^ (-(1 : ℝ) / 2))
+      = Real.sqrt 3 * Real.sqrt (Real.sqrt 3) * ellipticFIntegrand cubicPar θ := by
+  have hs := sin_pos_of_mem_Ioo_cubicAmp hθ
+  have hP := one_add_cos_pos hθ
+  have hu : 0 < 1 - cubicV θ := by linarith [cubicV_lt_one hθ]
+  have hr : (0 : ℝ) < Real.sqrt 3 := by linarith [one_lt_sqrt_three]
+  have hq : (0 : ℝ) < Real.sqrt (Real.sqrt 3) := Real.sqrt_pos.mpr hr
+  have hq2 : Real.sqrt (Real.sqrt 3) ^ 2 = Real.sqrt 3 := Real.sq_sqrt hr.le
+  have hWpos : (0 : ℝ) < Real.sqrt (1 - cubicPar * Real.sin θ ^ 2) :=
+    Real.sqrt_pos.mpr (one_sub_mul_sin_sq_pos cubicPar_lt_one θ)
+  have hx := cubicSub_mem hθ
+  have hA : cubicSub θ ^ (-(2 : ℝ) / 3) = ((1 - cubicV θ) ^ 2)⁻¹ := by
+    rw [show cubicSub θ = (1 - cubicV θ) ^ 3 from rfl,
+      ← Real.rpow_natCast (1 - cubicV θ) 3, ← Real.rpow_mul hu.le,
+      show ((3 : ℕ) : ℝ) * (-(2 : ℝ) / 3) = -(2 : ℝ) by norm_num, Real.rpow_neg hu.le]
+    norm_num
+  have hB : ((1 : ℝ) - cubicSub θ) ^ (-(1 : ℝ) / 2) = (Real.sqrt (1 - cubicSub θ))⁻¹ := by
+    rw [Real.sqrt_eq_rpow, ← Real.rpow_neg (by linarith [hx.2] : (0 : ℝ) ≤ 1 - cubicSub θ)]
+    norm_num
+  have hvd : 0 < cubicVDer θ := by
+    rw [cubicVDer]
+    exact mul_pos hr (div_pos (by linarith) (pow_pos hP 2))
+  have habs : |cubicSubDer θ| = 3 * (1 - cubicV θ) ^ 2 * cubicVDer θ := by
+    rw [cubicSubDer, abs_neg, abs_of_nonneg (mul_nonneg (by positivity) hvd.le)]
+  rw [smul_eq_mul, habs, hA, hB, sqrt_one_sub_cubicSub hθ, ellipticFIntegrand,
+    ellipticEIntegrand, cubicVDer]
+  set W := Real.sqrt (1 - cubicPar * Real.sin θ ^ 2) with hWdef
+  field_simp
+  linear_combination (-Real.sqrt 3) * hq2 - sq_sqrt_three
+
+/-! #### From the Beta integral to `Γ(1/3)`
+
+The substitution is now performed, and what remains is the three-way algebra between the
+Beta relation `Γ(1/3) Γ(1/2) = Γ(5/6) Β(1/3, 1/2)`, duplication at `s = 1/3` (which reads
+`Γ(1/3) Γ(5/6) = Γ(2/3) 2 ^ (1/3) √π`) and reflection at `x = 1/3` (which reads
+`Γ(1/3) Γ(2/3) √3 = 2π`). Multiplying the first by `Γ(1/3)` and substituting the second
+cancels `√π` and leaves `Γ(1/3)² = Γ(2/3) 2 ^ (1/3) Β`; multiplying by `Γ(1/3)` once more
+and substituting the third turns the left side into `Γ(1/3)³` and clears the last
+`Γ(2/3)`. -/
+
+-- Theorem: the substitution, with the Beta side written as a set integral over the open
+-- interval so that no integrability hypothesis is needed anywhere.
+theorem beta_one_third_one_half_integral :
+    (∫ x in Ioo (0 : ℝ) 1, x ^ (-(2 : ℝ) / 3) * (1 - x) ^ (-(1 : ℝ) / 2))
+      = Real.sqrt 3 * Real.sqrt (Real.sqrt 3) * ellipticF cubicPar cubicAmp := by
+  rw [← cubicSub_image_Ioo, integral_image_eq_integral_abs_deriv_smul measurableSet_Ioo
+      (fun x hx => (hasDerivAt_cubicSub (one_add_cos_pos hx).ne').hasDerivWithinAt)
+      cubicSub_injOn]
+  rw [setIntegral_congr_fun measurableSet_Ioo (fun t ht => cubicSub_integrand_eq ht),
+    integral_const_mul, ellipticF, intervalIntegral.integral_of_le cubicAmp_pos.le,
+    integral_Ioc_eq_integral_Ioo]
+
+-- Theorem: Mathlib's Beta integral is complex-valued and uses `cpow`; on `[0, 1]` both
+-- bases are nonnegative, so it is the cast of the real integral above.
+theorem betaIntegral_one_third_one_half :
+    Complex.betaIntegral (1 / 3) (1 / 2)
+      = ((∫ x in Ioo (0 : ℝ) 1, x ^ (-(2 : ℝ) / 3) * (1 - x) ^ (-(1 : ℝ) / 2) : ℝ) : ℂ) := by
+  rw [← integral_Ioc_eq_integral_Ioo,
+    ← intervalIntegral.integral_of_le (by norm_num : (0 : ℝ) ≤ 1),
+    ← intervalIntegral.integral_ofReal, Complex.betaIntegral]
+  refine intervalIntegral.integral_congr fun x hx => ?_
+  rw [Set.uIcc_of_le (by norm_num : (0 : ℝ) ≤ 1)] at hx
+  have hx0 : (0 : ℝ) ≤ x := hx.1
+  have hx1 : (0 : ℝ) ≤ 1 - x := by linarith [hx.2]
+  push_cast
+  rw [Complex.ofReal_cpow hx0, Complex.ofReal_cpow hx1]
+  push_cast
+  norm_num
+
+-- Theorem: the equianharmonic identity `Γ(1/3)³ = 2 π · 2 ^ (1/3) · 3 ^ (1/4) · F`, with
+-- `F` the incomplete elliptic integral of the first kind at parameter `(2 + √3)/4` and
+-- amplitude `arccos (2 - √3)`. Written with `3 ^ (1/4)` spelled `√√3`.
+theorem Gamma_one_third_cube :
+    Real.Gamma (1 / 3) ^ 3
+      = 2 * Real.pi * (2 : ℝ) ^ ((1 : ℝ) / 3) * Real.sqrt (Real.sqrt 3)
+          * ellipticF cubicPar cubicAmp := by
+  have hr : (0 : ℝ) < Real.sqrt 3 := by linarith [one_lt_sqrt_three]
+  have hppos : (0 : ℝ) < Real.sqrt Real.pi := Real.sqrt_pos.mpr Real.pi_pos
+  have hbeta : Real.Gamma (1 / 3) * Real.sqrt Real.pi
+      = Real.Gamma (5 / 6)
+          * (Real.sqrt 3 * Real.sqrt (Real.sqrt 3) * ellipticF cubicPar cubicAmp) := by
+    have h := Complex.Gamma_mul_Gamma_eq_betaIntegral
+      (s := (1 / 3 : ℂ)) (t := (1 / 2 : ℂ)) (by norm_num) (by norm_num)
+    rw [betaIntegral_one_third_one_half, beta_one_third_one_half_integral,
+      show ((1 : ℂ) / 3 + 1 / 2) = ((5 / 6 : ℝ) : ℂ) by norm_num,
+      show ((1 : ℂ) / 3) = ((1 / 3 : ℝ) : ℂ) by norm_num,
+      show ((1 : ℂ) / 2) = ((1 / 2 : ℝ) : ℂ) by norm_num,
+      Complex.Gamma_ofReal, Complex.Gamma_ofReal, Complex.Gamma_ofReal] at h
+    rw [← Real.Gamma_one_half_eq]
+    exact_mod_cast h
+  have hdup : Real.Gamma (1 / 3) * Real.Gamma (5 / 6)
+      = Real.Gamma (2 / 3) * (2 : ℝ) ^ ((1 : ℝ) / 3) * Real.sqrt Real.pi := by
+    have h := Real.Gamma_mul_Gamma_add_half (1 / 3 : ℝ)
+    rw [show (1 : ℝ) / 3 + 1 / 2 = 5 / 6 by norm_num,
+      show (2 : ℝ) * (1 / 3) = 2 / 3 by norm_num,
+      show (1 : ℝ) - 2 / 3 = 1 / 3 by norm_num] at h
+    exact h
+  have hrefl : Real.Gamma (1 / 3) * Real.Gamma (2 / 3) * Real.sqrt 3 = 2 * Real.pi := by
+    have h := Real.Gamma_mul_Gamma_one_sub (1 / 3 : ℝ)
+    rw [show (1 : ℝ) - 1 / 3 = 2 / 3 by norm_num,
+      show Real.pi * (1 / 3) = Real.pi / 3 by ring, Real.sin_pi_div_three] at h
+    rw [h]
+    field_simp
+  have step : Real.Gamma (1 / 3) ^ 2
+      = Real.Gamma (2 / 3) * (2 : ℝ) ^ ((1 : ℝ) / 3)
+          * (Real.sqrt 3 * Real.sqrt (Real.sqrt 3) * ellipticF cubicPar cubicAmp) := by
+    refine mul_right_cancel₀ hppos.ne' ?_
+    linear_combination Real.Gamma (1 / 3) * hbeta
+      + (Real.sqrt 3 * Real.sqrt (Real.sqrt 3) * ellipticF cubicPar cubicAmp) * hdup
+  linear_combination Real.Gamma (1 / 3) * step
+    + ((2 : ℝ) ^ ((1 : ℝ) / 3) * Real.sqrt (Real.sqrt 3)
+        * ellipticF cubicPar cubicAmp) * hrefl
+
+-- Theorem: `Γ(1/3)` is P-constructible, unconditionally. Every factor on the right of the
+-- identity above is reachable — `2 ^ (1/3)` by `rpow_two_Pconstructible`, `3 ^ (1/4)` by
+-- two square roots, `F` by `ellipticF_Pconstructible` — so `Γ(1/3)³` is P-constructible,
+-- and `Γ(1/3) > 0` lets the cube root, which is `rpow_Pconstructible` at exponent `1/3`,
+-- recover the value itself.
+theorem Gamma_one_third_Pconstructible : PConstructible (Real.Gamma (1 / 3)) := by
+  have hpos : 0 < Real.Gamma (1 / 3) := Real.Gamma_pos_of_pos (by norm_num)
+  have hF : PConstructible (ellipticF cubicPar cubicAmp) :=
+    ellipticF_Pconstructible cubicPar_Pconstructible cubicAmp_Pconstructible cubicPar_lt_one
+  have hcube : PConstructible (Real.Gamma (1 / 3) ^ 3) := by
+    rw [Gamma_one_third_cube]
+    exact PConstructible.mul (PConstructible.mul (PConstructible.mul
+      (PConstructible.mul two_Pconstructible pi_Pconstructible)
+      (rpow_two_Pconstructible (ratval_Pconstructible (1 / 3) (by norm_num))))
+      (sqrt_Pconstructible (sqrt_Pconstructible three_Pconstructible))) hF
+  have h := rpow_Pconstructible (b := (1 : ℝ) / 3) hcube
+    (ratval_Pconstructible (1 / 3) (by norm_num)) (pow_pos hpos 3)
+  rwa [← Real.rpow_natCast (Real.Gamma (1 / 3)) 3, ← Real.rpow_mul hpos.le,
+    show ((3 : ℕ) : ℝ) * ((1 : ℝ) / 3) = 1 by norm_num, Real.rpow_one] at h
+
+end Equianharmonic
+
 /-! ### Denominator `3`, and with it denominator `6`
 
-One new value, `Γ(1/3)`, buys two whole families. Reflection turns it into `Γ(2/3)`, and
-then duplication at `s = 1/6` — where `Γ(s + 1/2) = Γ(2/3)` and `Γ(2s) = Γ(1/3)` are both
-in hand — reads off `Γ(1/6)`. Reflection again gives `Γ(5/6)`, and the residues `2/6`,
-`3/6`, `4/6` are values already known. -/
+The one value `Γ(1/3)` buys two whole families, and it is now in hand unconditionally.
+Reflection turns it into `Γ(2/3)`, and then duplication at `s = 1/6` — where
+`Γ(s + 1/2) = Γ(2/3)` and `Γ(2s) = Γ(1/3)` are both available — reads off `Γ(1/6)`.
+Reflection again gives `Γ(5/6)`, and the residues `2/6`, `3/6`, `4/6` are values already
+known. Both families are therefore unconditional. -/
 
--- Theorem: `Γ(2/3)` is P-constructible as soon as `Γ(1/3)` is, by reflection.
-theorem Gamma_two_thirds_Pconstructible (h : PConstructible (Real.Gamma (1 / 3))) :
-    PConstructible (Real.Gamma (2 / 3)) := by
-  have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 3) (by norm_num)) h
+-- Theorem: `Γ(2/3)` is P-constructible, by reflection from `Γ(1/3)`.
+theorem Gamma_two_thirds_Pconstructible : PConstructible (Real.Gamma (2 / 3)) := by
+  have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 3) (by norm_num))
+    Gamma_one_third_Pconstructible
   rwa [show (1 : ℝ) - 1 / 3 = 2 / 3 by norm_num] at this
 
--- Theorem: `Γ(1/6)` is P-constructible as soon as `Γ(1/3)` is, by duplication at `s = 1/6`.
-theorem Gamma_one_sixth_Pconstructible (h : PConstructible (Real.Gamma (1 / 3))) :
-    PConstructible (Real.Gamma (1 / 6)) := by
+-- Theorem: `Γ(1/6)` is P-constructible, by duplication at `s = 1/6`.
+theorem Gamma_one_sixth_Pconstructible : PConstructible (Real.Gamma (1 / 6)) := by
   refine Gamma_of_add_half_Pconstructible (ratval_Pconstructible (1 / 6) (by norm_num)) ?_ ?_
   · rw [show (1 : ℝ) / 6 + 1 / 2 = 2 / 3 by norm_num]
-    exact Gamma_two_thirds_Pconstructible h
+    exact Gamma_two_thirds_Pconstructible
   · rw [show (2 : ℝ) * (1 / 6) = 1 / 3 by norm_num]
-    exact h
+    exact Gamma_one_third_Pconstructible
 
--- Theorem: `Γ(n/3)` is P-constructible for every integer `n`, given `Γ(1/3)`.
-theorem Gamma_intCast_div_three_Pconstructible (h : PConstructible (Real.Gamma (1 / 3)))
+-- Theorem: `Γ(n/3)` is P-constructible for every integer `n`.
+theorem Gamma_intCast_div_three_Pconstructible
     (n : ℤ) : PConstructible (Real.Gamma ((n : ℝ) / 3)) := by
   rw [show ((n : ℝ)) / 3 = (n : ℝ) / ((3 : ℕ) : ℝ) by norm_num]
   refine Gamma_intCast_div_Pconstructible (by norm_num) (fun r hr => ?_) n
@@ -349,17 +797,17 @@ theorem Gamma_intCast_div_three_Pconstructible (h : PConstructible (Real.Gamma (
   · rw [show ((0 : ℕ) : ℝ) / ((3 : ℕ) : ℝ) = 0 by norm_num, Real.Gamma_zero]
     exact zero_Pconstructible
   · rw [show ((1 : ℕ) : ℝ) / ((3 : ℕ) : ℝ) = 1 / 3 by norm_num]
-    exact h
+    exact Gamma_one_third_Pconstructible
   · rw [show ((2 : ℕ) : ℝ) / ((3 : ℕ) : ℝ) = 2 / 3 by norm_num]
-    exact Gamma_two_thirds_Pconstructible h
+    exact Gamma_two_thirds_Pconstructible
 
--- Theorem: `Γ(n/6)` is P-constructible for every integer `n`, given `Γ(1/3)`. No separate
--- assumption about `Γ(1/6)` is needed; duplication supplies it.
-theorem Gamma_intCast_div_six_Pconstructible (h : PConstructible (Real.Gamma (1 / 3)))
+-- Theorem: `Γ(n/6)` is P-constructible for every integer `n`. No separate input about
+-- `Γ(1/6)` is needed; duplication supplies it from `Γ(1/3)`.
+theorem Gamma_intCast_div_six_Pconstructible
     (n : ℤ) : PConstructible (Real.Gamma ((n : ℝ) / 6)) := by
-  have h16 : PConstructible (Real.Gamma (1 / 6)) := Gamma_one_sixth_Pconstructible h
   have h56 : PConstructible (Real.Gamma (5 / 6)) := by
-    have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 6) (by norm_num)) h16
+    have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 6) (by norm_num))
+      Gamma_one_sixth_Pconstructible
     rwa [show (1 : ℝ) - 1 / 6 = 5 / 6 by norm_num] at this
   rw [show ((n : ℝ)) / 6 = (n : ℝ) / ((6 : ℕ) : ℝ) by norm_num]
   refine Gamma_intCast_div_Pconstructible (by norm_num) (fun r hr => ?_) n
@@ -367,21 +815,21 @@ theorem Gamma_intCast_div_six_Pconstructible (h : PConstructible (Real.Gamma (1 
   · rw [show ((0 : ℕ) : ℝ) / ((6 : ℕ) : ℝ) = 0 by norm_num, Real.Gamma_zero]
     exact zero_Pconstructible
   · rw [show ((1 : ℕ) : ℝ) / ((6 : ℕ) : ℝ) = 1 / 6 by norm_num]
-    exact h16
+    exact Gamma_one_sixth_Pconstructible
   · rw [show ((2 : ℕ) : ℝ) / ((6 : ℕ) : ℝ) = 1 / 3 by norm_num]
-    exact h
+    exact Gamma_one_third_Pconstructible
   · rw [show ((3 : ℕ) : ℝ) / ((6 : ℕ) : ℝ) = 1 / 2 by norm_num]
     exact Gamma_one_half_Pconstructible
   · rw [show ((4 : ℕ) : ℝ) / ((6 : ℕ) : ℝ) = 2 / 3 by norm_num]
-    exact Gamma_two_thirds_Pconstructible h
+    exact Gamma_two_thirds_Pconstructible
   · rw [show ((5 : ℕ) : ℝ) / ((6 : ℕ) : ℝ) = 5 / 6 by norm_num]
     exact h56
 
 /-! ### The lemniscatic value `Γ(1/4)`
 
-The first transcendental input — and, unlike the ones needed for denominators `3` and `8`,
-one that an elementary change of variables can supply, so it is *proved* here rather than
-assumed.
+The second transcendental input, and the easier of the two: unlike the equianharmonic case
+above, and unlike the one still needed for denominator `8`, a single elementary
+substitution supplies it.
 
 The classical statement is `Γ(1/4)² = 4 √π · K(1/√2)`, with `K` the complete elliptic
 integral of the first kind. `Pptc.Basic` already reaches `K` at every P-constructible
