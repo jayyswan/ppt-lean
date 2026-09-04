@@ -85,25 +85,16 @@ theorem rat_Pconstructible (q : ℚ) : PConstructible (q : ℝ) := by
   convert PConstructible.div h1 h2
   exact Rat.cast_def q
 
--- Theorem: 420/69 is P-constructible.
-theorem example_420_69_Pconstructible : PConstructible (420 / 69 : ℝ) := by
-  have := rat_Pconstructible ((420 : ℚ) / 69)
-  simp only [Rat.cast_div, Rat.cast_ofNat] at this
-  convert this
-
 -- Theorem: 0 is P-constructible.
 theorem zero_Pconstructible : PConstructible (0 : ℝ) := by
   convert PConstructible.sub PConstructible.base_one PConstructible.base_one
   simp
 
--- Theorem: the negation of a P-constructible number is P-constructible. `PConstructible`
--- has no negation constructor, but `0 - x` serves and this saves spelling that out.
+-- Theorem: the negation of a P-constructible number is P-constructible.
 theorem neg_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (-x) := by
   simpa using PConstructible.sub zero_Pconstructible hx
 
--- Theorem: the reciprocal of a P-constructible number is P-constructible. As for
--- `neg_Pconstructible`, this is just the corresponding closure constructor with `1` on
--- the left, restated in the form Mathlib's lemmas produce.
+-- Theorem: the reciprocal of a P-constructible number is P-constructible.
 theorem inv_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible x⁻¹ := by
   simpa [one_div] using PConstructible.div PConstructible.base_one hx
 
@@ -112,17 +103,7 @@ theorem two_Pconstructible : PConstructible (2 : ℝ) := by
   convert PConstructible.add PConstructible.base_one PConstructible.base_one
   norm_num
 
-/-! ### Reading a coordinate off a curve
-
-The two workhorses. If a vertical line at a P-constructible abscissa meets a
-constructible curve in a single point, that point's ordinate is P-constructible — and
-symmetrically for horizontal lines.
-
-No bound on the coordinate is needed. Cutting the curve requires a segment long enough
-to reach it, but by the Archimedean property some natural number exceeds the coordinate
-in absolute value, and every natural number is P-constructible, so a big enough
-rectangle always exists. Geometrically: "draw a rectangle large enough". This is what
-frees the results below from having to supply explicit bounds. -/
+/-! ### Reading a coordinate off a curve -/
 
 -- Theorem: the ordinate of a single crossing with a vertical line is P-constructible.
 theorem ordinate_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
@@ -230,6 +211,8 @@ theorem dist_Pconstructible {x₀ y₀ x₁ y₁ : ℝ}
     (PConstructible.add (sq_Pconstructible (PConstructible.sub hx₁ hx₀))
       (sq_Pconstructible (PConstructible.sub hy₁ hy₀)))
 
+section AlgebraicNumbers
+
 /-! ### Algebraic numbers of degree at most 6
 
 The drawing program can plot the graph of any rational polynomial of degree at most `6`,
@@ -329,8 +312,6 @@ past it needs a graph of degree 7 or more, which is exactly what `poly_graph` wi
 One wrinkle throughout: `power_law` draws only the branch `x > 0`. A negative root is
 reached by reflecting the whole picture in the `y` axis, which replaces `p` by `p (-X)` and
 leaves the degree bound intact. -/
-
-section PowerLaw
 
 open Polynomial
 
@@ -539,7 +520,7 @@ theorem algebraic_Pconstructible_le_eight {x : ℝ} (hx : IsAlgebraic ℚ x)
     PConstructible x :=
   root_Pconstructible_le_eight (minpoly.ne_zero hx.isIntegral) hdeg (minpoly.aeval ℚ x)
 
-end PowerLaw
+end AlgebraicNumbers
 
 
 /-- The linear parametrization of the segment from `p` to `q`, traced over `[0, 1]`. -/
