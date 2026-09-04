@@ -1180,6 +1180,7 @@ theorem rpow_Pconstructible {a b : ℝ} (ha : PConstructible a) (hb : PConstruct
   rw [← key]
   exact rpow_two_Pconstructible (PConstructible.mul hb (logb_two_Pconstructible ha hapos))
 
+section e
 
 /-! ### The natural logarithm
 
@@ -1345,6 +1346,9 @@ theorem exp_one_Pconstructible : PConstructible (Real.exp 1) := by
   exact rpow_Pconstructible two_Pconstructible
     (PConstructible.div PConstructible.base_one hln2) (by norm_num)
 
+end e
+
+section LambertW
 
 /-! ### The Lambert W function
 
@@ -1575,6 +1579,7 @@ example : lambertW (Real.exp 1) = 1 := lambertW_eq (by norm_num) (by simp [mulEx
 
 example : lambertW (-Real.exp (-1)) = -1 := lambertW_eq le_rfl (by simp [mulExp])
 
+end LambertW
 
 /-! ### Translating a curve
 
@@ -1611,6 +1616,8 @@ theorem hyperbola_shift_PConstructibleCurve {c u v : ℝ} (hc : PConstructible c
     refine ⟨by linarith, ?_⟩
     rw [show x + u - u = x by ring]
 
+
+section LaplaceLimit
 /-! ### The Laplace limit
 
 Kepler's equation `M = E - e · sin E` ties the mean anomaly `M` of a body on an elliptic
@@ -1870,7 +1877,9 @@ theorem laplaceLimit_Pconstructible : PConstructible laplaceLimit :=
       (PConstructible.add laplaceRoot_Pconstructible four_Pconstructible)))
     two_Pconstructible
 
+end LaplaceLimit
 
+section TrigFunctions
 /-! ### Sine and cosine
 
 `PConstructibleCurve.arc_of_length` used in earnest. Instead of measuring an arc whose
@@ -2060,6 +2069,7 @@ theorem tan_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (R
   rw [Real.tan_eq_sin_div_cos]
   exact PConstructible.div (sin_Pconstructible hx) (cos_Pconstructible hx)
 
+end TrigFunctions
 
 section Dottie
 /-! ### The Dottie number
@@ -2196,6 +2206,7 @@ theorem dottie_Pconstructible : PConstructible dottie := by
 
 end Dottie
 
+section ArcTrig
 /-! ### Inverse trigonometric functions
 
 `arccos_Pconstructible_of_mem_Icc`, proved above alongside `π`, already does all of the
@@ -2242,7 +2253,9 @@ theorem arctan_Pconstructible {x : ℝ} (hx : PConstructible x) :
   refine arcsin_Pconstructible (PConstructible.div hx (sqrt_Pconstructible ?_))
   simpa [pow_two] using PConstructible.add PConstructible.base_one (PConstructible.mul hx hx)
 
+end ArcTrig
 
+section LinearMap
 /-! ### Linear transformations of the plane
 
 `PConstructibleCurve` is closed under every linear map of the plane whose four matrix
@@ -2649,6 +2662,9 @@ theorem shear_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstructibleCur
     simp [linearMap]
   rwa [hfun] at h
 
+end LinearMap
+
+section AffineMap
 /-- The affine map of the plane with linear part `[[a, b], [c, d]]` and translation
 `(u, v)`: `(x, y) ↦ (a * x + b * y + u, c * x + d * y + v)`. -/
 def affineMap (a b c d u v : ℝ) : ℝ × ℝ → ℝ × ℝ :=
@@ -2687,7 +2703,11 @@ theorem affineMap_zero_right {a b c d : ℝ} : affineMap a b c d 0 0 = linearMap
   funext p
   simp [affineMap, linearMap]
 
+end AffineMap
 
+section EllipticIntegrals
+
+section IncompleteSecondKind
 /-! ### The incomplete elliptic integral of the second kind
 
 `E(φ) = ∫₀^φ √(1 - c sin²θ) dθ` *is* an arc length of an ellipse, and at the right size
@@ -2906,7 +2926,9 @@ theorem ellipticE_Pconstructible {c φ : ℝ} (hc : PConstructible c) (hφ : PCo
   rw [hkey]
   exact PConstructible.add hr (PConstructible.mul (int_Pconstructible n) hEpi)
 
+end IncompleteSecondKind
 
+section IncompleteFirstKind
 /-! ### The incomplete elliptic integral of the first kind
 
 `F(φ) = ∫₀^φ dθ/√(1 - c sin²θ)` is not the arc length of an ellipse, or of any other
@@ -3602,6 +3624,8 @@ theorem ellipticF_Pconstructible {c φ : ℝ} (hcP : PConstructible c) (hφP : P
   rw [hkey]
   exact PConstructible.add hr (PConstructible.mul (int_Pconstructible n) hFpi)
 
+end IncompleteFirstKind
+
 /-! #### In terms of the modulus
 
 Legendre writes both integrals with the modulus `k`, where `c = k²`. Those are the
@@ -3617,6 +3641,8 @@ theorem ellipticE_sq_Pconstructible {k φ : ℝ} (hk : PConstructible k)
 theorem ellipticF_sq_Pconstructible {k φ : ℝ} (hk : PConstructible k)
     (hφ : PConstructible φ) (hk1 : k ^ 2 < 1) : PConstructible (ellipticF (k ^ 2) φ) :=
   ellipticF_Pconstructible (sq_Pconstructible hk) hφ hk1
+
+section CompleteThirdKind
 
 /-! ### The complete elliptic integral of the third kind
 
@@ -4600,5 +4626,9 @@ theorem ellipticPi_sq_Pconstructible {k n : ℝ} (hk : PConstructible k)
     (hn : PConstructible n) (hk0 : 0 < k ^ 2) (hk1 : k ^ 2 < 1) (hn1 : n < 1) :
     PConstructible (ellipticPi (k ^ 2) n) :=
   ellipticPi_Pconstructible (sq_Pconstructible hk) hn hk0 hk1 hn1
+
+end CompleteThirdKind
+
+end EllipticIntegrals
 
 end Pconstructible
