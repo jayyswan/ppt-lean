@@ -1065,27 +1065,111 @@ theorem Gamma_intCast_div_four_Pconstructible
   · rw [show ((3 : ℕ) : ℝ) / ((4 : ℕ) : ℝ) = 3 / 4 by norm_num]
     exact Gamma_three_quarters_Pconstructible
 
--- Theorem: `Γ(7/8)` is P-constructible as soon as `Γ(1/8)` is, by reflection.
-theorem Gamma_seven_eighths_Pconstructible (h : PConstructible (Real.Gamma (1 / 8))) :
+/-! ### The second singular value, and with it `Γ(1/8)`
+
+`k₂ = √2 - 1` is the modulus at which `K'/K = √2`. Evaluating `K` there is Chowla-Selberg
+at discriminant `-8`; it is a genuine theorem (Whittaker-Watson; Borwein-Borwein, *Pi and
+the AGM*), but its proof needs complex multiplication and the Kronecker limit formula,
+neither of which Mathlib has. It is assumed below — the sole `sorry` of this section — and
+everything derived from it is elementary. -/
+
+-- Theorem: the parameter `c = k₂² = (√2 - 1)²` lies below `1`, so `K` there is covered by
+-- `ellipticF_Pconstructible`.
+theorem secondSingularPar_lt_one : (Real.sqrt 2 - 1) ^ 2 < 1 := by
+  nlinarith [Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2), Real.sqrt_nonneg 2]
+
+-- Theorem: that parameter is P-constructible.
+theorem secondSingularPar_Pconstructible : PConstructible ((Real.sqrt 2 - 1) ^ 2) :=
+  sq_Pconstructible
+    (PConstructible.sub (sqrt_Pconstructible two_Pconstructible) PConstructible.base_one)
+
+/-- **Assumed.** The second singular value,
+`K(√2 - 1) = √(√2 + 1) · Γ(1/8) Γ(3/8) / (2 ^ (13/4) √π)`, with `K = F(·, π/2)` at the
+parameter `c = k² = (√2 - 1)²`. This is the one statement in the file taken on trust. -/
+theorem ellipticF_secondSingular :
+    ellipticF ((Real.sqrt 2 - 1) ^ 2) (Real.pi / 2)
+      = Real.sqrt (Real.sqrt 2 + 1) * (Real.Gamma (1 / 8) * Real.Gamma (3 / 8))
+          / ((2 : ℝ) ^ ((13 : ℝ) / 4) * Real.sqrt Real.pi) := by
+  sorry
+
+-- Theorem: hence the product `Γ(1/8) Γ(3/8)` is P-constructible — the singular value
+-- identity read as a statement about `Γ`.
+theorem Gamma_one_eighth_mul_three_eighths_Pconstructible :
+    PConstructible (Real.Gamma (1 / 8) * Real.Gamma (3 / 8)) := by
+  have hK : PConstructible (ellipticF ((Real.sqrt 2 - 1) ^ 2) (Real.pi / 2)) :=
+    ellipticF_Pconstructible secondSingularPar_Pconstructible
+      (PConstructible.div pi_Pconstructible two_Pconstructible) secondSingularPar_lt_one
+  have hroot : (0 : ℝ) < Real.sqrt (Real.sqrt 2 + 1) :=
+    Real.sqrt_pos.mpr (by positivity)
+  have hpi : (0 : ℝ) < Real.sqrt Real.pi := Real.sqrt_pos.mpr Real.pi_pos
+  have h2 : (0 : ℝ) < (2 : ℝ) ^ ((13 : ℝ) / 4) := Real.rpow_pos_of_pos two_pos _
+  have hsolve : Real.Gamma (1 / 8) * Real.Gamma (3 / 8)
+      = ellipticF ((Real.sqrt 2 - 1) ^ 2) (Real.pi / 2)
+          * ((2 : ℝ) ^ ((13 : ℝ) / 4) * Real.sqrt Real.pi)
+          / Real.sqrt (Real.sqrt 2 + 1) := by
+    rw [ellipticF_secondSingular]
+    field_simp
+  rw [hsolve]
+  exact PConstructible.div
+    (PConstructible.mul hK
+      (PConstructible.mul (rpow_two_Pconstructible (ratval_Pconstructible (13 / 4) (by norm_num)))
+        sqrt_pi_Pconstructible))
+    (sqrt_Pconstructible
+      (PConstructible.add (sqrt_Pconstructible two_Pconstructible) PConstructible.base_one))
+
+-- Theorem: `Γ(1/8)` is P-constructible. `Γ(7/8)` cancels between reflection at `1/8` and
+-- duplication at `s = 3/8` (whose `Γ(2s) = Γ(3/4)` is unconditional), leaving `Γ(1/8)²` as
+-- the assumed product times an elementary factor; `Γ(1/8) > 0` then recovers the value.
+theorem Gamma_one_eighth_Pconstructible : PConstructible (Real.Gamma (1 / 8)) := by
+  have hpos : 0 < Real.Gamma (1 / 8) := Real.Gamma_pos_of_pos (by norm_num)
+  have h38 : 0 < Real.Gamma (3 / 8) := Real.Gamma_pos_of_pos (by norm_num)
+  have h78 : 0 < Real.Gamma (7 / 8) := Real.Gamma_pos_of_pos (by norm_num)
+  have hrefl : Real.Gamma (1 / 8) * Real.Gamma (7 / 8)
+      = Real.pi / Real.sin (Real.pi * (1 / 8)) := by
+    have h := Real.Gamma_mul_Gamma_one_sub (1 / 8 : ℝ)
+    rwa [show (1 : ℝ) - 1 / 8 = 7 / 8 by norm_num] at h
+  have hdup : Real.Gamma (3 / 8) * Real.Gamma (7 / 8) = Real.Gamma (3 / 4) * dupFactor (3 / 8) := by
+    have h := Gamma_mul_Gamma_add_half' (3 / 8 : ℝ)
+    rwa [show (3 : ℝ) / 8 + 1 / 2 = 7 / 8 by norm_num,
+      show (2 : ℝ) * (3 / 8) = 3 / 4 by norm_num] at h
+  have hsq : PConstructible (Real.Gamma (1 / 8) ^ 2) := by
+    have key : Real.Gamma (1 / 8) ^ 2
+        = Real.Gamma (1 / 8) * Real.Gamma (3 / 8) * (Real.Gamma (1 / 8) * Real.Gamma (7 / 8))
+            / (Real.Gamma (3 / 8) * Real.Gamma (7 / 8)) := by
+      field_simp
+    rw [key, hrefl, hdup]
+    exact PConstructible.div
+      (PConstructible.mul Gamma_one_eighth_mul_three_eighths_Pconstructible
+        (PConstructible.div pi_Pconstructible
+          (sin_Pconstructible
+            (PConstructible.mul pi_Pconstructible (ratval_Pconstructible (1 / 8) (by norm_num))))))
+      (PConstructible.mul Gamma_three_quarters_Pconstructible
+        (dupFactor_Pconstructible (ratval_Pconstructible (3 / 8) (by norm_num))))
+  have h := sqrt_Pconstructible hsq
+  rwa [Real.sqrt_sq hpos.le] at h
+
+-- Theorem: `Γ(7/8)` is P-constructible, by reflection from `Γ(1/8)`.
+theorem Gamma_seven_eighths_Pconstructible :
     PConstructible (Real.Gamma (7 / 8)) := by
-  have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 8) (by norm_num)) h
+  have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 8) (by norm_num))
+    Gamma_one_eighth_Pconstructible
   rwa [show (1 : ℝ) - 1 / 8 = 7 / 8 by norm_num] at this
 
--- Theorem: `Γ(3/8)` is P-constructible given `Γ(1/8)`, by duplication at `s = 3/8`. It is
--- a consequence, not a further assumption.
-theorem Gamma_three_eighths_Pconstructible
-    (h₈ : PConstructible (Real.Gamma (1 / 8))) : PConstructible (Real.Gamma (3 / 8)) := by
+-- Theorem: `Γ(3/8)` is P-constructible, by duplication at `s = 3/8`. It is a consequence of
+-- `Γ(1/8)`, not a further assumption.
+theorem Gamma_three_eighths_Pconstructible :
+    PConstructible (Real.Gamma (3 / 8)) := by
   refine Gamma_of_add_half_Pconstructible (ratval_Pconstructible (3 / 8) (by norm_num)) ?_ ?_
   · rw [show (3 : ℝ) / 8 + 1 / 2 = 7 / 8 by norm_num]
-    exact Gamma_seven_eighths_Pconstructible h₈
+    exact Gamma_seven_eighths_Pconstructible
   · rw [show (2 : ℝ) * (3 / 8) = 3 / 4 by norm_num]
     exact Gamma_three_quarters_Pconstructible
 
--- Theorem: `Γ(n/8)` is P-constructible for every integer `n`, given `Γ(1/8)`.
+-- Theorem: `Γ(n/8)` is P-constructible for every integer `n`, unconditionally.
 theorem Gamma_intCast_div_eight_Pconstructible
-    (h₈ : PConstructible (Real.Gamma (1 / 8))) (n : ℤ) :
+    (n : ℤ) :
     PConstructible (Real.Gamma ((n : ℝ) / 8)) := by
-  have h38 : PConstructible (Real.Gamma (3 / 8)) := Gamma_three_eighths_Pconstructible h₈
+  have h38 : PConstructible (Real.Gamma (3 / 8)) := Gamma_three_eighths_Pconstructible
   have h58 : PConstructible (Real.Gamma (5 / 8)) := by
     have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (3 / 8) (by norm_num)) h38
     rwa [show (1 : ℝ) - 3 / 8 = 5 / 8 by norm_num] at this
@@ -1095,7 +1179,7 @@ theorem Gamma_intCast_div_eight_Pconstructible
   · rw [show ((0 : ℕ) : ℝ) / ((8 : ℕ) : ℝ) = 0 by norm_num, Real.Gamma_zero]
     exact zero_Pconstructible
   · rw [show ((1 : ℕ) : ℝ) / ((8 : ℕ) : ℝ) = 1 / 8 by norm_num]
-    exact h₈
+    exact Gamma_one_eighth_Pconstructible
   · rw [show ((2 : ℕ) : ℝ) / ((8 : ℕ) : ℝ) = 1 / 4 by norm_num]
     exact Gamma_one_quarter_Pconstructible
   · rw [show ((3 : ℕ) : ℝ) / ((8 : ℕ) : ℝ) = 3 / 8 by norm_num]
@@ -1107,6 +1191,146 @@ theorem Gamma_intCast_div_eight_Pconstructible
   · rw [show ((6 : ℕ) : ℝ) / ((8 : ℕ) : ℝ) = 3 / 4 by norm_num]
     exact Gamma_three_quarters_Pconstructible
   · rw [show ((7 : ℕ) : ℝ) / ((8 : ℕ) : ℝ) = 7 / 8 by norm_num]
-    exact Gamma_seven_eighths_Pconstructible h₈
+    exact Gamma_seven_eighths_Pconstructible
 
+
+/-! ### Gauss's triplication, and with it `Γ(1/12)`
+
+Mathlib proves only the `k = 2` case of Gauss's multiplication theorem, so the `k = 3` case
+is assumed below. Unlike the singular value above it needs no transcendental input at all —
+it is a functional equation of the same character as duplication and reflection, and with
+it denominator `12` follows from the already unconditional `Γ(1/4)`, `Γ(1/3)` and `Γ(1/6)`.
+Duplication and reflection alone do not suffice: they pin down `Γ(1/12) / Γ(5/12)` but never
+either factor. Triplication at `s = 1/12` supplies the missing *product* `Γ(1/12) Γ(5/12)`,
+and product times ratio is a square. -/
+
+-- Theorem: `Γ(5/6)` is P-constructible, by reflection from `Γ(1/6)`.
+theorem Gamma_five_sixths_Pconstructible : PConstructible (Real.Gamma (5 / 6)) := by
+  have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 6) (by norm_num))
+    Gamma_one_sixth_Pconstructible
+  rwa [show (1 : ℝ) - 1 / 6 = 5 / 6 by norm_num] at this
+
+/-- **Assumed.** Gauss's multiplication theorem at `k = 3`:
+`Γ(s) Γ(s + 1/3) Γ(s + 2/3) = 2π · 3 ^ (1/2 - 3s) · Γ(3s)`. Mathlib has only the `k = 2`
+(Legendre) case, `Real.Gamma_mul_Gamma_add_half`. -/
+theorem Gamma_mul_Gamma_add_third_mul_Gamma_add_two_thirds (s : ℝ) :
+    Real.Gamma s * Real.Gamma (s + 1 / 3) * Real.Gamma (s + 2 / 3)
+      = 2 * Real.pi * (3 : ℝ) ^ ((1 : ℝ) / 2 - 3 * s) * Real.Gamma (3 * s) := by
+  sorry
+
+-- Theorem: triplication at `s = 1/12`, where the third factor `Γ(3/4)` and the right-hand
+-- side's `Γ(1/4)` are both already unconditional. This is the product that duplication and
+-- reflection cannot reach.
+theorem Gamma_one_twelfth_mul_five_twelfths :
+    Real.Gamma (1 / 12) * Real.Gamma (5 / 12)
+      = 2 * Real.pi * (3 : ℝ) ^ ((1 : ℝ) / 4) * Real.Gamma (1 / 4) / Real.Gamma (3 / 4) := by
+  have h := Gamma_mul_Gamma_add_third_mul_Gamma_add_two_thirds (1 / 12 : ℝ)
+  rw [show (1 : ℝ) / 12 + 1 / 3 = 5 / 12 by norm_num,
+    show (1 : ℝ) / 12 + 2 / 3 = 3 / 4 by norm_num,
+    show (3 : ℝ) * (1 / 12) = 1 / 4 by norm_num,
+    show (1 : ℝ) / 2 - 1 / 4 = 1 / 4 by norm_num] at h
+  have h34 : Real.Gamma (3 / 4) ≠ 0 := (Real.Gamma_pos_of_pos (by norm_num)).ne'
+  field_simp
+  linear_combination h
+
+-- Theorem: hence that product is P-constructible.
+theorem Gamma_one_twelfth_mul_five_twelfths_Pconstructible :
+    PConstructible (Real.Gamma (1 / 12) * Real.Gamma (5 / 12)) := by
+  rw [Gamma_one_twelfth_mul_five_twelfths]
+  exact PConstructible.div
+    (PConstructible.mul
+      (PConstructible.mul
+        (PConstructible.mul two_Pconstructible pi_Pconstructible)
+        (rpow_Pconstructible three_Pconstructible
+          (ratval_Pconstructible (1 / 4) (by norm_num)) (by norm_num)))
+      Gamma_one_quarter_Pconstructible)
+    Gamma_three_quarters_Pconstructible
+
+-- Theorem: `Γ(1/12)` is P-constructible. `Γ(11/12)` cancels between reflection at `1/12`
+-- and duplication at `s = 5/12` (whose `Γ(2s) = Γ(5/6)` is unconditional), leaving
+-- `Γ(1/12)²` as the triplication product times an elementary factor.
+theorem Gamma_one_twelfth_Pconstructible : PConstructible (Real.Gamma (1 / 12)) := by
+  have hpos : 0 < Real.Gamma (1 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have h512 : 0 < Real.Gamma (5 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have h1112 : 0 < Real.Gamma (11 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have hrefl : Real.Gamma (1 / 12) * Real.Gamma (11 / 12)
+      = Real.pi / Real.sin (Real.pi * (1 / 12)) := by
+    have h := Real.Gamma_mul_Gamma_one_sub (1 / 12 : ℝ)
+    rwa [show (1 : ℝ) - 1 / 12 = 11 / 12 by norm_num] at h
+  have hdup : Real.Gamma (5 / 12) * Real.Gamma (11 / 12)
+      = Real.Gamma (5 / 6) * dupFactor (5 / 12) := by
+    have h := Gamma_mul_Gamma_add_half' (5 / 12 : ℝ)
+    rwa [show (5 : ℝ) / 12 + 1 / 2 = 11 / 12 by norm_num,
+      show (2 : ℝ) * (5 / 12) = 5 / 6 by norm_num] at h
+  have hsq : PConstructible (Real.Gamma (1 / 12) ^ 2) := by
+    have key : Real.Gamma (1 / 12) ^ 2
+        = Real.Gamma (1 / 12) * Real.Gamma (5 / 12)
+            * (Real.Gamma (1 / 12) * Real.Gamma (11 / 12))
+            / (Real.Gamma (5 / 12) * Real.Gamma (11 / 12)) := by
+      field_simp
+    rw [key, hrefl, hdup]
+    exact PConstructible.div
+      (PConstructible.mul Gamma_one_twelfth_mul_five_twelfths_Pconstructible
+        (PConstructible.div pi_Pconstructible
+          (sin_Pconstructible
+            (PConstructible.mul pi_Pconstructible
+              (ratval_Pconstructible (1 / 12) (by norm_num))))))
+      (PConstructible.mul Gamma_five_sixths_Pconstructible
+        (dupFactor_Pconstructible (ratval_Pconstructible (5 / 12) (by norm_num))))
+  have h := sqrt_Pconstructible hsq
+  rwa [Real.sqrt_sq hpos.le] at h
+
+-- Theorem: `Γ(5/12)` follows, dividing the triplication product by `Γ(1/12)`.
+theorem Gamma_five_twelfths_Pconstructible : PConstructible (Real.Gamma (5 / 12)) := by
+  have hpos : 0 < Real.Gamma (1 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have key : Real.Gamma (5 / 12)
+      = Real.Gamma (1 / 12) * Real.Gamma (5 / 12) / Real.Gamma (1 / 12) := by
+    field_simp
+  rw [key]
+  exact PConstructible.div Gamma_one_twelfth_mul_five_twelfths_Pconstructible
+    Gamma_one_twelfth_Pconstructible
+
+-- Theorem: `Γ(7/12)`, by reflection from `Γ(5/12)`.
+theorem Gamma_seven_twelfths_Pconstructible : PConstructible (Real.Gamma (7 / 12)) := by
+  have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (5 / 12) (by norm_num))
+    Gamma_five_twelfths_Pconstructible
+  rwa [show (1 : ℝ) - 5 / 12 = 7 / 12 by norm_num] at this
+
+-- Theorem: `Γ(11/12)`, by reflection from `Γ(1/12)`.
+theorem Gamma_eleven_twelfths_Pconstructible : PConstructible (Real.Gamma (11 / 12)) := by
+  have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 12) (by norm_num))
+    Gamma_one_twelfth_Pconstructible
+  rwa [show (1 : ℝ) - 1 / 12 = 11 / 12 by norm_num] at this
+
+-- Theorem: `Γ(n/12)` is P-constructible for every integer `n`. Denominator `12` is now an
+-- unconditional family, and with it every denominator dividing `12`.
+theorem Gamma_intCast_div_twelve_Pconstructible
+    (n : ℤ) : PConstructible (Real.Gamma ((n : ℝ) / 12)) := by
+  rw [show ((n : ℝ)) / 12 = (n : ℝ) / ((12 : ℕ) : ℝ) by norm_num]
+  refine Gamma_intCast_div_Pconstructible (by norm_num) (fun r hr => ?_) n
+  interval_cases r
+  · rw [show ((0 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 0 by norm_num, Real.Gamma_zero]
+    exact zero_Pconstructible
+  · rw [show ((1 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 1 / 12 by norm_num]
+    exact Gamma_one_twelfth_Pconstructible
+  · rw [show ((2 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 1 / 6 by norm_num]
+    exact Gamma_one_sixth_Pconstructible
+  · rw [show ((3 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 1 / 4 by norm_num]
+    exact Gamma_one_quarter_Pconstructible
+  · rw [show ((4 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 1 / 3 by norm_num]
+    exact Gamma_one_third_Pconstructible
+  · rw [show ((5 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 5 / 12 by norm_num]
+    exact Gamma_five_twelfths_Pconstructible
+  · rw [show ((6 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 1 / 2 by norm_num]
+    exact Gamma_one_half_Pconstructible
+  · rw [show ((7 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 7 / 12 by norm_num]
+    exact Gamma_seven_twelfths_Pconstructible
+  · rw [show ((8 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 2 / 3 by norm_num]
+    exact Gamma_two_thirds_Pconstructible
+  · rw [show ((9 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 3 / 4 by norm_num]
+    exact Gamma_three_quarters_Pconstructible
+  · rw [show ((10 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 5 / 6 by norm_num]
+    exact Gamma_five_sixths_Pconstructible
+  · rw [show ((11 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 11 / 12 by norm_num]
+    exact Gamma_eleven_twelfths_Pconstructible
 end Pconstructible
