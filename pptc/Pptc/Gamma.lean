@@ -17,6 +17,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 
 -- Targeted imports rather than `import Mathlib`; see the note in `Pptc.Defs`.
 import Pptc.Basic
+import Pptc.GaussMultiplicationK3
 import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.MeasureTheory.Function.JacobianOneDim
@@ -86,9 +87,10 @@ not assumed, by duplication at `s = 3/8` against the unconditional `Γ(3/4)`, an
 Doubling the denominator again does need a new input each time: from denominator `8` the
 duplication formula only ever delivers the *ratio* `Γ(1/16) / Γ(7/16)`, never either factor,
 which is the P-constructible shadow of the fact that each new singular value of `K` is a new
-transcendental. The one denominator that ought to come for free but does not is `12`:
-Gauss's triplication formula would give `Γ(1/12)` from `Γ(1/4)` and `Γ(1/3)`, but Mathlib
-proves only the `k = 2` case of the multiplication theorem.
+transcendental. Denominator `12` does come for free, but not out of Mathlib: Gauss's
+triplication formula gives `Γ(1/12)` from `Γ(1/4)` and `Γ(1/3)`, and since Mathlib proves
+only the `k = 2` case of the multiplication theorem, the `k = 3` case is proved from scratch
+in `Pptc.GaussMultiplicationK3` and imported here.
 -/
 
 namespace Pconstructible
@@ -1070,8 +1072,8 @@ theorem Gamma_intCast_div_four_Pconstructible
 `k₂ = √2 - 1` is the modulus at which `K'/K = √2`. Evaluating `K` there is Chowla-Selberg
 at discriminant `-8`; it is a genuine theorem (Whittaker-Watson; Borwein-Borwein, *Pi and
 the AGM*), but its proof needs complex multiplication and the Kronecker limit formula,
-neither of which Mathlib has. It is assumed below — the sole `sorry` of this section — and
-everything derived from it is elementary. -/
+neither of which Mathlib has. It is assumed below — now the sole `sorry` in the project —
+and everything derived from it is elementary. -/
 
 -- Theorem: the parameter `c = k₂² = (√2 - 1)²` lies below `1`, so `K` there is covered by
 -- `ellipticF_Pconstructible`.
@@ -1197,26 +1199,21 @@ theorem Gamma_intCast_div_eight_Pconstructible
 /-! ### Gauss's triplication, and with it `Γ(1/12)`
 
 Mathlib proves only the `k = 2` case of Gauss's multiplication theorem, so the `k = 3` case
-is assumed below. Unlike the singular value above it needs no transcendental input at all —
-it is a functional equation of the same character as duplication and reflection, and with
-it denominator `12` follows from the already unconditional `Γ(1/4)`, `Γ(1/3)` and `Γ(1/6)`.
-Duplication and reflection alone do not suffice: they pin down `Γ(1/12) / Γ(5/12)` but never
-either factor. Triplication at `s = 1/12` supplies the missing *product* `Γ(1/12) Γ(5/12)`,
-and product times ratio is a square. -/
+is proved from scratch in `Pptc.GaussMultiplicationK3` — Bohr-Mollerup on `(0, ∞)`, then
+descent along the recurrence to the rest of the line — and used here as
+`Gamma_mul_Gamma_add_third_mul_Gamma_add_two_thirds`. Unlike the singular value above it
+needs no transcendental input at all: it is a functional equation of the same character as
+duplication and reflection, and with it denominator `12` follows from the already
+unconditional `Γ(1/4)`, `Γ(1/3)` and `Γ(1/6)`. Duplication and reflection alone do not
+suffice: they pin down `Γ(1/12) / Γ(5/12)` but never either factor. Triplication at
+`s = 1/12` supplies the missing *product* `Γ(1/12) Γ(5/12)`, and product times ratio is a
+square. -/
 
 -- Theorem: `Γ(5/6)` is P-constructible, by reflection from `Γ(1/6)`.
 theorem Gamma_five_sixths_Pconstructible : PConstructible (Real.Gamma (5 / 6)) := by
   have := Gamma_one_sub_Pconstructible (ratval_Pconstructible (1 / 6) (by norm_num))
     Gamma_one_sixth_Pconstructible
   rwa [show (1 : ℝ) - 1 / 6 = 5 / 6 by norm_num] at this
-
-/-- **Assumed.** Gauss's multiplication theorem at `k = 3`:
-`Γ(s) Γ(s + 1/3) Γ(s + 2/3) = 2π · 3 ^ (1/2 - 3s) · Γ(3s)`. Mathlib has only the `k = 2`
-(Legendre) case, `Real.Gamma_mul_Gamma_add_half`. -/
-theorem Gamma_mul_Gamma_add_third_mul_Gamma_add_two_thirds (s : ℝ) :
-    Real.Gamma s * Real.Gamma (s + 1 / 3) * Real.Gamma (s + 2 / 3)
-      = 2 * Real.pi * (3 : ℝ) ^ ((1 : ℝ) / 2 - 3 * s) * Real.Gamma (3 * s) := by
-  sorry
 
 -- Theorem: triplication at `s = 1/12`, where the third factor `Γ(3/4)` and the right-hand
 -- side's `Γ(1/4)` are both already unconditional. This is the product that duplication and
