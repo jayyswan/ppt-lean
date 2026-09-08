@@ -18,6 +18,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 -- Targeted imports rather than `import Mathlib`; see the note in `Pptc.Defs`.
 import Pptc.Basic
 import Pptc.GaussMultiplicationK3
+import Pptc.EllipticFSecondSingular
 import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.MeasureTheory.Function.JacobianOneDim
@@ -1085,14 +1086,14 @@ theorem secondSingularPar_Pconstructible : PConstructible ((Real.sqrt 2 - 1) ^ 2
   sq_Pconstructible
     (PConstructible.sub (sqrt_Pconstructible two_Pconstructible) PConstructible.base_one)
 
-/-- **Assumed.** The second singular value,
-`K(√2 - 1) = √(√2 + 1) · Γ(1/8) Γ(3/8) / (2 ^ (13/4) √π)`, with `K = F(·, π/2)` at the
-parameter `c = k² = (√2 - 1)²`. This is the one statement in the file taken on trust. -/
-theorem ellipticF_secondSingular :
-    ellipticF ((Real.sqrt 2 - 1) ^ 2) (Real.pi / 2)
-      = Real.sqrt (Real.sqrt 2 + 1) * (Real.Gamma (1 / 8) * Real.Gamma (3 / 8))
-          / ((2 : ℝ) ^ ((13 : ℝ) / 4) * Real.sqrt Real.pi) := by
-  sorry
+-- /-- **Assumed.** The second singular value,
+-- `K(√2 - 1) = √(√2 + 1) · Γ(1/8) Γ(3/8) / (2 ^ (13/4) √π)`, with `K = F(·, π/2)` at the
+-- parameter `c = k² = (√2 - 1)²`. This is the one statement in the file taken on trust. -/
+-- theorem ellipticF_secondSingular :
+--     ellipticF ((Real.sqrt 2 - 1) ^ 2) (Real.pi / 2)
+--       = Real.sqrt (Real.sqrt 2 + 1) * (Real.Gamma (1 / 8) * Real.Gamma (3 / 8))
+--           / ((2 : ℝ) ^ ((13 : ℝ) / 4) * Real.sqrt Real.pi) := by
+--   sorry
 
 -- Theorem: hence the product `Γ(1/8) Γ(3/8)` is P-constructible — the singular value
 -- identity read as a statement about `Γ`.
