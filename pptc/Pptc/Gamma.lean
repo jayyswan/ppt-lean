@@ -22,6 +22,7 @@ import Pptc.EllipticFSecondSingular
 import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.MeasureTheory.Function.JacobianOneDim
+import Pptc.Level24
 
 /-! # Pptc.Gamma
 
@@ -94,11 +95,14 @@ triplication formula gives `Γ(1/12)` from `Γ(1/4)` and `Γ(1/3)`, and since Ma
 only the `k = 2` case of the multiplication theorem, the `k = 3` case is proved from scratch
 in `Pptc.GaussMultiplicationK3` and imported here.
 
-Denominator `24` is where this circle of ideas ends, and it is the one family still resting
-on an assumption. The sixth singular value `K(k₆)` — Chowla-Selberg at discriminant `-24`,
-for the field `ℚ(√-6)` — is assumed as `ellipticF_sixthSingular`, the file's only `sorry`,
-and with it the functional equations deliver `Γ(1/24)` and every residue mod `24`. The
-section that states it explains why no assumption-free route can exist, and why level `24`
+Denominator `24` is where this circle of ideas ends. The missing quantity there is the
+`χ`-weighted product of the four `Γ(a/24)` with `a` coprime to `24` and below `12`, which
+is what a CM period of `ℚ(√-6)` supplies; classically that is Chowla-Selberg at
+discriminant `-24`, whose proof needs complex multiplication and the Kronecker limit
+formula. `Pptc.Level24` gets it instead by an explicit degree-12 algebraic substitution
+carrying the period of `y² = v - v¹³` to a complete elliptic integral, so denominator `24`
+is unconditional too, and with it every residue mod `24`. The section that reaches it
+explains why no route through the functional equations alone can exist, and why level `24`
 is the last one the method reaches at all.
 -/
 
@@ -1081,8 +1085,8 @@ theorem Gamma_intCast_div_four_Pconstructible
 `k₂ = √2 - 1` is the modulus at which `K'/K = √2`. Evaluating `K` there is Chowla-Selberg
 at discriminant `-8`; it is a genuine theorem (Whittaker-Watson; Borwein-Borwein, *Pi and
 the AGM*), but its proof needs complex multiplication and the Kronecker limit formula,
-neither of which Mathlib has. It is assumed below — now the sole `sorry` in the project —
-and everything derived from it is elementary. -/
+neither of which Mathlib has. It is proved in `Pptc.EllipticFSecondSingular`, by a
+degree-2 algebraic substitution, and everything derived from it is elementary. -/
 
 -- Theorem: the parameter `c = k₂² = (√2 - 1)²` lies below `1`, so `K` there is covered by
 -- `ellipticF_Pconstructible`.
@@ -1093,15 +1097,6 @@ theorem secondSingularPar_lt_one : (Real.sqrt 2 - 1) ^ 2 < 1 := by
 theorem secondSingularPar_Pconstructible : PConstructible ((Real.sqrt 2 - 1) ^ 2) :=
   sq_Pconstructible
     (PConstructible.sub (sqrt_Pconstructible two_Pconstructible) PConstructible.base_one)
-
--- /-- **Assumed.** The second singular value,
--- `K(√2 - 1) = √(√2 + 1) · Γ(1/8) Γ(3/8) / (2 ^ (13/4) √π)`, with `K = F(·, π/2)` at the
--- parameter `c = k² = (√2 - 1)²`. This is the one statement in the file taken on trust. -/
--- theorem ellipticF_secondSingular :
---     ellipticF ((Real.sqrt 2 - 1) ^ 2) (Real.pi / 2)
---       = Real.sqrt (Real.sqrt 2 + 1) * (Real.Gamma (1 / 8) * Real.Gamma (3 / 8))
---           / ((2 : ℝ) ^ ((13 : ℝ) / 4) * Real.sqrt Real.pi) := by
---   sorry
 
 -- Theorem: hence the product `Γ(1/8) Γ(3/8)` is P-constructible — the singular value
 -- identity read as a statement about `Γ`.
@@ -1340,106 +1335,33 @@ theorem Gamma_intCast_div_twelve_Pconstructible
   · rw [show ((11 : ℕ) : ℝ) / ((12 : ℕ) : ℝ) = 11 / 12 by norm_num]
     exact Gamma_eleven_twelfths_Pconstructible
 
-/-! ### The sixth singular value, and with it `Γ(1/24)`
+/-! ### `Γ(1/24)`, from the level-24 substitution
 
-`k₆ = (2 - √3)(√3 - √2)` is the modulus at which `K'/K = √6`, and evaluating `K` there is
-Chowla-Selberg at discriminant `-24`, for the field `ℚ(√-6)` of class number `2`. As with
-the second singular value the classical proof runs through complex multiplication and the
-Kronecker limit formula; unlike that one it is not proved in this project, and it is
-assumed below as the file's only `sorry`.
+`Pptc.Level24` evaluates the singular value at `N = 3/2` — the modulus at which
+`K'/K = √(3/2)` — by an explicit degree-12 algebraic substitution, and reads off
 
-Why a new input is needed at all, with denominators `8` and `12` already in hand: consider
+`Γ(1/24)/Γ(13/24) + (√3+√6) Γ(5/24)/Γ(17/24) + (3+√6) Γ(7/24)/Γ(19/24)
+    + cot(π/24) Γ(11/24)/Γ(23/24) = 12/(ρ √π) · F(κ, π)`
+
+whose right-hand side is P-constructible.  Duplication turns each `Γ(p)/Γ(p+1/2)` into
+`Γ(p)²` over a denominator of level `12`, so the left-hand side is `Γ(1/24)²` times a
+P-constructible factor once the three ratios below are in hand.
+
+Why a new input was needed at all, with denominators `8` and `12` already there: consider
 the twist `Γ(a/24) ↦ t ^ χ(a) · Γ(a/24)`, where `χ` is the quadratic character of
 discriminant `-24` (`+1` on `1, 5, 7, 11` and `-1` on `13, 17, 19, 23`). It fixes `π`,
 every algebraic number, and every `Γ(a/n)` with `n ∣ 12` or `n ∣ 8`, and it preserves
 reflection and every Gauss multiplication relation at level `24`, since `χ` sums to zero
 over each of the relevant residue sets — `{1, 13}` for duplication, `{1, 9, 17}` for
 triplication, `{1, 7, 13, 19}` for `k = 4`. No combination of the functional equations can
-therefore pin down `Γ(1/24)`: they fix the three ratios below and nothing more. Exactly one
-number is missing, the `χ`-weighted product `Γ(1/24) Γ(5/24) Γ(7/24) Γ(11/24)`, and
-Chowla-Selberg at `-24` supplies precisely it. Product times ratios is a fourth power, the
-same shape as denominators `8` and `12` above, one level deeper.
+therefore pin down `Γ(1/24)`: they fix the three ratios below and nothing more. The
+substitution supplies exactly the missing `χ`-weighted quantity.
 
 Level `24` is where the method stops. Every character of `(ℤ/24)ˣ` is quadratic — `24` is
 the largest modulus for which that is true — so all four odd characters mod `24` belong to
-imaginary quadratic fields (`ℚ(i)`, `ℚ(√-2)`, `ℚ(√-3)`, `ℚ(√-6)`), and Chowla-Selberg has
-one CM period for each. Mod `5` the odd characters have order `4`, no imaginary quadratic
-field has conductor `5`, and the formula gives nothing. -/
-
-/-- The sixth singular modulus `k₆ = (2 - √3)(√3 - √2)`, at which `K'/K = √6`. -/
-noncomputable def sixthSingularMod : ℝ := (2 - Real.sqrt 3) * (Real.sqrt 3 - Real.sqrt 2)
-
--- Theorem: `√2 < √3`, the comparison behind both bounds on `k₆`.
-theorem sqrt_two_lt_sqrt_three : Real.sqrt 2 < Real.sqrt 3 :=
-  Real.sqrt_lt_sqrt (by norm_num) (by norm_num)
-
--- Theorem: `k₆` is positive; both of its factors are.
-theorem sixthSingularMod_pos : 0 < sixthSingularMod :=
-  mul_pos (by linarith [sqrt_three_lt_two]) (by linarith [sqrt_two_lt_sqrt_three])
-
--- Theorem: `k₆ < 1`, since each factor lies in `(0, 1)`: `2 - √3 < 1` is `1 < √3`, and
--- `√3 - √2 < 1` is `3 < 3 + 2√2`.
-theorem sixthSingularMod_lt_one : sixthSingularMod < 1 := by
-  have h2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
-  have h2pos : 0 < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
-  have hb : Real.sqrt 3 - Real.sqrt 2 < 1 := by nlinarith [sq_sqrt_three, Real.sqrt_nonneg 3]
-  have hbpos : 0 < Real.sqrt 3 - Real.sqrt 2 := by linarith [sqrt_two_lt_sqrt_three]
-  have ha : 2 - Real.sqrt 3 < 1 := by linarith [one_lt_sqrt_three]
-  have hapos : 0 < 2 - Real.sqrt 3 := by linarith [sqrt_three_lt_two]
-  unfold sixthSingularMod
-  nlinarith
-
--- Theorem: the parameter `c = k₆²` lies below `1`, so `K` there is covered by
--- `ellipticF_Pconstructible`.
-theorem sixthSingularPar_lt_one : sixthSingularMod ^ 2 < 1 := by
-  nlinarith [sixthSingularMod_pos, sixthSingularMod_lt_one]
-
--- Theorem: `k₆` is P-constructible, being a nested radical.
-theorem sixthSingularMod_Pconstructible : PConstructible sixthSingularMod :=
-  PConstructible.mul
-    (PConstructible.sub two_Pconstructible (sqrt_Pconstructible three_Pconstructible))
-    (PConstructible.sub (sqrt_Pconstructible three_Pconstructible)
-      (sqrt_Pconstructible two_Pconstructible))
-
--- Theorem: that parameter is P-constructible.
-theorem sixthSingularPar_Pconstructible : PConstructible (sixthSingularMod ^ 2) :=
-  sq_Pconstructible sixthSingularMod_Pconstructible
-
-/-- **Assumed.** The sixth singular value, `K(k₆)² = Γ(1/24) Γ(5/24) Γ(7/24) Γ(11/24) /
-(384 π (√2 + 1) k₆)`, with `K = F(·, π/2)` at the parameter `c = k₆²`. This is
-Chowla-Selberg at discriminant `-24`, and the one statement in the file taken on trust. -/
-theorem ellipticF_sixthSingular :
-    ellipticF (sixthSingularMod ^ 2) (Real.pi / 2) ^ 2
-      = Real.Gamma (1 / 24) * Real.Gamma (5 / 24) * Real.Gamma (7 / 24) * Real.Gamma (11 / 24)
-          / (384 * Real.pi * (Real.sqrt 2 + 1) * sixthSingularMod) := by
-  sorry
-
--- Theorem: the elementary factor in that identity is positive, so the division is safe.
-theorem sixthSingular_factor_pos :
-    0 < 384 * Real.pi * (Real.sqrt 2 + 1) * sixthSingularMod :=
-  mul_pos (mul_pos (mul_pos (by norm_num) Real.pi_pos) (by positivity))
-    sixthSingularMod_pos
-
--- Theorem: hence the product `Γ(1/24) Γ(5/24) Γ(7/24) Γ(11/24)` is P-constructible — the
--- singular value identity read as a statement about `Γ`.
-theorem Gamma_twentyfourths_product_Pconstructible :
-    PConstructible (Real.Gamma (1 / 24) * Real.Gamma (5 / 24) * Real.Gamma (7 / 24)
-      * Real.Gamma (11 / 24)) := by
-  have hK : PConstructible (ellipticF (sixthSingularMod ^ 2) (Real.pi / 2)) :=
-    ellipticF_Pconstructible sixthSingularPar_Pconstructible
-      (PConstructible.div pi_Pconstructible two_Pconstructible) sixthSingularPar_lt_one
-  have hsolve : Real.Gamma (1 / 24) * Real.Gamma (5 / 24) * Real.Gamma (7 / 24)
-      * Real.Gamma (11 / 24)
-      = ellipticF (sixthSingularMod ^ 2) (Real.pi / 2) ^ 2
-          * (384 * Real.pi * (Real.sqrt 2 + 1) * sixthSingularMod) := by
-    rw [ellipticF_sixthSingular, div_mul_cancel₀ _ sixthSingular_factor_pos.ne']
-  rw [hsolve]
-  exact PConstructible.mul (sq_Pconstructible hK)
-    (PConstructible.mul
-      (PConstructible.mul
-        (PConstructible.mul (ratval_Pconstructible 384 (by norm_num)) pi_Pconstructible)
-        (PConstructible.add (sqrt_Pconstructible two_Pconstructible) PConstructible.base_one))
-      sixthSingularMod_Pconstructible)
+imaginary quadratic fields (`ℚ(i)`, `ℚ(√-2)`, `ℚ(√-3)`, `ℚ(√-6)`), and each has a CM
+period. Mod `5` the odd characters have order `4`, no imaginary quadratic field has
+conductor `5`, and the method gives nothing. -/
 
 /-! #### The three ratios the functional equations do reach
 
@@ -1542,31 +1464,174 @@ theorem Gamma_one_div_seven_twentyfourths_Pconstructible :
 
 /-! #### `Γ(1/24)` and the rest of the residues -/
 
--- Theorem: `Γ(1/24)` is P-constructible. The assumed product times the three ratios is
--- `Γ(1/24) ^ 4`, and `Γ(1/24) > 0` recovers the value by two square roots.
+-- Theorem: `Γ(1/24)` is P-constructible. Duplication turns each ratio `Γ(p)/Γ(p + 1/2)`
+-- of `Pconstructible.lvGamma_key` into `Γ(p) ^ 2` over a level-`12` denominator; the three
+-- ratios above convert `Γ(5/24), Γ(7/24), Γ(11/24)` into `Γ(1/24)`, so the whole left-hand
+-- side is `Γ(1/24) ^ 2` times a P-constructible positive factor.
 theorem Gamma_one_twentyfourth_Pconstructible : PConstructible (Real.Gamma (1 / 24)) := by
   have h1 : (0 : ℝ) < Real.Gamma (1 / 24) := Real.Gamma_pos_of_pos (by norm_num)
   have h5 : (0 : ℝ) < Real.Gamma (5 / 24) := Real.Gamma_pos_of_pos (by norm_num)
   have h7 : (0 : ℝ) < Real.Gamma (7 / 24) := Real.Gamma_pos_of_pos (by norm_num)
   have h11 : (0 : ℝ) < Real.Gamma (11 / 24) := Real.Gamma_pos_of_pos (by norm_num)
-  have key : Real.Gamma (1 / 24) ^ 4
-      = Real.Gamma (1 / 24) * Real.Gamma (5 / 24) * Real.Gamma (7 / 24) * Real.Gamma (11 / 24)
-          * (Real.Gamma (1 / 24) / Real.Gamma (7 / 24)) ^ 2
-          * (Real.Gamma (1 / 24) / Real.Gamma (11 / 24))
-          / (Real.Gamma (5 / 24) / Real.Gamma (7 / 24)) := by
+  have g12 : (0 : ℝ) < Real.Gamma (1 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have g512 : (0 : ℝ) < Real.Gamma (5 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have g712 : (0 : ℝ) < Real.Gamma (7 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have g1112 : (0 : ℝ) < Real.Gamma (11 / 12) := Real.Gamma_pos_of_pos (by norm_num)
+  have hd : ∀ s : ℝ, 0 < dupFactor s := fun s => by
+    simp only [dupFactor]
+    positivity
+  have d1 : Real.Gamma (1 / 24) * Real.Gamma (13 / 24)
+      = Real.Gamma (1 / 12) * dupFactor (1 / 24) := by
+    have h := Gamma_mul_Gamma_add_half' (1 / 24 : ℝ)
+    rwa [show (1 : ℝ) / 24 + 1 / 2 = 13 / 24 by norm_num,
+      show (2 : ℝ) * (1 / 24) = 1 / 12 by norm_num] at h
+  have d5 : Real.Gamma (5 / 24) * Real.Gamma (17 / 24)
+      = Real.Gamma (5 / 12) * dupFactor (5 / 24) := by
+    have h := Gamma_mul_Gamma_add_half' (5 / 24 : ℝ)
+    rwa [show (5 : ℝ) / 24 + 1 / 2 = 17 / 24 by norm_num,
+      show (2 : ℝ) * (5 / 24) = 5 / 12 by norm_num] at h
+  have d7 : Real.Gamma (7 / 24) * Real.Gamma (19 / 24)
+      = Real.Gamma (7 / 12) * dupFactor (7 / 24) := by
+    have h := Gamma_mul_Gamma_add_half' (7 / 24 : ℝ)
+    rwa [show (7 : ℝ) / 24 + 1 / 2 = 19 / 24 by norm_num,
+      show (2 : ℝ) * (7 / 24) = 7 / 12 by norm_num] at h
+  have d11 : Real.Gamma (11 / 24) * Real.Gamma (23 / 24)
+      = Real.Gamma (11 / 12) * dupFactor (11 / 24) := by
+    have h := Gamma_mul_Gamma_add_half' (11 / 24 : ℝ)
+    rwa [show (11 : ℝ) / 24 + 1 / 2 = 23 / 24 by norm_num,
+      show (2 : ℝ) * (11 / 24) = 11 / 12 by norm_num] at h
+  have q5 : PConstructible (Real.Gamma (5 / 24) / Real.Gamma (1 / 24)) := by
+    have e : Real.Gamma (5 / 24) / Real.Gamma (1 / 24)
+        = Real.Gamma (5 / 24) / Real.Gamma (7 / 24)
+            / (Real.Gamma (1 / 24) / Real.Gamma (7 / 24)) := by
+      field_simp
+    rw [e]
+    exact PConstructible.div Gamma_five_div_seven_twentyfourths_Pconstructible
+      Gamma_one_div_seven_twentyfourths_Pconstructible
+  have q7 : PConstructible (Real.Gamma (7 / 24) / Real.Gamma (1 / 24)) := by
+    have e : Real.Gamma (7 / 24) / Real.Gamma (1 / 24)
+        = 1 / (Real.Gamma (1 / 24) / Real.Gamma (7 / 24)) := by field_simp
+    rw [e]
+    exact PConstructible.div PConstructible.base_one
+      Gamma_one_div_seven_twentyfourths_Pconstructible
+  have q11 : PConstructible (Real.Gamma (11 / 24) / Real.Gamma (1 / 24)) := by
+    have e : Real.Gamma (11 / 24) / Real.Gamma (1 / 24)
+        = 1 / (Real.Gamma (1 / 24) / Real.Gamma (11 / 24)) := by field_simp
+    rw [e]
+    exact PConstructible.div PConstructible.base_one
+      Gamma_one_div_eleven_twentyfourths_Pconstructible
+  have hr2 : PConstructible (Real.sqrt 2) :=
+    sqrt_Pconstructible (ratval_Pconstructible 2 (by norm_num))
+  have hr3 : PConstructible (Real.sqrt 3) :=
+    sqrt_Pconstructible (ratval_Pconstructible 3 (by norm_num))
+  have hAP : PConstructible (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) :=
+    PConstructible.add hr3 (PConstructible.mul hr2 hr3)
+  have hBP : PConstructible (3 + Real.sqrt 2 * Real.sqrt 3) :=
+    PConstructible.add (ratval_Pconstructible 3 (by norm_num)) (PConstructible.mul hr2 hr3)
+  have hCP : PConstructible Pconstructible.lvCot := by
+    rw [Pconstructible.lvCot]
+    exact PConstructible.add (PConstructible.add (PConstructible.add
+      (ratval_Pconstructible 2 (by norm_num)) hr2) hr3) (PConstructible.mul hr2 hr3)
+  have hApos : (0 : ℝ) < Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3 := Pconstructible.lv_a_pos
+  have hBpos : (0 : ℝ) < 3 + Real.sqrt 2 * Real.sqrt 3 := Pconstructible.lv_b_pos
+  have hCpos : (0 : ℝ) < Pconstructible.lvCot := Pconstructible.lvCot_pos
+  have hbeta : PConstructible (1 / (Real.Gamma (1 / 12) * dupFactor (1 / 24))
+      + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3)
+          * (Real.Gamma (5 / 24) / Real.Gamma (1 / 24)) ^ 2
+          / (Real.Gamma (5 / 12) * dupFactor (5 / 24))
+      + (3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (7 / 24) / Real.Gamma (1 / 24)) ^ 2
+          / (Real.Gamma (7 / 12) * dupFactor (7 / 24))
+      + Pconstructible.lvCot * (Real.Gamma (11 / 24) / Real.Gamma (1 / 24)) ^ 2
+          / (Real.Gamma (11 / 12) * dupFactor (11 / 24))) :=
+    PConstructible.add (PConstructible.add (PConstructible.add
+      (PConstructible.div PConstructible.base_one
+        (PConstructible.mul Gamma_one_twelfth_Pconstructible
+          (dupFactor_Pconstructible (ratval_Pconstructible (1 / 24) (by norm_num)))))
+      (PConstructible.div (PConstructible.mul hAP (sq_Pconstructible q5))
+        (PConstructible.mul Gamma_five_twelfths_Pconstructible
+          (dupFactor_Pconstructible (ratval_Pconstructible (5 / 24) (by norm_num))))))
+      (PConstructible.div (PConstructible.mul hBP (sq_Pconstructible q7))
+        (PConstructible.mul Gamma_seven_twelfths_Pconstructible
+          (dupFactor_Pconstructible (ratval_Pconstructible (7 / 24) (by norm_num))))))
+      (PConstructible.div (PConstructible.mul hCP (sq_Pconstructible q11))
+        (PConstructible.mul Gamma_eleven_twelfths_Pconstructible
+          (dupFactor_Pconstructible (ratval_Pconstructible (11 / 24) (by norm_num)))))
+  have hbpos : (0 : ℝ) < 1 / (Real.Gamma (1 / 12) * dupFactor (1 / 24))
+      + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3)
+          * (Real.Gamma (5 / 24) / Real.Gamma (1 / 24)) ^ 2
+          / (Real.Gamma (5 / 12) * dupFactor (5 / 24))
+      + (3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (7 / 24) / Real.Gamma (1 / 24)) ^ 2
+          / (Real.Gamma (7 / 12) * dupFactor (7 / 24))
+      + Pconstructible.lvCot * (Real.Gamma (11 / 24) / Real.Gamma (1 / 24)) ^ 2
+          / (Real.Gamma (11 / 12) * dupFactor (11 / 24)) := by
+    have e1 := hd (1 / 24)
+    have e5 := hd (5 / 24)
+    have e7 := hd (7 / 24)
+    have e11 := hd (11 / 24)
+    positivity
+  have hkey := Pconstructible.lvGamma_key
+  have g13 : (0 : ℝ) < Real.Gamma (13 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have g17 : (0 : ℝ) < Real.Gamma (17 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have g19 : (0 : ℝ) < Real.Gamma (19 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have g23 : (0 : ℝ) < Real.Gamma (23 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have hsum : Real.Gamma (1 / 24) / Real.Gamma (13 / 24)
+      + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (5 / 24) / Real.Gamma (17 / 24))
+      + (3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (7 / 24) / Real.Gamma (19 / 24))
+      + Pconstructible.lvCot * (Real.Gamma (11 / 24) / Real.Gamma (23 / 24))
+      = Real.Gamma (1 / 24) ^ 2 * (1 / (Real.Gamma (1 / 12) * dupFactor (1 / 24))
+        + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3)
+            * (Real.Gamma (5 / 24) / Real.Gamma (1 / 24)) ^ 2
+            / (Real.Gamma (5 / 12) * dupFactor (5 / 24))
+        + (3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (7 / 24) / Real.Gamma (1 / 24)) ^ 2
+            / (Real.Gamma (7 / 12) * dupFactor (7 / 24))
+        + Pconstructible.lvCot * (Real.Gamma (11 / 24) / Real.Gamma (1 / 24)) ^ 2
+            / (Real.Gamma (11 / 12) * dupFactor (11 / 24))) := by
+    rw [← d1, ← d5, ← d7, ← d11]
     field_simp
-  have h4 : PConstructible (Real.Gamma (1 / 24) ^ 4) := by
-    rw [key]
-    exact PConstructible.div
-      (PConstructible.mul
-        (PConstructible.mul Gamma_twentyfourths_product_Pconstructible
-          (sq_Pconstructible Gamma_one_div_seven_twentyfourths_Pconstructible))
-        Gamma_one_div_eleven_twentyfourths_Pconstructible)
-      Gamma_five_div_seven_twentyfourths_Pconstructible
+    try ring
+  rw [hsum] at hkey
+  have hR : PConstructible (12 / (Pconstructible.lvRho * Real.sqrt Real.pi)
+      * ellipticF Pconstructible.lvPar Real.pi) := by
+    have hnegA : PConstructible (-Pconstructible.lvA) := by
+      rw [Pconstructible.lvA, neg_neg]
+      exact PConstructible.add (PConstructible.add (PConstructible.add
+        (ratval_Pconstructible 9 (by norm_num))
+        (PConstructible.mul (ratval_Pconstructible 6 (by norm_num)) hr2))
+        (PConstructible.mul (ratval_Pconstructible 6 (by norm_num)) hr3))
+        (PConstructible.mul (ratval_Pconstructible 4 (by norm_num))
+          (PConstructible.mul hr2 hr3))
+    have hrho : PConstructible Pconstructible.lvRho := by
+      rw [Pconstructible.lvRho]
+      exact PConstructible.div (sqrt_Pconstructible hnegA)
+        (PConstructible.mul (ratval_Pconstructible 2 (by norm_num)) hCP)
+    have hpar : PConstructible Pconstructible.lvPar := by
+      rw [Pconstructible.lvPar]
+      exact PConstructible.sub (PConstructible.add (PConstructible.add
+        (neg_Pconstructible (ratval_Pconstructible 34 (by norm_num)))
+        (PConstructible.mul (ratval_Pconstructible 24 (by norm_num)) hr2))
+        (PConstructible.mul (ratval_Pconstructible 20 (by norm_num)) hr3))
+        (PConstructible.mul (ratval_Pconstructible 14 (by norm_num))
+          (PConstructible.mul hr2 hr3))
+    exact PConstructible.mul
+      (PConstructible.div (ratval_Pconstructible 12 (by norm_num))
+        (PConstructible.mul hrho sqrt_pi_Pconstructible))
+      (ellipticF_Pconstructible hpar pi_Pconstructible Pconstructible.lvPar_lt_one)
   have hsq : PConstructible (Real.Gamma (1 / 24) ^ 2) := by
-    have h := sqrt_Pconstructible h4
-    rwa [show Real.Gamma (1 / 24) ^ 4 = (Real.Gamma (1 / 24) ^ 2) ^ 2 by ring,
-      Real.sqrt_sq (by positivity)] at h
+    have e : Real.Gamma (1 / 24) ^ 2
+        = 12 / (Pconstructible.lvRho * Real.sqrt Real.pi)
+            * ellipticF Pconstructible.lvPar Real.pi
+          / (1 / (Real.Gamma (1 / 12) * dupFactor (1 / 24))
+            + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3)
+                * (Real.Gamma (5 / 24) / Real.Gamma (1 / 24)) ^ 2
+                / (Real.Gamma (5 / 12) * dupFactor (5 / 24))
+            + (3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (7 / 24) / Real.Gamma (1 / 24)) ^ 2
+                / (Real.Gamma (7 / 12) * dupFactor (7 / 24))
+            + Pconstructible.lvCot * (Real.Gamma (11 / 24) / Real.Gamma (1 / 24)) ^ 2
+                / (Real.Gamma (11 / 12) * dupFactor (11 / 24))) := by
+      rw [eq_div_iff hbpos.ne']
+      exact hkey
+    rw [e]
+    exact PConstructible.div hR hbeta
   have h := sqrt_Pconstructible hsq
   rwa [Real.sqrt_sq h1.le] at h
 
