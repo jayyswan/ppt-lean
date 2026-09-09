@@ -423,4 +423,186 @@ theorem lvTwelve_integrand_eq {v : ℝ} (hv : v ∈ Ioo (0 : ℝ) 1) :
   field_simp
   try ring
 
+/-! ### Integrability, and the split into four -/
+
+theorem lvBeta_nonneg {p x : ℝ} (hx : x ∈ Ioo (0 : ℝ) 1) : 0 ≤ lvBeta p x :=
+  mul_nonneg (Real.rpow_nonneg hx.1.le _) (Real.rpow_nonneg (by linarith [hx.2]) _)
+
+theorem continuousOn_lvBeta (p : ℝ) : ContinuousOn (lvBeta p) (Ioo (0 : ℝ) 1) := by
+  unfold lvBeta
+  refine ContinuousOn.mul (ContinuousOn.rpow_const (by fun_prop) ?_)
+    (ContinuousOn.rpow_const (by fun_prop) ?_)
+  · exact fun x hx => Or.inl (ne_of_gt hx.1)
+  · refine fun x hx => Or.inl ?_
+    have h := hx.2
+    intro hc
+    linarith
+
+theorem integrableOn_lvIntegrand : IntegrableOn lvIntegrand (Ioo (0 : ℝ) 1) := by
+  have h := integrableOn_image_iff_integrableOn_abs_deriv_smul (f := lvAmp) (f' := lvAmpDeriv)
+    (s := Ioo (0 : ℝ) 1) measurableSet_Ioo
+    (fun x hx => (hasDerivAt_lvAmp hx.1 hx.2).hasDerivWithinAt) lvAmp_injOn
+    (ellipticFIntegrand lvPar)
+  rw [lvAmp_image] at h
+  have hc : IntegrableOn (ellipticFIntegrand lvPar) (Ioo (0 : ℝ) Real.pi) :=
+    ((continuous_ellipticFIntegrand lvPar_lt_one).integrableOn_Icc).mono_set Ioo_subset_Icc_self
+  exact IntegrableOn.congr_fun (h.mp hc)
+    (fun v hv => lvIntegrand_eq hv.1 hv.2) measurableSet_Ioo
+
+theorem integrableOn_lvBetaSum : IntegrableOn lvBetaSum (Ioo (0 : ℝ) 1) := by
+  have h := integrableOn_image_iff_integrableOn_abs_deriv_smul (f := fun x : ℝ => x ^ 12)
+    (f' := fun x : ℝ => 12 * x ^ 11) (s := Ioo (0 : ℝ) 1) measurableSet_Ioo
+    (fun x _ => (hasDerivAt_lvTwelve x).hasDerivWithinAt) lvTwelve_injOn lvBetaSum
+  rw [lvTwelve_image] at h
+  exact h.mpr (IntegrableOn.congr_fun (integrableOn_lvIntegrand.const_mul (12 / lvRho))
+    (fun v hv => (lvTwelve_integrand_eq hv).symm) measurableSet_Ioo)
+
+theorem lvBetaSum_ge {p c x : ℝ} (_hx : x ∈ Ioo (0 : ℝ) 1) (hc : 0 < c)
+    (hle : c * lvBeta p x ≤ lvBetaSum x) : lvBeta p x ≤ c⁻¹ * lvBetaSum x := by
+  calc lvBeta p x = c⁻¹ * (c * lvBeta p x) := by field_simp
+    _ ≤ c⁻¹ * lvBetaSum x := by
+        exact mul_le_mul_of_nonneg_left hle (by positivity)
+
+theorem integrableOn_lvBeta {p c : ℝ} (hc : 0 < c)
+    (hle : ∀ x ∈ Ioo (0 : ℝ) 1, c * lvBeta p x ≤ lvBetaSum x) :
+    IntegrableOn (lvBeta p) (Ioo (0 : ℝ) 1) := by
+  refine Integrable.mono' (g := fun x => c⁻¹ * lvBetaSum x)
+    (integrableOn_lvBetaSum.const_mul _)
+    ((continuousOn_lvBeta p).aestronglyMeasurable measurableSet_Ioo) ?_
+  filter_upwards [ae_restrict_mem measurableSet_Ioo] with x hx
+  rw [Real.norm_eq_abs, abs_of_nonneg (lvBeta_nonneg hx)]
+  exact lvBetaSum_ge hx hc (hle x hx)
+
+theorem lv_a_pos : (0 : ℝ) < Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3 := by
+  have := lv_3_lb; have := lv_6_lb; linarith
+
+theorem lv_b_pos : (0 : ℝ) < 3 + Real.sqrt 2 * Real.sqrt 3 := by have := lv_6_lb; linarith
+
+theorem integrableOn_lvBeta1 : IntegrableOn (lvBeta (1 / 24)) (Ioo (0 : ℝ) 1) := by
+  refine integrableOn_lvBeta one_pos (fun x hx => ?_)
+  have h5 := lvBeta_nonneg (p := 5 / 24) hx
+  have h7 := lvBeta_nonneg (p := 7 / 24) hx
+  have h11 := lvBeta_nonneg (p := 11 / 24) hx
+  have := lv_a_pos; have := lv_b_pos; have := lvCot_pos
+  rw [lvBetaSum]; nlinarith
+
+theorem integrableOn_lvBeta5 : IntegrableOn (lvBeta (5 / 24)) (Ioo (0 : ℝ) 1) := by
+  refine integrableOn_lvBeta lv_a_pos (fun x hx => ?_)
+  have h1 := lvBeta_nonneg (p := 1 / 24) hx
+  have h7 := lvBeta_nonneg (p := 7 / 24) hx
+  have h11 := lvBeta_nonneg (p := 11 / 24) hx
+  have := lv_b_pos; have := lvCot_pos
+  rw [lvBetaSum]; nlinarith
+
+theorem integrableOn_lvBeta7 : IntegrableOn (lvBeta (7 / 24)) (Ioo (0 : ℝ) 1) := by
+  refine integrableOn_lvBeta lv_b_pos (fun x hx => ?_)
+  have h1 := lvBeta_nonneg (p := 1 / 24) hx
+  have h5 := lvBeta_nonneg (p := 5 / 24) hx
+  have h11 := lvBeta_nonneg (p := 11 / 24) hx
+  have := lv_a_pos; have := lvCot_pos
+  rw [lvBetaSum]; nlinarith
+
+theorem integrableOn_lvBeta11 : IntegrableOn (lvBeta (11 / 24)) (Ioo (0 : ℝ) 1) := by
+  refine integrableOn_lvBeta lvCot_pos (fun x hx => ?_)
+  have h1 := lvBeta_nonneg (p := 1 / 24) hx
+  have h5 := lvBeta_nonneg (p := 5 / 24) hx
+  have h7 := lvBeta_nonneg (p := 7 / 24) hx
+  have := lv_a_pos; have := lv_b_pos
+  rw [lvBetaSum]; nlinarith
+
+-- Theorem: the twelfth-power substitution turns the four Beta integrands into the
+-- `v`-side integrand, so their weighted sum integrates to `12/ρ · F(κ, π)`.
+theorem lvBetaSum_integral :
+    (∫ x in Ioo (0 : ℝ) 1, lvBetaSum x) = 12 / lvRho * ellipticF lvPar Real.pi := by
+  have h := integral_image_eq_integral_abs_deriv_smul (f := fun x : ℝ => x ^ 12)
+    (f' := fun x : ℝ => 12 * x ^ 11) (s := Ioo (0 : ℝ) 1) measurableSet_Ioo
+    (fun x _ => (hasDerivAt_lvTwelve x).hasDerivWithinAt) lvTwelve_injOn lvBetaSum
+  rw [lvTwelve_image] at h
+  rw [h, setIntegral_congr_fun measurableSet_Ioo (fun v hv => lvTwelve_integrand_eq hv),
+    integral_const_mul, ← ellipticF_eq_lvIntegral]
+
+/-! ### From the Beta integrals to `Γ` -/
+
+theorem lvBetaIntegral (p : ℝ) (_hp : 0 < p) :
+    Complex.betaIntegral (p : ℂ) (1 / 2) = ((∫ x in Ioo (0 : ℝ) 1, lvBeta p x : ℝ) : ℂ) := by
+  rw [← integral_Ioc_eq_integral_Ioo,
+    ← intervalIntegral.integral_of_le (by norm_num : (0 : ℝ) ≤ 1),
+    ← intervalIntegral.integral_ofReal, Complex.betaIntegral]
+  refine intervalIntegral.integral_congr fun x hx => ?_
+  rw [Set.uIcc_of_le (by norm_num : (0 : ℝ) ≤ 1)] at hx
+  have hx0 : (0 : ℝ) ≤ x := hx.1
+  have hx1 : (0 : ℝ) ≤ 1 - x := by linarith [hx.2]
+  rw [lvBeta]
+  push_cast
+  rw [Complex.ofReal_cpow hx0, Complex.ofReal_cpow hx1]
+  push_cast
+  norm_num
+
+theorem lvGamma_beta (p : ℝ) (hp : 0 < p) :
+    Real.Gamma p * Real.sqrt Real.pi
+      = Real.Gamma (p + 1 / 2) * ∫ x in Ioo (0 : ℝ) 1, lvBeta p x := by
+  have h := Complex.Gamma_mul_Gamma_eq_betaIntegral (s := (p : ℂ)) (t := (1 / 2 : ℂ))
+    (by simpa using hp) (by norm_num)
+  rw [lvBetaIntegral p hp,
+    show ((p : ℂ) + 1 / 2) = ((p + 1 / 2 : ℝ) : ℂ) by push_cast; ring,
+    show ((1 : ℂ) / 2) = ((1 / 2 : ℝ) : ℂ) by norm_num,
+    Complex.Gamma_ofReal, Complex.Gamma_ofReal, Complex.Gamma_ofReal] at h
+  rw [← Real.Gamma_one_half_eq]
+  exact_mod_cast h
+
+theorem lvBeta_eval (p q : ℝ) (hp : 0 < p) (hq : p + 1 / 2 = q) :
+    (∫ x in Ioo (0 : ℝ) 1, lvBeta p x)
+      = Real.Gamma p * Real.sqrt Real.pi / Real.Gamma q := by
+  have hgq : (0 : ℝ) < Real.Gamma q := Real.Gamma_pos_of_pos (by rw [← hq]; linarith)
+  have h := lvGamma_beta p hp
+  rw [hq] at h
+  rw [eq_div_iff hgq.ne']
+  linear_combination -h
+
+theorem lvBetaSum_split :
+    (∫ x in Ioo (0 : ℝ) 1, lvBetaSum x)
+      = (∫ x in Ioo (0 : ℝ) 1, lvBeta (1 / 24) x)
+        + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * (∫ x in Ioo (0 : ℝ) 1, lvBeta (5 / 24) x)
+        + (3 + Real.sqrt 2 * Real.sqrt 3) * (∫ x in Ioo (0 : ℝ) 1, lvBeta (7 / 24) x)
+        + lvCot * (∫ x in Ioo (0 : ℝ) 1, lvBeta (11 / 24) x) := by
+  have iA : IntegrableOn (fun x => lvBeta (1 / 24) x) (Ioo (0 : ℝ) 1) := integrableOn_lvBeta1
+  have iB : IntegrableOn (fun x => (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (5 / 24) x)
+      (Ioo (0 : ℝ) 1) := integrableOn_lvBeta5.const_mul _
+  have iC : IntegrableOn (fun x => (3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (7 / 24) x)
+      (Ioo (0 : ℝ) 1) := integrableOn_lvBeta7.const_mul _
+  have iD : IntegrableOn (fun x => lvCot * lvBeta (11 / 24) x) (Ioo (0 : ℝ) 1) :=
+    integrableOn_lvBeta11.const_mul _
+  have iAB : IntegrableOn (fun x => lvBeta (1 / 24) x
+      + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (5 / 24) x) (Ioo (0 : ℝ) 1) := iA.add iB
+  have iABC : IntegrableOn (fun x => lvBeta (1 / 24) x
+      + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (5 / 24) x
+      + (3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (7 / 24) x) (Ioo (0 : ℝ) 1) := iAB.add iC
+  simp only [lvBetaSum]
+  rw [integral_add iABC iD, integral_add iAB iC, integral_add iA iB,
+    integral_const_mul, integral_const_mul, integral_const_mul]
+
+-- Theorem: the level-24 evaluation.  The weighted sum of the four ratios
+-- `Γ(p)/Γ(p + 1/2)`, at `p = 1/24, 5/24, 7/24, 11/24`, is an elliptic integral at a
+-- P-constructible parameter.  This is the whole analytic content of the file.
+theorem lvGamma_key :
+    Real.Gamma (1 / 24) / Real.Gamma (13 / 24)
+        + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (5 / 24) / Real.Gamma (17 / 24))
+        + (3 + Real.sqrt 2 * Real.sqrt 3) * (Real.Gamma (7 / 24) / Real.Gamma (19 / 24))
+        + lvCot * (Real.Gamma (11 / 24) / Real.Gamma (23 / 24))
+      = 12 / (lvRho * Real.sqrt Real.pi) * ellipticF lvPar Real.pi := by
+  have hpi : (0 : ℝ) < Real.sqrt Real.pi := Real.sqrt_pos.mpr Real.pi_pos
+  have hrho := lvRho_pos
+  have g13 : (0 : ℝ) < Real.Gamma (13 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have g17 : (0 : ℝ) < Real.Gamma (17 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have g19 : (0 : ℝ) < Real.Gamma (19 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have g23 : (0 : ℝ) < Real.Gamma (23 / 24) := Real.Gamma_pos_of_pos (by norm_num)
+  have e1 := lvBeta_eval (1 / 24) (13 / 24) (by norm_num) (by norm_num)
+  have e2 := lvBeta_eval (5 / 24) (17 / 24) (by norm_num) (by norm_num)
+  have e3 := lvBeta_eval (7 / 24) (19 / 24) (by norm_num) (by norm_num)
+  have e4 := lvBeta_eval (11 / 24) (23 / 24) (by norm_num) (by norm_num)
+  have h := lvBetaSum_split
+  rw [e1, e2, e3, e4, lvBetaSum_integral] at h
+  field_simp at h ⊢
+  linear_combination -h
+
 end Pconstructible
