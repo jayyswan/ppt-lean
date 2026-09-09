@@ -1,1 +1,24 @@
-/.lake
+# Lean / Lake build artifacts
+.lake/
+
+# Lean generated files
+*.olean
+*.ilean
+
+# Native compilation artifacts
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+.gitignore
+
+# Local Claude settings
+.claude/
