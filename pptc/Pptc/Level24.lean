@@ -265,4 +265,162 @@ theorem lvIntegrand_eq {v : ℝ} (hv0 : 0 < v) (hv1 : v < 1) :
   field_simp
   ring
 
+/-! ### The change of variables
+
+`cos amp` runs from `1` at `v = 0` to `-1` at `v = 1`, so `amp` sweeps `(0, π)` once,
+monotonically.  That is what lets the whole of `(0, 1)` be substituted in one piece. -/
+
+theorem continuous_lvS : Continuous lvS := by unfold lvS; fun_prop
+theorem continuous_lvT : Continuous lvT := by unfold lvT; fun_prop
+theorem continuous_lvD : Continuous lvD := by unfold lvD; fun_prop
+theorem continuous_lvG : Continuous lvG := by unfold lvG lvD; fun_prop
+theorem continuous_lvW : Continuous lvW := by unfold lvW; exact continuous_lvS.mul continuous_lvD
+
+theorem lvCos_zero : lvCos 0 = 1 := by
+  have hG : lvG 0 = 1 := by norm_num [lvG, lvD]
+  have hW : lvW 0 = lvS 0 := by norm_num [lvW, lvD]
+  have hT : lvT 0 = -lvS 0 := by simp only [lvT, lvS, lvCot]; norm_num; try ring
+  have hS0 : lvS 0 ≠ 0 := (lvS_pos le_rfl zero_le_one).ne'
+  rw [lvCos, hG, Real.sqrt_one, hW, hT]
+  field_simp
+
+theorem lvCos_one : lvCos 1 = -1 := by
+  have hG : lvG 1 = 3 := by norm_num [lvG, lvD]
+  have hW : lvW 1 = lvS 1 := by norm_num [lvW, lvD]
+  have hkey : lvT 1 * Real.sqrt 3 = lvS 1 := by
+    simp only [lvT, lvS, lvCot]
+    norm_num
+    linear_combination (2 + Real.sqrt 2) * lv_sq3
+  have hS0 : lvS 1 ≠ 0 := (lvS_pos zero_le_one le_rfl).ne'
+  rw [lvCos, hG, hW, hkey]
+  field_simp
+
+theorem lvAmp_zero : lvAmp 0 = 0 := by rw [lvAmp, lvCos_zero, Real.arccos_one]
+
+theorem lvAmp_one : lvAmp 1 = Real.pi := by rw [lvAmp, lvCos_one, Real.arccos_neg_one]
+
+theorem continuousOn_lvCos : ContinuousOn lvCos (Icc 0 1) := by
+  refine ContinuousOn.div ?_ continuous_lvW.continuousOn ?_
+  · exact (continuous_lvT.mul (Real.continuous_sqrt.comp continuous_lvG)).neg.continuousOn
+  · exact fun x hx => (lvW_pos hx.1 hx.2).ne'
+
+theorem continuousOn_lvAmp : ContinuousOn lvAmp (Icc 0 1) :=
+  Real.continuous_arccos.comp_continuousOn continuousOn_lvCos
+
+theorem lvAmp_strictMonoOn : StrictMonoOn lvAmp (Icc 0 1) := by
+  refine strictMonoOn_of_deriv_pos (convex_Icc 0 1) continuousOn_lvAmp ?_
+  intro x hx
+  rw [interior_Icc] at hx
+  rw [(hasDerivAt_lvAmp hx.1 hx.2).deriv]
+  exact lvAmpDeriv_pos hx.1 hx.2
+
+theorem lvAmp_injOn : InjOn lvAmp (Ioo (0 : ℝ) 1) :=
+  (lvAmp_strictMonoOn.mono Ioo_subset_Icc_self).injOn
+
+theorem lvAmp_image : lvAmp '' (Ioo (0 : ℝ) 1) = Ioo 0 Real.pi := by
+  apply Set.Subset.antisymm
+  · rintro _ ⟨v, hv, rfl⟩
+    exact ⟨Real.arccos_pos.mpr (lvCos_lt_one hv.1 hv.2),
+      Real.arccos_lt_pi.mpr (neg_one_lt_lvCos hv.1 hv.2)⟩
+  · have h := intermediate_value_Ioo (zero_le_one : (0 : ℝ) ≤ 1) continuousOn_lvAmp
+    simpa [lvAmp_zero, lvAmp_one] using h
+
+-- Theorem: the substitution itself.  `F` at the level-24 parameter, taken to the half
+-- period `π`, is the integral of `ρ shape(v)/√(v - v¹³)` over `(0, 1)`.
+theorem ellipticF_eq_lvIntegral :
+    ellipticF lvPar Real.pi = ∫ v in Ioo (0 : ℝ) 1, lvIntegrand v := by
+  have h := integral_image_eq_integral_abs_deriv_smul (f := lvAmp) (f' := lvAmpDeriv)
+    (s := Ioo (0 : ℝ) 1) measurableSet_Ioo
+    (fun x hx => (hasDerivAt_lvAmp hx.1 hx.2).hasDerivWithinAt)
+    lvAmp_injOn (ellipticFIntegrand lvPar)
+  rw [lvAmp_image] at h
+  rw [ellipticF, intervalIntegral.integral_of_le Real.pi_pos.le,
+    integral_Ioc_eq_integral_Ioo, h,
+    setIntegral_congr_fun measurableSet_Ioo (fun v hv => lvIntegrand_eq hv.1 hv.2)]
+
+/-! ### Down to four Beta integrals
+
+The substitution `x = v¹²` turns `ρ shape(v)/√(v - v¹³)` into a sum of four Beta
+integrands, at `1/24, 5/24, 7/24, 11/24` against `1/2` — the four exponents coprime
+to `24` below `12`, exactly the CM type. -/
+
+/-- The Beta integrand `x ^ (p - 1) (1 - x) ^ (-1/2)`, whose integral is `Β(p, 1/2)`. -/
+noncomputable def lvBeta (p x : ℝ) : ℝ := x ^ (p - 1) * (1 - x) ^ (-(1 : ℝ) / 2)
+
+/-- The four of them, weighted as the differential weights them. -/
+noncomputable def lvBetaSum (x : ℝ) : ℝ :=
+  lvBeta (1 / 24) x + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (5 / 24) x
+    + (3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (7 / 24) x + lvCot * lvBeta (11 / 24) x
+
+theorem hasDerivAt_lvTwelve (v : ℝ) :
+    HasDerivAt (fun x : ℝ => x ^ 12) (12 * v ^ 11) v := by simpa using hasDerivAt_pow 12 v
+
+theorem lvTwelve_injOn : InjOn (fun x : ℝ => x ^ 12) (Ioo (0 : ℝ) 1) := by
+  intro x hx y hy hxy
+  simp only at hxy
+  rcases lt_trichotomy x y with h | h | h
+  · exact absurd hxy (ne_of_lt (pow_lt_pow_left₀ h hx.1.le (by norm_num)))
+  · exact h
+  · exact absurd hxy.symm (ne_of_lt (pow_lt_pow_left₀ h hy.1.le (by norm_num)))
+
+theorem lvTwelve_image : (fun x : ℝ => x ^ 12) '' (Ioo (0 : ℝ) 1) = Ioo (0 : ℝ) 1 := by
+  apply Set.Subset.antisymm
+  · rintro _ ⟨v, hv, rfl⟩
+    exact ⟨pow_pos hv.1 12, pow_lt_one₀ hv.1.le hv.2 (by norm_num)⟩
+  · have h := intermediate_value_Ioo (by norm_num : (0 : ℝ) ≤ 1)
+      ((continuous_pow 12).continuousOn (s := Icc (0 : ℝ) 1))
+    simpa using h
+
+theorem lvTwelve_beta_term {v : ℝ} (hv0 : 0 < v) (hv1 : v < 1) (n : ℕ) (p : ℝ)
+    (h : (12 : ℝ) * (p - 1) + 11 = (n : ℝ) + -(1 : ℝ) / 2) :
+    12 * v ^ 11 * lvBeta p (v ^ 12) = 12 * v ^ n / Real.sqrt (v - v ^ 13) := by
+  have h12 : (0 : ℝ) < 1 - v ^ 12 := by
+    have := pow_lt_one₀ hv0.le hv1 (by norm_num : (12 : ℕ) ≠ 0); linarith
+  have hsq : Real.sqrt (v - v ^ 13) = Real.sqrt v * Real.sqrt (1 - v ^ 12) := by
+    rw [← Real.sqrt_mul hv0.le]; congr 1; ring
+  have hsv : (0 : ℝ) < Real.sqrt v := Real.sqrt_pos.mpr hv0
+  have hs1 : (0 : ℝ) < Real.sqrt (1 - v ^ 12) := Real.sqrt_pos.mpr h12
+  have e1 : ((v ^ (12 : ℕ) : ℝ)) ^ (p - 1) = v ^ (12 * (p - 1)) := by
+    rw [← Real.rpow_natCast v 12, ← Real.rpow_mul hv0.le]; norm_num
+  have e2 : ((1 : ℝ) - v ^ 12) ^ (-(1 : ℝ) / 2) = (Real.sqrt (1 - v ^ 12))⁻¹ := by
+    rw [Real.sqrt_eq_rpow, ← Real.rpow_neg h12.le]; norm_num
+  have e3 : (v : ℝ) ^ (11 : ℕ) * v ^ (12 * (p - 1)) = v ^ (n : ℕ) * (Real.sqrt v)⁻¹ := by
+    rw [← Real.rpow_natCast v 11, ← Real.rpow_natCast v n, ← Real.rpow_add hv0,
+      Real.sqrt_eq_rpow, ← Real.rpow_neg hv0.le, ← Real.rpow_add hv0]
+    congr 1
+    push_cast
+    linarith
+  rw [lvBeta, e1, e2, hsq,
+    show (12 : ℝ) * v ^ 11 * (v ^ (12 * (p - 1)) * (Real.sqrt (1 - v ^ 12))⁻¹)
+      = 12 * (v ^ 11 * v ^ (12 * (p - 1))) * (Real.sqrt (1 - v ^ 12))⁻¹ from by ring, e3]
+  field_simp
+
+theorem lvTwelve_integrand_eq {v : ℝ} (hv : v ∈ Ioo (0 : ℝ) 1) :
+    |12 * v ^ 11| • lvBetaSum (v ^ 12) = 12 / lvRho * lvIntegrand v := by
+  obtain ⟨hv0, hv1⟩ := hv
+  have habs : |12 * v ^ 11| = 12 * v ^ 11 := abs_of_pos (by positivity)
+  have t0 := lvTwelve_beta_term hv0 hv1 0 (1 / 24) (by norm_num)
+  have t2 := lvTwelve_beta_term hv0 hv1 2 (5 / 24) (by norm_num)
+  have t3 := lvTwelve_beta_term hv0 hv1 3 (7 / 24) (by norm_num)
+  have t5 := lvTwelve_beta_term hv0 hv1 5 (11 / 24) (by norm_num)
+  have hrho := lvRho_pos.ne'
+  have hv13 : Real.sqrt (v - v ^ 13) ≠ 0 :=
+    (Real.sqrt_pos.mpr (lv_v13_pos hv0 hv1)).ne'
+  have key : 12 * v ^ 11 * lvBetaSum (v ^ 12) = 12 * lvShape v / Real.sqrt (v - v ^ 13) := by
+    rw [lvBetaSum,
+      show (12 : ℝ) * v ^ 11 * (lvBeta (1 / 24) (v ^ 12)
+            + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (5 / 24) (v ^ 12)
+            + (3 + Real.sqrt 2 * Real.sqrt 3) * lvBeta (7 / 24) (v ^ 12)
+            + lvCot * lvBeta (11 / 24) (v ^ 12))
+          = 12 * v ^ 11 * lvBeta (1 / 24) (v ^ 12)
+            + (Real.sqrt 3 + Real.sqrt 2 * Real.sqrt 3) * (12 * v ^ 11 * lvBeta (5 / 24) (v ^ 12))
+            + (3 + Real.sqrt 2 * Real.sqrt 3) * (12 * v ^ 11 * lvBeta (7 / 24) (v ^ 12))
+            + lvCot * (12 * v ^ 11 * lvBeta (11 / 24) (v ^ 12)) from by ring,
+      t0, t2, t3, t5, lvShape]
+    field_simp
+    try ring
+  rw [smul_eq_mul, habs, key, lvIntegrand]
+  field_simp
+  try ring
+
 end Pconstructible
