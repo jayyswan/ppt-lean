@@ -1038,6 +1038,306 @@ theorem root_Pconstructible_le_five_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
       rw [hβ]
       exact PConstructible.sub hz hs
 
+/-! ### Sextics with P-constructible coefficients
+
+Degree `5` is where the *graph* of a cubic stops: `n ≤ d + r + 1` with `d = 3` and `r = 1`.
+Degree `6` comes from using the Bézier as what it actually is — a **parametric** curve. Both
+of its coordinates are cubics of the parameter, chosen independently, so the traced set
+`(x(t), y(t))` need not be a graph over either axis. `cubicPairArc_PConstructibleCurve` is
+`cubicGraph_PConstructibleCurve` with the abscissa allowed to be a cubic of its own instead
+of the affine `u + (v - u) t`; the control points are still the two endpoints and the two
+handles at a third of the tangent, one coordinate at a time.
+
+That extra freedom buys exactly one substitution. Depress the sextic to
+
+  `t⁶ + a₄t⁴ + a₃t³ + a₂t² + a₁t + a₀`
+
+and set `y = t³ + a₄t/2`. Then `y² = t⁶ + a₄t⁴ + a₄²t²/4` absorbs the top two terms, and
+`a₃t³ = a₃y - a₃a₄t/2` absorbs the third, leaving `y² + a₃y + x` with
+
+  `x = (a₂ - a₄²/4)t² + (a₁ - a₃a₄/2)t + a₀`.
+
+So `t` is a root precisely when the point `(x(t), y(t))` lies on the sideways parabola
+`x = -y² - a₃y`. Both are Bézier arcs: the first pairs a quadratic with a cubic, the second
+pairs a quadratic with the identity. Crossing them reads off `y`, and `t` is then a root of
+the *cubic* `t³ + a₄t/2 - y`, which the previous section already solves. The quadratic `x`
+is never inverted — the cubic in `y` does that work, and it does it without the case split
+a quadratic formula would need when `a₂ - a₄²/4` vanishes.
+
+Isolating the crossing, as `inter_y` demands, works differently here than above. There the
+cropping window cut the *abscissa* down to a neighbourhood of the root, which suffices for a
+graph. A parametric curve can revisit an abscissa, so the window has to be a box in the
+plane instead: distinct roots of the sextic produce finitely many crossing points, and a
+small enough rational box around the wanted one excludes the others. Several parameters
+colliding onto a single point is harmless, since the intersection is a set of points. -/
+
+/-- The plane curve whose two coordinates are both cubics of the parameter. -/
+def cubicPairParam (c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ t : ℝ) : ℝ × ℝ :=
+  (cubicVal c₀ c₁ c₂ c₃ t, cubicVal d₀ d₁ d₂ d₃ t)
+
+/-- The depressed monic sextic `t⁶ + a₄t⁴ + a₃t³ + a₂t² + a₁t + a₀`. -/
+def sexticVal (a₀ a₁ a₂ a₃ a₄ t : ℝ) : ℝ :=
+  t ^ 6 + a₄ * t ^ 4 + a₃ * t ^ 3 + a₂ * t ^ 2 + a₁ * t + a₀
+
+-- Theorem: the Bézier through the endpoint/handle control points of a *pair* of cubics
+-- reparametrizes that pair over `[u, v]`, one coordinate at a time.
+theorem bezierParam_cubicPair (c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ u v t : ℝ) :
+    bezierParam (cubicPairParam c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ u)
+      (cubicVal c₀ c₁ c₂ c₃ u + (v - u) * cubicDer c₁ c₂ c₃ u / 3,
+       cubicVal d₀ d₁ d₂ d₃ u + (v - u) * cubicDer d₁ d₂ d₃ u / 3)
+      (cubicVal c₀ c₁ c₂ c₃ v - (v - u) * cubicDer c₁ c₂ c₃ v / 3,
+       cubicVal d₀ d₁ d₂ d₃ v - (v - u) * cubicDer d₁ d₂ d₃ v / 3)
+      (cubicPairParam c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ v) t =
+      cubicPairParam c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ (u + (v - u) * t) := by
+  simp only [bezierParam, cubicPairParam, cubicVal, cubicDer, Prod.mk.injEq]
+  constructor <;> ring
+
+-- Theorem: an arc of such a curve, over any interval with P-constructible endpoints, is a
+-- constructible curve.
+theorem cubicPairArc_PConstructibleCurve {c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ u v : ℝ}
+    (hc₀ : PConstructible c₀) (hc₁ : PConstructible c₁) (hc₂ : PConstructible c₂)
+    (hc₃ : PConstructible c₃) (hd₀ : PConstructible d₀) (hd₁ : PConstructible d₁)
+    (hd₂ : PConstructible d₂) (hd₃ : PConstructible d₃)
+    (hu : PConstructible u) (hv : PConstructible v) (huv : u < v) :
+    PConstructibleCurve (cubicPairParam c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ '' Set.Icc u v) := by
+  have hvu : v - u ≠ 0 := ne_of_gt (by linarith : (0 : ℝ) < v - u)
+  have hh : PConstructible (v - u) := PConstructible.sub hv hu
+  have h3 : PConstructible (3 : ℝ) := three_Pconstructible
+  have hbez := PConstructibleCurve.cubic_bezier
+    (cubicPairParam c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ u)
+    (cubicVal c₀ c₁ c₂ c₃ u + (v - u) * cubicDer c₁ c₂ c₃ u / 3,
+     cubicVal d₀ d₁ d₂ d₃ u + (v - u) * cubicDer d₁ d₂ d₃ u / 3)
+    (cubicVal c₀ c₁ c₂ c₃ v - (v - u) * cubicDer c₁ c₂ c₃ v / 3,
+     cubicVal d₀ d₁ d₂ d₃ v - (v - u) * cubicDer d₁ d₂ d₃ v / 3)
+    (cubicPairParam c₀ c₁ c₂ c₃ d₀ d₁ d₂ d₃ v)
+    (cubicVal_Pconstructible hc₀ hc₁ hc₂ hc₃ hu)
+    (cubicVal_Pconstructible hd₀ hd₁ hd₂ hd₃ hu)
+    (PConstructible.add (cubicVal_Pconstructible hc₀ hc₁ hc₂ hc₃ hu)
+      (PConstructible.div (PConstructible.mul hh (cubicDer_Pconstructible hc₁ hc₂ hc₃ hu)) h3))
+    (PConstructible.add (cubicVal_Pconstructible hd₀ hd₁ hd₂ hd₃ hu)
+      (PConstructible.div (PConstructible.mul hh (cubicDer_Pconstructible hd₁ hd₂ hd₃ hu)) h3))
+    (PConstructible.sub (cubicVal_Pconstructible hc₀ hc₁ hc₂ hc₃ hv)
+      (PConstructible.div (PConstructible.mul hh (cubicDer_Pconstructible hc₁ hc₂ hc₃ hv)) h3))
+    (PConstructible.sub (cubicVal_Pconstructible hd₀ hd₁ hd₂ hd₃ hv)
+      (PConstructible.div (PConstructible.mul hh (cubicDer_Pconstructible hd₁ hd₂ hd₃ hv)) h3))
+    (cubicVal_Pconstructible hc₀ hc₁ hc₂ hc₃ hv)
+    (cubicVal_Pconstructible hd₀ hd₁ hd₂ hd₃ hv)
+  convert hbez using 1
+  ext p
+  simp only [Set.mem_image]
+  constructor
+  · rintro ⟨w, ⟨hw0, hw1⟩, rfl⟩
+    refine ⟨(w - u) / (v - u), ⟨div_nonneg (by linarith) (by linarith), ?_⟩, ?_⟩
+    · rw [div_le_one (by linarith)]; linarith
+    · rw [bezierParam_cubicPair]
+      congr 1
+      field_simp
+      ring
+  · rintro ⟨t, ⟨ht0, ht1⟩, rfl⟩
+    exact ⟨u + (v - u) * t, ⟨by nlinarith, by nlinarith⟩, (bezierParam_cubicPair ..).symm⟩
+
+-- Theorem: the substitution `y = t³ + a₄t/2` splits the depressed sextic into the abscissa
+-- of the Bézier plus the quadratic `y² + a₃y` in its ordinate.
+theorem sexticVal_eq_cubicPair (a₀ a₁ a₂ a₃ a₄ t : ℝ) :
+    sexticVal a₀ a₁ a₂ a₃ a₄ t =
+      (cubicPairParam a₀ (a₁ - a₃ * a₄ / 2) (a₂ - a₄ ^ 2 / 4) 0 0 (a₄ / 2) 0 1 t).1
+        + (cubicPairParam a₀ (a₁ - a₃ * a₄ / 2) (a₂ - a₄ ^ 2 / 4) 0 0 (a₄ / 2) 0 1 t).2 ^ 2
+        + a₃ *
+          (cubicPairParam a₀ (a₁ - a₃ * a₄ / 2) (a₂ - a₄ ^ 2 / 4) 0 0 (a₄ / 2) 0 1 t).2 := by
+  simp only [sexticVal, cubicPairParam, cubicVal]
+  ring
+
+-- Theorem: every real root of a depressed monic sextic with P-constructible coefficients is
+-- P-constructible. The Bézier `t ↦ (x(t), y(t))` is crossed with the sideways parabola
+-- `x = -y² - a₃y`, and the ordinate of the crossing is `y = β³ + a₄β/2`.
+theorem sextic_root_Pconstructible {a₀ a₁ a₂ a₃ a₄ β : ℝ}
+    (h₀ : PConstructible a₀) (h₁ : PConstructible a₁) (h₂ : PConstructible a₂)
+    (h₃ : PConstructible a₃) (h₄ : PConstructible a₄)
+    (hroot : sexticVal a₀ a₁ a₂ a₃ a₄ β = 0) : PConstructible β := by
+  have hone : PConstructible (1 : ℝ) := PConstructible.base_one
+  have hzero : PConstructible (0 : ℝ) := zero_Pconstructible
+  have h2 : PConstructible (2 : ℝ) := two_Pconstructible
+  have h4c : PConstructible (4 : ℝ) := by simpa using nat_Pconstructible 4
+  have hb₁ : PConstructible (a₁ - a₃ * a₄ / 2) :=
+    PConstructible.sub h₁ (PConstructible.div (PConstructible.mul h₃ h₄) h2)
+  have hb₂ : PConstructible (a₂ - a₄ ^ 2 / 4) :=
+    PConstructible.sub h₂ (PConstructible.div (sq_Pconstructible h₄) h4c)
+  have hah : PConstructible (a₄ / 2) := PConstructible.div h₄ h2
+  -- `F` traces `(x(t), y(t))`; `G` traces the parabola `x = -y² - a₃y`, with `y` as the
+  -- parameter.
+  set F : ℝ → ℝ × ℝ :=
+    cubicPairParam a₀ (a₁ - a₃ * a₄ / 2) (a₂ - a₄ ^ 2 / 4) 0 0 (a₄ / 2) 0 1 with hFdef
+  set G : ℝ → ℝ × ℝ := cubicPairParam 0 (-a₃) (-1) 0 0 1 0 0 with hGdef
+  set y₀ : ℝ := cubicVal 0 (a₄ / 2) 0 1 β with hy₀def
+  set x₀ : ℝ := -y₀ ^ 2 - a₃ * y₀ with hx₀def
+  have hG : ∀ s : ℝ, G s = (-s ^ 2 - a₃ * s, s) := by
+    intro s
+    simp only [hGdef, cubicPairParam, cubicVal, Prod.mk.injEq]
+    constructor <;> ring
+  -- `β` being a root is exactly the statement that `F β` lands on the parabola.
+  have hFβ : F β = (x₀, y₀) := by
+    have hsplit := sexticVal_eq_cubicPair a₀ a₁ a₂ a₃ a₄ β
+    rw [hroot, ← hFdef] at hsplit
+    have hy : (F β).2 = y₀ := rfl
+    rw [hy] at hsplit
+    rw [Prod.ext_iff]
+    exact ⟨by change (F β).1 = -y₀ ^ 2 - a₃ * y₀; linarith, hy⟩
+  have hcross : ∀ t : ℝ, (F t).1 = -((F t).2) ^ 2 - a₃ * (F t).2 →
+      sexticVal a₀ a₁ a₂ a₃ a₄ t = 0 := by
+    intro t ht
+    have hsplit := sexticVal_eq_cubicPair a₀ a₁ a₂ a₃ a₄ t
+    rw [← hFdef] at hsplit
+    rw [hsplit, ht]
+    ring
+  -- The sextic has finitely many roots, hence the two curves finitely many crossings.
+  set P : Polynomial ℝ :=
+    X ^ 6 + C a₄ * X ^ 4 + C a₃ * X ^ 3 + C a₂ * X ^ 2 + C a₁ * X + C a₀ with hPdef
+  have hPeval : ∀ t : ℝ, P.eval t = sexticVal a₀ a₁ a₂ a₃ a₄ t := by
+    intro t
+    simp [hPdef, sexticVal]
+  have hPne : P ≠ 0 := by
+    intro hc
+    have h6 : P.coeff 6 = 1 := by simp [hPdef, coeff_X_pow]
+    rw [hc] at h6
+    simp at h6
+  have hRfin : {t : ℝ | P.IsRoot t}.Finite := Polynomial.finite_setOfPred_isRoot hPne
+  set A : Set (ℝ × ℝ) := F '' {t : ℝ | P.IsRoot t} \ {(x₀, y₀)} with hAdef
+  have hAfin : A.Finite := (hRfin.image F).sdiff
+  have hApt : (x₀, y₀) ∉ A := by simp [hAdef]
+  obtain ⟨ε, hε, hball⟩ :=
+    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl (x₀, y₀) hApt
+  -- A rational box around `(x₀, y₀)` small enough to miss every other crossing, plus
+  -- rational parameter windows around `β` and `y₀` for the two arcs.
+  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show x₀ - ε < x₀ by linarith)
+  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show x₀ < x₀ + ε by linarith)
+  obtain ⟨r₁, hr₁a, hr₁b⟩ := exists_rat_btwn (show y₀ - ε < y₀ by linarith)
+  obtain ⟨r₂, hr₂a, hr₂b⟩ := exists_rat_btwn (show y₀ < y₀ + ε by linarith)
+  obtain ⟨u, hu1, hu2⟩ := exists_rat_btwn (show β - 1 < β by linarith)
+  obtain ⟨v, hv1, hv2⟩ := exists_rat_btwn (show β < β + 1 by linarith)
+  obtain ⟨w, hw1, hw2⟩ := exists_rat_btwn (show y₀ - 1 < y₀ by linarith)
+  obtain ⟨z, hz1, hz2⟩ := exists_rat_btwn (show y₀ < y₀ + 1 by linarith)
+  have hbox : ∀ p : ℝ × ℝ, (q₁ : ℝ) ≤ p.1 → p.1 ≤ (q₂ : ℝ) → (r₁ : ℝ) ≤ p.2 →
+      p.2 ≤ (r₂ : ℝ) → p ∉ A := by
+    intro p hp1 hp2 hp3 hp4
+    have hd : dist p (x₀, y₀) < ε := by
+      rw [Prod.dist_eq, max_lt_iff, Real.dist_eq, Real.dist_eq, abs_lt, abs_lt]
+      refine ⟨⟨by linarith, by linarith⟩, by linarith, by linarith⟩
+    exact hball (by simpa [Metric.mem_ball] using hd)
+  have hS := PConstructibleCurve.restrict
+    (cubicPairArc_PConstructibleCurve h₀ hb₁ hb₂ hzero hzero hah hzero hone
+      (rat_Pconstructible u) (rat_Pconstructible v) (by linarith : ((u : ℝ)) < (v : ℝ)))
+    (q₁ : ℝ) (q₂ : ℝ) (r₁ : ℝ) (r₂ : ℝ) (rat_Pconstructible q₁) (rat_Pconstructible q₂)
+    (rat_Pconstructible r₁) (rat_Pconstructible r₂)
+  have hT := PConstructibleCurve.restrict
+    (cubicPairArc_PConstructibleCurve hzero (neg_Pconstructible h₃)
+      (neg_Pconstructible hone) hzero hzero hone hzero hzero
+      (rat_Pconstructible w) (rat_Pconstructible z) (by linarith : ((w : ℝ)) < (z : ℝ)))
+    (q₁ : ℝ) (q₂ : ℝ) (r₁ : ℝ) (r₂ : ℝ) (rat_Pconstructible q₁) (rat_Pconstructible q₂)
+    (rat_Pconstructible r₁) (rat_Pconstructible r₂)
+  rw [← hFdef] at hS
+  rw [← hGdef] at hT
+  have hy₀P : PConstructible y₀ := by
+    refine PConstructible.inter_y hS hT (x := x₀) (y := y₀) ?_
+    ext p
+    simp only [Set.mem_inter_iff, Set.mem_image, Set.mem_ofPred_eq, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨⟨⟨t, _, hFt⟩, hb1, hb2, hb3, hb4⟩, ⟨s, _, hGs⟩, -⟩
+      rw [hG s] at hGs
+      have hps : p.2 = s := by rw [← hGs]
+      have hp1 : p.1 = -p.2 ^ 2 - a₃ * p.2 := by rw [← hGs]
+      have hrt : P.IsRoot t := by
+        rw [Polynomial.IsRoot, hPeval]
+        refine hcross t ?_
+        rw [hFt, hp1]
+      have hmemA : p ∈ F '' {t : ℝ | P.IsRoot t} := ⟨t, hrt, hFt⟩
+      have hnotA := hbox p hb1 hb2 hb3 hb4
+      rw [hAdef, Set.mem_sdiff, not_and, not_not] at hnotA
+      simpa using hnotA hmemA
+    · rintro rfl
+      refine ⟨⟨⟨β, ⟨hu2.le, hv1.le⟩, hFβ⟩, hq₁b.le, hq₂a.le, hr₁b.le, hr₂a.le⟩,
+        ⟨y₀, ⟨hw2.le, hz1.le⟩, ?_⟩, hq₁b.le, hq₂a.le, hr₁b.le, hr₂a.le⟩
+      rw [hG y₀, hx₀def]
+  -- With `y₀` in hand, `β` is a root of the cubic `t³ + a₄t/2 - y₀`.
+  refine cubicVal_root_Pconstructible (neg_Pconstructible hy₀P) hah hzero hone
+    (Or.inl one_ne_zero) ?_
+  rw [cubicVal, hy₀def, cubicVal]
+  ring
+
+-- Theorem: a sextic relation with nonzero leading coefficient and no quintic term
+-- rearranges into the depressed monic form.
+theorem sextic_eq_sexticVal {a₀ a₁ a₂ a₃ a₄ a₆ w : ℝ} (ha : a₆ ≠ 0)
+    (h : a₀ + a₁ * w + a₂ * w ^ 2 + a₃ * w ^ 3 + a₄ * w ^ 4 + a₆ * w ^ 6 = 0) :
+    sexticVal (a₀ / a₆) (a₁ / a₆) (a₂ / a₆) (a₃ / a₆) (a₄ / a₆) w = 0 := by
+  rw [sexticVal]
+  field_simp
+  linear_combination h
+
+-- Theorem: every real root of every polynomial of degree at most 6 whose coefficients are
+-- P-constructible is itself P-constructible. Degree 6 shifts the variable by
+-- `s = p₅ / (6 p₆)` to remove the `X ^ 5` term — the ordinary depression, which costs
+-- nothing in P-constructibility — and then divides by the leading coefficient.
+--
+-- Like the degree-5 theorem this one takes P-constructible coefficients, so it iterates:
+-- the P-constructible reals are closed under solving any polynomial of degree at most 6
+-- over themselves.
+theorem root_Pconstructible_le_six_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
+    (hdeg : p.natDegree ≤ 6) (hcoeff : ∀ i, PConstructible (p.coeff i)) {β : ℝ}
+    (hroot : p.eval β = 0) :
+    PConstructible β := by
+  by_cases h5 : p.natDegree ≤ 5
+  · exact root_Pconstructible_le_five_coeffs hp h5 hcoeff hroot
+  · have h6 : p.natDegree = 6 := by omega
+    have ha : p.coeff 6 ≠ 0 := by
+      rw [← h6]; exact Polynomial.leadingCoeff_ne_zero.mpr hp
+    have h6R : PConstructible (6 : ℝ) := by simpa using nat_Pconstructible 6
+    set s : ℝ := p.coeff 5 / (6 * p.coeff 6) with hsdef
+    have hs : PConstructible s := by
+      rw [hsdef]
+      exact PConstructible.div (hcoeff 5) (PConstructible.mul h6R (hcoeff 6))
+    set r : Polynomial ℝ := Polynomial.taylor (-s) p with hrdef
+    have hrcoeff : ∀ i, PConstructible (r.coeff i) := fun i =>
+      taylor_coeff_Pconstructible hcoeff (neg_Pconstructible hs) i
+    have hr6 : r.coeff 6 = p.coeff 6 := by
+      rw [hrdef, Polynomial.taylor_coeff]
+      have hd : (Polynomial.hasseDeriv 6 p).natDegree < 1 := by
+        have := Polynomial.natDegree_hasseDeriv_le p 6
+        omega
+      rw [Polynomial.eval_eq_sum_range' hd]
+      simp [Polynomial.hasseDeriv_coeff]
+    have hr6ne : r.coeff 6 ≠ 0 := by rw [hr6]; exact ha
+    have hr5 : r.coeff 5 = 0 := by
+      rw [hrdef, Polynomial.taylor_coeff]
+      have hd : (Polynomial.hasseDeriv 5 p).natDegree < 2 := by
+        have := Polynomial.natDegree_hasseDeriv_le p 5
+        omega
+      rw [Polynomial.eval_eq_sum_range' hd]
+      simp [Finset.sum_range_succ, Polynomial.hasseDeriv_coeff, hsdef]
+      field_simp
+      ring
+    have hrdeg : r.natDegree = 6 := by
+      rw [hrdef, Polynomial.natDegree_taylor]; exact h6
+    have hrz : r.eval (β + s) = 0 := by
+      rw [hrdef, Polynomial.taylor_apply, Polynomial.eval_comp]
+      simp only [Polynomial.eval_add, Polynomial.eval_X, Polynomial.eval_C]
+      rw [show β + s + -s = β by ring]
+      exact hroot
+    have hval : r.coeff 0 + r.coeff 1 * (β + s) + r.coeff 2 * (β + s) ^ 2
+        + r.coeff 3 * (β + s) ^ 3 + r.coeff 4 * (β + s) ^ 4
+        + r.coeff 6 * (β + s) ^ 6 = 0 := by
+      rw [← hrz, Polynomial.eval_eq_sum_range' (n := 7) (by omega)]
+      simp [Finset.sum_range_succ, hr5]
+    have hz : PConstructible (β + s) :=
+      sextic_root_Pconstructible
+        (PConstructible.div (hrcoeff 0) (hrcoeff 6))
+        (PConstructible.div (hrcoeff 1) (hrcoeff 6))
+        (PConstructible.div (hrcoeff 2) (hrcoeff 6))
+        (PConstructible.div (hrcoeff 3) (hrcoeff 6))
+        (PConstructible.div (hrcoeff 4) (hrcoeff 6))
+        (sextic_eq_sexticVal hr6ne hval)
+    have hβ : β = (β + s) - s := by ring
+    rw [hβ]
+    exact PConstructible.sub hz hs
+
 end BezierGraph
 
 
