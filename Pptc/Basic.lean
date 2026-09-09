@@ -211,6 +211,60 @@ theorem dist_Pconstructible {x₀ y₀ x₁ y₁ : ℝ}
     (PConstructible.add (sq_Pconstructible (PConstructible.sub hx₁ hx₀))
       (sq_Pconstructible (PConstructible.sub hy₁ hy₀)))
 
+/-! ### The isolation argument
+
+Several constructions below cross a curve family against a "bad" set of points other than
+the one they want — the other roots of a polynomial, the other crossings of two curves —
+and need a rational window around the wanted point that excludes every bad one. The bad
+set is always finite (finitely many roots, finitely many crossings), hence closed, so the
+wanted point has an open ball around it disjoint from the bad set; `exists_rat_btwn` then
+supplies rational bounds strictly inside that ball, straddling the wanted point. The three
+lemmas below package that argument once: `exists_ball_isolating` for the topological step
+(finite avoiding set ⇒ isolating ball, in any metric space), and `exists_rat_isolating` /
+`exists_rat_box_isolating` for the rational window on top of it, in `ℝ` and `ℝ × ℝ`
+respectively.
+
+No positivity variant is needed. The `power_law` sites below draw only the half-line
+`x > 0`, so it is tempting to shrink the window to keep it there, but the constraint is
+already carried by the curve itself: a point of the intersection satisfies `0 < p.1`
+because it lies on `power_law`, not because the cropping window says so. -/
+
+-- Theorem: a finite set avoiding a point has some ball around that point missing the
+-- whole set.
+theorem exists_ball_isolating {X : Type*} [MetricSpace X] {p₀ : X} {A : Set X}
+    (hfin : A.Finite) (hp₀ : p₀ ∉ A) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ p : X, dist p p₀ < ε → p ∉ A := by
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp hfin.isClosed.isOpen_compl p₀ hp₀
+  exact ⟨ε, hε, fun p hd => hball (Metric.mem_ball.mpr hd)⟩
+
+-- Theorem: if the points other than `x` satisfying `P` are finite, some rational window
+-- around `x` contains no other point satisfying `P`.
+theorem exists_rat_isolating {x : ℝ} {P : ℝ → Prop} (hfin : {t : ℝ | P t ∧ t ≠ x}.Finite) :
+    ∃ q₁ q₂ : ℚ, (q₁ : ℝ) < x ∧ x < (q₂ : ℝ) ∧
+      ∀ t : ℝ, P t → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = x := by
+  obtain ⟨ε, hε, hiso⟩ := exists_ball_isolating hfin (fun h => h.2 rfl)
+  obtain ⟨q₁, hq₁a, hq₁⟩ := exists_rat_btwn (show x - ε < x by linarith)
+  obtain ⟨q₂, hq₂, hq₂b⟩ := exists_rat_btwn (show x < x + ε by linarith)
+  refine ⟨q₁, q₂, hq₁, hq₂, fun t ht hlo hhi => ?_⟩
+  by_contra hne
+  exact hiso t (by rw [Real.dist_eq, abs_lt]; exact ⟨by linarith, by linarith⟩) ⟨ht, hne⟩
+
+-- Theorem: the planar analogue, isolating a point of `ℝ × ℝ` inside a rational box rather
+-- than an interval.
+theorem exists_rat_box_isolating {p₀ : ℝ × ℝ} {A : Set (ℝ × ℝ)}
+    (hfin : A.Finite) (hp₀ : p₀ ∉ A) :
+    ∃ q₁ q₂ r₁ r₂ : ℚ, (q₁ : ℝ) < p₀.1 ∧ p₀.1 < (q₂ : ℝ) ∧
+      (r₁ : ℝ) < p₀.2 ∧ p₀.2 < (r₂ : ℝ) ∧
+      ∀ p : ℝ × ℝ, (q₁ : ℝ) ≤ p.1 → p.1 ≤ (q₂ : ℝ) → (r₁ : ℝ) ≤ p.2 → p.2 ≤ (r₂ : ℝ) → p ∉ A := by
+  obtain ⟨ε, hε, hiso⟩ := exists_ball_isolating hfin hp₀
+  obtain ⟨q₁, hq₁a, hq₁⟩ := exists_rat_btwn (show p₀.1 - ε < p₀.1 by linarith)
+  obtain ⟨q₂, hq₂, hq₂b⟩ := exists_rat_btwn (show p₀.1 < p₀.1 + ε by linarith)
+  obtain ⟨r₁, hr₁a, hr₁⟩ := exists_rat_btwn (show p₀.2 - ε < p₀.2 by linarith)
+  obtain ⟨r₂, hr₂, hr₂b⟩ := exists_rat_btwn (show p₀.2 < p₀.2 + ε by linarith)
+  refine ⟨q₁, q₂, r₁, r₂, hq₁, hq₂, hr₁, hr₂, fun p hp1 hp2 hp3 hp4 => hiso p ?_⟩
+  rw [Prod.dist_eq, max_lt_iff, Real.dist_eq, Real.dist_eq, abs_lt, abs_lt]
+  exact ⟨⟨by linarith, by linarith⟩, by linarith, by linarith⟩
+
 section AlgebraicNumbers
 
 /-! ### Algebraic numbers of degree at most 6
@@ -248,23 +302,13 @@ theorem root_Pconstructible_le_six {x : ℝ} {p : Polynomial ℚ} (hp : p ≠ 0)
   have heval : ∀ t : ℝ, Polynomial.aeval t p = P.eval t := by
     intro t
     simp [hPdef, Polynomial.eval_map, Polynomial.aeval_def]
-  -- The roots other than `x` form a finite, hence closed, set avoiding `x`, so some
-  -- ball around `x` contains no other root.
+  -- The roots other than `x` form a finite set avoiding `x`; isolate `x` from them in a
+  -- rational window.
   have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ x}.Finite :=
     (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
-  obtain ⟨ε, hε, hball⟩ :=
-    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl x (fun h => h.2 rfl)
-  -- Rational abscissa bounds strictly inside that ball, straddling `x`.
-  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show x - ε < x by linarith)
-  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show x < x + ε by linarith)
-  have huniq : ∀ t : ℝ, Polynomial.aeval t p = 0 → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = x := by
-    intro t ht hlo hhi
-    have hmem : t ∈ Metric.ball x ε := by
-      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
-      constructor <;> linarith
-    have hnot := hball hmem
-    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
-    exact hnot (by rw [Polynomial.IsRoot, ← heval]; exact ht)
+  obtain ⟨q₁, q₂, hq₁b, hq₂a, hunroot⟩ := exists_rat_isolating hAfin
+  have huniq : ∀ t : ℝ, Polynomial.aeval t p = 0 → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = x :=
+    fun t ht hlo hhi => hunroot t (by rw [Polynomial.IsRoot, ← heval]; exact ht) hlo hhi
   -- The graph of `p`, cropped to that window, meets the horizontal axis exactly once.
   have hS := PConstructibleCurve.restrict (PConstructibleCurve.poly_graph p hdeg)
     (q₁ : ℝ) (q₂ : ℝ) (-1) 1 (rat_Pconstructible q₁) (rat_Pconstructible q₂)
@@ -339,26 +383,11 @@ theorem powerLaw_root_pos_Pconstructible {n : ℕ} (hn : 6 < n) {a : ℚ} (ha : 
     simp [hPdef, Polynomial.eval_map, ← Polynomial.aeval_def]
   have hroot : P.IsRoot β := by
     rw [Polynomial.IsRoot, hevalP, heq, sub_self]
-  -- Isolate `β` from the finitely many other roots, keeping the window inside `x > 0`.
+  -- Isolate `β` from the finitely many other roots. The window need not be kept inside
+  -- `x > 0`: `power_law` carries that constraint itself.
   have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ β}.Finite :=
     (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
-  obtain ⟨ε, hε, hball⟩ :=
-    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl β (fun h => h.2 rfl)
-  have hδ : 0 < min ε β := lt_min hε hβ
-  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show β - min ε β < β by linarith)
-  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show β < β + min ε β by linarith)
-  have hq₁pos : (0 : ℝ) < q₁ := by
-    have : min ε β ≤ β := min_le_right _ _
-    linarith
-  have huniq : ∀ t : ℝ, P.IsRoot t → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = β := by
-    intro t ht hlo hhi
-    have hδε : min ε β ≤ ε := min_le_left _ _
-    have hmem : t ∈ Metric.ball β ε := by
-      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
-      constructor <;> linarith
-    have hnot := hball hmem
-    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
-    exact hnot ht
+  obtain ⟨q₁, q₂, hq₁b, hq₂a, huniq⟩ := exists_rat_isolating hAfin
   -- A window tall enough to hold the crossing, whichever sign `a` has.
   obtain ⟨M, hM⟩ := exists_nat_gt (|(a : ℝ)| * (q₂ : ℝ) ^ n)
   have hS := PConstructibleCurve.restrict (PConstructibleCurve.power_law a (n : ℚ))
@@ -784,23 +813,7 @@ theorem powerLaw_cubic_root_pos_Pconstructible {n : ℕ} (hn : 3 < n) {c₀ c₁
     rw [Polynomial.IsRoot, hevalP, heq, sub_self]
   have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ β}.Finite :=
     (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
-  obtain ⟨ε, hε, hball⟩ :=
-    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl β (fun h => h.2 rfl)
-  have hδ : 0 < min ε β := lt_min hε hβ
-  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show β - min ε β < β by linarith)
-  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show β < β + min ε β by linarith)
-  have hq₁pos : (0 : ℝ) < q₁ := by
-    have : min ε β ≤ β := min_le_right _ _
-    linarith
-  have huniq : ∀ t : ℝ, P.IsRoot t → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = β := by
-    intro t ht hlo hhi
-    have hδε : min ε β ≤ ε := min_le_left _ _
-    have hmem : t ∈ Metric.ball β ε := by
-      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
-      constructor <;> linarith
-    have hnot := hball hmem
-    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
-    exact hnot ht
+  obtain ⟨q₁, q₂, hq₁b, hq₂a, huniq⟩ := exists_rat_isolating hAfin
   have hT := cubicGraph_PConstructibleCurve h₀ h₁ h₂ h₃
     (rat_Pconstructible q₁) (rat_Pconstructible q₂) (by linarith : (q₁ : ℝ) < q₂)
   refine PConstructible.inter_x (PConstructibleCurve.power_law 1 (n : ℚ)) hT
@@ -879,18 +892,7 @@ theorem cubicVal_root_Pconstructible {c₀ c₁ c₂ c₃ β : ℝ} (h₀ : PCon
   have hrootP : P.IsRoot β := by rw [Polynomial.IsRoot, hevalP, hroot]
   have hAfin : {t : ℝ | P.IsRoot t ∧ t ≠ β}.Finite :=
     (Polynomial.finite_setOfPred_isRoot hPne).subset (fun t ht => ht.1)
-  obtain ⟨ε, hε, hball⟩ :=
-    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl β (fun h => h.2 rfl)
-  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show β - ε < β by linarith)
-  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show β < β + ε by linarith)
-  have huniq : ∀ t : ℝ, P.IsRoot t → (q₁ : ℝ) ≤ t → t ≤ (q₂ : ℝ) → t = β := by
-    intro t ht hlo hhi
-    have hmem : t ∈ Metric.ball β ε := by
-      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
-      constructor <;> linarith
-    have hnot := hball hmem
-    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_and, not_not] at hnot
-    exact hnot ht
+  obtain ⟨q₁, q₂, hq₁b, hq₂a, huniq⟩ := exists_rat_isolating hAfin
   have hS := cubicGraph_PConstructibleCurve h₀ h₁ h₂ h₃
     (rat_Pconstructible q₁) (rat_Pconstructible q₂) (by linarith : (q₁ : ℝ) < q₂)
   refine abscissa_Pconstructible hS zero_Pconstructible ?_
@@ -1204,25 +1206,13 @@ theorem sextic_root_Pconstructible {a₀ a₁ a₂ a₃ a₄ β : ℝ}
   set A : Set (ℝ × ℝ) := F '' {t : ℝ | P.IsRoot t} \ {(x₀, y₀)} with hAdef
   have hAfin : A.Finite := (hRfin.image F).sdiff
   have hApt : (x₀, y₀) ∉ A := by simp [hAdef]
-  obtain ⟨ε, hε, hball⟩ :=
-    Metric.isOpen_iff.mp hAfin.isClosed.isOpen_compl (x₀, y₀) hApt
   -- A rational box around `(x₀, y₀)` small enough to miss every other crossing, plus
   -- rational parameter windows around `β` and `y₀` for the two arcs.
-  obtain ⟨q₁, hq₁a, hq₁b⟩ := exists_rat_btwn (show x₀ - ε < x₀ by linarith)
-  obtain ⟨q₂, hq₂a, hq₂b⟩ := exists_rat_btwn (show x₀ < x₀ + ε by linarith)
-  obtain ⟨r₁, hr₁a, hr₁b⟩ := exists_rat_btwn (show y₀ - ε < y₀ by linarith)
-  obtain ⟨r₂, hr₂a, hr₂b⟩ := exists_rat_btwn (show y₀ < y₀ + ε by linarith)
+  obtain ⟨q₁, q₂, r₁, r₂, hq₁b, hq₂a, hr₁b, hr₂a, hbox⟩ := exists_rat_box_isolating hAfin hApt
   obtain ⟨u, hu1, hu2⟩ := exists_rat_btwn (show β - 1 < β by linarith)
   obtain ⟨v, hv1, hv2⟩ := exists_rat_btwn (show β < β + 1 by linarith)
   obtain ⟨w, hw1, hw2⟩ := exists_rat_btwn (show y₀ - 1 < y₀ by linarith)
   obtain ⟨z, hz1, hz2⟩ := exists_rat_btwn (show y₀ < y₀ + 1 by linarith)
-  have hbox : ∀ p : ℝ × ℝ, (q₁ : ℝ) ≤ p.1 → p.1 ≤ (q₂ : ℝ) → (r₁ : ℝ) ≤ p.2 →
-      p.2 ≤ (r₂ : ℝ) → p ∉ A := by
-    intro p hp1 hp2 hp3 hp4
-    have hd : dist p (x₀, y₀) < ε := by
-      rw [Prod.dist_eq, max_lt_iff, Real.dist_eq, Real.dist_eq, abs_lt, abs_lt]
-      refine ⟨⟨by linarith, by linarith⟩, by linarith, by linarith⟩
-    exact hball (by simpa [Metric.mem_ball] using hd)
   have hS := PConstructibleCurve.restrict
     (cubicPairArc_PConstructibleCurve h₀ hb₁ hb₂ hzero hzero hah hzero hone
       (rat_Pconstructible u) (rat_Pconstructible v) (by linarith : ((u : ℝ)) < (v : ℝ)))
