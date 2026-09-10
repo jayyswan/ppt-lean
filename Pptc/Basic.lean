@@ -1418,6 +1418,195 @@ theorem root_Pconstructible_le_six_coeffs {p : Polynomial ℝ} (hp : p ≠ 0)
     rw [hβ]
     exact PConstructible.sub hz hs
 
+/-! ### Nonics: the Bézout ceiling of the cubic Bézier
+
+Two cubic Béziers cross in `3 × 3 = 9` points, and `9` is as far as this argument reaches.
+Among the drawable families that carry P-constructible parameters rather than merely
+rational ones, the implicit equations on offer have degree `2` (the conics: `ellipse`, and
+`power_law (-1)` once an affine map has been applied) or degree `3` (`cubic_bezier`).
+`poly_graph` and `power_law` go higher, but only with rational coefficients, and `offset`
+draws higher-degree curves whose implicit equations are not in usable form. So `9` is the
+largest Bézout number available here, and reaching it needs *both* curves to be genuine
+cubics.
+
+That is a real restriction, and it is what fixes the shape of this section. A cubic Bézier
+is a pair of cubics `(x t, y t)`, so its projective parametrization `[s : w] ↦ [x* : y* :
+w³]` reaches the line at infinity only at `w = 0`, and vanishes to order `3` there: the
+curve meets that line at the *single* point `[x₃ : y₃ : 0]`, with multiplicity `3`. Two
+consequences run through everything below.
+
+*Sharing the point at infinity costs three.* If both Béziers approach infinity in the same
+direction, the intersection multiplicity there is already `3` and only `9 - 3 = 6`
+crossings are left in the plane. Concretely the leading form of `F` is a perfect cube
+`c (αX + βY)³`, so `p t = c (α x t + β y t)³ + (degree ≤ 2 in X, Y)`, and the shared
+direction is exactly `α x₃ + β y₃ = 0`, which drops the cube to degree `≤ 6` while the tail
+was already `≤ 6`. So the degree of a crossing polynomial is `9` or at most `6`, never `7`
+or `8`.
+
+*Only one shape of cubic is drawable.* Up to an affine change of the plane, a plane cubic
+that is singular (as a rational curve must be) and meets the line at infinity in one triple
+point is the Weierstrass cubic `Y² = X³ - λX²` — a crunode for `λ < 0`, an acnode for
+`λ > 0`, a cusp at `λ = 0` — or the degenerate graph `Y = X³`. So crossing two Béziers
+reaches exactly the nonics
+
+  `v² - u³ + λu²`,  `u` and `v` cubics,
+
+an eight-parameter family inside the nine-parameter space of monic nonics: a hypersurface,
+not everything. Two counts agree on the codimension. Parameters: `8` for `(x, y)`, plus
+`10 - 2 - 1 = 7` for a cubic `F` with a perfect-cube leading form and a singular point,
+less `6` for affine redundancy, is `9` against `10`. Cohomology: the restriction
+`H⁰(ℙ², O(3)) → H⁰(ℙ¹, O(9))` is `10 → 10` with the equation of the curve itself in its
+kernel, so its image is a hyperplane — and for a nodal curve with node parameters `t₁ ≠ t₂`
+that hyperplane is readable, being `{p | p t₁ = p t₂}`.
+
+What follows is that family, proved the way the sextic is. `Γ t = (u t, v t)` is one
+Bézier, `Δ s = (s² + λ, s³ + λs)` is the other — abscissa quadratic, ordinate cubic, so a
+Bézier like any other — and `Y² - X³ + λX²` is the implicit equation of the second read
+along the first. The crossing hands back `u β`, and `β` is then a root of the *cubic*
+`u t - u β`, which the earlier sections solve.
+
+One case escapes the crossing. For `λ > 0` the origin is an acnode of `Y² = X³ - λX²`: a
+real solution of the equation that the real parametrization misses, since reaching it would
+need `s² = -λ`. It arises exactly when `u β = 0`, and then `β` is a root of a cubic with
+P-constructible coefficients outright, so the proof splits on `u β = 0` and disposes of that
+branch first.
+
+Degrees `7` and `8` are *not* the "one or two shared points at infinity" of that picture —
+a Bézier has one point at infinity to share and sharing it costs three. They are
+divisibility questions instead: `crossing_Pconstructible` asks only that `β` be a root of
+`p`, so a target of degree `7` or `8` may be multiplied by a free quadratic or linear factor
+to reach degree `9`, whose extra roots the isolation box crops away. That turns each of
+degrees `7`, `8` and `9` into a square system of seven coupled quadratic equations, which
+is where this section stops; see `NONIC-notes.md` in the repository root. -/
+
+/-- The nonic `M t ^ 3 + lam * M t ^ 2 + v t ^ 2`, with `M` the monic cubic
+`t ^ 3 + m₂ t ^ 2 + m₁ t + m₀` and `v` the cubic with coefficients `v₀ v₁ v₂ v₃`. This is
+the depressed normal form of the nonics that two crossing Béziers reach. -/
+def nonicVal (m₀ m₁ m₂ lam v₀ v₁ v₂ v₃ t : ℝ) : ℝ :=
+  cubicVal m₀ m₁ m₂ 1 t ^ 3 + lam * cubicVal m₀ m₁ m₂ 1 t ^ 2 + cubicVal v₀ v₁ v₂ v₃ t ^ 2
+
+-- Theorem: the Weierstrass cubic `Y ^ 2 = X ^ 3 - lam * X ^ 2` is traced by a cubic pair,
+-- quadratic abscissa against cubic ordinate, so it is a Bézier arc like any other. The
+-- substitution is the classical one: `X = s ^ 2 + lam` makes `X ^ 3 - lam * X ^ 2 =
+-- X ^ 2 * (X - lam)` the square `(s * X) ^ 2`.
+theorem cubicPairParam_weierstrass (lam s : ℝ) :
+    cubicPairParam lam 0 1 0 0 lam 0 1 s = (s ^ 2 + lam, s ^ 3 + lam * s) := by
+  simp only [cubicPairParam, cubicVal, Prod.mk.injEq]
+  constructor <;> ring
+
+-- Theorem: and every point it traces satisfies that equation.
+theorem weierstrass_implicit (lam s : ℝ) :
+    (s ^ 3 + lam * s) ^ 2 - (s ^ 2 + lam) ^ 3 + lam * (s ^ 2 + lam) ^ 2 = 0 := by ring
+
+-- Theorem: conversely, a point of `Y ^ 2 = X ^ 3 - lam * X ^ 2` with `X ≠ 0` is traced, at
+-- the parameter `s = Y / X`. The hypothesis `X ≠ 0` is not a convenience: it excludes the
+-- singular point, which for `lam > 0` is an acnode and genuinely off the real trace.
+theorem weierstrass_param_of_ne {lam X Y : ℝ} (hX : X ≠ 0)
+    (h : Y ^ 2 = X ^ 3 - lam * X ^ 2) :
+    (Y / X) ^ 2 + lam = X ∧ (Y / X) ^ 3 + lam * (Y / X) = Y := by
+  have h1 : (Y / X) ^ 2 + lam = X := by field_simp; linear_combination h
+  refine ⟨h1, ?_⟩
+  have h2 : (Y / X) ^ 3 + lam * (Y / X) = (Y / X) * ((Y / X) ^ 2 + lam) := by ring
+  rw [h2, h1]
+  field_simp
+
+-- Theorem: if the cubic pair `(u, v)` lands on the Weierstrass cubic `Y ^ 2 = X ^ 3 -
+-- lam * X ^ 2` at the parameter `β`, and `u` is a genuine cubic, then `β` is
+-- P-constructible. This is the whole content of degree `9`: `u ^ 3` is the leading term,
+-- so the relation is a nonic in `β`, and every nonic that two crossing Béziers can reach
+-- has this shape.
+theorem weierstrassCross_root_Pconstructible {u₀ u₁ u₂ u₃ lam v₀ v₁ v₂ v₃ β : ℝ}
+    (hu₀ : PConstructible u₀) (hu₁ : PConstructible u₁) (hu₂ : PConstructible u₂)
+    (hu₃ : PConstructible u₃) (hlam : PConstructible lam) (hv₀ : PConstructible v₀)
+    (hv₁ : PConstructible v₁) (hv₂ : PConstructible v₂) (hv₃ : PConstructible v₃)
+    (hu₃ne : u₃ ≠ 0)
+    (hrel : cubicVal v₀ v₁ v₂ v₃ β ^ 2 =
+      cubicVal u₀ u₁ u₂ u₃ β ^ 3 - lam * cubicVal u₀ u₁ u₂ u₃ β ^ 2) :
+    PConstructible β := by
+  have hone : PConstructible (1 : ℝ) := PConstructible.base_one
+  have hzero : PConstructible (0 : ℝ) := zero_Pconstructible
+  -- The acnode branch: at the singular point `β` already solves a cubic.
+  by_cases hX0 : cubicVal u₀ u₁ u₂ u₃ β = 0
+  · exact cubicVal_root_Pconstructible hu₀ hu₁ hu₂ hu₃ (Or.inl hu₃ne) hX0
+  -- `Γ` traces `(u t, v t)`; `Δ` traces `Y ^ 2 = X ^ 3 - lam * X ^ 2`, with the crossing
+  -- at the parameter `s₀ = v β / u β`.
+  set Γ : ℝ → ℝ × ℝ := cubicPairParam u₀ u₁ u₂ u₃ v₀ v₁ v₂ v₃ with hΓdef
+  set Δ : ℝ → ℝ × ℝ := cubicPairParam lam 0 1 0 0 lam 0 1 with hΔdef
+  have hΓ : ∀ t : ℝ, Γ t = (cubicVal u₀ u₁ u₂ u₃ t, cubicVal v₀ v₁ v₂ v₃ t) := fun _ => rfl
+  have hΔ : ∀ s : ℝ, Δ s = (s ^ 2 + lam, s ^ 3 + lam * s) := cubicPairParam_weierstrass lam
+  obtain ⟨hs1, hs2⟩ := weierstrass_param_of_ne hX0 hrel
+  set s₀ : ℝ := cubicVal v₀ v₁ v₂ v₃ β / cubicVal u₀ u₁ u₂ u₃ β with hs₀def
+  have hΓβ : Γ β = Δ s₀ := by
+    rw [hΓ β, hΔ s₀, Prod.ext_iff]
+    exact ⟨hs1.symm, hs2.symm⟩
+  -- The nonic has finitely many roots, hence the two curves finitely many crossings. It is
+  -- nonzero because `u ^ 3` has degree `9` while everything else has degree at most `6`.
+  set p : ℝ → ℝ := fun t =>
+    cubicVal v₀ v₁ v₂ v₃ t ^ 2 - cubicVal u₀ u₁ u₂ u₃ t ^ 3
+      + lam * cubicVal u₀ u₁ u₂ u₃ t ^ 2 with hpdef
+  have hfin : {t : ℝ | p t = 0}.Finite := by
+    set Up : Polynomial ℝ := C u₃ * X ^ 3 + C u₂ * X ^ 2 + C u₁ * X + C u₀ with hUpdef
+    set Vp : Polynomial ℝ := C v₃ * X ^ 3 + C v₂ * X ^ 2 + C v₁ * X + C v₀ with hVpdef
+    set P : Polynomial ℝ := Vp ^ 2 - Up ^ 3 + C lam * Up ^ 2 with hPdef
+    have hPeval : ∀ t : ℝ, P.eval t = p t := by
+      intro t
+      simp only [hPdef, hUpdef, hVpdef, hpdef, cubicVal, eval_add, eval_sub, eval_mul,
+        eval_pow, eval_C, eval_X]
+    have hUpdeg : Up.natDegree = 3 := by rw [hUpdef]; compute_degree!
+    have hPne : P ≠ 0 := by
+      intro hc
+      have h1 : Up ^ 3 = Vp ^ 2 + C lam * Up ^ 2 := by
+        rw [hPdef] at hc; linear_combination -hc
+      have h2 : (Up ^ 3).natDegree = 9 := by rw [Polynomial.natDegree_pow, hUpdeg]
+      have h3 : (Vp ^ 2 + C lam * Up ^ 2).natDegree ≤ 6 := by
+        rw [hUpdef, hVpdef]; compute_degree
+      rw [h1] at h2
+      omega
+    exact (Polynomial.finite_setOfPred_isRoot hPne).subset
+      (fun t ht => by change P.eval t = 0; rw [hPeval]; exact ht)
+  -- Rational parameter windows around `β` and `s₀`, giving the two arcs to cross.
+  obtain ⟨a, -, ha2⟩ := exists_rat_btwn (show β - 1 < β by linarith)
+  obtain ⟨b, hb1, -⟩ := exists_rat_btwn (show β < β + 1 by linarith)
+  obtain ⟨c, -, hc2⟩ := exists_rat_btwn (show s₀ - 1 < s₀ by linarith)
+  obtain ⟨d, hd1, -⟩ := exists_rat_btwn (show s₀ < s₀ + 1 by linarith)
+  have hS := cubicPairArc_PConstructibleCurve hu₀ hu₁ hu₂ hu₃ hv₀ hv₁ hv₂ hv₃
+    (rat_Pconstructible a) (rat_Pconstructible b) (by linarith : ((a : ℝ)) < (b : ℝ))
+  have hT := cubicPairArc_PConstructibleCurve hlam hzero hone hzero hzero hlam hzero hone
+    (rat_Pconstructible c) (rat_Pconstructible d) (by linarith : ((c : ℝ)) < (d : ℝ))
+  rw [← hΓdef] at hS
+  rw [← hΔdef] at hT
+  have hTzero : ∀ q ∈ Δ '' Set.Icc (c : ℝ) (d : ℝ),
+      q.2 ^ 2 - q.1 ^ 3 + lam * q.1 ^ 2 = 0 := by
+    rintro q ⟨s, -, rfl⟩
+    rw [hΔ s]
+    exact weierstrass_implicit lam s
+  have hcross :=
+    crossing_Pconstructible hS hT (F := fun A B => B ^ 2 - A ^ 3 + lam * A ^ 2) (p := p)
+      (Set.image_subset_range Γ _) hTzero (fun _ => rfl) hfin
+      ⟨β, ⟨ha2.le, hb1.le⟩, rfl⟩ ⟨s₀, ⟨hc2.le, hd1.le⟩, hΓβ.symm⟩
+  -- The abscissa of the crossing is `u β`, and `β` is a root of the cubic `u t - u β`.
+  refine cubicVal_root_Pconstructible
+    (PConstructible.sub hu₀ hcross.1) hu₁ hu₂ hu₃ (Or.inl hu₃ne) ?_
+  rw [cubicVal, hΓ β]
+  dsimp only
+  rw [cubicVal]
+  ring
+
+-- Theorem: every real root of the depressed nonic normal form `M ^ 3 + lam * M ^ 2 + v ^ 2`
+-- with P-constructible coefficients is P-constructible. This is the previous theorem read
+-- through `u = -M`, which is what makes the nonic monic.
+theorem nonicVal_root_Pconstructible {m₀ m₁ m₂ lam v₀ v₁ v₂ v₃ β : ℝ}
+    (hm₀ : PConstructible m₀) (hm₁ : PConstructible m₁) (hm₂ : PConstructible m₂)
+    (hlam : PConstructible lam) (hv₀ : PConstructible v₀) (hv₁ : PConstructible v₁)
+    (hv₂ : PConstructible v₂) (hv₃ : PConstructible v₃)
+    (hroot : nonicVal m₀ m₁ m₂ lam v₀ v₁ v₂ v₃ β = 0) : PConstructible β := by
+  refine weierstrassCross_root_Pconstructible (neg_Pconstructible hm₀)
+    (neg_Pconstructible hm₁) (neg_Pconstructible hm₂)
+    (neg_Pconstructible PConstructible.base_one) hlam hv₀ hv₁ hv₂ hv₃ (by norm_num) ?_
+  rw [nonicVal] at hroot
+  simp only [cubicVal] at hroot ⊢
+  linear_combination hroot
+
 end BezierGraph
 
 
