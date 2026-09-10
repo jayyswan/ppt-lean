@@ -1475,9 +1475,11 @@ Degrees `7` and `8` are *not* the "one or two shared points at infinity" of that
 a Bézier has one point at infinity to share and sharing it costs three. They are
 divisibility questions instead: `crossing_Pconstructible` asks only that `β` be a root of
 `p`, so a target of degree `7` or `8` may be multiplied by a free quadratic or linear factor
-to reach degree `9`, whose extra roots the isolation box crops away. That turns each of
-degrees `7`, `8` and `9` into a square system of seven coupled quadratic equations, which
-is where this section stops; see `NONIC-notes.md` in the repository root. -/
+to reach degree `9`, whose extra roots the isolation box crops away. Degree `9` itself needs
+a genuinely nonlinear Tschirnhaus, a shift buying nothing there because the family is
+invariant under it. Either way what is left is a coupled quadratic system of seven
+equations in six unknowns, which is where this section stops; the system is written out in
+`NONIC-notes.md` in the repository root. -/
 
 /-- The nonic `M t ^ 3 + lam * M t ^ 2 + v t ^ 2`, with `M` the monic cubic
 `t ^ 3 + m₂ t ^ 2 + m₁ t + m₀` and `v` the cubic with coefficients `v₀ v₁ v₂ v₃`. This is

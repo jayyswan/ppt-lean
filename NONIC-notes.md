@@ -124,20 +124,41 @@ Since `p` need only *vanish* at `β`, a target `P` may be multiplied up to degre
 |---|---|---|---|
 | `deg P = 7` | monic quadratic `t² + bt + c` (no reality condition needed) | `8 + 2 = 10` | 9 |
 | `deg P = 8` | `t - r` | `8 + 1 = 9` | 9 |
-| `deg P = 9` | none; instead a Tschirnhaus shift `t ↦ t + s` | `8 + 1 = 9` | 9 |
+| `deg P = 9` | none; instead a quadratic Tschirnhaus `y = β² + c₁β + c₀` | `8 + 2` | 9 + 1 |
 
-In each case the requirement is `P · g = M³ + λM² + v²`, and the counts are square or
-better, so a solution exists generically. Writing `M = t³ + m₂t² + m₁t + m₀`, the top two
-equations are triangular (`m₂`, then `m₁`, in closed form), but the remaining seven — in
-`m₀, λ, v₃, v₂, v₁, v₀` and the multiplier's parameter — are genuinely coupled and
-quadratic. **No triangular closed form for them was found.** The sextic's charm, each
-substitution absorbing exactly one coefficient, does not reproduce: at degree `9` the
-ordinate is squared *and* cubed, so `v` and `M` contest the same equations.
+A *shift* `t ↦ t + s` buys nothing at degree 9: `M(t + s)` is again a monic cubic and
+`v(t + s)` again a cubic, so the family is invariant under shifting and the obstruction is
+too. The Tschirnhaus has to be genuinely nonlinear. A quadratic one costs nothing to undo —
+`β` is then a root of `φ(x) - y`, which is a quadratic.
+
+For degrees 7 and 8 the requirement is `P · g = M³ + λM² + v²`; for degree 9 it is the same
+with `P` replaced by the resolvent of the Tschirnhaus. Either way the counts are square or
+better, so a solution exists generically.
+
+The system, written out. Depress, so `a₈ = 0`; the `t⁸` equation is `3m₂ = a₈`, so `m₂ = 0`,
+and `M = t³ + mt + n`. What is left, with `v = v₃t³ + v₂t² + v₁t + v₀`:
+
+    t⁷:  3m = a₇
+    t⁶:  3n + λ + v₃² = a₆
+    t⁵:  3m² + 2v₃v₂ = a₅
+    t⁴:  6mn + 2λm + v₂² + 2v₃v₁ = a₄
+    t³:  m³ + 3n² + 2λn + 2v₃v₀ + 2v₂v₁ = a₃
+    t²:  3m²n + λm² + v₁² + 2v₂v₀ = a₂
+    t¹:  3mn² + 2λmn + 2v₁v₀ = a₁
+    t⁰:  n³ + λn² + v₀² = a₀
+
+Two are free: `t⁷` gives `m = a₇/3`, and `t⁵` then gives `v₃v₂ = (a₅ - 3m²)/2`. The
+remaining **seven equations in six unknowns** `n, λ, v₃, v₂, v₁, v₀` are the codimension,
+and they are genuinely coupled and quadratic. **No triangular closed form for them was
+found.** The sextic's charm, each substitution absorbing exactly one coefficient, does not
+reproduce: at degree `9` the ordinate is squared *and* cubed, so `v` and `M` contest the
+same equations.
 
 That is the open problem this investigation leaves. It is not the problem the issue posed
-("find the right substitution"); it is a definite system of `7` equations in `7` unknowns
-whose solvability by field operations plus roots of degree `≤ 6` — and whose *real*
-solvability — is what degrees `7`, `8` and `9` now turn on.
+("find the right substitution"); it is a definite polynomial system whose solvability by
+field operations plus roots of degree `≤ 6` — and whose *real* solvability — is what
+degrees `7`, `8` and `9` now turn on. Its Bézout number is `2⁷ = 128`, which is the reason
+not to expect the elimination to land in degree `≤ 6`.
 
 Two remarks on that system:
 
