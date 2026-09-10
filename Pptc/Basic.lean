@@ -265,6 +265,92 @@ theorem exists_rat_box_isolating {p₀ : ℝ × ℝ} {A : Set (ℝ × ℝ)}
   rw [Prod.dist_eq, max_lt_iff, Real.dist_eq, Real.dist_eq, abs_lt, abs_lt]
   exact ⟨⟨by linarith, by linarith⟩, by linarith, by linarith⟩
 
+/-! ### Crossing two drawn curves
+
+Every root construction below has the same shape. The polynomial `p` whose root is wanted
+is rewritten as
+
+  `p t = F (Γ t).1 (Γ t).2`
+
+where `Γ` traces one drawable curve — at parameter `t` the pen is at the point `Γ t` — and
+`F` is the *implicit* equation of another, a two-variable function vanishing exactly on it.
+The identity turns an algebraic statement into a geometric one:
+
+  `t` is a root of `p`  ↔  the point `Γ t` lies on the second curve  ↔  the two drawn
+  curves cross there,
+
+and reading a coordinate off a crossing is what `PConstructible.inter_x` / `inter_y` do.
+
+What stands in the way is their demand that the two curves meet in a *single* point, and
+that is what finiteness of the root set buys: every crossing is the image `Γ t` of a root,
+so all but the wanted one are finitely many points of the plane, which
+`exists_rat_box_isolating` crops away. A box rather than an interval, because `Γ` is
+parametric and may revisit an abscissa. Several roots colliding onto one crossing point is
+harmless, the intersection being a set of points.
+
+Note what the second curve is *not* asked to do. `hTzero` only says its points satisfy
+`F = 0`, not that it is all of `{F = 0}`; and `hSrange` only says the first curve is
+covered by `Γ`, not that `Γ` covers no more. Both directions of slack are needed, since in
+practice each curve is a bounded arc — a Bézier is drawn only over `[0, 1]` — cut out of an
+unbounded locus.
+
+The conclusion is about the *coordinates* of the crossing rather than the root `β`, because
+recovering `β` from them is not generic: `sextic_root_Pconstructible` takes the ordinate and
+then solves a cubic for `β`, while a construction whose `Γ` has the identity for its
+abscissa gets `β` back for nothing. The degree of the equation solved is likewise not this
+lemma's business. It is `max (i * deg x + j * deg y)` over the monomials `X ^ i * Y ^ j` of
+`F`, where `Γ t = (x t, y t)`, and each construction buys its degree by choosing `F` and
+`Γ`: with `x` quadratic, `y` cubic and `F X Y = X + Y ^ 2 + a₃ * Y` it is `6`, the sextic
+below. -/
+
+-- Theorem: if the values of `p` are the implicit equation `F` of one drawable curve read
+-- along a parametrization `Γ` of another, then both coordinates of the crossing at a root
+-- of `p` are P-constructible.
+theorem crossing_Pconstructible {S T : Set (ℝ × ℝ)}
+    (hS : PConstructibleCurve S) (hT : PConstructibleCurve T)
+    {Γ : ℝ → ℝ × ℝ} {F : ℝ → ℝ → ℝ} {p : ℝ → ℝ} {β : ℝ}
+    -- Every point of the first curve is traced by `Γ` ...
+    (hSrange : S ⊆ Set.range Γ)
+    -- ... and every point of the second satisfies `F = 0`.
+    (hTzero : ∀ q ∈ T, F q.1 q.2 = 0)
+    -- `p` is `F` read along `Γ`, and has finitely many roots.
+    (hp : ∀ t, p t = F (Γ t).1 (Γ t).2)
+    (hfin : {t : ℝ | p t = 0}.Finite)
+    -- The two curves genuinely meet at `Γ β`. That `β` is a root of `p` is not assumed
+    -- separately: it follows from `hβT` through `hTzero` and `hp`.
+    (hβS : Γ β ∈ S) (hβT : Γ β ∈ T) :
+    PConstructible (Γ β).1 ∧ PConstructible (Γ β).2 := by
+  -- The crossings other than `Γ β` lie among the images of the other roots, so they are
+  -- finitely many and a rational box around `Γ β` excludes them all.
+  set A : Set (ℝ × ℝ) := Γ '' {t : ℝ | p t = 0} \ {Γ β} with hAdef
+  have hAfin : A.Finite := (hfin.image Γ).sdiff
+  have hApt : Γ β ∉ A := by simp [hAdef]
+  obtain ⟨q₁, q₂, r₁, r₂, hq₁, hq₂, hr₁, hr₂, hbox⟩ := exists_rat_box_isolating hAfin hApt
+  have hS' := PConstructibleCurve.restrict hS (q₁ : ℝ) (q₂ : ℝ) (r₁ : ℝ) (r₂ : ℝ)
+    (rat_Pconstructible q₁) (rat_Pconstructible q₂)
+    (rat_Pconstructible r₁) (rat_Pconstructible r₂)
+  have hT' := PConstructibleCurve.restrict hT (q₁ : ℝ) (q₂ : ℝ) (r₁ : ℝ) (r₂ : ℝ)
+    (rat_Pconstructible q₁) (rat_Pconstructible q₂)
+    (rat_Pconstructible r₁) (rat_Pconstructible r₂)
+  have hsing : (S ∩ {q : ℝ × ℝ | (q₁ : ℝ) ≤ q.1 ∧ q.1 ≤ (q₂ : ℝ) ∧
+        (r₁ : ℝ) ≤ q.2 ∧ q.2 ≤ (r₂ : ℝ)}) ∩
+      (T ∩ {q : ℝ × ℝ | (q₁ : ℝ) ≤ q.1 ∧ q.1 ≤ (q₂ : ℝ) ∧
+        (r₁ : ℝ) ≤ q.2 ∧ q.2 ≤ (r₂ : ℝ)}) = {((Γ β).1, (Γ β).2)} := by
+    ext q
+    simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨⟨hqS, hb1, hb2, hb3, hb4⟩, hqT, -⟩
+      obtain ⟨t, hΓt⟩ := hSrange hqS
+      have hpt : p t = 0 := by rw [hp t, hΓt]; exact hTzero q hqT
+      have hnot := hbox q hb1 hb2 hb3 hb4
+      rw [hAdef, Set.mem_sdiff, not_and, not_not] at hnot
+      have hq := hnot ⟨t, hpt, hΓt⟩
+      simp only [Set.mem_singleton_iff] at hq
+      rw [hq]
+    · rintro rfl
+      exact ⟨⟨hβS, hq₁.le, hq₂.le, hr₁.le, hr₂.le⟩, hβT, hq₁.le, hq₂.le, hr₁.le, hr₂.le⟩
+  exact ⟨PConstructible.inter_x hS' hT' hsing, PConstructible.inter_y hS' hT' hsing⟩
+
 section AlgebraicNumbers
 
 /-! ### Algebraic numbers of degree at most 6
@@ -1165,32 +1251,25 @@ theorem sextic_root_Pconstructible {a₀ a₁ a₂ a₃ a₄ β : ℝ}
   have hb₂ : PConstructible (a₂ - a₄ ^ 2 / 4) :=
     PConstructible.sub h₂ (PConstructible.div (sq_Pconstructible h₄) h4c)
   have hah : PConstructible (a₄ / 2) := PConstructible.div h₄ h2
-  -- `F` traces `(x(t), y(t))`; `G` traces the parabola `x = -y² - a₃y`, with `y` as the
-  -- parameter.
-  set F : ℝ → ℝ × ℝ :=
-    cubicPairParam a₀ (a₁ - a₃ * a₄ / 2) (a₂ - a₄ ^ 2 / 4) 0 0 (a₄ / 2) 0 1 with hFdef
-  set G : ℝ → ℝ × ℝ := cubicPairParam 0 (-a₃) (-1) 0 0 1 0 0 with hGdef
+  -- `Γ` traces `(x(t), y(t))`; `Δ` traces the parabola `x = -y² - a₃y`, with `y` as the
+  -- parameter, and `X + Y² + a₃Y` is the implicit equation of that parabola.
+  set Γ : ℝ → ℝ × ℝ :=
+    cubicPairParam a₀ (a₁ - a₃ * a₄ / 2) (a₂ - a₄ ^ 2 / 4) 0 0 (a₄ / 2) 0 1 with hΓdef
+  set Δ : ℝ → ℝ × ℝ := cubicPairParam 0 (-a₃) (-1) 0 0 1 0 0 with hΔdef
   set y₀ : ℝ := cubicVal 0 (a₄ / 2) 0 1 β with hy₀def
-  set x₀ : ℝ := -y₀ ^ 2 - a₃ * y₀ with hx₀def
-  have hG : ∀ s : ℝ, G s = (-s ^ 2 - a₃ * s, s) := by
+  have hΔ : ∀ s : ℝ, Δ s = (-s ^ 2 - a₃ * s, s) := by
     intro s
-    simp only [hGdef, cubicPairParam, cubicVal, Prod.mk.injEq]
+    simp only [hΔdef, cubicPairParam, cubicVal, Prod.mk.injEq]
     constructor <;> ring
-  -- `β` being a root is exactly the statement that `F β` lands on the parabola.
-  have hFβ : F β = (x₀, y₀) := by
+  -- `β` being a root is exactly the statement that `Γ β` lands on the parabola, at the
+  -- parameter `y₀ = β³ + a₄β/2`.
+  have hΓβ : Γ β = Δ y₀ := by
     have hsplit := sexticVal_eq_cubicPair a₀ a₁ a₂ a₃ a₄ β
-    rw [hroot, ← hFdef] at hsplit
-    have hy : (F β).2 = y₀ := rfl
+    rw [hroot, ← hΓdef] at hsplit
+    have hy : (Γ β).2 = y₀ := rfl
     rw [hy] at hsplit
-    rw [Prod.ext_iff]
-    exact ⟨by change (F β).1 = -y₀ ^ 2 - a₃ * y₀; linarith, hy⟩
-  have hcross : ∀ t : ℝ, (F t).1 = -((F t).2) ^ 2 - a₃ * (F t).2 →
-      sexticVal a₀ a₁ a₂ a₃ a₄ t = 0 := by
-    intro t ht
-    have hsplit := sexticVal_eq_cubicPair a₀ a₁ a₂ a₃ a₄ t
-    rw [← hFdef] at hsplit
-    rw [hsplit, ht]
-    ring
+    rw [hΔ y₀, Prod.ext_iff]
+    exact ⟨by change (Γ β).1 = -y₀ ^ 2 - a₃ * y₀; linarith, hy⟩
   -- The sextic has finitely many roots, hence the two curves finitely many crossings.
   set P : Polynomial ℝ :=
     X ^ 6 + C a₄ * X ^ 4 + C a₃ * X ^ 3 + C a₂ * X ^ 2 + C a₁ * X + C a₀ with hPdef
@@ -1202,51 +1281,31 @@ theorem sextic_root_Pconstructible {a₀ a₁ a₂ a₃ a₄ β : ℝ}
     have h6 : P.coeff 6 = 1 := by simp [hPdef, coeff_X_pow]
     rw [hc] at h6
     simp at h6
-  have hRfin : {t : ℝ | P.IsRoot t}.Finite := Polynomial.finite_setOfPred_isRoot hPne
-  set A : Set (ℝ × ℝ) := F '' {t : ℝ | P.IsRoot t} \ {(x₀, y₀)} with hAdef
-  have hAfin : A.Finite := (hRfin.image F).sdiff
-  have hApt : (x₀, y₀) ∉ A := by simp [hAdef]
-  -- A rational box around `(x₀, y₀)` small enough to miss every other crossing, plus
-  -- rational parameter windows around `β` and `y₀` for the two arcs.
-  obtain ⟨q₁, q₂, r₁, r₂, hq₁b, hq₂a, hr₁b, hr₂a, hbox⟩ := exists_rat_box_isolating hAfin hApt
+  have hfin : {t : ℝ | sexticVal a₀ a₁ a₂ a₃ a₄ t = 0}.Finite :=
+    (Polynomial.finite_setOfPred_isRoot hPne).subset
+      (fun t ht => by change P.eval t = 0; rw [hPeval]; exact ht)
+  -- Rational parameter windows around `β` and `y₀`, giving the two arcs to cross.
   obtain ⟨u, hu1, hu2⟩ := exists_rat_btwn (show β - 1 < β by linarith)
   obtain ⟨v, hv1, hv2⟩ := exists_rat_btwn (show β < β + 1 by linarith)
   obtain ⟨w, hw1, hw2⟩ := exists_rat_btwn (show y₀ - 1 < y₀ by linarith)
   obtain ⟨z, hz1, hz2⟩ := exists_rat_btwn (show y₀ < y₀ + 1 by linarith)
-  have hS := PConstructibleCurve.restrict
-    (cubicPairArc_PConstructibleCurve h₀ hb₁ hb₂ hzero hzero hah hzero hone
-      (rat_Pconstructible u) (rat_Pconstructible v) (by linarith : ((u : ℝ)) < (v : ℝ)))
-    (q₁ : ℝ) (q₂ : ℝ) (r₁ : ℝ) (r₂ : ℝ) (rat_Pconstructible q₁) (rat_Pconstructible q₂)
-    (rat_Pconstructible r₁) (rat_Pconstructible r₂)
-  have hT := PConstructibleCurve.restrict
-    (cubicPairArc_PConstructibleCurve hzero (neg_Pconstructible h₃)
-      (neg_Pconstructible hone) hzero hzero hone hzero hzero
-      (rat_Pconstructible w) (rat_Pconstructible z) (by linarith : ((w : ℝ)) < (z : ℝ)))
-    (q₁ : ℝ) (q₂ : ℝ) (r₁ : ℝ) (r₂ : ℝ) (rat_Pconstructible q₁) (rat_Pconstructible q₂)
-    (rat_Pconstructible r₁) (rat_Pconstructible r₂)
-  rw [← hFdef] at hS
-  rw [← hGdef] at hT
-  have hy₀P : PConstructible y₀ := by
-    refine PConstructible.inter_y hS hT (x := x₀) (y := y₀) ?_
-    ext p
-    simp only [Set.mem_inter_iff, Set.mem_image, Set.mem_ofPred_eq, Set.mem_singleton_iff]
-    constructor
-    · rintro ⟨⟨⟨t, _, hFt⟩, hb1, hb2, hb3, hb4⟩, ⟨s, _, hGs⟩, -⟩
-      rw [hG s] at hGs
-      have hps : p.2 = s := by rw [← hGs]
-      have hp1 : p.1 = -p.2 ^ 2 - a₃ * p.2 := by rw [← hGs]
-      have hrt : P.IsRoot t := by
-        rw [Polynomial.IsRoot, hPeval]
-        refine hcross t ?_
-        rw [hFt, hp1]
-      have hmemA : p ∈ F '' {t : ℝ | P.IsRoot t} := ⟨t, hrt, hFt⟩
-      have hnotA := hbox p hb1 hb2 hb3 hb4
-      rw [hAdef, Set.mem_sdiff, not_and, not_not] at hnotA
-      simpa using hnotA hmemA
-    · rintro rfl
-      refine ⟨⟨⟨β, ⟨hu2.le, hv1.le⟩, hFβ⟩, hq₁b.le, hq₂a.le, hr₁b.le, hr₂a.le⟩,
-        ⟨y₀, ⟨hw2.le, hz1.le⟩, ?_⟩, hq₁b.le, hq₂a.le, hr₁b.le, hr₂a.le⟩
-      rw [hG y₀, hx₀def]
+  have hS := cubicPairArc_PConstructibleCurve h₀ hb₁ hb₂ hzero hzero hah hzero hone
+    (rat_Pconstructible u) (rat_Pconstructible v) (by linarith : ((u : ℝ)) < (v : ℝ))
+  have hT := cubicPairArc_PConstructibleCurve hzero (neg_Pconstructible h₃)
+    (neg_Pconstructible hone) hzero hzero hone hzero hzero
+    (rat_Pconstructible w) (rat_Pconstructible z) (by linarith : ((w : ℝ)) < (z : ℝ))
+  rw [← hΓdef] at hS
+  rw [← hΔdef] at hT
+  have hTzero : ∀ q ∈ Δ '' Set.Icc (w : ℝ) (z : ℝ), q.1 + q.2 ^ 2 + a₃ * q.2 = 0 := by
+    rintro q ⟨s, -, rfl⟩
+    rw [hΔ s]
+    dsimp only
+    ring
+  have hy₀P : PConstructible y₀ :=
+    (crossing_Pconstructible hS hT (F := fun A B => A + B ^ 2 + a₃ * B)
+      (p := sexticVal a₀ a₁ a₂ a₃ a₄) (Set.image_subset_range Γ _) hTzero
+      (fun t => by rw [hΓdef]; exact sexticVal_eq_cubicPair a₀ a₁ a₂ a₃ a₄ t) hfin
+      ⟨β, ⟨hu2.le, hv1.le⟩, rfl⟩ ⟨y₀, ⟨hw2.le, hz1.le⟩, hΓβ.symm⟩).2
   -- With `y₀` in hand, `β` is a root of the cubic `t³ + a₄t/2 - y₀`.
   refine cubicVal_root_Pconstructible (neg_Pconstructible hy₀P) hah hzero hone
     (Or.inl one_ne_zero) ?_
