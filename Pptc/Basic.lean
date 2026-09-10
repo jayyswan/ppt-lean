@@ -18,6 +18,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 -- Targeted imports rather than `import Mathlib`; see the note in `Pptc.Defs`.
 -- Most of the mathematical content arrives transitively through `Pptc.Defs`.
 import Pptc.Defs
+import Pptc.Tactic
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
@@ -85,16 +86,49 @@ theorem rat_Pconstructible (q : ℚ) : PConstructible (q : ℝ) := by
   convert PConstructible.div h1 h2
   exact Rat.cast_def q
 
+-- Theorem: an explicit rational numeral is P-constructible. The value is taken as a
+-- hypothesis rather than being the subject, so that `norm_num` can match a numeral such
+-- as `3 / 8` against the cast of the corresponding `ℚ`.
+theorem ratval_Pconstructible {x : ℝ} (q : ℚ) (h : (q : ℝ) = x) : PConstructible x :=
+  h ▸ rat_Pconstructible q
+
+open Lean Elab Tactic Meta in
+/-- Leaf rule for the `pconstructible` tactic: close `PConstructible e` when `e` is a
+numeric literal.
+
+This has to be a tactic rule rather than an `apply` rule because `rat_Pconstructible`
+concludes `PConstructible ((q : ℚ) : ℝ)`, and that `Rat.cast` does not unify with the
+`OfNat.ofNat` that a literal like `(37 : ℝ)` elaborates to. Reading the literal off the
+goal and handing `norm_num` the resulting equation sidesteps the mismatch.
+
+Only natural-number literals need handling: `37 / 24` is an `HDiv` node that
+`PConstructible.div` splits, and `-34` a `Neg.neg` node that `neg_Pconstructible`
+peels, so both reach this rule already decomposed. -/
+def numTac : TacticM Unit := do
+  let tgt ← whnfR (← (← getMainGoal).getType)
+  let some e := tgt.app1? ``PConstructible
+    | throwError "pconstructible: not a PConstructible goal"
+  let_expr OfNat.ofNat _ lit _ := e
+    | throwError "pconstructible: {e} is not a numeral"
+  let some n := lit.rawNatLit?
+    | throwError "pconstructible: {lit} is not a raw literal"
+  let q := Syntax.mkNumLit (toString n)
+  evalTactic (← `(tactic| exact ratval_Pconstructible $q (by norm_num)))
+
+attribute [aesop safe tactic (rule_sets := [Pconstructible])] numTac
+
 -- Theorem: 0 is P-constructible.
 theorem zero_Pconstructible : PConstructible (0 : ℝ) := by
   convert PConstructible.sub PConstructible.base_one PConstructible.base_one
   simp
 
 -- Theorem: the negation of a P-constructible number is P-constructible.
+@[pconstructible]
 theorem neg_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (-x) := by
   simpa using PConstructible.sub zero_Pconstructible hx
 
 -- Theorem: the reciprocal of a P-constructible number is P-constructible.
+@[pconstructible]
 theorem inv_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible x⁻¹ := by
   simpa [one_div] using PConstructible.div PConstructible.base_one hx
 
@@ -176,6 +210,7 @@ theorem abscissa_Pconstructible {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve
       by linarith, by linarith, by linarith, le_rfl⟩
 
 -- Theorem: the square root of a P-constructible number is P-constructible.
+@[pconstructible]
 theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible (Real.sqrt x) := by
   by_cases h : x ≤ 0
@@ -196,6 +231,7 @@ theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
       exact ⟨⟨h, by rw [one_mul, Real.sqrt_eq_rpow]⟩, rfl⟩
 
 -- Theorem: the square of a P-constructible number is P-constructible.
+@[pconstructible]
 theorem sq_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (x ^ 2) := by
   have := PConstructible.mul hx hx
   rwa [← sq] at this
@@ -793,6 +829,7 @@ section BezierGraph
 
 open Polynomial
 
+@[pconstructible]
 theorem pow_Pconstructible {x : ℝ} (hx : PConstructible x) :
     ∀ n : ℕ, PConstructible (x ^ n)
   | 0 => by simpa using PConstructible.base_one
@@ -810,19 +847,13 @@ def cubicGraph (c₀ c₁ c₂ c₃ u v : ℝ) : Set (ℝ × ℝ) :=
 
 theorem cubicVal_Pconstructible {c₀ c₁ c₂ c₃ x : ℝ} (h₀ : PConstructible c₀)
     (h₁ : PConstructible c₁) (h₂ : PConstructible c₂) (h₃ : PConstructible c₃)
-    (hx : PConstructible x) : PConstructible (cubicVal c₀ c₁ c₂ c₃ x) :=
-  PConstructible.add (PConstructible.add (PConstructible.add
-    (PConstructible.mul h₃ (pow_Pconstructible hx 3))
-    (PConstructible.mul h₂ (pow_Pconstructible hx 2)))
-    (PConstructible.mul h₁ hx)) h₀
+    (hx : PConstructible x) : PConstructible (cubicVal c₀ c₁ c₂ c₃ x) := by
+  simp only [cubicVal]; pconstructible
 
 theorem cubicDer_Pconstructible {c₁ c₂ c₃ x : ℝ} (h₁ : PConstructible c₁)
     (h₂ : PConstructible c₂) (h₃ : PConstructible c₃) (hx : PConstructible x) :
-    PConstructible (cubicDer c₁ c₂ c₃ x) :=
-  PConstructible.add (PConstructible.add
-    (PConstructible.mul (PConstructible.mul three_Pconstructible h₃)
-      (pow_Pconstructible hx 2))
-    (PConstructible.mul (PConstructible.mul two_Pconstructible h₂) hx)) h₁
+    PConstructible (cubicDer c₁ c₂ c₃ x) := by
+  simp only [cubicDer]; pconstructible
 
 -- Theorem: the graph of a cubic with P-constructible coefficients, over any interval with
 -- P-constructible endpoints, is a constructible curve. The control points are the two
@@ -1473,6 +1504,7 @@ theorem arccos_Pconstructible_of_mem_Icc {x : ℝ} (hx : PConstructible x)
 --
 -- It is the case `x = -1` of the lemma above: the arc from `(1, 0)` round to `(-1, 0)`
 -- is the whole upper half circle, so its length is `arccos (-1) = π`.
+@[pconstructible]
 theorem pi_Pconstructible : PConstructible Real.pi := by
   rw [← Real.arccos_neg_one]
   exact arccos_Pconstructible_of_mem_Icc neg_one_Pconstructible (by norm_num) (by norm_num)
@@ -1484,6 +1516,7 @@ lying at height `a` sits at abscissa `logb 2 a`, so a horizontal line at height 
 the curve exactly there — which is precisely what `abscissa_Pconstructible` consumes. -/
 
 -- Theorem: `logb 2 x` is P-constructible for positive P-constructible `x`.
+@[pconstructible_cond]
 theorem logb_two_Pconstructible {x : ℝ} (hx : PConstructible x) (hxpos : 0 < x) :
     PConstructible (Real.logb 2 x) := by
   refine abscissa_Pconstructible PConstructibleCurve.exp_two hx ?_
@@ -1507,6 +1540,7 @@ abscissa, and `rpow_Pconstructible` then gets every positive base from
 -- `2 ^ x` outgrows every polynomial in `x`, so there is no algebraic bound on it to
 -- supply. None is needed: `ordinate_Pconstructible` gets its segment from the
 -- Archimedean property rather than from a formula.
+@[pconstructible]
 theorem rpow_two_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible ((2 : ℝ) ^ x) := by
   refine ordinate_Pconstructible PConstructibleCurve.exp_two hx ?_
@@ -1521,6 +1555,7 @@ theorem rpow_two_Pconstructible {x : ℝ} (hx : PConstructible x) :
 
 -- Theorem: `a ^ b` is P-constructible for positive P-constructible `a` and
 -- P-constructible `b`, since `a ^ b = 2 ^ (b * logb 2 a)`.
+@[pconstructible_cond]
 theorem rpow_Pconstructible {a b : ℝ} (ha : PConstructible a) (hb : PConstructible b)
     (hapos : 0 < a) : PConstructible (a ^ b) := by
   have key : (2 : ℝ) ^ (b * Real.logb 2 a) = a ^ b := by
@@ -1660,6 +1695,7 @@ theorem parabolaAntideriv_val {a : ℝ} (hapos : 0 < a) :
   ring
 
 -- Theorem: the natural logarithm of a positive P-constructible number is P-constructible.
+@[pconstructible_cond]
 theorem log_Pconstructible {a : ℝ} (ha : PConstructible a) (hapos : 0 < a) :
     PConstructible (Real.log a) := by
   have ha0 : a ≠ 0 := hapos.ne'
@@ -1686,6 +1722,7 @@ theorem log_Pconstructible {a : ℝ} (ha : PConstructible a) (hapos : 0 < a) :
   exact PConstructible.sub (PConstructible.mul h4 hG) hq
 
 -- e is P-constructible: ln is now available, so `e = 2 ^ (1 / ln 2)`.
+@[pconstructible]
 theorem exp_one_Pconstructible : PConstructible (Real.exp 1) := by
   have hln2 : PConstructible (Real.log 2) := log_Pconstructible two_Pconstructible (by norm_num)
   have h : Real.exp 1 = (2 : ℝ) ^ (1 / Real.log 2) := by
@@ -1858,6 +1895,7 @@ theorem hyperbola_neg_PConstructibleCurve {c : ℝ} (hc : PConstructible c) :
 -- this is the junk value `0`; inside it, `W x` is the abscissa where the exponential
 -- curve `y = e ^ u` meets the hyperbola `y = x / u`, since that crossing is exactly the
 -- equation `u * exp u = x`.
+@[pconstructible]
 theorem lambertW_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible (lambertW x) := by
   by_cases hdom : -Real.exp (-1) ≤ x
@@ -2175,6 +2213,7 @@ theorem laplaceLimit_spec :
   ring
 
 -- Theorem: the root is P-constructible.
+@[pconstructible]
 theorem laplaceRoot_Pconstructible : PConstructible laplaceRoot := by
   have hE : PConstructible (Real.exp 2) := by
     rw [show (2 : ℝ) = 1 + 1 by norm_num, Real.exp_add]
@@ -2220,11 +2259,9 @@ theorem laplaceRoot_Pconstructible : PConstructible laplaceRoot := by
     exact ⟨rfl, ⟨hpos, hroot⟩, hmem.1.1, hmem.1.2, (Real.exp_pos _).le, hle⟩
 
 -- Theorem: the Laplace limit is P-constructible.
-theorem laplaceLimit_Pconstructible : PConstructible laplaceLimit :=
-  PConstructible.div
-    (sqrt_Pconstructible (PConstructible.mul laplaceRoot_Pconstructible
-      (PConstructible.add laplaceRoot_Pconstructible four_Pconstructible)))
-    two_Pconstructible
+@[pconstructible]
+theorem laplaceLimit_Pconstructible : PConstructible laplaceLimit := by
+  simp only [laplaceLimit]; pconstructible
 
 end LaplaceLimit
 
@@ -2404,16 +2441,19 @@ theorem cos_sin_Pconstructible {x : ℝ} (hx : PConstructible x) :
     simpa using neg_Pconstructible hsn
 
 -- Theorem: the cosine of a P-constructible number is P-constructible.
+@[pconstructible]
 theorem cos_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.cos x) :=
   (cos_sin_Pconstructible hx).1
 
 -- Theorem: the sine of a P-constructible number is P-constructible.
+@[pconstructible]
 theorem sin_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.sin x) :=
   (cos_sin_Pconstructible hx).2
 
 -- Theorem: the tangent of a P-constructible number is P-constructible. No hypothesis is
 -- needed at the poles: there `cos x = 0`, and Lean's division makes `tan x = 0`, which is
 -- P-constructible anyway.
+@[pconstructible]
 theorem tan_Pconstructible {x : ℝ} (hx : PConstructible x) : PConstructible (Real.tan x) := by
   rw [Real.tan_eq_sin_div_cos]
   exact PConstructible.div (sin_Pconstructible hx) (cos_Pconstructible hx)
@@ -2540,6 +2580,7 @@ theorem eq_dottie {x : ℝ} (hx : Real.cos x = x) : x = dottie :=
 -- The cosine graph and the diagonal `y = x` meet exactly at `(d, d)`: a point of both is a
 -- point `(u, v)` with `v = cos u` and `v = u`, hence a fixed point of the cosine, hence `d`
 -- by `eq_dottie`. That singleton is what `PConstructible.inter_x` needs.
+@[pconstructible]
 theorem dottie_Pconstructible : PConstructible dottie := by
   refine PConstructible.inter_x (y := dottie) cos_graph_PConstructibleCurve
     diagonal_PConstructibleCurve ?_
@@ -2572,6 +2613,7 @@ core and not by anything built on it. -/
 
 -- Theorem: the arccosine of a P-constructible number is P-constructible. No bound on `x`
 -- is needed: outside `[-1, 1]` Mathlib's `arccos` is constantly `π` or `0`.
+@[pconstructible]
 theorem arccos_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible (Real.arccos x) := by
   rcases le_total x (-1) with h | h₁
@@ -2586,6 +2628,7 @@ theorem arccos_Pconstructible {x : ℝ} (hx : PConstructible x) :
 --
 -- `arccos` is *defined* in Mathlib as `π / 2 - arcsin`, so this is the previous theorem
 -- rearranged; the complementary angle costs only a subtraction and a halving.
+@[pconstructible]
 theorem arcsin_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible (Real.arcsin x) := by
   have h := PConstructible.sub (PConstructible.div pi_Pconstructible two_Pconstructible)
@@ -2596,6 +2639,7 @@ theorem arcsin_Pconstructible {x : ℝ} (hx : PConstructible x) :
 --
 -- Via `arctan x = arcsin (x / √(1 + x²))`. Unlike `tan_Pconstructible` there are no poles
 -- to worry about, and `1 + x²` is positive, so the square root is a genuine one.
+@[pconstructible]
 theorem arctan_Pconstructible {x : ℝ} (hx : PConstructible x) :
     PConstructible (Real.arctan x) := by
   rw [Real.arctan_eq_arcsin]
@@ -2758,14 +2802,7 @@ theorem exists_rotation_param {c s : ℝ} (hcP : PConstructible c) (hsc : s ^ 2 
     linear_combination 3 * hDsq
   refine ⟨p, ?_, hquad, ?_, ?_, ?_⟩
   · rw [hp_def]
-    exact PConstructible.div
-      (PConstructible.add
-        (neg_Pconstructible (PConstructible.sub
-          (PConstructible.mul h16 (sq_Pconstructible hcP)) h6))
-        (sqrt_Pconstructible (PConstructible.sub
-          (sq_Pconstructible (PConstructible.sub
-            (PConstructible.mul h16 (sq_Pconstructible hcP)) h6)) h36)))
-      h6
+    pconstructible
   · intro h
     have hp1 : p = 1 := by linarith
     rw [hp1] at hquad
@@ -2833,12 +2870,7 @@ theorem rotate_small_PConstructibleCurve {S : Set (ℝ × ℝ)} (hS : PConstruct
       (PConstructible.add hpP three_Pconstructible)
   have hHP : PConstructible H := by
     rw [hH_def]
-    exact PConstructible.div
-      (PConstructible.mul (PConstructible.mul hsP hrP)
-        (PConstructible.sub hpP PConstructible.base_one))
-      (PConstructible.mul hcP
-        (PConstructible.add (PConstructible.mul three_Pconstructible hpP)
-          PConstructible.base_one))
+    pconstructible
   have hM : linearMap c (-s) s c =
       linearMap A 0 0 B ∘
         linearMap (Real.sqrt 3 / 2) (-(1 / 2)) (1 / 2) (Real.sqrt 3 / 2) ∘
@@ -3256,6 +3288,7 @@ theorem exists_int_half_turns (x : ℝ) :
 --
 -- `c < 1` is what makes the ellipse drawable: `b = √(1 - c)` has to be a positive length.
 -- It is also exactly the range in which the integrand is real for every `θ`.
+@[pconstructible_cond]
 theorem ellipticE_Pconstructible {c φ : ℝ} (hc : PConstructible c) (hφ : PConstructible φ)
     (hc1 : c < 1) : PConstructible (ellipticE c φ) := by
   have hb : Real.sqrt (1 - c) ^ 2 = 1 - c := Real.sq_sqrt (by linarith)
@@ -3779,20 +3812,9 @@ theorem ellipticF_Pconstructible_of_pos {c φ : ℝ} (hcP : PConstructible c)
   have hQ : PConstructible (Real.sqrt (firstKindQuartic m (Real.tan φ))) := by
     refine sqrt_Pconstructible ?_
     unfold firstKindQuartic
-    exact PConstructible.add
-      (sq_Pconstructible (PConstructible.sub PConstructible.base_one
-        (PConstructible.mul hmP (sq_Pconstructible hTP))))
-      (sq_Pconstructible (PConstructible.mul
-        (PConstructible.add PConstructible.base_one hmP) hTP))
+    pconstructible
   have hE := ellipticE_Pconstructible hcP hφP hc
-  exact PConstructible.div
-    (PConstructible.sub
-      (PConstructible.sub (PConstructible.mul three_Pconstructible hJ)
-        (PConstructible.mul (PConstructible.add PConstructible.base_one (sq_Pconstructible hmP))
-          (PConstructible.div (PConstructible.sub (PConstructible.mul hTP hEint) hE)
-            (sq_Pconstructible hmP))))
-      (PConstructible.mul hTP hQ))
-    two_Pconstructible
+  pconstructible
 
 -- Theorem: `F` is odd, since its integrand is even.
 theorem ellipticF_neg (c φ : ℝ) : ellipticF c (-φ) = -ellipticF c φ := by
@@ -3958,6 +3980,7 @@ theorem ellipticF_add_int_mul_pi {c : ℝ} (hc : c < 1) (φ : ℝ) (n : ℤ) :
 --
 -- Reduction modulo `π` on top of the reflection above, so no restriction on `φ` at all —
 -- matching `ellipticE_Pconstructible`.
+@[pconstructible_cond]
 theorem ellipticF_Pconstructible {c φ : ℝ} (hcP : PConstructible c) (hφP : PConstructible φ)
     (hc : c < 1) : PConstructible (ellipticF c φ) := by
   obtain ⟨n, h0, hpi⟩ := exists_int_half_turns φ
@@ -4819,6 +4842,7 @@ theorem ellipticPi_self {c : ℝ} (hc0 : 0 < c) (hc : c < 1) :
   rw [eq_div_iff hne1]
   linear_combination -hkey
 
+@[pconstructible]
 theorem ellipticEIntegrand_Pconstructible {c θ : ℝ} (hc : PConstructible c)
     (hθ : PConstructible θ) : PConstructible (ellipticEIntegrand c θ) :=
   sqrt_Pconstructible (PConstructible.sub PConstructible.base_one
@@ -4829,6 +4853,7 @@ theorem pi_div_two_Pconstructible : PConstructible (Real.pi / 2) :=
 
 -- Theorem: the complete elliptic integral of the third kind `Π(n, c)` is P-constructible
 -- for every P-constructible parameter `n < 1` and every P-constructible `0 < c < 1`.
+@[pconstructible_cond]
 theorem ellipticPi_Pconstructible {c n : ℝ} (hcP : PConstructible c) (hnP : PConstructible n)
     (hc0 : 0 < c) (hc : c < 1) (hn : n < 1) : PConstructible (ellipticPi c n) := by
   have hK : PConstructible (ellipticF c (Real.pi / 2)) :=
@@ -4864,14 +4889,11 @@ theorem ellipticPi_Pconstructible {c n : ℝ} (hcP : PConstructible c) (hnP : PC
         (PConstructible.add PConstructible.base_one (PConstructible.mul hcP
           (sq_Pconstructible hXP))))
     have hatP : PConstructible (Real.arctan X) := arctan_Pconstructible hXP
-    exact PConstructible.add hK (PConstructible.mul hnP (PConstructible.div
-      (PConstructible.sub (PConstructible.add
-        (PConstructible.mul hK (PConstructible.div (PConstructible.mul hXP hWP)
-          (PConstructible.add PConstructible.base_one (sq_Pconstructible hXP))))
-        (PConstructible.mul (PConstructible.sub hK hEE)
-          (ellipticF_Pconstructible hccP hatP hcc)))
-        (PConstructible.mul hK (ellipticE_Pconstructible hccP hatP hcc)))
-      (PConstructible.mul (PConstructible.mul hcP hXP) hWP)))
+    -- `lowerQ c X` is by definition `c * X * lowerW c X`, but `pconstructible` matches
+    -- syntactically and will not unfold a `def`, so the denominator is supplied here.
+    have hQP : PConstructible (lowerQ c X) :=
+      PConstructible.mul (PConstructible.mul hcP hXP) hWP
+    pconstructible
   · rw [hzero, ellipticPi_zero hc]; exact hK
   · rcases lt_trichotomy n c with hlt | heq | hgt
     · set B := Real.arcsin (Real.sqrt (n / c)) with hBdef
@@ -4903,12 +4925,7 @@ theorem ellipticPi_Pconstructible {c n : ℝ} (hcP : PConstructible c) (hnP : PC
       rw [ellipticPi_eq_aux hc hn, hA]
       have hBP : PConstructible B :=
         arcsin_Pconstructible (sqrt_Pconstructible (PConstructible.div hnP hcP))
-      exact PConstructible.add hK (PConstructible.mul hnP (PConstructible.div
-        (PConstructible.sub (PConstructible.mul hK (ellipticE_Pconstructible hcP hBP hc))
-          (PConstructible.mul hEE (ellipticF_Pconstructible hcP hBP hc)))
-        (PConstructible.mul (PConstructible.mul (PConstructible.mul hcP
-          (sin_Pconstructible hBP)) (cos_Pconstructible hBP))
-          (ellipticEIntegrand_Pconstructible hcP hBP))))
+      pconstructible
     · rw [heq, ellipticPi_self hc0 hc]
       exact PConstructible.div hEE hccP
     · set X := Real.sqrt ((n - c) / (1 - n)) with hXdef
@@ -4950,19 +4967,8 @@ theorem ellipticPi_Pconstructible {c n : ℝ} (hcP : PConstructible c) (hnP : PC
         PConstructible.sub pi_div_two_Pconstructible (arctan_Pconstructible hXP)
       have hQP : PConstructible (upperQ c X) := by
         rw [upperQ]
-        exact PConstructible.div (PConstructible.mul (PConstructible.mul hccP hXP) hSP)
-          (PConstructible.mul (PConstructible.add PConstructible.base_one
-            (sq_Pconstructible hXP)) hRP)
-      exact PConstructible.add hK (PConstructible.mul hnP (PConstructible.div
-        (PConstructible.sub
-          (PConstructible.sub (PConstructible.mul (PConstructible.sub hK hEE)
-            (ellipticF_Pconstructible hccP hpsiP hcc))
-            (PConstructible.mul hK (ellipticE_Pconstructible hccP hpsiP hcc)))
-          (PConstructible.sub (PConstructible.mul (PConstructible.sub hK hEE)
-            (ellipticF_Pconstructible hccP pi_div_two_Pconstructible hcc))
-            (PConstructible.mul hK
-              (ellipticE_Pconstructible hccP pi_div_two_Pconstructible hcc))))
-        hQP))
+        pconstructible
+      pconstructible
 
 /-! #### In terms of the modulus
 

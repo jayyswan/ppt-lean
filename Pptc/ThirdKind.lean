@@ -198,24 +198,14 @@ theorem ellipticPiInc_self_Pconstructible {c φ : ℝ} (hcP : PConstructible c)
     (hφP : PConstructible φ) (hc : c < 1) :
     PConstructible (ellipticPiInc c c φ) := by
   rw [ellipticPiInc_self hc]
-  exact PConstructible.div
-    (PConstructible.sub (ellipticE_Pconstructible hcP hφP hc)
-      (PConstructible.div (PConstructible.mul (PConstructible.mul hcP (sin_Pconstructible hφP))
-        (cos_Pconstructible hφP)) (ellipticEIntegrand_Pconstructible hcP hφP)))
-    (PConstructible.sub PConstructible.base_one hcP)
+  pconstructible
 
 -- Theorem: `Π(1, φ, c)` is P-constructible for `|φ| < π/2`.
 theorem ellipticPiInc_one_Pconstructible {c φ : ℝ} (hcP : PConstructible c)
     (hφP : PConstructible φ) (hc : c < 1) (hφ : |φ| < Real.pi / 2) :
     PConstructible (ellipticPiInc c 1 φ) := by
   rw [ellipticPiInc_one hc hφ]
-  exact PConstructible.add (ellipticF_Pconstructible hcP hφP hc)
-    (PConstructible.div
-      (PConstructible.sub
-        (PConstructible.mul (tan_Pconstructible hφP)
-          (ellipticEIntegrand_Pconstructible hcP hφP))
-        (ellipticE_Pconstructible hcP hφP hc))
-      (PConstructible.sub PConstructible.base_one hcP))
+  pconstructible
 
 /-! ### The interchange relation
 
@@ -820,9 +810,7 @@ theorem arcLength_thirdKind_Pconstructible {c m h Φ : ℝ} (hm : m ^ 2 = 1 - c)
       · exact (hmono hψ ⟨h0.le, le_rfl⟩ h').le
   have hTP : PConstructible T := by
     rw [hTdef, thirdKindTan, thirdKindDen]
-    exact PConstructible.div (sin_Pconstructible hΦP)
-      (PConstructible.add (cos_Pconstructible hΦP)
-        (PConstructible.mul hhP (sin_Pconstructible hΦP)))
+    pconstructible
   refine PConstructible.arc_length (thirdKindBezier_PConstructibleCurve hmP hhP hTP)
     (thirdKindTanParam m h) h0.le ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
   · rintro p ⟨ψ, hψ, rfl⟩
@@ -1184,6 +1172,7 @@ theorem twelve_Pconstructible : PConstructible (12 : ℝ) := by
   norm_num at h
   exact h
 
+@[pconstructible]
 theorem quarticArcAnti_Pconstructible {q4 q3 q2 q1 q0 t : ℝ}
     (h4 : PConstructible q4) (h3 : PConstructible q3) (h2 : PConstructible q2)
     (h1 : PConstructible q1) (h0 : PConstructible q0) (ht : PConstructible t) :
@@ -1192,11 +1181,7 @@ theorem quarticArcAnti_Pconstructible {q4 q3 q2 q1 q0 t : ℝ}
   refine PConstructible.mul (PConstructible.add
     (PConstructible.div h3 (PConstructible.mul twelve_Pconstructible h4))
     (PConstructible.div ht three_Pconstructible)) (sqrt_Pconstructible ?_)
-  exact PConstructible.add (PConstructible.add (PConstructible.add
-    (PConstructible.add (PConstructible.mul h4 (pow_Pconstructible ht 4))
-      (PConstructible.mul h3 (pow_Pconstructible ht 3)))
-      (PConstructible.mul h2 (pow_Pconstructible ht 2)))
-      (PConstructible.mul h1 ht)) h0
+  pconstructible
 
 theorem thirdKindQs_Pconstructible {m h : ℝ} (hmP : PConstructible m)
     (hhP : PConstructible h) :
@@ -1219,55 +1204,46 @@ where
   nat_four : PConstructible (4 : ℝ) := by
     have h := nat_Pconstructible 4; norm_num at h; exact h
 
+@[pconstructible]
 theorem thirdKindTan_Pconstructible {h Φ : ℝ} (hhP : PConstructible h)
     (hΦP : PConstructible Φ) : PConstructible (thirdKindTan h Φ) := by
   rw [thirdKindTan, thirdKindDen]
-  exact PConstructible.div (sin_Pconstructible hΦP)
-    (PConstructible.add (cos_Pconstructible hΦP)
-      (PConstructible.mul hhP (sin_Pconstructible hΦP)))
+  pconstructible
 
+@[pconstructible]
 theorem thirdKindAnti_Pconstructible {c n Φ : ℝ} (hcP : PConstructible c)
     (hnP : PConstructible n) (hΦP : PConstructible Φ) :
     PConstructible (thirdKindAnti c n Φ) := by
   rw [thirdKindAnti]
-  exact PConstructible.div (PConstructible.mul (PConstructible.mul
-    (PConstructible.mul hnP (sin_Pconstructible hΦP)) (cos_Pconstructible hΦP))
-    (ellipticEIntegrand_Pconstructible hcP hΦP))
-    (PConstructible.sub PConstructible.base_one
-      (PConstructible.mul hnP (sq_Pconstructible (sin_Pconstructible hΦP))))
+  pconstructible
 
 theorem eight_Pconstructible : PConstructible (8 : ℝ) := by
   have h := nat_Pconstructible 8; norm_num at h; exact h
 theorem twentyfour_Pconstructible : PConstructible (24 : ℝ) := by
   have h := nat_Pconstructible 24; norm_num at h; exact h
 
+@[pconstructible]
 theorem thirdKindAlpha_Pconstructible {m h : ℝ} (hmP : PConstructible m)
     (hhP : PConstructible h) : PConstructible (thirdKindAlpha m h) := by
   obtain ⟨h4, h3, h2, h1⟩ := thirdKindQs_Pconstructible hmP hhP
   rw [thirdKindAlpha]
-  exact PConstructible.sub (PConstructible.div two_Pconstructible three_Pconstructible)
-    (PConstructible.div (PConstructible.mul h3 h1)
-      (PConstructible.mul twentyfour_Pconstructible h4))
+  pconstructible
 
+@[pconstructible]
 theorem thirdKindGamma_Pconstructible {m h : ℝ} (hmP : PConstructible m)
     (hhP : PConstructible h) : PConstructible (thirdKindGamma m h) := by
   obtain ⟨h4, h3, h2, h1⟩ := thirdKindQs_Pconstructible hmP hhP
   rw [thirdKindGamma]
-  exact PConstructible.sub (PConstructible.div h2 three_Pconstructible)
-    (PConstructible.div (sq_Pconstructible h3)
-      (PConstructible.mul eight_Pconstructible h4))
+  pconstructible
 
+@[pconstructible]
 theorem thirdKindPiCoeff_Pconstructible {m h : ℝ} (hmP : PConstructible m)
     (hhP : PConstructible h) : PConstructible (thirdKindPiCoeff m h) := by
   have h2 := sq_Pconstructible hhP
   have hm2 := sq_Pconstructible hmP
   have h4 : PConstructible (h ^ 4) := pow_Pconstructible hhP 4
   rw [thirdKindPiCoeff]
-  exact PConstructible.div
-    (PConstructible.mul (PConstructible.mul h2 (PConstructible.sub h4 hm2))
-      (sq_Pconstructible (PConstructible.sub hm2 PConstructible.base_one)))
-    (PConstructible.mul (sq_Pconstructible (PConstructible.add h2 PConstructible.base_one))
-      (sq_Pconstructible (PConstructible.add h2 hm2)))
+  pconstructible
 
 theorem thirdKindPiCoeff_ne_zero {m h : ℝ} (hm0 : m ≠ 0) (hh0 : h ≠ 0)
     (hne4 : h ^ 4 ≠ m ^ 2) (hm1 : m ^ 2 ≠ 1) : thirdKindPiCoeff m h ≠ 0 := by
@@ -1335,11 +1311,7 @@ theorem ellipticPiAux_Pconstructible_gt_one {c m h Φ : ℝ}
           (quarticArcAnti_Pconstructible hQ4' hQ3' hQ2' hQ1' hone hzero))))
       (PConstructible.mul (PConstructible.mul two_Pconstructible
         (thirdKindAlpha_Pconstructible hmP hhP)) hFP)) ?_
-    exact PConstructible.mul (PConstructible.div (PConstructible.mul two_Pconstructible
-      (thirdKindGamma_Pconstructible hmP hhP)) hQ4)
-      (PConstructible.add (PConstructible.sub
-        (PConstructible.mul (PConstructible.sub hone hnP) hFP) hEP)
-        (thirdKindAnti_Pconstructible hcP hnP hΦP))
+    pconstructible
   have heq : thirdKindPiCoeff m h * ellipticPiAux c (1 + h ^ 2) Φ
       = (arcLengthOf (thirdKindTanParam m h) 0 Φ
           + arcLengthOf (thirdKindTanParam m (-h)) 0 Φ)

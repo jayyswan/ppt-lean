@@ -1,4 +1,5 @@
 import Pptc.Defs
+import Pptc.Tactic
 import Pptc.Basic
 import Pptc.ThirdKind
 import Pptc.GaussMultiplicationK3
