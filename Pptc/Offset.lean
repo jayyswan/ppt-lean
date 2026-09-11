@@ -52,7 +52,7 @@ subset of a finite set is finite; the spurious roots enlarge the bound and do no
 else. The offset is used as the *first* curve of the crossing, the one presented by a
 parametrization, so its implicit equation is never needed — only this bound on how often
 the composite can vanish. See `offsetCrossPoly_eq_zero_of_offsetCrossVal` and
-`offsetCubicPairCross_point_Pconstructible`.
+`offsetCubicPair_cross_point_Pconstructible`.
 
 **The parameter comes back off the offset for free.** Reading a crossing gives the point
 `(X, Y)` of the offset, not the parameter `β` that produced it, and there is no reason a
@@ -64,8 +64,11 @@ velocity, so
 
 With `x`, `y` cubic that is a **quintic** in `β` with P-constructible coefficients — degree
 `5`, comfortably inside `root_Pconstructible_le_six_coeffs`. So the recovery step is
-cheaper than the construction, which is the opposite of the usual situation. See
-`offsetParam_normal_eq_zero` and `offsetCubicPairCross_root_Pconstructible`.
+cheaper than the construction, which is the opposite of the usual situation — and, since
+it is a statement about the *first* curve alone, it does not care what the offset was
+crossed with. That is why `offsetCubicPair_cross_root_Pconstructible` leaves the second
+curve open: a harder one raises the degree of what is solved without raising the degree of
+anything that has to be undone. See `offsetParam_normal_eq_zero`.
 
 ## The conjecture this is aimed at
 
@@ -298,12 +301,17 @@ theorem offsetCubicPairArc_PConstructibleCurve {c₀ c₁ c₂ c₃ e₀ e₁ e�
 
 /-! ### The line `A·X + B·Y = C` as a drawn arc
 
-The second curve of the crossing. `poly_graph` will not do: its coefficients are rational,
-while the whole point here is a line whose coefficients are P-constructible, and it cannot
-draw a vertical line at all. A cubic pair can do both at once — take both coordinates
-affine in the parameter — and the parametrization chosen runs from the foot of the
-perpendicular from the origin in the direction `(-B, A)`, which needs no case split on
-which of `A`, `B` is nonzero. -/
+The second curve of the crossing, and nothing new: `segment_PConstructibleCurve` already
+draws the segment between any two P-constructible points, vertical ones included, and the
+two endpoints needed here are P-constructible expressions in `A`, `B`, `C` and a pair of
+rationals. This is a repackaging, not an addition.
+
+What it buys is shape. `crossing_Pconstructible` wants the second curve given by a
+*parametrization* whose parameter locates the crossing, and a cubic pair with both
+coordinates affine in the parameter is exactly that; `lineParam_surj` then names the
+parameter of a given point outright. Running from the foot of the perpendicular from the
+origin in the direction `(-B, A)` also avoids a case split on which of `A`, `B` is
+nonzero, which a slope form would force. -/
 
 /-- The line `A·X + B·Y = C`, parametrized from the foot of the perpendicular dropped on it
 from the origin, running in the direction `(-B, A)`. Degenerate (a single point) when
@@ -517,16 +525,112 @@ theorem quinticVal_root_Pconstructible {r₀ r₁ r₂ r₃ r₄ r₅ β : ℝ}
       Polynomial.eval_C, Polynomial.eval_X]
     linarith [hroot]
 
-/-! ### The crossing, and the parameter behind it
+/-! ### The degree engine, with the second curve left open
 
-`offsetCubicPairCross_point_Pconstructible` reads the crossing off the plane: it is
-`crossing_Pconstructible` with the offset arc as the parametrized curve and the line as the
-one carrying the implicit equation, which is the arrangement that keeps the implicit
-equation of the offset out of the argument entirely.
+The two theorems here are the reusable core, and they are deliberately silent about what
+the offset is crossed with. `crossing_Pconstructible` asks the second curve only for an
+implicit equation `F` vanishing on it and for the composite `F ∘ Γ` to have finitely many
+zeros, so those are exactly the hypotheses taken; a line, a conic, a polynomial graph and
+a sine curve are all instances, differing only in the finiteness bound each needs.
 
-`offsetCubicPairCross_root_Pconstructible` then recovers the parameter, by the
-orthogonality of the offset displacement to the velocity. Together they say: the degree-10
-crossing equation of an offset cubic pair against a line has P-constructible roots. -/
+The recovery of the parameter is likewise indifferent to the second curve.
+`offsetParam_normal_eq_zero` is a statement about the *first* curve alone — the
+displacement to the offset is along the normal, so it kills the velocity, whatever else
+happens to pass through that point. With the cubic pair that is a quintic, and a quintic
+is two degrees inside `root_Pconstructible_le_six_coeffs` no matter how high the degree of
+the crossing equation climbs. That asymmetry is what makes the engine worth having: adding
+a harder second curve raises the degree of what is *solved* without raising the degree of
+anything that has to be *undone*. -/
+
+-- Theorem: both coordinates of a point where the offset of a cubic pair meets any
+-- constructible curve are P-constructible.
+theorem offsetCubicPair_cross_point_Pconstructible {T : Set (ℝ × ℝ)}
+    (hT : PConstructibleCurve T) {F : ℝ → ℝ → ℝ}
+    {c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d β : ℝ}
+    (hc₀ : PConstructible c₀) (hc₁ : PConstructible c₁) (hc₂ : PConstructible c₂)
+    (hc₃ : PConstructible c₃) (he₀ : PConstructible e₀) (he₁ : PConstructible e₁)
+    (he₂ : PConstructible e₂) (he₃ : PConstructible e₃) (hd : PConstructible d)
+    -- `F` vanishes on the second curve ...
+    (hTzero : ∀ q ∈ T, F q.1 q.2 = 0)
+    -- ... and vanishes only finitely often along the offset.
+    (hfin : {t : ℝ | F (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d t).1
+        (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d t).2 = 0}.Finite)
+    -- The arc is regular at `β`, and the offset really does meet the second curve there.
+    (hreg : cubicDer c₁ c₂ c₃ β ≠ 0 ∨ cubicDer e₁ e₂ e₃ β ≠ 0)
+    (hβT : offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β ∈ T) :
+    PConstructible (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).1 ∧
+      PConstructible (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).2 := by
+  set γ : ℝ → ℝ × ℝ := cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ with hγ
+  set Γ : ℝ → ℝ × ℝ := offsetParam γ d with hΓ
+  obtain ⟨u, v, hu, hv, hwin, hinj⟩ :=
+    exists_rat_window_cubicPair (c₀ := c₀) (e₀ := e₀) hreg
+  have huv : (u : ℝ) < (v : ℝ) := lt_trans hu hv
+  have hmemβ : β ∈ Set.Icc (u : ℝ) (v : ℝ) := ⟨hu.le, hv.le⟩
+  have hS := offsetCubicPairArc_PConstructibleCurve hc₀ hc₁ hc₂ hc₃ he₀ he₁ he₂ he₃ hd
+    (rat_Pconstructible u) (rat_Pconstructible v) huv hwin hinj
+  rw [← hγ, ← hΓ] at hS
+  exact crossing_Pconstructible hS hT (Set.image_subset_range Γ _) hTzero
+    (fun t => rfl) hfin ⟨β, hmemβ, rfl⟩ hβT
+
+-- Theorem: the expansion of the orthogonality relation between the offset displacement and
+-- the velocity. It is a quintic in the parameter, with coefficients built from the crossing
+-- point and the coefficients of the cubic pair by `+ - *` alone.
+theorem normalEq_eq_quinticVal (X Y c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ t : ℝ) :
+    (X - cubicVal c₀ c₁ c₂ c₃ t) * cubicDer c₁ c₂ c₃ t
+        + (Y - cubicVal e₀ e₁ e₂ e₃ t) * cubicDer e₁ e₂ e₃ t
+      = -3 * (c₃ ^ 2 + e₃ ^ 2) * t ^ 5
+        + -5 * (c₂ * c₃ + e₂ * e₃) * t ^ 4
+        + -(4 * c₁ * c₃ + 2 * c₂ ^ 2 + 4 * e₁ * e₃ + 2 * e₂ ^ 2) * t ^ 3
+        + (3 * X * c₃ + 3 * Y * e₃ - 3 * c₁ * c₂ - 3 * c₀ * c₃ - 3 * e₁ * e₂
+            - 3 * e₀ * e₃) * t ^ 2
+        + (2 * X * c₂ + 2 * Y * e₂ - c₁ ^ 2 - 2 * c₀ * c₂ - e₁ ^ 2 - 2 * e₀ * e₂) * t
+        + (X * c₁ + Y * e₁ - c₀ * c₁ - e₀ * e₁) := by
+  simp only [cubicVal, cubicDer]
+  ring
+
+-- Theorem: and the parameter behind such a crossing is P-constructible too, whatever the
+-- second curve was. This is the engine: the degree of the equation actually solved is set
+-- by `F`, and can be as high as one likes, while the step that undoes the construction
+-- stays a quintic.
+theorem offsetCubicPair_cross_root_Pconstructible {T : Set (ℝ × ℝ)}
+    (hT : PConstructibleCurve T) {F : ℝ → ℝ → ℝ}
+    {c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d β : ℝ}
+    (hc₀ : PConstructible c₀) (hc₁ : PConstructible c₁) (hc₂ : PConstructible c₂)
+    (hc₃ : PConstructible c₃) (he₀ : PConstructible e₀) (he₁ : PConstructible e₁)
+    (he₂ : PConstructible e₂) (he₃ : PConstructible e₃) (hd : PConstructible d)
+    (hTzero : ∀ q ∈ T, F q.1 q.2 = 0)
+    (hfin : {t : ℝ | F (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d t).1
+        (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d t).2 = 0}.Finite)
+    -- The cubic pair has a genuine cubic term, so the recovery quintic is not degenerate.
+    (hcubic : c₃ ≠ 0 ∨ e₃ ≠ 0)
+    (hreg : cubicDer c₁ c₂ c₃ β ≠ 0 ∨ cubicDer e₁ e₂ e₃ β ≠ 0)
+    (hβT : offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β ∈ T) :
+    PConstructible β := by
+  obtain ⟨hX, hY⟩ := offsetCubicPair_cross_point_Pconstructible hT hc₀ hc₁ hc₂ hc₃ he₀ he₁
+    he₂ he₃ hd hTzero hfin hreg hβT
+  set X : ℝ := (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).1 with hXdef
+  set Y : ℝ := (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).2 with hYdef
+  have h5ne : -3 * (c₃ ^ 2 + e₃ ^ 2) ≠ 0 := by
+    have hpos : 0 < c₃ ^ 2 + e₃ ^ 2 := by rcases hcubic with h | h <;> positivity
+    intro hz
+    nlinarith
+  -- The displacement to the crossing point is along the normal, hence kills the velocity:
+  -- one polynomial equation in `β`, of degree `5`.
+  have hnormal : (X - cubicVal c₀ c₁ c₂ c₃ β) * cubicDer c₁ c₂ c₃ β
+      + (Y - cubicVal e₀ e₁ e₂ e₃ β) * cubicDer e₁ e₂ e₃ β = 0 := by
+    have h := offsetParam_normal_eq_zero (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β
+    rwa [deriv_cubicPairParam_fst, deriv_cubicPairParam_snd] at h
+  rw [normalEq_eq_quinticVal] at hnormal
+  exact quinticVal_root_Pconstructible (by pconstructible) (by pconstructible)
+    (by pconstructible) (by pconstructible) (by pconstructible) (by pconstructible)
+    h5ne hnormal
+
+/-! ### The line as the first instance
+
+With the engine in place a second curve costs only its finiteness bound. For a line that
+bound is the degree-10 rationalization, and `line_offset_mul_speed` is what connects the
+two: the line's implicit equation at the offset point, times the speed, is exactly
+`offsetCrossVal`, whose vanishing forces `offsetCrossPoly` to vanish. -/
 
 -- Theorem: the line's implicit equation, evaluated at the offset point and cleared of its
 -- denominator, is exactly `offsetCrossVal`. At a singular parameter both sides vanish, the
@@ -553,89 +657,11 @@ theorem line_offset_mul_speed (c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C t
   · field_simp
     ring
 
--- Theorem: both coordinates of the point where the offset of a cubic pair meets a line are
--- P-constructible. The crossing is presented by the parameter `β` at which it happens;
--- `hcross` is the geometric statement that the offset really is on the line there, and
--- `hlead` says the line is not parallel to the leading direction of the cubic pair, which
--- is what keeps the rationalized equation from collapsing below degree `10`.
-theorem offsetCubicPairCross_point_Pconstructible {c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C β : ℝ}
-    (hc₀ : PConstructible c₀) (hc₁ : PConstructible c₁) (hc₂ : PConstructible c₂)
-    (hc₃ : PConstructible c₃) (he₀ : PConstructible e₀) (he₁ : PConstructible e₁)
-    (he₂ : PConstructible e₂) (he₃ : PConstructible e₃) (hd : PConstructible d)
-    (hA : PConstructible A) (hB : PConstructible B) (hC : PConstructible C)
-    (hlead : A * c₃ + B * e₃ ≠ 0)
-    (hreg : cubicDer c₁ c₂ c₃ β ≠ 0 ∨ cubicDer e₁ e₂ e₃ β ≠ 0)
-    (hcross : offsetCrossVal c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C β = 0) :
-    PConstructible (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).1 ∧
-      PConstructible (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).2 := by
-  set γ : ℝ → ℝ × ℝ := cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ with hγ
-  set Γ : ℝ → ℝ × ℝ := offsetParam γ d with hΓ
-  -- A line needs a direction: `A` and `B` cannot both vanish, or `hlead` would fail.
-  have hAB : A ^ 2 + B ^ 2 ≠ 0 := by
-    intro hz
-    have hA0 : A = 0 := by nlinarith [sq_nonneg A, sq_nonneg B]
-    have hB0 : B = 0 := by nlinarith [sq_nonneg A, sq_nonneg B]
-    exact hlead (by rw [hA0, hB0]; ring)
-  -- A window around `β` on which the arc is regular and injectively traced.
-  obtain ⟨u, v, hu, hv, hwin, hinj⟩ :=
-    exists_rat_window_cubicPair (c₀ := c₀) (e₀ := e₀) hreg
-  have huv : (u : ℝ) < (v : ℝ) := lt_trans hu hv
-  have hmemβ : β ∈ Set.Icc (u : ℝ) (v : ℝ) := ⟨hu.le, hv.le⟩
-  have hS := offsetCubicPairArc_PConstructibleCurve hc₀ hc₁ hc₂ hc₃ he₀ he₁ he₂ he₃ hd
-    (rat_Pconstructible u) (rat_Pconstructible v) huv hwin hinj
-  rw [← hγ, ← hΓ] at hS
-  -- The crossing point, and the parameter at which the line's own tracing reaches it.
-  have honline : A * (Γ β).1 + B * (Γ β).2 - C = 0 := by
-    have hmul := line_offset_mul_speed c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C β
-    rw [← hγ, ← hΓ, hcross] at hmul
-    exact (mul_eq_zero.mp hmul).resolve_right (hwin β hmemβ)
-  set s₀ : ℝ := (A * (Γ β).2 - B * (Γ β).1) / (A ^ 2 + B ^ 2) with hs₀
-  obtain ⟨w, hw1, hw2⟩ := exists_rat_btwn (show s₀ - 1 < s₀ by linarith)
-  obtain ⟨z, hz1, hz2⟩ := exists_rat_btwn (show s₀ < s₀ + 1 by linarith)
-  have hT := lineArc_PConstructibleCurve hA hB hC (rat_Pconstructible w)
-    (rat_Pconstructible z) (show ((w : ℝ)) < (z : ℝ) by linarith)
-  -- Every crossing is a root of the rationalized degree-10 equation, so there are
-  -- finitely many; the spurious roots that squaring adds only enlarge the bound.
-  have hfin : {t : ℝ | A * (Γ t).1 + B * (Γ t).2 - C = 0}.Finite := by
-    refine (offsetCross_finite_roots (c₀ := c₀) (e₀ := e₀) (d := d) (C := C) hlead
-      ⟨β, hreg⟩).subset fun t ht => ?_
-    refine offsetCrossPoly_eq_zero_of_offsetCrossVal ?_
-    have hmul := line_offset_mul_speed c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C t
-    rw [← hγ, ← hΓ] at hmul
-    rw [← hmul, show A * (Γ t).1 + B * (Γ t).2 - C = 0 from ht, zero_mul]
-  exact crossing_Pconstructible hS hT (F := fun P Q => A * P + B * Q - C)
-    (p := fun t => A * (Γ t).1 + B * (Γ t).2 - C) (Set.image_subset_range Γ _)
-    (fun q hq => by obtain ⟨s, -, rfl⟩ := hq; exact lineParam_implicit hAB s)
-    (fun t => rfl) hfin ⟨β, hmemβ, rfl⟩
-    ⟨s₀, ⟨hw2.le, hz1.le⟩, by rw [hs₀]; exact lineParam_surj hAB honline⟩
-
--- Theorem: the expansion of the orthogonality relation between the offset displacement and
--- the velocity. It is a quintic in the parameter, with coefficients built from the crossing
--- point and the coefficients of the cubic pair by `+ - *` alone.
-theorem normalEq_eq_quinticVal (X Y c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ t : ℝ) :
-    (X - cubicVal c₀ c₁ c₂ c₃ t) * cubicDer c₁ c₂ c₃ t
-        + (Y - cubicVal e₀ e₁ e₂ e₃ t) * cubicDer e₁ e₂ e₃ t
-      = -3 * (c₃ ^ 2 + e₃ ^ 2) * t ^ 5
-        + -5 * (c₂ * c₃ + e₂ * e₃) * t ^ 4
-        + -(4 * c₁ * c₃ + 2 * c₂ ^ 2 + 4 * e₁ * e₃ + 2 * e₂ ^ 2) * t ^ 3
-        + (3 * X * c₃ + 3 * Y * e₃ - 3 * c₁ * c₂ - 3 * c₀ * c₃ - 3 * e₁ * e₂
-            - 3 * e₀ * e₃) * t ^ 2
-        + (2 * X * c₂ + 2 * Y * e₂ - c₁ ^ 2 - 2 * c₀ * c₂ - e₁ ^ 2 - 2 * e₀ * e₂) * t
-        + (X * c₁ + Y * e₁ - c₀ * c₁ - e₀ * e₁) := by
-  simp only [cubicVal, cubicDer]
-  ring
-
-
--- Theorem: the parameter of the crossing is itself P-constructible. This is the headline
--- of the file: `β` is a root of the degree-`10` equation `offsetCrossPoly` — rather, of the
--- sign-correct `offsetCrossVal` behind it — with `12` P-constructible parameters free, and
--- it is reached with no appeal to any degree bound beyond `6`.
---
--- The recovery is the cheap half. `offsetCubicPairCross_point_Pconstructible` does the
--- work, landing the crossing point `(X, Y)` in the plane; `β` then falls out of the one
--- fact that makes an offset an offset, namely that the displacement from `γ β` to `(X, Y)`
--- is along the normal and so kills the velocity. That is a quintic in `β`, and a quintic is
--- two degrees inside what was already reachable.
+-- Theorem: the parameter of a crossing of the offset cubic pair against a line is
+-- P-constructible. `hcross` is the geometric statement that the offset really is on the
+-- line at `β`, and `hlead` says the line is not parallel to the leading direction of the
+-- cubic pair, which is what keeps the rationalized equation from collapsing below
+-- degree `10`.
 theorem offsetCubicPairCross_root_Pconstructible {c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C β : ℝ}
     (hc₀ : PConstructible c₀) (hc₁ : PConstructible c₁) (hc₂ : PConstructible c₂)
     (hc₃ : PConstructible c₃) (he₀ : PConstructible e₀) (he₁ : PConstructible e₁)
@@ -645,32 +671,106 @@ theorem offsetCubicPairCross_root_Pconstructible {c₀ c₁ c₂ c₃ e₀ e₁ 
     (hreg : cubicDer c₁ c₂ c₃ β ≠ 0 ∨ cubicDer e₁ e₂ e₃ β ≠ 0)
     (hcross : offsetCrossVal c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C β = 0) :
     PConstructible β := by
-  obtain ⟨hX, hY⟩ := offsetCubicPairCross_point_Pconstructible hc₀ hc₁ hc₂ hc₃ he₀ he₁ he₂
-    he₃ hd hA hB hC hlead hreg hcross
-  set X : ℝ := (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).1 with hXdef
-  set Y : ℝ := (offsetParam (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β).2 with hYdef
-  -- The leading coefficient of the recovery quintic: it is nonzero because `hlead` forces
-  -- the cubic pair to have a genuine cubic term in at least one coordinate.
-  have hlead3 : c₃ ≠ 0 ∨ e₃ ≠ 0 := by
+  set γ : ℝ → ℝ × ℝ := cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ with hγ
+  set Γ : ℝ → ℝ × ℝ := offsetParam γ d with hΓ
+  -- A line needs a direction: `A` and `B` cannot both vanish, or `hlead` would fail.
+  have hAB : A ^ 2 + B ^ 2 ≠ 0 := by
+    intro hz
+    have hA0 : A = 0 := by nlinarith [sq_nonneg A, sq_nonneg B]
+    have hB0 : B = 0 := by nlinarith [sq_nonneg A, sq_nonneg B]
+    exact hlead (by rw [hA0, hB0]; ring)
+  have hcubic : c₃ ≠ 0 ∨ e₃ ≠ 0 := by
     by_contra hcon
     push Not at hcon
     exact hlead (by rw [hcon.1, hcon.2]; ring)
-  have h5ne : -3 * (c₃ ^ 2 + e₃ ^ 2) ≠ 0 := by
-    rcases hlead3 with h | h
-    · have : 0 < c₃ ^ 2 + e₃ ^ 2 := by positivity
-      intro hz; nlinarith
-    · have : 0 < c₃ ^ 2 + e₃ ^ 2 := by positivity
-      intro hz; nlinarith
-  -- The displacement to the crossing point is along the normal, hence orthogonal to the
-  -- velocity: one polynomial equation in `β`, of degree `5`.
-  have hnormal : (X - cubicVal c₀ c₁ c₂ c₃ β) * cubicDer c₁ c₂ c₃ β
-      + (Y - cubicVal e₀ e₁ e₂ e₃ β) * cubicDer e₁ e₂ e₃ β = 0 := by
-    have h := offsetParam_normal_eq_zero (cubicPairParam c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃) d β
-    rwa [deriv_cubicPairParam_fst, deriv_cubicPairParam_snd] at h
-  rw [normalEq_eq_quinticVal] at hnormal
-  exact quinticVal_root_Pconstructible (by pconstructible) (by pconstructible)
-    (by pconstructible) (by pconstructible) (by pconstructible) (by pconstructible)
-    h5ne hnormal
+  -- The offset is on the line at `β`: the speed there is nonzero, so `hcross` transfers.
+  have honline : A * (Γ β).1 + B * (Γ β).2 - C = 0 := by
+    obtain ⟨u, v, hu, hv, hwin, -⟩ :=
+      exists_rat_window_cubicPair (c₀ := c₀) (e₀ := e₀) hreg
+    have hmul := line_offset_mul_speed c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C β
+    rw [← hγ, ← hΓ, hcross] at hmul
+    exact (mul_eq_zero.mp hmul).resolve_right (hwin β ⟨hu.le, hv.le⟩)
+  -- The line arc through that point, cut to a rational window in its own parameter.
+  set s₀ : ℝ := (A * (Γ β).2 - B * (Γ β).1) / (A ^ 2 + B ^ 2) with hs₀
+  obtain ⟨w, hw1, hw2⟩ := exists_rat_btwn (show s₀ - 1 < s₀ by linarith)
+  obtain ⟨z, hz1, hz2⟩ := exists_rat_btwn (show s₀ < s₀ + 1 by linarith)
+  have hT := lineArc_PConstructibleCurve hA hB hC (rat_Pconstructible w)
+    (rat_Pconstructible z) (show ((w : ℝ)) < (z : ℝ) by linarith)
+  -- Every crossing is a root of the rationalized degree-10 equation, so there are finitely
+  -- many; the spurious roots that squaring adds only enlarge the bound.
+  have hfin : {t : ℝ | A * (Γ t).1 + B * (Γ t).2 - C = 0}.Finite := by
+    refine (offsetCross_finite_roots (c₀ := c₀) (e₀ := e₀) (d := d) (C := C) hlead
+      ⟨β, hreg⟩).subset fun t ht => ?_
+    refine offsetCrossPoly_eq_zero_of_offsetCrossVal ?_
+    have hmul := line_offset_mul_speed c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A B C t
+    rw [← hγ, ← hΓ] at hmul
+    rw [← hmul, show A * (Γ t).1 + B * (Γ t).2 - C = 0 from ht, zero_mul]
+  exact offsetCubicPair_cross_root_Pconstructible hT hc₀ hc₁ hc₂ hc₃ he₀ he₁ he₂ he₃ hd
+    (F := fun P Q => A * P + B * Q - C)
+    (fun q hq => by obtain ⟨s, -, rfl⟩ := hq; exact lineParam_implicit hAB s) hfin hcubic
+    hreg ⟨s₀, ⟨hw2.le, hz1.le⟩, by rw [hs₀]; exact lineParam_surj hAB honline⟩
+
+-- Theorem: the same statement with the line taken to be the `y`-axis, which is the shape
+-- the construction actually has once the plane is put in the line's frame. Every real
+-- solution of
+--
+--   `x(β) · √(x'(β)² + y'(β)²)  =  d · y'(β)`
+--
+-- with `x`, `y` cubics with P-constructible coefficients, `x` a genuine cubic, and `d`
+-- P-constructible, is P-constructible. Generic such equations have irreducible degree-`10`
+-- rationalizations, which is where the numbers this file adds come from.
+theorem offsetCubicPair_axisCross_root_Pconstructible {c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d β : ℝ}
+    (hc₀ : PConstructible c₀) (hc₁ : PConstructible c₁) (hc₂ : PConstructible c₂)
+    (hc₃ : PConstructible c₃) (he₀ : PConstructible e₀) (he₁ : PConstructible e₁)
+    (he₂ : PConstructible e₂) (he₃ : PConstructible e₃) (hd : PConstructible d)
+    (hlead : c₃ ≠ 0)
+    (hreg : cubicDer c₁ c₂ c₃ β ≠ 0 ∨ cubicDer e₁ e₂ e₃ β ≠ 0)
+    (hcross : cubicVal c₀ c₁ c₂ c₃ β
+        * Real.sqrt (cubicDer c₁ c₂ c₃ β ^ 2 + cubicDer e₁ e₂ e₃ β ^ 2)
+      = d * cubicDer e₁ e₂ e₃ β) :
+    PConstructible β := by
+  refine offsetCubicPairCross_root_Pconstructible hc₀ hc₁ hc₂ hc₃ he₀ he₁ he₂ he₃ hd
+    PConstructible.base_one zero_Pconstructible zero_Pconstructible (by simpa using hlead)
+    hreg ?_
+  simp only [offsetCrossVal, one_mul, zero_mul, add_zero, sub_zero, zero_sub]
+  linarith [hcross]
+
+/-! ### A number that was out of reach before
+
+Worth recording concretely, because "reaches degree 10" is only interesting if degree 10
+was not already reachable. Take
+
+    x t = t³ - t² + 2t + 1,   y t = -(t³/3 + t²/2 + t),   d = √7
+
+in `offsetCubicPair_axisCross_root_Pconstructible`. Then `y' t = -(t² + t + 1)`, the
+crossing equation `x·√(x'² + y'²) = d·y'` rationalizes to
+
+    10t¹⁰ - 30t⁹ + 89t⁸ - 114t⁷ + 152t⁶ - 58t⁵ + 38t⁴ + 30t³ - 16t² - 2 = 0,
+
+and its two real roots are near `-0.5322430792` and `0.4965475424`. Both satisfy the
+crossing equation itself, not merely its square — one with `d = +√7` and one with
+`d = -√7`, the sign of `d` being the choice of which side to offset — and the arc is
+regular at both, so the theorem applies to each. Every coefficient in sight is rational
+except `d`, which `sqrt_Pconstructible` supplies.
+
+That polynomial is irreducible over `ℚ` (irreducible modulo several primes), and its
+Galois group contains `A₁₀`: it is transitive, and the factorisation type `1 + 2 + 7`
+at `p = 29` gives an element whose square is a `7`-cycle, so Jordan's theorem applies
+once primitivity is checked — a block system of size `2` or `5` cannot admit a `7`-cycle.
+
+That places the roots outside everything the project could previously reach:
+
+* `root_Pconstructible_le_eight` stops at degree `8` over `ℚ`, and these have degree `10`;
+* `nonicVal_root_Pconstructible` is a degree-`9` family;
+* iterating `root_Pconstructible_le_six_coeffs` builds exactly the numbers lying in towers
+  whose steps have degree at most `6`, and no such tower contains these. A tower gives a
+  chain of subgroups with all indices at most `6` descending from the Galois group into a
+  point stabiliser, while the smallest index of a proper subgroup of `A₁₀` is `10`, so the
+  chain cannot take a single step below `A₁₀` — and `A₁₀` is transitive, hence in no point
+  stabiliser.
+
+The irreducibility and the cycle type are computations, run outside Lean and not
+formalized here; the P-constructibility of the roots is the theorem above and is. -/
 
 /-! ### How much of degree 10 this reaches
 
