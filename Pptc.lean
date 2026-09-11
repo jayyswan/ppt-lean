@@ -1,6 +1,7 @@
 import Pptc.Defs
 import Pptc.Tactic
 import Pptc.Basic
+import Pptc.Offset
 import Pptc.ThirdKind
 import Pptc.GaussMultiplicationK3
 import Pptc.Gamma
