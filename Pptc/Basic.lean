@@ -475,6 +475,15 @@ Degree 9 is where this stops. Crossing `y = x ^ 9` with a degree-6 graph would n
 `X ^ 8` *and* `X ^ 7` coefficients to vanish, and one shift kills only one of them. Getting
 past it needs a graph of degree 7 or more, which is exactly what `poly_graph` will not draw.
 
+That ceiling is not an artifact of using a *shift* to kill the second coefficient; no real
+substitution of any degree does better. A Tschirnhaus map `φ` kills the top two coefficients
+of its resolvent exactly when `Σ φ(xᵢ) = 0` and `Σ φ(xᵢ) ^ 2 = 0`, summed over all roots.
+The second sum is Hermite's trace form `Tr (φ ^ 2)` on `ℝ[X] / (q)`, whose signature is the
+number of real roots of `q` (Sylvester). So for a *totally real* `q` it is positive definite
+and forces `φ = 0`: over `ℝ` one coefficient is all that can ever be killed, and the bound
+`n ≤ (degree of the drawable graph) + 2` is structural. The same fact caps the
+P-constructible-coefficient story below, where the best drawable graph is the cubic Bézier.
+
 One wrinkle throughout: `power_law` draws only the branch `x > 0`. A negative root is
 reached by reflecting the whole picture in the `y` axis, which replaces `p` by `p (-X)` and
 leaves the degree bound intact. -/
