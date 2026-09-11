@@ -4214,6 +4214,30 @@ theorem ellipticF_sq_Pconstructible {k φ : ℝ} (hk : PConstructible k)
     (hφ : PConstructible φ) (hk1 : k ^ 2 < 1) : PConstructible (ellipticF (k ^ 2) φ) :=
   ellipticF_Pconstructible (sq_Pconstructible hk) hφ hk1
 
+/-! ### The lemniscate constant
+
+The lemniscate constant `ϖ = 2 ∫₀¹ dt/√(1 - t⁴)` is the length of one loop of Bernoulli's
+lemniscate `r² = cos 2θ`. The lemniscate is algebraic but not rationally parametrized, so it
+is not a curve the program can draw and `arc_length` cannot read `ϖ` off it (the closing
+section of `Pptc.Jacobi` says as much). It is P-constructible all the same, because the
+standard reduction to Legendre form,
+
+  `∫₀¹ dt/√(1 - t⁴) = (1/√2) · K(1/√2)`,  `K(k) = ∫₀^{π/2} dθ/√(1 - k² sin²θ)`,
+
+turns it into `√2` times the complete first-kind integral at the lemniscatic parameter
+`c = k² = 1/2`, which `ellipticF_pi_div_two_Pconstructible` already reaches. -/
+
+/-- The lemniscate constant `ϖ = √2 · K(1/√2) = 2.62205…`, where `K` is the complete
+elliptic integral of the first kind, `ellipticF (1 / 2) (π / 2)` in the parameter
+convention of this file (`c = k²`). -/
+noncomputable def lemniscateConstant : ℝ := Real.sqrt 2 * ellipticF (1 / 2) (Real.pi / 2)
+
+-- Theorem: the lemniscate constant is P-constructible.
+theorem lemniscateConstant_Pconstructible : PConstructible lemniscateConstant := by
+  unfold lemniscateConstant
+  exact PConstructible.mul (sqrt_Pconstructible two_Pconstructible)
+    (ellipticF_pi_div_two_Pconstructible (by pconstructible) (by norm_num))
+
 section CompleteThirdKind
 
 /-! ### The complete elliptic integral of the third kind
