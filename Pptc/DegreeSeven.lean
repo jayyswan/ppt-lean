@@ -46,16 +46,17 @@ The proof splits on the number of non-real conjugate pairs:
   certificate `exists_sign_change`, rational witnesses by density, the sextic along the
   stereographic line, and the same tail.
 
-The declarations below were inlined, in dependency order, from the modules that used to
-carry this development (`ScratchD/F/G/H/N/E/K/C/C2/AB/S/Sep`, `DegreeSevenOnePair`,
-`S1Roots`, `S1Cert`, `S1Iso`, `S1Sign`, `S1Sextic`, `S1Final`).
+The declarations below were inlined, in dependency order, from the modules that once
+carried this development. Those scratch modules have since been deleted, so this file is
+now self-contained; the section headings below describe the content, and the removed
+modules remain available in git history.
 -/
 
 
 open Polynomial Matrix
 
 
-/- ==================== inlined from Pptc.ScratchD ==================== -/
+/- ==================== companion matrix, charpoly, resolvent ==================== -/
 
 
 open Polynomial Matrix
@@ -307,7 +308,7 @@ theorem resolvent_powerLaw {q φ : ℝ[X]} {β : ℝ}
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchF ==================== -/
+/- ==================== the standard basis vectors ==================== -/
 
 
 open Polynomial Matrix
@@ -328,7 +329,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchG ==================== -/
+/- ==================== spectral identities and conjQuad ==================== -/
 
 
 open Polynomial Matrix Module
@@ -563,7 +564,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchH ==================== -/
+/- ==================== Bring-Jerrard directions and trace ==================== -/
 
 
 open Polynomial Matrix Module
@@ -939,7 +940,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchN ==================== -/
+/- ==================== charpoly, Newton identities, top kill ==================== -/
 
 
 open Polynomial Matrix Module
@@ -1219,7 +1220,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchE ==================== -/
+/- ==================== the Hermite form ==================== -/
 
 
 open Polynomial Matrix
@@ -1283,7 +1284,7 @@ theorem hermiteForm_eq_trace_sq (q : ℝ[X]) (v : Fin 7 → ℝ) :
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchK ==================== -/
+/- ==================== quadratic and bilinear forms ==================== -/
 
 
 /-! ### The associated quadratic and bilinear forms
@@ -1319,7 +1320,7 @@ end Pconstructible
 
 
 
-/- ==================== inlined from Pptc.ScratchC2 ==================== -/
+/- ==================== P-constructibility of finite sums ==================== -/
 
 
 open Polynomial
@@ -1345,7 +1346,7 @@ lemma Finset.sum_Pconstructible {ι : Type*} (s : Finset ι) (f : ι → ℝ)
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchAB ==================== -/
+/- ==================== cubic roots and the binary cubic ==================== -/
 
 
 open Polynomial Filter
@@ -1430,7 +1431,7 @@ theorem binary_cubic_zero {a b c d : ℝ} (ha : PConstructible a) (hb : PConstru
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchS ==================== -/
+/- ==================== the trace form on {p1 = 0} ==================== -/
 
 
 open Polynomial Matrix
@@ -2042,7 +2043,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchSep ==================== -/
+/- ==================== the non-separable case ==================== -/
 
 
 open Polynomial
@@ -2307,7 +2308,7 @@ theorem root_Pconstructible_of_nonSeparable {q : Polynomial ℝ} (hmon : q.Monic
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.DegreeSeven ==================== -/
+/- ==================== recovery and scalar-construction steps ==================== -/
 
 
 open Polynomial Matrix
@@ -2431,7 +2432,7 @@ theorem natDegree_ne_zero_of_trace_zero {q φ : ℝ[X]}
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.DegreeSevenOnePair ==================== -/
+/- ==================== one-conjugate-pair case, part I ==================== -/
 
 
 open Polynomial Matrix
@@ -2653,7 +2654,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.S1Roots ==================== -/
+/- ==================== root decomposition for one pair ==================== -/
 
 
 open Polynomial Matrix
@@ -2752,7 +2753,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.S1Cert ==================== -/
+/- ==================== the cubic certificate ==================== -/
 
 
 open Polynomial Matrix
@@ -2962,7 +2963,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.S1Iso ==================== -/
+/- ==================== no isotropic plane when s = 1 ==================== -/
 
 
 open Polynomial Matrix
@@ -3244,7 +3245,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.S1Sign ==================== -/
+/- ==================== the sign certificate ==================== -/
 
 
 open Polynomial Matrix
@@ -3705,7 +3706,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.S1Sextic ==================== -/
+/- ==================== the sextic along the line ==================== -/
 
 
 open Polynomial Matrix
@@ -3718,7 +3719,8 @@ noncomputable section
 
 `PConstructible` is closed under the polynomial operations used to assemble the
 sextic, but Mathlib only provides the product and constant-multiple closures in
-`Pptc.ScratchSep`.  The two `add`/`sub` helpers and the monomial closures below fill
+this file (`coeff_mul_Pconstructible`, `C_mul_coeff_Pconstructible`).  The two `add`/`sub`
+helpers and the monomial closures below fill
 the remaining gaps. -/
 
 private theorem coeff_add_Pc {p r : ℝ[X]}
@@ -3941,7 +3943,7 @@ end
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.S1Final ==================== -/
+/- ==================== assembly and the issue statement ==================== -/
 
 
 open Polynomial Matrix
@@ -4317,8 +4319,8 @@ theorem exists_tschirnhaus_traces (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDeg
 -- non-real roots `z, w` in distinct conjugate classes is P-constructible. This is the `s ≥ 2`
 -- case of issue #6.  Separability is not assumed: if `q` is not separable, either the
 -- normalised `gcd q q'` or the quotient of `q` by it has degree at most `6` and kills `β`,
--- and the sextic engine already recovers `β` (`ScratchSep`); only the separable case goes
--- through the Bring–Jerrard reduction.
+-- and the sextic engine already recovers `β` (see `root_Pconstructible_of_nonSeparable`
+-- above); only the separable case goes through the Bring–Jerrard reduction.
 theorem root_Pconstructible_of_two_conjugate_pairs_monic {q : ℝ[X]} (hmon : q.Monic)
     (hnat : q.natDegree = 7) (hq : ∀ k, PConstructible (q.coeff k))
     {z w : ℂ} (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0)
