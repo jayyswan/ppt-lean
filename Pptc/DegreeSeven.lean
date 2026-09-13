@@ -228,20 +228,11 @@ theorem matrix_pow_entries_Pconstructible {n : Type*} [Fintype n] [DecidableEq n
       rw [pow_succ]
       exact matrix_mul_entries_Pconstructible ih hA i j
 
-theorem matrix_sum_apply {ι : Type*} {n : Type*} [Fintype n] [DecidableEq n]
-    (s : Finset ι) (f : ι → Matrix n n ℝ) (i j : n) :
-    (∑ k ∈ s, f k) i j = ∑ k ∈ s, f k i j := by
-  classical
-  induction s using Finset.induction with
-  | empty => simp
-  | insert a s ha ih =>
-      rw [Finset.sum_insert ha, Finset.sum_insert ha, Matrix.add_apply, ih]
-
 theorem aeval_entries_Pconstructible {n : Type*} [Fintype n] [DecidableEq n]
     (M : Matrix n n ℝ) (hM : ∀ i j, PConstructible (M i j))
     (φ : ℝ[X]) (hφ : ∀ k, PConstructible (φ.coeff k)) (i j : n) :
     PConstructible ((aeval M φ) i j) := by
-  rw [Polynomial.aeval_eq_sum_range, matrix_sum_apply]
+  rw [Polynomial.aeval_eq_sum_range, Matrix.sum_apply]
   refine Finset.sum_induction _ PConstructible (fun _ _ ha hb => PConstructible.add ha hb)
     zero_Pconstructible (fun k _ => ?_)
   rw [Matrix.smul_apply, smul_eq_mul]
@@ -1306,12 +1297,6 @@ theorem trace_pow_companion7_Pconstructible (q : ℝ[X])
     zero_Pconstructible (fun i _ => matrix_pow_entries_Pconstructible
       (companion7_entries_Pconstructible hq) k i i)
 
--- Theorem: `H i j = trace (M ^ (i + j))` is P-constructible.
-theorem traceH_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k))
-    (i j : Fin 7) :
-    PConstructible (Matrix.trace ((companion7 q) ^ (i.val + j.val))) :=
-  trace_pow_companion7_Pconstructible q hq (i.val + j.val)
-
 /-! ### The Hermite form built from the companion matrix -/
 
 /-- The Hermite (trace) form of `q`, in the monomial basis `1, X, …, X⁶`. -/
@@ -2338,7 +2323,7 @@ def p3vec (q : ℝ[X]) (v : Fin 7 → ℝ) : ℝ :=
 
 theorem Hmat_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k))
     (i j : Fin 7) : PConstructible (Hmat q i j) :=
-  traceH_Pconstructible q hq i j
+  trace_pow_companion7_Pconstructible q hq (i.val + j.val)
 
 theorem Hmat_symm (q : ℝ[X]) : (Hmat q)ᵀ = Hmat q := by
   ext i j
@@ -2890,15 +2875,9 @@ theorem trace_mul_Pconstructible {A B : Matrix (Fin 7) (Fin 7) ℝ}
   exact Finset.sum_Pconstructible Finset.univ (fun i => (A * B) i i)
     (fun i _ => matrix_mul_entries_Pconstructible hA hB i i)
 
-theorem coeff_finset_sum {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → ℝ[X]) (k : ℕ) :
-    (∑ i ∈ s, f i).coeff k = ∑ i ∈ s, (f i).coeff k := by
-  induction s using Finset.induction with
-  | empty => simp
-  | insert a s ha ih => rw [Finset.sum_insert ha, Finset.sum_insert ha, Polynomial.coeff_add, ih]
-
 theorem polyOfVec_coeff_Pconstructible (v : Fin 7 → ℝ) (hv : ∀ i, PConstructible (v i))
     (k : ℕ) : PConstructible ((polyOfVec v).coeff k) := by
-  rw [polyOfVec, coeff_finset_sum]
+  rw [polyOfVec, Polynomial.finsetSum_coeff]
   refine Finset.sum_Pconstructible Finset.univ
     (fun i => (Polynomial.monomial i.val (v i)).coeff k) (fun i _ => ?_)
   rw [Polynomial.coeff_monomial]
@@ -2908,7 +2887,7 @@ theorem polyOfVec_coeff_Pconstructible (v : Fin 7 → ℝ) (hv : ∀ i, PConstru
 
 theorem polyOfVec_natDegree_le (v : Fin 7 → ℝ) : (polyOfVec v).natDegree ≤ 6 := by
   refine Polynomial.natDegree_le_iff_coeff_eq_zero.mpr (fun k hk => ?_)
-  rw [polyOfVec, coeff_finset_sum]
+  rw [polyOfVec, Polynomial.finsetSum_coeff]
   refine Finset.sum_eq_zero (fun i _ => ?_)
   rw [Polynomial.coeff_monomial]
   split_ifs with h
@@ -2920,7 +2899,7 @@ theorem polyOfVec_ne_zero {v : Fin 7 → ℝ} (hv : v ≠ 0) : polyOfVec v ≠ 0
   apply hv
   funext i
   have hc : (polyOfVec v).coeff i.val = 0 := by rw [h, Polynomial.coeff_zero]
-  rw [polyOfVec, coeff_finset_sum] at hc
+  rw [polyOfVec, Polynomial.finsetSum_coeff] at hc
   rw [Finset.sum_eq_single i] at hc
   · simpa [Polynomial.coeff_monomial] using hc
   · intro j _ hji
@@ -4051,7 +4030,7 @@ sum of squares to be `-2 < 0`, a contradiction. -/
 private lemma vecOf_polyOfVec (v : Fin 7 → ℝ) : vecOf (polyOfVec v) = v := by
   funext i
   have hc : (polyOfVec v).coeff i.val = v i := by
-    rw [polyOfVec, coeff_finset_sum]
+    rw [polyOfVec, Polynomial.finsetSum_coeff]
     rw [Finset.sum_eq_single i]
     · simp
     · intro j _ hji
@@ -4924,17 +4903,17 @@ theorem exists_sextic_along_line (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coe
           (coeff_mul_Pconstructible (coeff_C_Pconstructible (hδ i)) coeff_X_Pc))
   have hlineVec_c : ∀ i k, PConstructible ((lineVec i).coeff k) := by
     intro i k
-    rw [hlineVecdef i, coeff_finset_sum]
+    rw [hlineVecdef i, Polynomial.finsetSum_coeff]
     refine Finset.sum_Pconstructible Finset.univ _ (fun j _ => ?_)
     exact coeff_mul_Pconstructible (hstComp_c j)
       (coeff_C_Pconstructible (bvec_Pconstructible q hq j i)) k
   have hPsi_c : ∀ n, PConstructible (Ψ.coeff n) := by
     intro n
-    rw [hPsiedef, coeff_finset_sum]
+    rw [hPsiedef, Polynomial.finsetSum_coeff]
     refine Finset.sum_Pconstructible Finset.univ _ (fun i _ => ?_)
-    rw [coeff_finset_sum]
+    rw [Polynomial.finsetSum_coeff]
     refine Finset.sum_Pconstructible Finset.univ _ (fun j _ => ?_)
-    rw [coeff_finset_sum]
+    rw [Polynomial.finsetSum_coeff]
     refine Finset.sum_Pconstructible Finset.univ _ (fun k _ => ?_)
     exact coeff_mul_Pconstructible
       (coeff_mul_Pconstructible
