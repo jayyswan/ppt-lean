@@ -828,6 +828,47 @@ theorem trace_aeval_eq_zero_of_vanishes (q : ℝ[X]) (hmon : q.Monic) (hnat : q.
   obtain ⟨x, hx, rfl⟩ := Multiset.mem_map.mp hy
   exact hF x ((Polynomial.mem_roots hqCne).mp hx)
 
+-- Theorem: if a real polynomial `f` takes the value `c` at a non-real root `z` and vanishes
+-- at every other root, then `trace N_f = 2 Re c` and `trace N_f² = 2 Re c²`.
+theorem trace_eq_of_value (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
+    (hsep : q.Separable) {z : ℂ} (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0)
+    (hzim : z.im ≠ 0) {f : ℝ[X]} {c : ℂ}
+    (hfz : (f.map (algebraMap ℝ ℂ)).eval z = c)
+    (hfother : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ z →
+      x ≠ starRingEnd ℂ z → (f.map (algebraMap ℝ ℂ)).eval x = 0) :
+    Matrix.trace (aeval (companion7 q) f) = 2 * c.re ∧
+      Matrix.trace ((aeval (companion7 q) f) ^ 2) = 2 * (c ^ 2).re := by
+  have hfsq : ((f ^ 2).map (algebraMap ℝ ℂ)).eval z = c ^ 2 := by
+    rw [Polynomial.map_pow, Polynomial.eval_pow, hfz]
+  have hfothersq : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ z →
+      x ≠ starRingEnd ℂ z → ((f ^ 2).map (algebraMap ℝ ℂ)).eval x = 0 := by
+    intro x hx hxz hxz'
+    rw [Polynomial.map_pow, Polynomial.eval_pow, hfother x hx hxz hxz']
+    simp
+  have ht := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim f c hfz hfother
+  have htsq :=
+    algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim (f ^ 2) (c ^ 2) hfsq hfothersq
+  refine ⟨?_, ?_⟩
+  · apply (algebraMap ℝ ℂ).injective
+    rw [ht, Complex.add_conj]
+    rfl
+  · apply (algebraMap ℝ ℂ).injective
+    have h2 : (aeval (companion7 q) f) ^ 2 = aeval (companion7 q) (f ^ 2) :=
+      (map_pow (aeval (companion7 q)) f 2).symm
+    rw [h2, htsq, Complex.add_conj]
+    rfl
+
+-- Theorem: for any complex value `c`, some real polynomial of degree at most six realises
+-- `trace N_f = 2 Re c` and `trace N_f² = 2 Re c²`.
+theorem exists_value_trace (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
+    (hsep : q.Separable) {z : ℂ} (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0)
+    (hzim : z.im ≠ 0) (c : ℂ) :
+    ∃ f : ℝ[X], f.natDegree ≤ 6 ∧ Matrix.trace (aeval (companion7 q) f) = 2 * c.re ∧
+      Matrix.trace ((aeval (companion7 q) f) ^ 2) = 2 * (c ^ 2).re := by
+  obtain ⟨f, hfdeg, hfz, _hfbar, hfother⟩ :=
+    exists_poly_value_at_root q hmon hnat hsep hz hzim c
+  exact ⟨f, hfdeg, trace_eq_of_value q hmon hnat hsep hz hzim hfz hfother⟩
+
 -- Theorem: for a non-real root `z`, some real polynomial of degree at most six has trace
 -- `0` and trace of square `-2` in the companion matrix.
 theorem exists_neg_trace (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
@@ -835,27 +876,8 @@ theorem exists_neg_trace (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
     (hzim : z.im ≠ 0) :
     ∃ f : ℝ[X], f.natDegree ≤ 6 ∧ Matrix.trace (aeval (companion7 q) f) = 0 ∧
       Matrix.trace ((aeval (companion7 q) f) ^ 2) = -2 := by
-  obtain ⟨f, hfdeg, hfz, _hfbar, hfother⟩ :=
-    exists_poly_value_at_root q hmon hnat hsep hz hzim Complex.I
-  have hfsq : ((f ^ 2).map (algebraMap ℝ ℂ)).eval z = Complex.I ^ 2 := by
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfz]
-  have hfothersq : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ z →
-      x ≠ starRingEnd ℂ z → ((f ^ 2).map (algebraMap ℝ ℂ)).eval x = 0 := by
-    intro x hx hxz hxz'
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfother x hx hxz hxz']
-    simp
-  have ht := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim f Complex.I hfz hfother
-  have htsq := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim (f ^ 2) (Complex.I ^ 2)
-    hfsq hfothersq
-  have hI : (Complex.I : ℂ) ^ 2 = -1 := Complex.I_sq
-  have hIc : starRingEnd ℂ ((Complex.I : ℂ) ^ 2) = -1 := by rw [hI, map_neg, map_one]
-  refine ⟨f, hfdeg, ?_, ?_⟩
-  · rw [Complex.conj_I, add_neg_cancel] at ht
-    exact (algebraMap ℝ ℂ).injective (by simpa using ht)
-  · have h2 : (Complex.I : ℂ) ^ 2 + starRingEnd ℂ ((Complex.I : ℂ) ^ 2) = -2 := by
-      rw [hIc, hI]; norm_num
-    rw [h2, map_pow] at htsq
-    exact (algebraMap ℝ ℂ).injective (by simpa using htsq)
+  obtain ⟨f, hfdeg, htr, htrsq⟩ := exists_value_trace q hmon hnat hsep hz hzim Complex.I
+  exact ⟨f, hfdeg, by simpa [Complex.I_re] using htr, by simpa [Complex.I_sq] using htrsq⟩
 
 -- Theorem: for a non-real root `z`, some real polynomial of degree at most six has trace
 -- `2` and trace of square `2` in the companion matrix.
@@ -864,31 +886,63 @@ theorem exists_pos_trace (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
     (hzim : z.im ≠ 0) :
     ∃ f : ℝ[X], f.natDegree ≤ 6 ∧ Matrix.trace (aeval (companion7 q) f) = 2 ∧
       Matrix.trace ((aeval (companion7 q) f) ^ 2) = 2 := by
-  obtain ⟨f, hfdeg, hfz, _hfbar, hfother⟩ :=
-    exists_poly_value_at_root q hmon hnat hsep hz hzim 1
-  have hfsq : ((f ^ 2).map (algebraMap ℝ ℂ)).eval z = (1 : ℂ) ^ 2 := by
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfz]
-  have hfothersq : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ z →
-      x ≠ starRingEnd ℂ z → ((f ^ 2).map (algebraMap ℝ ℂ)).eval x = 0 := by
-    intro x hx hxz hxz'
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfother x hx hxz hxz']
-    simp
-  have ht := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim f 1 hfz hfother
-  have htsq := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim (f ^ 2) ((1 : ℂ) ^ 2)
-    hfsq hfothersq
-  refine ⟨f, hfdeg, ?_, ?_⟩
-  · have h2 : (1 : ℂ) + starRingEnd ℂ (1 : ℂ) = 2 := by rw [map_one]; norm_num
-    rw [h2] at ht
-    exact (algebraMap ℝ ℂ).injective (by simpa using ht)
-  · have h2 : ((1 : ℂ) ^ 2) + starRingEnd ℂ ((1 : ℂ) ^ 2) = 2 := by
-      rw [one_pow, map_one]; norm_num
-    rw [h2, map_pow] at htsq
-    exact (algebraMap ℝ ℂ).injective (by simpa using htsq)
+  obtain ⟨f, hfdeg, htr, htrsq⟩ := exists_value_trace q hmon hnat hsep hz hzim 1
+  exact ⟨f, hfdeg, by simpa using htr, by simpa using htrsq⟩
 
 /-! ### Two conjugate pairs
 
 Two non-real roots `z`, `w` from distinct conjugate pairs give polynomials supported on
 disjoint sets of roots, so their traces and cross trace can be computed independently. -/
+
+-- Theorem: for any complex value `c`, two non-real roots from distinct conjugate pairs yield
+-- real polynomials of degree at most six realising `trace = 2 Re c`, `trace sq = 2 Re c²` and
+-- vanishing cross trace.
+theorem exists_value_pair (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
+    (hsep : q.Separable) {z w : ℂ} (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0)
+    (hzim : z.im ≠ 0) (hw : (q.map (algebraMap ℝ ℂ)).eval w = 0) (hwim : w.im ≠ 0)
+    (hzw : z ≠ w) (hzw' : z ≠ starRingEnd ℂ w) (c : ℂ) :
+    ∃ f g : ℝ[X], f.natDegree ≤ 6 ∧ g.natDegree ≤ 6 ∧
+      Matrix.trace (aeval (companion7 q) f) = 2 * c.re ∧
+      Matrix.trace (aeval (companion7 q) g) = 2 * c.re ∧
+      Matrix.trace ((aeval (companion7 q) f) ^ 2) = 2 * (c ^ 2).re ∧
+      Matrix.trace ((aeval (companion7 q) g) ^ 2) = 2 * (c ^ 2).re ∧
+      Matrix.trace ((aeval (companion7 q) f) * (aeval (companion7 q) g)) = 0 := by
+  obtain ⟨f, hfdeg, hfz, _hfbar, hfother⟩ :=
+    exists_poly_value_at_root q hmon hnat hsep hz hzim c
+  obtain ⟨g, hgdeg, hgw, _hgbar, hgother⟩ :=
+    exists_poly_value_at_root q hmon hnat hsep hw hwim c
+  have hzbar : (q.map (algebraMap ℝ ℂ)).eval (starRingEnd ℂ z) = 0 := by
+    rw [eval_map_conj, hz, map_zero]
+  have hz'w : starRingEnd ℂ z ≠ w := by
+    intro h
+    apply hzw'
+    have := congrArg (starRingEnd ℂ) h
+    rw [starRingEnd_apply, starRingEnd_apply, star_star] at this
+    exact this
+  have hz'w' : starRingEnd ℂ z ≠ starRingEnd ℂ w := by
+    intro h
+    exact hzw ((starRingEnd ℂ).injective h)
+  have hcross := trace_aeval_eq_zero_of_vanishes q hmon hnat hsep (f * g) (by
+    intro x hx
+    rw [Polynomial.map_mul, Polynomial.eval_mul]
+    by_cases hxz : x = z
+    · rw [hxz]
+      have hgz : (g.map (algebraMap ℝ ℂ)).eval z = 0 := hgother z hz hzw hzw'
+      rw [hgz, mul_zero]
+    · by_cases hxz' : x = starRingEnd ℂ z
+      · rw [hxz']
+        have hgz : (g.map (algebraMap ℝ ℂ)).eval (starRingEnd ℂ z) = 0 :=
+          hgother _ hzbar hz'w hz'w'
+        rw [hgz, mul_zero]
+      · rw [hfother x hx hxz hxz', zero_mul])
+  have htrace : Matrix.trace ((aeval (companion7 q) f) * (aeval (companion7 q) g)) = 0 := by
+    have h1 : (aeval (companion7 q) f) * (aeval (companion7 q) g)
+        = aeval (companion7 q) (f * g) := by rw [map_mul]
+    rw [h1]
+    exact (algebraMap ℝ ℂ).injective (by simpa using hcross)
+  obtain ⟨htf, htf_sq⟩ := trace_eq_of_value q hmon hnat hsep hz hzim hfz hfother
+  obtain ⟨htg, htg_sq⟩ := trace_eq_of_value q hmon hnat hsep hw hwim hgw hgother
+  exact ⟨f, g, hfdeg, hgdeg, htf, htg, htf_sq, htg_sq, htrace⟩
 
 -- Theorem: two non-real roots from distinct conjugate pairs yield real polynomials of
 -- degree at most six with vanishing traces, square traces `-2`, and vanishing cross trace.
@@ -901,74 +955,11 @@ theorem exists_neg_pair (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
       Matrix.trace ((aeval (companion7 q) f) ^ 2) = -2 ∧
       Matrix.trace ((aeval (companion7 q) g) ^ 2) = -2 ∧
       Matrix.trace ((aeval (companion7 q) f) * (aeval (companion7 q) g)) = 0 := by
-  obtain ⟨f, hfdeg, hfz, _hfbar, hfother⟩ :=
-    exists_poly_value_at_root q hmon hnat hsep hz hzim Complex.I
-  obtain ⟨g, hgdeg, hgw, _hgbar, hgother⟩ :=
-    exists_poly_value_at_root q hmon hnat hsep hw hwim Complex.I
-  have hzbar : (q.map (algebraMap ℝ ℂ)).eval (starRingEnd ℂ z) = 0 := by
-    rw [eval_map_conj, hz, map_zero]
-  have hz'w : starRingEnd ℂ z ≠ w := by
-    intro h
-    apply hzw'
-    have := congrArg (starRingEnd ℂ) h
-    rw [starRingEnd_apply, starRingEnd_apply, star_star] at this
-    exact this
-  have hz'w' : starRingEnd ℂ z ≠ starRingEnd ℂ w := by
-    intro h
-    exact hzw ((starRingEnd ℂ).injective h)
-  have hfsq : ((f ^ 2).map (algebraMap ℝ ℂ)).eval z = Complex.I ^ 2 := by
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfz]
-  have hfothersq : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ z →
-      x ≠ starRingEnd ℂ z → ((f ^ 2).map (algebraMap ℝ ℂ)).eval x = 0 := by
-    intro x hx hxz hxz'
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfother x hx hxz hxz']
-    simp
-  have hgsq : ((g ^ 2).map (algebraMap ℝ ℂ)).eval w = Complex.I ^ 2 := by
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hgw]
-  have hgothersq : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ w →
-      x ≠ starRingEnd ℂ w → ((g ^ 2).map (algebraMap ℝ ℂ)).eval x = 0 := by
-    intro x hx hxw hxw'
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hgother x hx hxw hxw']
-    simp
-  have htf := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim f Complex.I hfz hfother
-  have htf_sq := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim (f ^ 2) (Complex.I ^ 2)
-    hfsq hfothersq
-  have htg := algebraMap_trace_eq_of_value q hmon hnat hsep hw hwim g Complex.I hgw hgother
-  have htg_sq := algebraMap_trace_eq_of_value q hmon hnat hsep hw hwim (g ^ 2) (Complex.I ^ 2)
-    hgsq hgothersq
-  have hI : (Complex.I : ℂ) ^ 2 = -1 := Complex.I_sq
-  have hIc : starRingEnd ℂ ((Complex.I : ℂ) ^ 2) = -1 := by rw [hI, map_neg, map_one]
-  have hcross := trace_aeval_eq_zero_of_vanishes q hmon hnat hsep (f * g) (by
-    intro x hx
-    rw [Polynomial.map_mul, Polynomial.eval_mul]
-    by_cases hxz : x = z
-    · rw [hxz]
-      have hgz : (g.map (algebraMap ℝ ℂ)).eval z = 0 := hgother z hz hzw hzw'
-      rw [hgz, mul_zero]
-    · by_cases hxz' : x = starRingEnd ℂ z
-      · rw [hxz']
-        have hgz : (g.map (algebraMap ℝ ℂ)).eval (starRingEnd ℂ z) = 0 :=
-          hgother _ hzbar hz'w hz'w'
-        rw [hgz, mul_zero]
-      · rw [hfother x hx hxz hxz', zero_mul])
-  have htrace : Matrix.trace ((aeval (companion7 q) f) * (aeval (companion7 q) g)) = 0 := by
-    have h1 : (aeval (companion7 q) f) * (aeval (companion7 q) g)
-        = aeval (companion7 q) (f * g) := by rw [map_mul]
-    rw [h1]
-    exact (algebraMap ℝ ℂ).injective (by simpa using hcross)
-  refine ⟨f, g, hfdeg, hgdeg, ?_, ?_, ?_, ?_, htrace⟩
-  · rw [Complex.conj_I, add_neg_cancel] at htf
-    exact (algebraMap ℝ ℂ).injective (by simpa using htf)
-  · rw [Complex.conj_I, add_neg_cancel] at htg
-    exact (algebraMap ℝ ℂ).injective (by simpa using htg)
-  · have h2 : (Complex.I : ℂ) ^ 2 + starRingEnd ℂ ((Complex.I : ℂ) ^ 2) = -2 := by
-      rw [hIc, hI]; norm_num
-    rw [h2, map_pow] at htf_sq
-    exact (algebraMap ℝ ℂ).injective (by simpa using htf_sq)
-  · have h2 : (Complex.I : ℂ) ^ 2 + starRingEnd ℂ ((Complex.I : ℂ) ^ 2) = -2 := by
-      rw [hIc, hI]; norm_num
-    rw [h2, map_pow] at htg_sq
-    exact (algebraMap ℝ ℂ).injective (by simpa using htg_sq)
+  obtain ⟨f, g, hfdeg, hgdeg, htf, htg, htfsq, htgsq, hcross⟩ :=
+    exists_value_pair q hmon hnat hsep hz hzim hw hwim hzw hzw' Complex.I
+  exact ⟨f, g, hfdeg, hgdeg, by simpa [Complex.I_re] using htf,
+    by simpa [Complex.I_re] using htg, by simpa [Complex.I_sq] using htfsq,
+    by simpa [Complex.I_sq] using htgsq, hcross⟩
 
 -- Theorem: two non-real roots from distinct conjugate pairs yield real polynomials of
 -- degree at most six with traces `2`, square traces `2`, and vanishing cross trace.
@@ -981,74 +972,10 @@ theorem exists_pos_pair (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
       Matrix.trace ((aeval (companion7 q) f) ^ 2) = 2 ∧
       Matrix.trace ((aeval (companion7 q) g) ^ 2) = 2 ∧
       Matrix.trace ((aeval (companion7 q) f) * (aeval (companion7 q) g)) = 0 := by
-  obtain ⟨f, hfdeg, hfz, _hfbar, hfother⟩ :=
-    exists_poly_value_at_root q hmon hnat hsep hz hzim 1
-  obtain ⟨g, hgdeg, hgw, _hgbar, hgother⟩ :=
-    exists_poly_value_at_root q hmon hnat hsep hw hwim 1
-  have hzbar : (q.map (algebraMap ℝ ℂ)).eval (starRingEnd ℂ z) = 0 := by
-    rw [eval_map_conj, hz, map_zero]
-  have hz'w : starRingEnd ℂ z ≠ w := by
-    intro h
-    apply hzw'
-    have := congrArg (starRingEnd ℂ) h
-    rw [starRingEnd_apply, starRingEnd_apply, star_star] at this
-    exact this
-  have hz'w' : starRingEnd ℂ z ≠ starRingEnd ℂ w := by
-    intro h
-    exact hzw ((starRingEnd ℂ).injective h)
-  have hfsq : ((f ^ 2).map (algebraMap ℝ ℂ)).eval z = (1 : ℂ) ^ 2 := by
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfz]
-  have hfothersq : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ z →
-      x ≠ starRingEnd ℂ z → ((f ^ 2).map (algebraMap ℝ ℂ)).eval x = 0 := by
-    intro x hx hxz hxz'
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hfother x hx hxz hxz']
-    simp
-  have hgsq : ((g ^ 2).map (algebraMap ℝ ℂ)).eval w = (1 : ℂ) ^ 2 := by
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hgw]
-  have hgothersq : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 → x ≠ w →
-      x ≠ starRingEnd ℂ w → ((g ^ 2).map (algebraMap ℝ ℂ)).eval x = 0 := by
-    intro x hx hxw hxw'
-    rw [Polynomial.map_pow, Polynomial.eval_pow, hgother x hx hxw hxw']
-    simp
-  have htf := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim f 1 hfz hfother
-  have htf_sq := algebraMap_trace_eq_of_value q hmon hnat hsep hz hzim (f ^ 2) ((1 : ℂ) ^ 2)
-    hfsq hfothersq
-  have htg := algebraMap_trace_eq_of_value q hmon hnat hsep hw hwim g 1 hgw hgother
-  have htg_sq := algebraMap_trace_eq_of_value q hmon hnat hsep hw hwim (g ^ 2) ((1 : ℂ) ^ 2)
-    hgsq hgothersq
-  have hcross := trace_aeval_eq_zero_of_vanishes q hmon hnat hsep (f * g) (by
-    intro x hx
-    rw [Polynomial.map_mul, Polynomial.eval_mul]
-    by_cases hxz : x = z
-    · rw [hxz]
-      have hgz : (g.map (algebraMap ℝ ℂ)).eval z = 0 := hgother z hz hzw hzw'
-      rw [hgz, mul_zero]
-    · by_cases hxz' : x = starRingEnd ℂ z
-      · rw [hxz']
-        have hgz : (g.map (algebraMap ℝ ℂ)).eval (starRingEnd ℂ z) = 0 :=
-          hgother _ hzbar hz'w hz'w'
-        rw [hgz, mul_zero]
-      · rw [hfother x hx hxz hxz', zero_mul])
-  have htrace : Matrix.trace ((aeval (companion7 q) f) * (aeval (companion7 q) g)) = 0 := by
-    have h1 : (aeval (companion7 q) f) * (aeval (companion7 q) g)
-        = aeval (companion7 q) (f * g) := by rw [map_mul]
-    rw [h1]
-    exact (algebraMap ℝ ℂ).injective (by simpa using hcross)
-  refine ⟨f, g, hfdeg, hgdeg, ?_, ?_, ?_, ?_, htrace⟩
-  · have h2 : (1 : ℂ) + starRingEnd ℂ (1 : ℂ) = 2 := by rw [map_one]; norm_num
-    rw [h2] at htf
-    exact (algebraMap ℝ ℂ).injective (by simpa using htf)
-  · have h2 : (1 : ℂ) + starRingEnd ℂ (1 : ℂ) = 2 := by rw [map_one]; norm_num
-    rw [h2] at htg
-    exact (algebraMap ℝ ℂ).injective (by simpa using htg)
-  · have h2 : ((1 : ℂ) ^ 2) + starRingEnd ℂ ((1 : ℂ) ^ 2) = 2 := by
-      rw [one_pow, map_one]; norm_num
-    rw [h2, map_pow] at htf_sq
-    exact (algebraMap ℝ ℂ).injective (by simpa using htf_sq)
-  · have h2 : ((1 : ℂ) ^ 2) + starRingEnd ℂ ((1 : ℂ) ^ 2) = 2 := by
-      rw [one_pow, map_one]; norm_num
-    rw [h2, map_pow] at htg_sq
-    exact (algebraMap ℝ ℂ).injective (by simpa using htg_sq)
+  obtain ⟨f, g, hfdeg, hgdeg, htf, htg, htfsq, htgsq, hcross⟩ :=
+    exists_value_pair q hmon hnat hsep hz hzim hw hwim hzw hzw' 1
+  exact ⟨f, g, hfdeg, hgdeg, by simpa using htf, by simpa using htg,
+    by simpa using htfsq, by simpa using htgsq, hcross⟩
 
 end
 
