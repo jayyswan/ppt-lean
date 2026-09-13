@@ -4068,10 +4068,9 @@ private lemma eval_map_ofReal (f : ℝ[X]) (r : ℝ) :
   rw [Polynomial.eval_map]
   exact Polynomial.eval₂_at_apply (f := algebraMap ℝ ℂ) (r := r) (p := f)
 
-/-- Coercing the sum of the squared evaluations equals the complex multiset sum. -/
-private lemma ofReal_sum_sq (R : Multiset ℝ) (H : ℝ[X]) :
-    ((R.map (fun r => ((H.eval r) ^ 2 : ℂ))).sum)
-      = (((R.map (fun r => (H.eval r) ^ 2)).sum : ℝ) : ℂ) := by
+/-- Coercing a multiset sum of real values into `ℂ`. -/
+lemma ofReal_multiset_sum (R : Multiset ℝ) (F : ℝ → ℝ) :
+    (R.map (fun r => (F r : ℂ))).sum = (((R.map F).sum : ℝ) : ℂ) := by
   induction R using Multiset.induction_on with
   | empty => simp
   | cons a s ih =>
@@ -4118,7 +4117,12 @@ private theorem sum_sq_add_pair_re {q H : ℝ[X]} (hmon : q.Monic) (hnat : q.nat
       simp only [Function.comp_apply]
       rw [eval_map_ofReal]
     rw [hcongr]
-    rw [ofReal_sum_sq, hS]
+    have hfun : (fun r => ((H.eval r) ^ 2 : ℂ))
+        = (fun r => (((H.eval r) ^ 2 : ℝ) : ℂ)) := by
+      funext r
+      push_cast
+      ring
+    rw [hfun, ofReal_multiset_sum, hS]
   rw [hzbar, hRmap] at hsum
   have hmain : (2 * (w ^ 2).re + S : ℝ) = 0 := by
     rw [← add_assoc, Complex.add_conj] at hsum
@@ -4126,16 +4130,17 @@ private theorem sum_sq_add_pair_re {q H : ℝ[X]} (hmon : q.Monic) (hnat : q.nat
   rw [hS]
   linarith
 
-/-- If `H` of degree `≤ 6` vanishes at all complex roots of a separable septic `q`, then
-`H = 0`. -/
-private lemma eq_zero_of_eval_zero_on_roots {q H : ℝ[X]} (_hmon : q.Monic)
-    (hnat : q.natDegree = 7) (hsep : q.Separable) (hHdeg : H.natDegree ≤ 6)
+-- Theorem: a degree-`≤ 6` real polynomial vanishing at all complex roots of a separable
+-- septic `q` is zero.
+lemma eq_zero_of_vanishes_on_roots {q H : ℝ[X]} (hnat : q.natDegree = 7) (hsep : q.Separable)
+    (hHdeg : H.natDegree ≤ 6)
     (h : ∀ w : ℂ, w ∈ (q.map (algebraMap ℝ ℂ)).roots →
       (H.map (algebraMap ℝ ℂ)).eval w = 0) : H = 0 := by
   have hnodup : (q.map (algebraMap ℝ ℂ)).roots.Nodup :=
     Polynomial.nodup_roots (hsep.map)
   have hcardC : (q.map (algebraMap ℝ ℂ)).roots.card = 7 := by
-    rw [show (q.map (algebraMap ℝ ℂ)).roots.card = (q.map (algebraMap ℝ ℂ)).natDegree from
+    rw [show (q.map (algebraMap ℝ ℂ)).roots.card
+        = (q.map (algebraMap ℝ ℂ)).natDegree from
       (IsAlgClosed.splits (q.map (algebraMap ℝ ℂ))).natDegree_eq_card_roots.symm]
     rw [Polynomial.natDegree_map_eq_of_injective (algebraMap ℝ ℂ).injective, hnat]
   have hcardfin : Fintype.card ((q.map (algebraMap ℝ ℂ)).roots.toFinset) = 7 := by
@@ -4253,7 +4258,7 @@ theorem isotropic_plane_trivial {q : ℝ[X]} (hmon : q.Monic) (hnat : q.natDegre
           rw [← hrw, eval_map_ofReal, hpoint r hr]
           simp
     have hH0 : C a * F + C b * G = 0 :=
-      eq_zero_of_eval_zero_on_roots hmon hnat hsep (hHdeg a b) hrootzero
+      eq_zero_of_vanishes_on_roots hnat hsep (hHdeg a b) hrootzero
     have hL0 : Lcomb q (a • x + b • y) = 0 := by
       rw [hpoly a b] at hH0
       by_contra hne
@@ -4347,15 +4352,6 @@ lemma omegaC_mul_conj : omegaC * starRingEnd ℂ omegaC = 1 := by
 real point are the real evaluations cast to `ℂ`.  These are used to move between polynomials
 and their coefficient vectors in the trace identities. -/
 
-/-- Coercing a multiset sum of real values into `ℂ`. -/
-lemma ofReal_multiset_sum (R : Multiset ℝ) (F : ℝ → ℝ) :
-    (R.map (fun r => (F r : ℂ))).sum = (((R.map F).sum : ℝ) : ℂ) := by
-  induction R using Multiset.induction_on with
-  | empty => simp
-  | cons a s ih =>
-      simp only [Multiset.map_cons, Multiset.sum_cons, ih]
-      push_cast
-      ring
 
 /-! ### The trace split identity
 
@@ -4413,31 +4409,6 @@ lemma root_of_mem_R {q : ℝ[X]} (hmon : q.Monic) {z : ℂ} {R : Multiset ℝ}
   rw [Polynomial.eval_map, Polynomial.eval₂_at_apply] at hroot
   exact (algebraMap ℝ ℂ).injective (by simpa using hroot)
 
--- Theorem: a degree-`≤ 6` real polynomial vanishing at all complex roots of a separable
--- septic `q` is zero.
-lemma eq_zero_of_vanishes_on_roots {q H : ℝ[X]} (hnat : q.natDegree = 7) (hsep : q.Separable)
-    (hHdeg : H.natDegree ≤ 6)
-    (h : ∀ w : ℂ, w ∈ (q.map (algebraMap ℝ ℂ)).roots →
-      (H.map (algebraMap ℝ ℂ)).eval w = 0) : H = 0 := by
-  have hnodup : (q.map (algebraMap ℝ ℂ)).roots.Nodup :=
-    Polynomial.nodup_roots (hsep.map)
-  have hcardC : (q.map (algebraMap ℝ ℂ)).roots.card = 7 := by
-    rw [show (q.map (algebraMap ℝ ℂ)).roots.card
-        = (q.map (algebraMap ℝ ℂ)).natDegree from
-      (IsAlgClosed.splits (q.map (algebraMap ℝ ℂ))).natDegree_eq_card_roots.symm]
-    rw [Polynomial.natDegree_map_eq_of_injective (algebraMap ℝ ℂ).injective, hnat]
-  have hcardfin : Fintype.card ((q.map (algebraMap ℝ ℂ)).roots.toFinset) = 7 := by
-    rw [Fintype.card_coe, Multiset.toFinset_card_of_nodup hnodup, hcardC]
-  have hdegC : (H.map (algebraMap ℝ ℂ)).natDegree < 7 := by
-    rw [Polynomial.natDegree_map_eq_of_injective (algebraMap ℝ ℂ).injective]
-    omega
-  refine (Polynomial.map_eq_zero_iff (algebraMap ℝ ℂ).injective).mp ?_
-  refine Polynomial.eq_zero_of_natDegree_lt_card_of_eval_eq_zero
-    (H.map (algebraMap ℝ ℂ)) (ι := (q.map (algebraMap ℝ ℂ)).roots.toFinset)
-    (f := Subtype.val) Subtype.val_injective ?_ ?_
-  · intro w
-    exact h (w : ℂ) (Multiset.mem_toFinset.mp w.2)
-  · rw [hcardfin]; exact hdegC
 
 -- Theorem: `bilin (Hmat q) (vecOf f) (vecOf g) = trace (N_f N_g)`.
 lemma bilin_Hmat_vecOf (q : ℝ[X]) (f g : ℝ[X]) (hf : f.natDegree ≤ 6)
