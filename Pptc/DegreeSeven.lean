@@ -310,214 +310,6 @@ def e7 (k : Fin 7) : Fin 7 → ℝ := Pi.single k 1
 
 theorem e7_apply_ne {i k : Fin 7} (h : i ≠ k) : e7 k i = 0 := Pi.single_eq_of_ne h 1
 
-theorem e7_ext {k l : Fin 7} (h : k = l) : e7 k = e7 l := by rw [h]
-
-/-- The same vector, totalized in the index, so it can appear in `Finset.range` sums. -/
-def eb (i : ℕ) : Fin 7 → ℝ := if h : i < 7 then e7 ⟨i, h⟩ else 0
-
-theorem eb_eq_e7 (i : ℕ) (h : i < 7) : eb i = e7 ⟨i, h⟩ := by rw [eb, dif_pos h]
-
-theorem eb_val (j : Fin 7) : eb j.val = e7 j := by rw [eb_eq_e7 j.val j.isLt]
-
-/-- The transpose of the companion matrix shifts the standard basis up. -/
-theorem transpose_companion7_mulVec_e7_succ (q : ℝ[X]) (k : Fin 7) (hk : k.val < 6) :
-    (companion7 q)ᵀ *ᵥ e7 k = e7 ⟨k.val + 1, by omega⟩ := by
-  change (companion7 q)ᵀ *ᵥ Pi.single k 1 = e7 ⟨k.val + 1, by omega⟩
-  rw [Matrix.mulVec_single_one]
-  funext i
-  rw [Matrix.col_apply, Matrix.transpose_apply, companion7_apply]
-  have hk6 : k.val ≠ 6 := by omega
-  rw [if_neg hk6]
-  by_cases h : i = ⟨k.val + 1, by omega⟩
-  · subst h; rw [if_pos rfl, e7_apply_self]
-  · rw [e7_apply_ne h]
-    have hne : i.val ≠ k.val + 1 := fun hv => h (Fin.ext hv)
-    rw [if_neg hne]
-
-/-- The transpose of the companion matrix on the last basis vector. -/
-theorem transpose_companion7_mulVec_e7_last (q : ℝ[X]) :
-    (companion7 q)ᵀ *ᵥ e7 ⟨6, by norm_num⟩ = fun i => -q.coeff i.val := by
-  change (companion7 q)ᵀ *ᵥ Pi.single ⟨6, by norm_num⟩ 1 = fun i => -q.coeff i.val
-  rw [Matrix.mulVec_single_one]
-  funext i
-  rw [Matrix.col_apply, Matrix.transpose_apply, companion7_apply, if_pos rfl]
-
-/-- `e₀` is cyclic: powers of the transposed companion hit every basis vector. -/
-theorem transpose_companion7_pow_mulVec_e7_zero (q : ℝ[X]) (k : ℕ) (hk : k ≤ 6) :
-    ((companion7 q)ᵀ ^ k) *ᵥ e7 (0 : Fin 7) = e7 ⟨k, by omega⟩ := by
-  induction k with
-  | zero => rw [pow_zero, Matrix.one_mulVec]; rfl
-  | succ k ih =>
-      have hk6 : k < 6 := by omega
-      rw [pow_succ', ← Matrix.mulVec_mulVec, ih (by omega)]
-      exact transpose_companion7_mulVec_e7_succ q ⟨k, by omega⟩ hk6
-
-/-- The transposed companion applied to `e₀` seven times is the feedback vector. -/
-theorem transpose_companion7_pow_seven_mulVec_e7_zero (q : ℝ[X]) :
-    ((companion7 q)ᵀ ^ 7) *ᵥ e7 (0 : Fin 7) = -∑ j : Fin 7, q.coeff j.val • e7 j := by
-  rw [pow_succ', ← Matrix.mulVec_mulVec,
-    transpose_companion7_pow_mulVec_e7_zero q 6 (by norm_num),
-    show e7 (⟨6, by omega⟩ : Fin 7) = e7 ⟨6, by norm_num⟩ from
-      e7_ext (by rw [Fin.ext_iff]),
-    transpose_companion7_mulVec_e7_last]
-  funext i
-  simp only [Pi.neg_apply, Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
-  rw [Finset.sum_eq_single i]
-  · simp
-  · intro b _ hb; rw [e7_apply_ne (Ne.symm hb), mul_zero]
-  · intro hi; exact absurd (Finset.mem_univ i) hi
-
-/-- The sum `∑ i<7, cᵢ • eᵢ` agrees with the `Fin 7` sum. -/
-theorem sum_range_seven_e7 (q : ℝ[X]) :
-    (∑ i ∈ Finset.range 7, q.coeff i • eb i) = ∑ j : Fin 7, q.coeff j.val • e7 j := by
-  rw [← Fin.sum_univ_eq_sum_range (fun i => q.coeff i • eb i) 7]
-  refine Finset.sum_congr rfl (fun j _ => ?_)
-  rw [eb_val j]
-
-/-- The first `7` powers kill `e₀` down to the feedback vector. -/
-theorem sum_range_seven_pow_e7 (q : ℝ[X]) :
-    (∑ i ∈ Finset.range 7, q.coeff i • ((companion7 q)ᵀ ^ i *ᵥ e7 (0 : Fin 7)))
-      = ∑ j : Fin 7, q.coeff j.val • e7 j := by
-  rw [show (∑ i ∈ Finset.range 7, q.coeff i • ((companion7 q)ᵀ ^ i *ᵥ e7 (0 : Fin 7)))
-        = ∑ i ∈ Finset.range 7, q.coeff i • eb i from
-      Finset.sum_congr rfl (fun i hi => by
-        rw [Finset.mem_range] at hi
-        rw [transpose_companion7_pow_mulVec_e7_zero q i (by omega), eb_eq_e7 i (by omega)])]
-  exact sum_range_seven_e7 q
-
-/-- `aeval T q` commutes with `T`. -/
-theorem aeval_transpose_companion7_commute (q : ℝ[X]) (hqdeg : q.natDegree = 7) :
-    (Polynomial.aeval (companion7 q)ᵀ q) * (companion7 q)ᵀ
-      = (companion7 q)ᵀ * (Polynomial.aeval (companion7 q)ᵀ q) := by
-  rw [Polynomial.aeval_eq_sum_range, hqdeg, Finset.sum_mul, Finset.mul_sum]
-  refine Finset.sum_congr rfl (fun i _ => ?_)
-  rw [Matrix.smul_mul, Matrix.mul_smul, ← pow_succ, ← pow_succ']
-
-/-- `(aeval T q)` kills the cyclic vector `e₀`. -/
-theorem aeval_transpose_companion7_mulVec_e7_zero (q : ℝ[X]) (h7 : q.coeff 7 = 1)
-    (hqdeg : q.natDegree = 7) :
-    (Polynomial.aeval (companion7 q)ᵀ q) *ᵥ e7 (0 : Fin 7) = 0 := by
-  rw [Polynomial.aeval_eq_sum_range, hqdeg, Matrix.sum_mulVec]
-  simp_rw [Matrix.smul_mulVec]
-  rw [Finset.sum_range_succ, sum_range_seven_pow_e7 q,
-    transpose_companion7_pow_seven_mulVec_e7_zero q, h7]
-  simp
-
-/-- `q` annihilates the transposed companion matrix. -/
-theorem aeval_transpose_companion7_eq_zero (q : ℝ[X]) (h7 : q.coeff 7 = 1)
-    (hqdeg : q.natDegree = 7) :
-    (Polynomial.aeval (companion7 q)ᵀ q) = 0 := by
-  have hcomm := aeval_transpose_companion7_commute q hqdeg
-  have hpow : ∀ k : ℕ,
-      (Polynomial.aeval (companion7 q)ᵀ q) * (companion7 q)ᵀ ^ k
-        = (companion7 q)ᵀ ^ k * (Polynomial.aeval (companion7 q)ᵀ q) := by
-    intro k
-    induction k with
-    | zero => simp
-    | succ k ih =>
-        calc (Polynomial.aeval (companion7 q)ᵀ q) * (companion7 q)ᵀ ^ (k + 1)
-            = (Polynomial.aeval (companion7 q)ᵀ q) * ((companion7 q)ᵀ ^ k * (companion7 q)ᵀ) := by
-              rw [pow_succ]
-          _ = ((Polynomial.aeval (companion7 q)ᵀ q) * (companion7 q)ᵀ ^ k) * (companion7 q)ᵀ := by
-              rw [← mul_assoc]
-          _ = ((companion7 q)ᵀ ^ k * (Polynomial.aeval (companion7 q)ᵀ q)) * (companion7 q)ᵀ := by
-              rw [ih]
-          _ = (companion7 q)ᵀ ^ k * ((Polynomial.aeval (companion7 q)ᵀ q) * (companion7 q)ᵀ) := by
-              rw [← mul_assoc]
-          _ = (companion7 q)ᵀ ^ k * ((companion7 q)ᵀ * (Polynomial.aeval (companion7 q)ᵀ q)) := by
-              rw [hcomm]
-          _ = ((companion7 q)ᵀ ^ k * (companion7 q)ᵀ) * (Polynomial.aeval (companion7 q)ᵀ q) := by
-              rw [mul_assoc]
-          _ = (companion7 q)ᵀ ^ (k + 1) * (Polynomial.aeval (companion7 q)ᵀ q) := by
-              rw [← pow_succ]
-  apply Matrix.ext
-  intro i j
-  have h0 := aeval_transpose_companion7_mulVec_e7_zero q h7 hqdeg
-  have hzero : (Polynomial.aeval (companion7 q)ᵀ q) *ᵥ e7 j = 0 := by
-    rw [show e7 j = (companion7 q)ᵀ ^ j.val *ᵥ e7 (0 : Fin 7) from
-        (e7_ext (Fin.ext rfl)).trans
-          (transpose_companion7_pow_mulVec_e7_zero q j.val (by omega)).symm,
-      Matrix.mulVec_mulVec, hpow, ← Matrix.mulVec_mulVec, h0]
-    simp
-  have hcoord : (Polynomial.aeval (companion7 q)ᵀ q) i j
-      = ((Polynomial.aeval (companion7 q)ᵀ q) *ᵥ e7 j) i := by
-    rw [show e7 j = Pi.single j 1 from rfl, Matrix.mulVec_single_one, Matrix.col_apply]
-  rw [hcoord, hzero]
-  rfl
-
-/-- For monic `q` of degree at most `7`, the companion matrix has characteristic polynomial `q`. -/
-theorem companion7_charpoly (q : ℝ[X]) (h7 : q.coeff 7 = 1) (hdeg : q.natDegree ≤ 7) :
-    (companion7 q).charpoly = q := by
-  have hqdeg : q.natDegree = 7 :=
-    Polynomial.natDegree_eq_of_le_of_coeff_ne_zero hdeg (by rw [h7]; norm_num)
-  have hmonic : q.Monic := by
-    unfold Polynomial.Monic
-    rw [Polynomial.leadingCoeff, hqdeg, h7]
-  have hnoann : ∀ p : ℝ[X], p.natDegree < 7 →
-      (Polynomial.aeval (companion7 q)ᵀ p) = 0 → p = 0 := by
-    intro p hp hpe
-    have h1 : (∑ i ∈ Finset.range (p.natDegree + 1), p.coeff i • eb i) = 0 := by
-      have h := congrArg (fun (A : Matrix (Fin 7) (Fin 7) ℝ) => A *ᵥ e7 (0 : Fin 7)) hpe
-      rw [Matrix.zero_mulVec, Polynomial.aeval_eq_sum_range, Matrix.sum_mulVec] at h
-      simp_rw [Matrix.smul_mulVec] at h
-      rw [← h]
-      refine Finset.sum_congr rfl (fun i hi => ?_)
-      rw [Finset.mem_range] at hi
-      rw [transpose_companion7_pow_mulVec_e7_zero q i (by omega), eb_eq_e7 i (by omega)]
-    have h2 : (∑ i ∈ Finset.range 7, p.coeff i • eb i) = 0 := by
-      rw [← h1]
-      exact (Finset.sum_subset (fun i hi => by rw [Finset.mem_range] at hi ⊢; omega)
-        (fun i _ hni => by
-          rw [Finset.mem_range] at hni
-          rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_smul])).symm
-    have h3 : (∑ i : Fin 7, p.coeff i.val • e7 i) = 0 := by
-      rw [← Fin.sum_univ_eq_sum_range (fun i => p.coeff i • eb i) 7] at h2
-      simpa only [eb_val] using h2
-    apply Polynomial.ext
-    intro n
-    by_cases hn : n < 7
-    · have h4 : (∑ i : Fin 7, p.coeff i.val • e7 i) (⟨n, hn⟩ : Fin 7) = 0 := by
-        rw [h3]; rfl
-      rw [Finset.sum_apply] at h4
-      simp only [Pi.smul_apply, smul_eq_mul] at h4
-      rw [Finset.sum_eq_single (⟨n, hn⟩ : Fin 7)] at h4
-      · simpa using h4
-      · intro b _ hb; rw [e7_apply_ne (Ne.symm hb), mul_zero]
-      · intro hmem; exact absurd (Finset.mem_univ (⟨n, hn⟩ : Fin 7)) hmem
-    · rw [Polynomial.coeff_eq_zero_of_natDegree_lt (show p.natDegree < n by omega)]
-      rw [Polynomial.coeff_zero]
-  set r := (companion7 q)ᵀ.charpoly %ₘ q with hr
-  have hr0 : r = 0 := by
-    refine hnoann r ?_ ?_
-    · rcases eq_or_ne r 0 with h | h
-      · rw [h]; norm_num
-      · rw [Polynomial.natDegree_lt_iff_degree_lt h]
-        have hlt := Polynomial.degree_modByMonic_lt (companion7 q)ᵀ.charpoly hmonic
-        rwa [Polynomial.degree_eq_natDegree hmonic.ne_zero, hqdeg] at hlt
-    · have hsplit := Polynomial.modByMonic_add_div (companion7 q)ᵀ.charpoly q
-      rw [← hr] at hsplit
-      have h := congrArg (Polynomial.aeval (companion7 q)ᵀ) hsplit
-      simp only [map_add, map_mul] at h
-      rw [Matrix.aeval_self_charpoly,
-        aeval_transpose_companion7_eq_zero q h7 hqdeg, zero_mul, add_zero] at h
-      exact h
-  have hdvd_char : q ∣ (companion7 q)ᵀ.charpoly := by
-    rw [← Polynomial.modByMonic_eq_zero_iff_dvd hmonic, ← hr]
-    exact hr0
-  have hchar_monic : (companion7 q)ᵀ.charpoly.Monic := Matrix.charpoly_monic _
-  have hchar_deg : (companion7 q)ᵀ.charpoly.natDegree = 7 := Matrix.charpoly_natDegree_eq_dim _
-  have hchar_eq : (companion7 q)ᵀ.charpoly = q :=
-    Polynomial.eq_of_monic_of_dvd_of_natDegree_le hmonic hchar_monic hdvd_char
-      (by rw [hchar_deg, hqdeg])
-  rw [← Matrix.charpoly_transpose]
-  exact hchar_eq
-
-/-- Cayley–Hamilton specialization: `q (companion7 q) = 0`. -/
-theorem aeval_companion7_self (q : ℝ[X]) (h7 : q.coeff 7 = 1) (hdeg : q.natDegree ≤ 7) :
-    (Polynomial.aeval (companion7 q)) q = 0 := by
-  have h := Matrix.aeval_self_charpoly (companion7 q)
-  rwa [companion7_charpoly q h7 hdeg] at h
-
 end
 
 end Pconstructible
@@ -1603,18 +1395,6 @@ noncomputable def hermiteForm (q : ℝ[X]) (v : Fin 7 → ℝ) : ℝ :=
 noncomputable def polyOfVec (v : Fin 7 → ℝ) : ℝ[X] :=
   ∑ i : Fin 7, Polynomial.monomial i.val (v i)
 
--- Theorem: the Hermite form of P-constructible coefficients is P-constructible.
-theorem hermiteForm_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k))
-    (v : Fin 7 → ℝ) (hv : ∀ i, PConstructible (v i)) :
-    PConstructible (hermiteForm q v) := by
-  rw [hermiteForm]
-  refine Finset.sum_induction _ PConstructible (fun _ _ ha hb => PConstructible.add ha hb)
-    zero_Pconstructible (fun i _ => ?_)
-  refine Finset.sum_induction _ PConstructible (fun _ _ ha hb => PConstructible.add ha hb)
-    zero_Pconstructible (fun j _ => ?_)
-  exact PConstructible.mul
-    (PConstructible.mul (hv i) (traceH_Pconstructible q hq i j)) (hv j)
-
 -- Theorem: `aeval` of the coefficient vector is the corresponding matrix polynomial.
 theorem aeval_polyOfVec (q : ℝ[X]) (v : Fin 7 → ℝ) :
     aeval (companion7 q) (polyOfVec v) = ∑ i : Fin 7, v i • (companion7 q) ^ i.val := by
@@ -1647,49 +1427,6 @@ theorem trace_aeval_polyOfVec_sq (q : ℝ[X]) (v : Fin 7 → ℝ) :
 theorem hermiteForm_eq_trace_sq (q : ℝ[X]) (v : Fin 7 → ℝ) :
     hermiteForm q v = Matrix.trace ((aeval (companion7 q) (polyOfVec v)) ^ 2) :=
   (trace_aeval_polyOfVec_sq q v).symm
-
--- Theorem: a polynomial of degree at most six whose matrix square has negative trace
--- produces a negative direction for the Hermite form. This reduces the existence part
--- of E2 to a statement about real polynomials rather than vectors.
-theorem traceForm_neg_of_poly (q : ℝ[X]) (f : ℝ[X]) (hdeg : f.natDegree ≤ 6)
-    (hneg : Matrix.trace ((aeval (companion7 q) f) ^ 2) < 0) :
-    ∃ v : Fin 7 → ℝ, hermiteForm q v < 0 := by
-  refine ⟨fun i => f.coeff i.val, ?_⟩
-  rw [hermiteForm_eq_trace_sq]
-  have hpoly : polyOfVec (fun i : Fin 7 => f.coeff i.val) = f := by
-    rw [polyOfVec]
-    rw [Fin.sum_univ_eq_sum_range (fun k => Polynomial.monomial k (f.coeff k)) 7]
-    exact (Polynomial.as_sum_range' f 7 (by omega)).symm
-  rw [hpoly]
-  exact hneg
-
--- Theorem: the Hermite form is symmetric.
-theorem hermiteForm_comm (q : ℝ[X]) (v w : Fin 7 → ℝ) :
-    (∑ i, ∑ j, v i * Matrix.trace ((companion7 q) ^ (i.val + j.val)) * w j) =
-    (∑ i, ∑ j, w i * Matrix.trace ((companion7 q) ^ (i.val + j.val)) * v j) := by
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
-  rw [Nat.add_comm i.val j.val]
-  ring
-
-/-! ### Route to E2
-
-By `hermiteForm_eq_trace_sq`, a negative direction for the Hermite form is exactly a
-polynomial `F` of degree `≤ 6` with `trace (F(M)²) < 0`, and `traceForm_neg_of_poly`
-turns such an `F` into the vector `v`. The remaining gap is producing `F`.
-
-An elementary construction avoiding Hermite's inertia theorem: write `q = p * G` with
-`p` the irreducible real quadratic annihilating the non-real root. Bezout gives
-`e = v * G` with `e² = e`, `e ≡ 1 mod p`, `e ≡ 0 mod G`; then `e(M)` is the projector
-onto the two-dimensional `p`-primary component, so `trace (e(M)) = 2`. Since the map
-`h ↦ h(z)` from linear real polynomials to `ℂ` is onto, choose linear `h` whose value
-at `z` is `1 / G(z)` times the imaginary unit; then `F = G * h` satisfies `F² = -e` in
-`ℝ[X]/(q)`, whence
-`trace (F(M)²) = -trace (e(M)) = -2 < 0`.
-
-What is missing in Mathlib for this: `Matrix.charpoly (companion7 q) = q` (so
-Cayley–Hamilton gives `q(M) = 0`), the analogue of the eigenvector lemmas over `ℂ`,
-and `trace = rank` for idempotent matrices. -/
 
 end Pconstructible
 
@@ -1783,17 +1520,6 @@ theorem two_neg_of_negDef {D : Matrix (Fin n) (Fin n) ℝ}
     have hsum := hneg 1 0 (Or.inl one_ne_zero)
     linarith
 
--- Theorem: a diagonal form whose weighted square sum is positive along two
--- independent directions has two positive diagonal entries.
-theorem two_pos_of_posDef {D : Matrix (Fin n) (Fin n) ℝ}
-    (_hdiag : ∀ i j, i ≠ j → D i j = 0) {v1 v2 : Fin n → ℝ}
-    (hpos : ∀ a b : ℝ, (a ≠ 0 ∨ b ≠ 0) →
-      0 < (∑ i, D i i * (a * v1 i + b * v2 i) ^ 2)) :
-    ∃ i j : Fin n, i ≠ j ∧ 0 < D i i ∧ 0 < D j j := by
-  obtain ⟨i, j, hij, hi, hj⟩ := two_neg_of_negDef (D := -D) (v1 := v1) (v2 := v2)
-    (fun i j h => by simp [_hdiag i j h]) fun a b hab => by simpa using hpos a b hab
-  exact ⟨i, j, hij, neg_neg_iff_pos.mp hi, neg_neg_iff_pos.mp hj⟩
-
 -- Theorem: under an invertible congruence, two negative directions for `A`
 -- force two negative diagonal entries of any diagonal `D` congruent to `A`.
 theorem two_neg_diag_of_pair {A D U : Matrix (Fin n) (Fin n) ℝ}
@@ -1832,208 +1558,6 @@ theorem two_pos_diag_of_pair {A D U : Matrix (Fin n) (Fin n) ℝ}
 end Pconstructible
 
 
-/- ==================== inlined from Pptc.ScratchC ==================== -/
-
-
-open Polynomial
-open Matrix
-
-namespace Pconstructible
-
-/-! ## C1: completing the square in two variables -/
-
--- Theorem: completing the square in two variables: the binary quadratic form
--- `a x² + 2 b x y + c y²` becomes diagonal in the coordinates `X = x + (b/a) y`,
--- `Y = y`, namely `a X² + (c - b²/a) Y²`.
-theorem complete_square2 {a b c : ℝ} (ha : a ≠ 0) :
-    ∀ x y : ℝ,
-      a * (x + b / a * y) ^ 2 + (c - b ^ 2 / a) * y ^ 2
-        = a * x ^ 2 + 2 * b * x * y + c * y ^ 2 := by
-  intro x y
-  field_simp
-  ring
-
--- Theorem: the same identity as an explicit congruence of symmetric `2 × 2` matrices,
--- by the invertible matrix `U = !![1, -b/a; 0, 1]`.
-theorem complete_square2_congruence {a b c : ℝ} (ha : a ≠ 0) :
-    ∃ U D : Matrix (Fin 2) (Fin 2) ℝ,
-      U = !![1, -b / a; 0, 1] ∧
-        D = !![a, 0; 0, c - b ^ 2 / a] ∧
-        Uᵀ * !![a, b; b, c] * U = D := by
-  refine ⟨!![1, -b / a; 0, 1], !![a, 0; 0, c - b ^ 2 / a], rfl, rfl, ?_⟩
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_two] <;>
-    field_simp <;> ring
-
--- Theorem: the P-constructible-entries version of `complete_square2_congruence`.
-theorem complete_square2_congruence_Pconstructible {a b c : ℝ}
-    (ha : PConstructible a) (hb : PConstructible b) (hc : PConstructible c) (hane : a ≠ 0) :
-    ∃ U D : Matrix (Fin 2) (Fin 2) ℝ,
-      (∀ i j, PConstructible (U i j)) ∧
-        (∀ i j, PConstructible (D i j)) ∧
-        (∀ i j, i ≠ j → D i j = 0) ∧
-        Uᵀ * !![a, b; b, c] * U = D := by
-  refine ⟨!![1, -b / a; 0, 1], !![a, 0; 0, c - b ^ 2 / a], ?_, ?_, ?_, ?_⟩
-  · intro i j
-    fin_cases i <;> fin_cases j <;> simp <;> pconstructible
-  · intro i j
-    fin_cases i <;> fin_cases j <;> simp <;> pconstructible
-  · intro i j hij
-    fin_cases i <;> fin_cases j <;> simp at hij ⊢
-  · ext i j
-    fin_cases i <;> fin_cases j <;>
-      simp [Matrix.mul_apply, Fin.sum_univ_two] <;>
-      field_simp <;> ring
-
-/-! ## C2: diagonalizing a symmetric matrix with P-constructible entries
-
-The `Fin 2` case is done explicitly, by the three-way case split on the diagonal entries
-(diagonalize directly if the leading entry is nonzero, swap the coordinates if the other
-diagonal entry is nonzero, and use the hyperbolic change of basis `!![1,1;1,-1]` when both
-vanish). -/
-
--- Theorem: a symmetric `2 × 2` real matrix with P-constructible entries is congruent,
--- by a matrix with P-constructible entries, to a diagonal matrix with P-constructible
--- entries.
-theorem exists_diag_congruence_two (A : Matrix (Fin 2) (Fin 2) ℝ)
-    (hsym : Aᵀ = A) (hA : ∀ i j, PConstructible (A i j)) :
-    ∃ U D : Matrix (Fin 2) (Fin 2) ℝ,
-      (∀ i j, PConstructible (U i j)) ∧
-        (∀ i j, PConstructible (D i j)) ∧
-        (∀ i j, i ≠ j → D i j = 0) ∧
-        Uᵀ * A * U = D := by
-  set a : ℝ := A 0 0 with ha'
-  set b : ℝ := A 0 1 with hb'
-  set c : ℝ := A 1 1 with hc'
-  have haP : PConstructible a := hA 0 0
-  have hbP : PConstructible b := hA 0 1
-  have hcP : PConstructible c := hA 1 1
-  have h10 : A 1 0 = b := by
-    have h := congrFun (congrFun hsym 0) 1
-    simpa [← hb'] using h
-  have hAeq : A = !![a, b; b, c] := by
-    ext i j
-    fin_cases i <;> fin_cases j <;> simp [ha', hb', hc', h10]
-  by_cases hane : a ≠ 0
-  · obtain ⟨U, D, hU, hD, hdiag, hUD⟩ :=
-      complete_square2_congruence_Pconstructible haP hbP hcP hane
-    exact ⟨U, D, hU, hD, hdiag, by simpa [hAeq] using hUD⟩
-  · push Not at hane
-    by_cases hcne : c ≠ 0
-    · refine ⟨!![0, 1; 1, -b / c], !![c, 0; 0, -b ^ 2 / c], ?_, ?_, ?_, ?_⟩
-      · intro i j
-        fin_cases i <;> fin_cases j <;> simp <;> pconstructible
-      · intro i j
-        fin_cases i <;> fin_cases j <;> simp <;> pconstructible
-      · intro i j hij
-        fin_cases i <;> fin_cases j <;> simp at hij ⊢
-      · rw [hAeq, hane]
-        ext i j
-        fin_cases i <;> fin_cases j <;>
-          simp [Matrix.mul_apply, Fin.sum_univ_two] <;>
-          field_simp <;> ring
-    · push Not at hcne
-      refine ⟨!![1, 1; 1, -1], !![2 * b, 0; 0, -(2 * b)], ?_, ?_, ?_, ?_⟩
-      · intro i j
-        fin_cases i <;> fin_cases j <;> simp <;> pconstructible
-      · intro i j
-        fin_cases i <;> fin_cases j <;> simp <;> pconstructible
-      · intro i j hij
-        fin_cases i <;> fin_cases j <;> simp at hij ⊢
-      · rw [hAeq, hane, hcne]
-        ext i j
-        fin_cases i <;> fin_cases j <;>
-          simp [Matrix.mul_apply, Fin.sum_univ_two] <;>
-          ring
-
-/-! ## C3: the totally isotropic plane of the `(2,2)` form, and cubics on it
-
-On `ℝ⁴` with the standard form `Q(y) = y₀² + y₁² - y₂² - y₃²` of signature `(2,2)`, the
-plane `y₂ = y₀`, `y₃ = y₁` is totally isotropic: `Q` and its polar form `B` both vanish
-identically there. Reading a homogeneous cubic off that plane along `q = 1` gives an
-ordinary real cubic, whose P-constructible root yields a P-constructible nonzero
-isotropic vector. -/
-
-/-- The standard quadratic form of signature `(2, 2)` on `ℝ⁴`. -/
-def form22 (y : Fin 4 → ℝ) : ℝ := y 0 ^ 2 + y 1 ^ 2 - y 2 ^ 2 - y 3 ^ 2
-
-/-- The polar bilinear form of `form22`. -/
-def bilin22 (v w : Fin 4 → ℝ) : ℝ :=
-  v 0 * w 0 + v 1 * w 1 - v 2 * w 2 - v 3 * w 3
-
-/-- The point `(p, q, p, q)` of the plane `y₂ = y₀`, `y₃ = y₁`, written as a vector. -/
-def planeVec (p q : ℝ) : Fin 4 → ℝ := ![p, q, p, q]
-
--- Theorem: the plane `y₂ = y₀`, `y₃ = y₁` is totally isotropic for `form22`: the quadratic
--- form vanishes at every point of it.
-theorem form22_planeVec (p q : ℝ) : form22 (planeVec p q) = 0 := by
-  simp [form22, planeVec]
-
--- Theorem: ... and so does the polar form, on every pair of points of it.
-theorem bilin22_planeVec (p q p' q' : ℝ) :
-    bilin22 (planeVec p q) (planeVec p' q') = 0 := by
-  simp [bilin22, planeVec]
-
--- Theorem: the polar form of `form22` is the quadratic form itself when the two arguments
--- agree.
-theorem bilin22_self (v : Fin 4 → ℝ) : bilin22 v v = form22 v := by
-  simp [bilin22, form22]
-  ring
-
-/-- A homogeneous binary cubic `a p³ + b p² q + c p q² + d q³`. -/
-def hCubic (a b c d p q : ℝ) : ℝ := a * p ^ 3 + b * p ^ 2 * q + c * p * q ^ 2 + d * q ^ 3
-
--- Theorem: restricting a binary cubic to the line `q = 1` recovers the ordinary cubic
--- `cubicVal d c b a` used by the root construction in `Pptc.Basic`.
-theorem hCubic_one (a b c d p : ℝ) : hCubic a b c d p 1 = cubicVal d c b a p := by
-  simp [hCubic, cubicVal]
-
--- Theorem: restricting any homogeneous cubic of four variables to the isotropic plane is a
--- binary cubic: scaling `(p, q)` scales the restriction by the cube.
-theorem restrict_plane_homogeneous (F : (Fin 4 → ℝ) → ℝ)
-    (hF : ∀ (t : ℝ) (y : Fin 4 → ℝ), F (t • y) = t ^ 3 * F y) (t p q : ℝ) :
-    F (planeVec (t * p) (t * q)) = t ^ 3 * F (planeVec p q) := by
-  have hscale : planeVec (t * p) (t * q) = t • planeVec p q := by
-    ext i
-    fin_cases i <;> simp [planeVec]
-  rw [hscale, hF]
-
--- Theorem: a real root of the binary cubic on the isotropic plane gives a P-constructible
--- nonzero isotropic vector. The root `β` is P-constructible by
--- `cubicVal_root_Pconstructible`, and `(β, 1, β, 1)` is a nonzero point of the plane.
-theorem exists_isotropic_vec_of_cubic_root {a b c d β : ℝ}
-    (ha : PConstructible a) (hb : PConstructible b) (hc : PConstructible c)
-    (hd : PConstructible d) (hne : a ≠ 0 ∨ b ≠ 0 ∨ c ≠ 0 ∨ d ≠ 0)
-    (hroot : cubicVal d c b a β = 0) :
-    PConstructible β ∧
-      (∀ i, PConstructible (planeVec β 1 i)) ∧
-      planeVec β 1 ≠ 0 ∧
-      form22 (planeVec β 1) = 0 ∧ bilin22 (planeVec β 1) (planeVec β 1) = 0 := by
-  have hβP : PConstructible β := cubicVal_root_Pconstructible hd hc hb ha hne hroot
-  refine ⟨hβP, ?_, ?_, form22_planeVec β 1, ?_⟩
-  · intro i
-    fin_cases i <;> simp [planeVec] <;> pconstructible
-  · intro hv
-    have h1 := congrFun hv 1
-    simp [planeVec] at h1
-  · rw [bilin22_self, form22_planeVec]
-
--- Theorem: as soon as the binary cubic has a real root, the form has a P-constructible
--- nonzero isotropic vector on its isotropic plane.
-theorem exists_isotropic_vec_of_exists_root {a b c d : ℝ}
-    (ha : PConstructible a) (hb : PConstructible b) (hc : PConstructible c)
-    (hd : PConstructible d) (hne : a ≠ 0 ∨ b ≠ 0 ∨ c ≠ 0 ∨ d ≠ 0)
-    (hroot : ∃ β : ℝ, cubicVal d c b a β = 0) :
-    ∃ v : Fin 4 → ℝ,
-      (∀ i, PConstructible (v i)) ∧ v ≠ 0 ∧
-        form22 v = 0 ∧ bilin22 v v = 0 := by
-  obtain ⟨β, hβ⟩ := hroot
-  obtain ⟨hβP, hvP, hvne, hv0, hvb⟩ :=
-    exists_isotropic_vec_of_cubic_root ha hb hc hd hne hβ
-  exact ⟨planeVec β 1, hvP, hvne, hv0, hvb⟩
-
-end Pconstructible
 
 
 /- ==================== inlined from Pptc.ScratchC2 ==================== -/
@@ -3044,9 +2568,6 @@ theorem bvec_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k)
       · rw [h, e7_apply_self]; exact PConstructible.base_one
       · rw [e7_apply_ne h]; exact zero_Pconstructible
 
-theorem coeff6_Pconstructible {v : Fin 7 → ℝ} (hv : ∀ i, PConstructible (v i))
-    (k : Fin 6) : PConstructible (coeff6 v k) := hv (Fin.succ k)
-
 theorem p1vec_bvec (q : ℝ[X]) (j : Fin 6) : p1vec q (bvec q j) = 0 := by
   rw [p1vec, Fin.sum_univ_succ]
   simp only [bvec_apply_zero, bvec_apply_succ, svec_zero]
@@ -3147,9 +2668,6 @@ directions for the Gram matrix. -/
 /-- The coefficient vector `(f.coeff 0, …, f.coeff 6)` of a polynomial. -/
 def vecOf (f : ℝ[X]) : Fin 7 → ℝ := fun i => f.coeff i.val
 
-theorem vecOf_Pconstructible {f : ℝ[X]} (hf : ∀ k, PConstructible (f.coeff k))
-    (i : Fin 7) : PConstructible (vecOf f i) := hf i.val
-
 theorem polyOfVec_vecOf {f : ℝ[X]} (hf : f.natDegree ≤ 6) : polyOfVec (vecOf f) = f := by
   rw [polyOfVec]
   simp only [vecOf]
@@ -3171,14 +2689,6 @@ theorem polyOfVec_smul_add {a b : ℝ} {f g : ℝ[X]} (hf : f.natDegree ≤ 6)
 theorem p1vec_vecOf (q : ℝ[X]) (f : ℝ[X]) (hf : f.natDegree ≤ 6) :
     p1vec q (vecOf f) = Matrix.trace (aeval (companion7 q) f) := by
   rw [p1vec_eq_trace, polyOfVec_vecOf hf]
-
-theorem p1vec_smul_add_vecOf (q : ℝ[X]) (a b : ℝ) (f g : ℝ[X])
-    (hf : f.natDegree ≤ 6) (hg : g.natDegree ≤ 6) :
-    p1vec q (a • vecOf f + b • vecOf g) =
-      a * Matrix.trace (aeval (companion7 q) f) + b * Matrix.trace (aeval (companion7 q) g) := by
-  rw [p1vec_eq_trace, polyOfVec_smul_add hf hg, map_add, map_mul, map_mul]
-  simp only [Polynomial.aeval_C, Algebra.algebraMap_eq_smul_one, Matrix.smul_mul,
-    Matrix.one_mul, Matrix.trace_add, Matrix.trace_smul, smul_eq_mul]
 
 theorem aeval_C_mul_smul (q : ℝ[X]) (a b : ℝ) (f g : ℝ[X]) :
     aeval (companion7 q) (C a * f + C b * g)
@@ -3344,14 +2854,6 @@ theorem pos_dir_of_pair (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
     · nlinarith [sq_pos_of_ne_zero ha, sq_nonneg b]
     · nlinarith [sq_nonneg a, sq_pos_of_ne_zero hb]
   nlinarith [sq_nonneg (a - 2 * b), sq_nonneg a, sq_nonneg b]
-
-theorem sq_smul_add (A B : Matrix (Fin 7) (Fin 7) ℝ) (a b : ℝ) :
-    (a • A + b • B) ^ 2 =
-      a ^ 2 • A ^ 2 + (a * b) • (A * B) + (a * b) • (B * A) + b ^ 2 • B ^ 2 := by
-  rw [sq, Matrix.add_mul, Matrix.mul_add, Matrix.mul_add]
-  simp only [smul_mul_smul, pow_two]
-  rw [mul_comm b a]
-  abel
 
 theorem cube_add (X Y : Matrix (Fin 7) (Fin 7) ℝ) :
     (X + Y) ^ 3 = X ^ 3 + X ^ 2 * Y + X * Y * X + Y * X ^ 2 + X * Y ^ 2
@@ -3784,14 +3286,6 @@ theorem divModByMonic_coeff_Pconstructible {d : Polynomial ℝ} (hd : d.Monic)
             _ = pp + d * z := by rw [hmid]
             _ = p := by rw [hppdef]; ring
 
--- Theorem: the quotient of a P-constructible polynomial by a monic P-constructible one has
--- P-constructible coefficients.
-theorem divByMonic_coeff_Pconstructible {d : Polynomial ℝ} (hd : d.Monic)
-    (hdc : ∀ i, PConstructible (d.coeff i)) {p : Polynomial ℝ}
-    (hp : ∀ i, PConstructible (p.coeff i)) :
-    ∀ i, PConstructible ((p /ₘ d).coeff i) :=
-  (divModByMonic_coeff_Pconstructible hd hdc p hp).1
-
 -- Theorem: the remainder of a P-constructible polynomial modulo a monic P-constructible one
 -- has P-constructible coefficients.
 theorem modByMonic_coeff_Pconstructible {d : Polynomial ℝ} (hd : d.Monic)
@@ -3934,89 +3428,6 @@ open Polynomial Matrix
 
 namespace Pconstructible
 
-/-! ### The one-conjugate-pair reduction -/
-
--- Theorem: the first three power sums of the seven values `1, -1, 0, 0, 0, i, -i` all
--- vanish. This is the explicit `s = 1` solution: five real roots carrying the values
--- `1, -1, 0, 0, 0` and one conjugate pair carrying `± i`.
-theorem septic_one_pair_powerSums_zero :
-    ((1 : ℂ) + (-1) + 0 + 0 + 0 + Complex.I + (-Complex.I) = 0) ∧
-    ((1 : ℂ) ^ 2 + (-1) ^ 2 + 0 ^ 2 + 0 ^ 2 + 0 ^ 2
-        + Complex.I ^ 2 + (-Complex.I) ^ 2 = 0) ∧
-    ((1 : ℂ) ^ 3 + (-1) ^ 3 + 0 ^ 3 + 0 ^ 3 + 0 ^ 3
-        + Complex.I ^ 3 + (-Complex.I) ^ 3 = 0) := by
-  have hmI2 : (-Complex.I) ^ 2 = -1 := by
-    rw [show (-Complex.I) ^ 2 = Complex.I ^ 2 by ring, Complex.I_sq]
-  have hmI3 : (-Complex.I) ^ 3 = Complex.I := by
-    rw [show (-Complex.I) ^ 3 = -(Complex.I ^ 3) by ring, Complex.I_pow_three]
-    ring
-  refine ⟨?_, ?_, ?_⟩
-  · ring
-  · rw [Complex.I_sq, hmI2]; ring
-  · rw [Complex.I_pow_three, hmI3]; ring
-
--- Theorem: with `p₁ = 0` (`a = -S/2`) and `p₂ = 0` (`b² = T/2 + S²/4`) imposed, the third
--- power sum `p₃ = ∑ uᵢ³ + 2 (a³ - 3 a b²)` is the homogeneous cubic `∑ uᵢ³ + S³/2 + 3ST/2`
--- in the five real values. The conjugate pair survives only through `b²`, so the `b`
--- direction has disappeared from `p₃`.
-theorem septic_one_pair_p3_eq (u₁ u₂ u₃ u₄ u₅ a b : ℝ)
-    (ha : a = -(u₁ + u₂ + u₃ + u₄ + u₅) / 2)
-    (hb : b ^ 2 = (u₁ ^ 2 + u₂ ^ 2 + u₃ ^ 2 + u₄ ^ 2 + u₅ ^ 2) / 2
-      + (u₁ + u₂ + u₃ + u₄ + u₅) ^ 2 / 4) :
-    (u₁ ^ 3 + u₂ ^ 3 + u₃ ^ 3 + u₄ ^ 3 + u₅ ^ 3) + 2 * (a ^ 3 - 3 * a * b ^ 2)
-      = (u₁ ^ 3 + u₂ ^ 3 + u₃ ^ 3 + u₄ ^ 3 + u₅ ^ 3)
-        + (u₁ + u₂ + u₃ + u₄ + u₅) ^ 3 / 2
-        + (3 / 2) * (u₁ + u₂ + u₃ + u₄ + u₅)
-          * (u₁ ^ 2 + u₂ ^ 2 + u₃ ^ 2 + u₄ ^ 2 + u₅ ^ 2) := by
-  subst ha
-  rw [hb]
-  ring
-
--- Theorem: the reduced cubic `Q u = ∑ uᵢ³ + S³/2 + 3ST/2` vanishes at `u = (1, -1, 0, 0, 0)`.
--- This is the value-level witness that `p₁ = p₂ = p₃ = 0` is solvable with one conjugate
--- pair; the corresponding pair is `a = 0`, `b = 1`, i.e. the complex roots `± i`.
-theorem septic_one_pair_Q_zero :
-    (1 ^ 3 + (-1) ^ 3 + 0 ^ 3 + 0 ^ 3 + 0 ^ 3)
-        + (1 + (-1) + 0 + 0 + 0) ^ 3 / 2
-        + (3 / 2) * (1 + (-1) + 0 + 0 + 0)
-          * (1 ^ 2 + (-1) ^ 2 + 0 ^ 2 + 0 ^ 2 + 0 ^ 2) = 0 := by
-  norm_num
-
-/-! ### The stated general lemma is false
-
-The issue asks for "a cubic form on the projectivised light cone of a signature-`(5,1)`
-form has a real zero". The form `Q` below has signature `(5,1)`, the form `C` is a nonzero
-cubic, and yet `Q = C = 0` forces the point to be the origin: there is no projective zero.
--/
-
--- Theorem: the quadratic form `Q = ∑ xᵢ² - x₆²` (signature `(5,1)`) and the cubic form
--- `C = x₆³ - 2 x₆ ∑ xᵢ²` (sums over `i = 1, …, 5`) have no common nonzero real zero.
-theorem lightCone_cubic_no_projective_zero
-    {x₁ x₂ x₃ x₄ x₅ x₆ : ℝ}
-    (hQ : x₁ ^ 2 + x₂ ^ 2 + x₃ ^ 2 + x₄ ^ 2 + x₅ ^ 2 - x₆ ^ 2 = 0)
-    (hC : x₆ ^ 3 - 2 * x₆ * (x₁ ^ 2 + x₂ ^ 2 + x₃ ^ 2 + x₄ ^ 2 + x₅ ^ 2) = 0) :
-    x₁ = 0 ∧ x₂ = 0 ∧ x₃ = 0 ∧ x₄ = 0 ∧ x₅ = 0 ∧ x₆ = 0 := by
-  have hsum : x₁ ^ 2 + x₂ ^ 2 + x₃ ^ 2 + x₄ ^ 2 + x₅ ^ 2 = x₆ ^ 2 := by linarith
-  have hx₆ : x₆ = 0 := by
-    rw [hsum] at hC
-    ring_nf at hC
-    exact eq_zero_of_pow_eq_zero (show x₆ ^ 3 = 0 by linarith)
-  have hsum0 : x₁ ^ 2 + x₂ ^ 2 + x₃ ^ 2 + x₄ ^ 2 + x₅ ^ 2 = 0 := by
-    rw [hx₆] at hsum
-    simpa using hsum
-  have h1 : x₁ ^ 2 = 0 := by
-    nlinarith [hsum0, sq_nonneg x₂, sq_nonneg x₃, sq_nonneg x₄, sq_nonneg x₅]
-  have h2 : x₂ ^ 2 = 0 := by
-    nlinarith [hsum0, sq_nonneg x₁, sq_nonneg x₃, sq_nonneg x₄, sq_nonneg x₅]
-  have h3 : x₃ ^ 2 = 0 := by
-    nlinarith [hsum0, sq_nonneg x₁, sq_nonneg x₂, sq_nonneg x₄, sq_nonneg x₅]
-  have h4 : x₄ ^ 2 = 0 := by
-    nlinarith [hsum0, sq_nonneg x₁, sq_nonneg x₂, sq_nonneg x₃, sq_nonneg x₅]
-  have h5 : x₅ ^ 2 = 0 := by
-    nlinarith [hsum0, sq_nonneg x₁, sq_nonneg x₂, sq_nonneg x₃, sq_nonneg x₄]
-  exact ⟨sq_eq_zero_iff.mp h1, sq_eq_zero_iff.mp h2, sq_eq_zero_iff.mp h3,
-    sq_eq_zero_iff.mp h4, sq_eq_zero_iff.mp h5, hx₆⟩
-
 /-! ### The recovery step, isolated
 
 Whatever eventually produces the value `y = φ β` of a degree-`≤ 6` Tschirnhaus map `φ`,
@@ -4072,70 +3483,6 @@ theorem root_Pconstructible_of_powerLaw {φ : Polynomial ℝ}
   eval_root_Pconstructible hcoeff hdeg hne
     (powerLaw_cubic_root_Pconstructible (by norm_num) h₀ h₁ h₂ h₃ h) rfl
 
-/-! ### One P-constructible root yields all of them
-
-A useful structural remark for the whole problem: the hypothesis "every real root is
-P-constructible" collapses to "some real root is", because once one root `d` is in hand,
-`q / (X - d)` has degree at most six and still kills every other root. The quotient is
-built here by shifting `d` to the origin (bringing the root to `0`), dividing by `X`
-(`Polynomial.divX`), and shifting back; both operations are `taylor`, whose coefficients
-stay P-constructible by `taylor_coeff_Pconstructible`. -/
-
--- Theorem: if a nonzero polynomial `q` of degree at most 7 with P-constructible
--- coefficients has a P-constructible root `d`, then every other root `β` of `q` is
--- P-constructible. (`q / (X - d)` is a degree-`≤ 6` P-constructible polynomial killing `β`.)
-theorem root_Pconstructible_of_other_root {q : Polynomial ℝ}
-    (hq : ∀ i, PConstructible (q.coeff i)) (hqne : q ≠ 0) (hdeg : q.natDegree ≤ 7)
-    {d β : ℝ} (hd : PConstructible d) (hdroot : q.eval d = 0) (hneq : β ≠ d)
-    (hβ : q.eval β = 0) :
-    PConstructible β := by
-  set r : Polynomial ℝ := Polynomial.taylor d q with hrdef
-  have hrcoeff : ∀ i, PConstructible (r.coeff i) := by
-    intro i
-    rw [hrdef]
-    exact taylor_coeff_Pconstructible hq hd i
-  have hr0 : r.coeff 0 = 0 := by
-    rw [hrdef, Polynomial.taylor_coeff_zero, hdroot]
-  set s : Polynomial ℝ := r.divX with hsdef
-  have hsc : ∀ i, PConstructible (s.coeff i) := by
-    intro i
-    rw [hsdef, Polynomial.coeff_divX]
-    exact hrcoeff (i + 1)
-  have hs_eq : Polynomial.X * s = r := by
-    have h := Polynomial.X_mul_divX_add r
-    rw [hr0, Polynomial.C_0, add_zero] at h
-    rw [hsdef]
-    exact h
-  set φ : Polynomial ℝ := Polynomial.taylor (-d) s with hφdef
-  have hφc : ∀ i, PConstructible (φ.coeff i) := by
-    intro i
-    rw [hφdef]
-    exact taylor_coeff_Pconstructible hsc (neg_Pconstructible hd) i
-  have hq_eq : q = (Polynomial.X - Polynomial.C d) * φ := by
-    calc q = Polynomial.taylor (-d) r := by
-            rw [hrdef, Polynomial.taylor_taylor, neg_add_cancel, Polynomial.taylor_zero]
-      _ = Polynomial.taylor (-d) (Polynomial.X * s) := by rw [hs_eq]
-      _ = Polynomial.taylor (-d) Polynomial.X * Polynomial.taylor (-d) s := by
-            rw [Polynomial.taylor_mul]
-      _ = (Polynomial.X - Polynomial.C d) * φ := by
-            rw [hφdef, Polynomial.taylor_X, Polynomial.C_neg]
-            ring
-  have hφne : φ ≠ 0 := by
-    intro h0
-    rw [h0, mul_zero] at hq_eq
-    exact hqne hq_eq
-  have hφdeg : φ.natDegree ≤ 6 := by
-    have hmul := Polynomial.natDegree_mul (Polynomial.X_sub_C_ne_zero d) hφne
-    rw [hq_eq, hmul, Polynomial.natDegree_X_sub_C] at hdeg
-    omega
-  have hφβ : φ.eval β = 0 := by
-    have h : q.eval β = (β - d) * φ.eval β := by
-      have := congrArg (fun p : Polynomial ℝ => p.eval β) hq_eq
-      simpa using this
-    rw [hβ] at h
-    exact (mul_eq_zero.mp h.symm).resolve_left (sub_ne_zero.mpr hneq)
-  exact root_Pconstructible_le_six_coeffs hφne hφdeg hφc hφβ
-
 /-! ### The isotropic-vector step, in the scalar form the construction uses
 
 The constructive route the issue asks for works on the *line* joining a direction `v` on
@@ -4170,45 +3517,6 @@ theorem exists_pos_quadratic_root {a b c : ℝ} (ha : PConstructible a)
     have hane : a ≠ 0 := ne_of_gt hapos
     field_simp
     linear_combination hsq
-
-/-! ### The reduced cubic of the one-pair case
-
-`septic_one_pair_p3_eq` gives the reduced third power sum as the cubic
-`∑ uᵢ³ + S³ / 2 + 3 S T / 2` in the five real values `uᵢ`. It is worth naming it and
-recording that it is homogeneous of degree three and odd, since that is exactly what
-`septic_one_pair_powerSums_zero` exploits: on the sphere `S⁴` the odd function
-`septicOnePairCubic` changes sign along any path from `u` to `-u`, so the circle of
-values that the issue's "genuinely solvable" claim needs is not empty. -/
-
-/-- The reduced cubic `∑ uᵢ³ + S³ / 2 + 3 S T / 2` in the five real values of the
-one-conjugate-pair reduction. -/
-noncomputable def septicOnePairCubic (u₁ u₂ u₃ u₄ u₅ : ℝ) : ℝ :=
-  (u₁ ^ 3 + u₂ ^ 3 + u₃ ^ 3 + u₄ ^ 3 + u₅ ^ 3)
-    + (u₁ + u₂ + u₃ + u₄ + u₅) ^ 3 / 2
-    + (3 / 2) * (u₁ + u₂ + u₃ + u₄ + u₅)
-      * (u₁ ^ 2 + u₂ ^ 2 + u₃ ^ 2 + u₄ ^ 2 + u₅ ^ 2)
-
--- Theorem: `septicOnePairCubic` is homogeneous of degree three.
-theorem septicOnePairCubic_homogeneous (t u₁ u₂ u₃ u₄ u₅ : ℝ) :
-    septicOnePairCubic (t * u₁) (t * u₂) (t * u₃) (t * u₄) (t * u₅)
-      = t ^ 3 * septicOnePairCubic u₁ u₂ u₃ u₄ u₅ := by
-  simp only [septicOnePairCubic]
-  ring
-
--- Theorem: `septicOnePairCubic` is odd, so on the unit sphere in the five real values it
--- is an odd continuous function and vanishes along every path joining a point to its
--- antipode.
-theorem septicOnePairCubic_neg (u₁ u₂ u₃ u₄ u₅ : ℝ) :
-    septicOnePairCubic (-u₁) (-u₂) (-u₃) (-u₄) (-u₅)
-      = -septicOnePairCubic u₁ u₂ u₃ u₄ u₅ := by
-  simp only [septicOnePairCubic]
-  ring
-
--- Theorem: the named cubic vanishes at the explicit nonzero values `(1, -1, 0, 0, 0)`.
-theorem septicOnePairCubic_zero :
-    septicOnePairCubic 1 (-1) 0 0 0 = 0 := by
-  simp only [septicOnePairCubic]
-  norm_num
 
 /-! ### The `s ≥ 2` case: the Bring–Jerrard reduction is constructible
 
@@ -4260,32 +3568,6 @@ theorem root_Pconstructible_of_two_conjugate_pairs_monic {q : ℝ[X]} (hmon : q.
     exact root_Pconstructible_of_powerLaw hφc hφdeg
       (natDegree_ne_zero_of_trace_zero hp1 hφne) hc₀ hc₁ hc₂ hc₃ hpow
   · exact root_Pconstructible_of_nonSeparable hmon hq (le_of_eq hnat) hsep hβ
-
--- Theorem: a real root `β` of a septic `q` (not necessarily monic) with P-constructible
--- coefficients and two non-real roots `z, w` in distinct conjugate classes is P-constructible.
--- Dividing by the leading coefficient, itself a P-constructible coefficient of `q`, gives a
--- monic septic with the same complex roots, to which the monic case applies.
-theorem root_Pconstructible_of_two_conjugate_pairs {q : ℝ[X]}
-    (hnat : q.natDegree = 7) (hq : ∀ k, PConstructible (q.coeff k))
-    {z w : ℂ} (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0)
-    (hw : (q.map (algebraMap ℝ ℂ)).eval w = 0) (hwim : w.im ≠ 0)
-    (hzw : z ≠ w) (hzw' : z ≠ starRingEnd ℂ w) {β : ℝ} (hβ : q.eval β = 0) :
-    PConstructible β := by
-  have hne : q ≠ 0 := Polynomial.ne_zero_of_natDegree_gt (n := 0) (by omega)
-  have hlc : q.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hne
-  set q₀ : ℝ[X] := C q.leadingCoeff⁻¹ * q with hq₀
-  have hmon : q₀.Monic :=
-    Polynomial.monic_C_mul_of_mul_leadingCoeff_eq_one (inv_mul_cancel₀ hlc)
-  have hnat₀ : q₀.natDegree = 7 := by
-    rw [hq₀, Polynomial.natDegree_C_mul (inv_ne_zero hlc), hnat]
-  have hq₀c : ∀ k, PConstructible (q₀.coeff k) :=
-    C_mul_coeff_Pconstructible (inv_Pconstructible (hq q.natDegree)) hq
-  have hroot : ∀ x : ℂ, (q.map (algebraMap ℝ ℂ)).eval x = 0 →
-      (q₀.map (algebraMap ℝ ℂ)).eval x = 0 := by
-    intro x hx
-    simp [hq₀, Polynomial.map_mul, hx]
-  exact root_Pconstructible_of_two_conjugate_pairs_monic hmon hnat₀ hq₀c (hroot z hz) hzim
-    (hroot w hw) hwim hzw hzw' (by simp [hq₀, hβ])
 
 end Pconstructible
 
@@ -5118,9 +4400,6 @@ F₀(z)`, so the two `b`'s multiply to `(y_j - Re u)² - 3 (Im u)²`, which is n
 /-- The primitive sixth root of unity `-1/2 + (√3/2) i`. -/
 noncomputable def omegaC : ℂ := ⟨-1/2, Real.sqrt 3 / 2⟩
 
-lemma omegaC_conj : starRingEnd ℂ omegaC = ⟨-1/2, -(Real.sqrt 3 / 2)⟩ := by
-  simp [omegaC, Complex.ext_iff, Complex.conj_re, Complex.conj_im]
-
 lemma omegaC_add_conj : omegaC + starRingEnd ℂ omegaC = -1 := by
   apply Complex.ext
   · simp [omegaC]
@@ -5189,25 +4468,6 @@ lemma ofReal_trace_mul_eq_sum (q f g : ℝ[X]) (hmon : q.Monic) (hnat : q.natDeg
   rw [hR] at h
   rw [h]
   ring
-
--- Theorem: a real number whose image in `ℂ` is a root of the mapped septic, and which is
--- neither `z` nor `z̄`, lies in `R`.
-lemma mem_R_of_root {q : ℝ[X]} (hmon : q.Monic) {z : ℂ} {R : Multiset ℝ}
-    (hroots : (q.map (algebraMap ℝ ℂ)).roots
-      = z ::ₘ starRingEnd ℂ z ::ₘ (R.map (algebraMap ℝ ℂ)))
-    {x : ℝ} (hx : q.eval x = 0) (hxz : (x : ℂ) ≠ z)
-    (hxz' : (x : ℂ) ≠ starRingEnd ℂ z) : x ∈ R := by
-  have hqCne : (q.map (algebraMap ℝ ℂ)) ≠ 0 := (hmon.map (algebraMap ℝ ℂ)).ne_zero
-  have hxrootC : (q.map (algebraMap ℝ ℂ)).eval (algebraMap ℝ ℂ x) = 0 := by
-    rw [Polynomial.eval_map, Polynomial.eval₂_at_apply, hx, map_zero]
-  have hmem : (algebraMap ℝ ℂ x) ∈ (q.map (algebraMap ℝ ℂ)).roots :=
-    (Polynomial.mem_roots hqCne).mpr hxrootC
-  rw [hroots] at hmem
-  simp only [Multiset.mem_cons] at hmem
-  rcases hmem with h | h | h
-  · exact absurd h hxz
-  · exact absurd h hxz'
-  · exact (Multiset.mem_map_of_injective (algebraMap ℝ ℂ).injective).mp h
 
 -- Theorem: every element of `R` is a real root of `q`.
 lemma root_of_mem_R {q : ℝ[X]} (hmon : q.Monic) {z : ℂ} {R : Multiset ℝ}
