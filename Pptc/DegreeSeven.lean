@@ -346,9 +346,10 @@ theorem companion7_map_eq {S : Type*} [CommRing S] (f : ℝ →+* S) (q : ℝ[X]
 
 /-- In a basis of eigenvectors, the trace of a power is the sum of the eigenvalues' powers. -/
 theorem trace_pow_eq_sum_eigen {K ι V : Type*} [Field K] [AddCommGroup V] [Module K V]
-    [Fintype ι] [DecidableEq ι] (F : Module.End K V) (b : Basis ι K V) (z : ι → K)
+    [Fintype ι] (F : Module.End K V) (b : Basis ι K V) (z : ι → K)
     (hv : ∀ i, F (b i) = z i • b i) (k : ℕ) :
     (F ^ k).trace K V = ∑ i, z i ^ k := by
+  classical
   rw [LinearMap.trace_eq_matrix_trace K b]
   simp only [Matrix.trace]
   refine Finset.sum_congr rfl (fun i _ => ?_)
@@ -364,7 +365,7 @@ theorem trace_pow_eq_sum_eigen {K ι V : Type*} [Field K] [AddCommGroup V] [Modu
 -- Theorem: trace of a power of the degree-7 companion matrix is the sum of the `k`-th powers
 -- of the roots of `q` (with multiplicity).
 set_option linter.style.haveILetI false in
-theorem companion7'_trace_pow {K : Type*} [Field K] [IsAlgClosed K] [DecidableEq K]
+theorem companion7'_trace_pow {K : Type*} [Field K] [IsAlgClosed K]
     (q : K[X]) (hmon : q.Monic) (hnat : q.natDegree = 7) (hsep : q.Separable) (k : ℕ) :
     Matrix.trace ((companion7' q) ^ k) = (q.roots.map (fun z => z ^ k)).sum := by
   classical
@@ -377,7 +378,6 @@ theorem companion7'_trace_pow {K : Type*} [Field K] [IsAlgClosed K] [DecidableEq
   let idx := q.roots.toFinset
   haveI : Nonempty idx := by
     obtain ⟨x, hx⟩ := Finset.card_pos.mp (by
-      show 0 < q.roots.toFinset.card
       rw [Multiset.toFinset_card_of_nodup hnodup, hcard]; norm_num)
     exact ⟨⟨x, hx⟩⟩
   let v : idx → (Fin 7 → K) := fun z => companionVecC (z : K)
@@ -409,9 +409,10 @@ theorem companion7'_trace_pow {K : Type*} [Field K] [IsAlgClosed K] [DecidableEq
 
 -- Theorem: the trace of any polynomial in the companion matrix is the sum over the roots of
 -- the polynomial evaluated there.
-theorem companion7'_trace_aeval {K : Type*} [Field K] [IsAlgClosed K] [DecidableEq K]
+theorem companion7'_trace_aeval {K : Type*} [Field K] [IsAlgClosed K]
     (q φ : K[X]) (hmon : q.Monic) (hnat : q.natDegree = 7) (hsep : q.Separable) :
     Matrix.trace (aeval (companion7' q) φ) = (q.roots.map φ.eval).sum := by
+  classical
   induction φ using Polynomial.induction_on' with
   | add p r hp hr =>
       rw [map_add, Matrix.trace_add, hp, hr]
@@ -465,10 +466,12 @@ theorem exists_linear_eval (z c : ℂ) (hz : z.im ≠ 0) :
       Polynomial.map_X]
     simp only [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_X]
     apply Complex.ext
-    · simp only [Complex.add_re, Complex.mul_re, Complex.coe_algebraMap, Complex.ofReal_re, Complex.ofReal_im]
+    · simp only [Complex.add_re, Complex.mul_re, Complex.coe_algebraMap, Complex.ofReal_re,
+        Complex.ofReal_im]
       field_simp
       ring
-    · simp only [Complex.add_im, Complex.mul_im, Complex.coe_algebraMap, Complex.ofReal_re, Complex.ofReal_im]
+    · simp only [Complex.add_im, Complex.mul_im, Complex.coe_algebraMap, Complex.ofReal_re,
+        Complex.ofReal_im]
       field_simp
       ring
 
@@ -483,17 +486,15 @@ theorem conjQuad_natDegree (z : ℂ) : (conjQuad z).natDegree = 2 := by
 
 theorem conjQuad_eval_map (z : ℂ) : ((conjQuad z).map (algebraMap ℝ ℂ)).eval z = 0 := by
   rw [conjQuad]
-  simp only [Polynomial.map_add, Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_pow,
+  simp only [Polynomial.map_add, Polynomial.map_sub, Polynomial.map_mul,
     Polynomial.map_C, Polynomial.map_X, Polynomial.eval_add, Polynomial.eval_sub,
-    Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_C, Polynomial.eval_X, pow_two]
+    Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_X, pow_two]
   apply Complex.ext
   · simp only [Complex.add_re, Complex.sub_re, Complex.mul_re, Complex.coe_algebraMap,
-      Complex.ofReal_re, Complex.ofReal_im, zero_mul, zero_add, mul_zero, add_zero,
-      Complex.zero_re, Complex.zero_im]
+      Complex.ofReal_re, Complex.ofReal_im, zero_mul, Complex.zero_re]
     ring
   · simp only [Complex.add_im, Complex.sub_im, Complex.mul_im, Complex.coe_algebraMap,
-      Complex.ofReal_re, Complex.ofReal_im, zero_mul, zero_add, mul_zero, add_zero,
-      Complex.zero_re, Complex.zero_im]
+      Complex.ofReal_re, Complex.ofReal_im, zero_mul, add_zero, Complex.zero_im]
     ring
 
 -- Theorem: a real polynomial `q` with a non-real complex root `z` is divisible by the real
@@ -524,7 +525,7 @@ theorem conjQuad_dvd_of_root {q : ℝ[X]} {z : ℂ} (hz : (q.map (algebraMap ℝ
       ext n
       rcases lt_or_ge n 2 with hn | hn
       · interval_cases n <;>
-          simp [Polynomial.coeff_C, Polynomial.coeff_X, Polynomial.coeff_C_mul_X]
+          simp [Polynomial.coeff_C, Polynomial.coeff_X]
       · have h0 : r.coeff n = 0 := Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)
         have h1' : (C (r.coeff 0) + C (r.coeff 1) * X : ℝ[X]).coeff n = 0 := by
           rw [Polynomial.coeff_add, Polynomial.coeff_C, Polynomial.coeff_C_mul_X,
@@ -538,7 +539,7 @@ theorem conjQuad_dvd_of_root {q : ℝ[X]} {z : ℂ} (hz : (q.map (algebraMap ℝ
     have hb : r.coeff 1 = 0 := by
       have := congrArg Complex.im h2
       simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
-        Complex.zero_re, Complex.zero_im] at this
+        Complex.zero_im] at this
       have h3 : (r.coeff 1 : ℂ).re * z.im = 0 := by simpa using this
       simpa [Complex.ofReal_re] using (mul_eq_zero.mp h3).resolve_right hzim
     have ha : r.coeff 0 = 0 := by
@@ -720,7 +721,7 @@ theorem multiset_sum_eq_two_of_vanish {g : ℂ → ℂ} {s : Multiset ℂ} (hs :
   have hval : s.toFinset.val = s := by
     rw [Multiset.toFinset_val, Multiset.dedup_eq_self.mpr hs]
   have h1 : (s.map g).sum = ∑ x ∈ s.toFinset, g x := by
-    show (s.map g).sum = (s.toFinset.val.map g).sum
+    change (s.map g).sum = (s.toFinset.val.map g).sum
     rw [hval]
   have hsub : ({z, z'} : Finset ℂ) ⊆ s.toFinset := by
     intro x hx
@@ -767,7 +768,7 @@ theorem algebraMap_trace_eq_of_value (q : ℝ[X]) (hmon : q.Monic) (hnat : q.nat
     (g := fun x => (F.map (algebraMap ℝ ℂ)).eval x)
     (fun x hx hxz hxz' => hFother x ((Polynomial.mem_roots hqCne).mp hx) hxz hxz')
   rw [hsum]
-  show (F.map (algebraMap ℝ ℂ)).eval z
+  change (F.map (algebraMap ℝ ℂ)).eval z
       + (F.map (algebraMap ℝ ℂ)).eval (starRingEnd ℂ z) = c + starRingEnd ℂ c
   rw [hFz, eval_map_conj F z, hFz]
 
@@ -994,7 +995,6 @@ theorem companion7'_charpoly_aeval_eq_prod {K : Type*} [Field K] [IsAlgClosed K]
   let idx := q.roots.toFinset
   haveI : Nonempty idx := by
     obtain ⟨x, hx⟩ := Finset.card_pos.mp (by
-      show 0 < q.roots.toFinset.card
       rw [Multiset.toFinset_card_of_nodup hnodup, hcard]; norm_num)
     exact ⟨⟨x, hx⟩⟩
   let v : idx → (Fin 7 → K) := fun z => companionVecC (z : K)
@@ -1305,6 +1305,14 @@ noncomputable def qform (A : Matrix (Fin n) (Fin n) ℝ) (x : Fin n → ℝ) : �
 noncomputable def bilin (A : Matrix (Fin n) (Fin n) ℝ) (x y : Fin n → ℝ) : ℝ :=
   x ⬝ᵥ (A *ᵥ y)
 
+theorem qform_neg (A : Matrix (Fin n) (Fin n) ℝ) (x : Fin n → ℝ) :
+    qform (-A) x = -qform A x := by
+  simp only [qform, Matrix.neg_mulVec, dotProduct_neg]
+
+theorem bilin_neg (A : Matrix (Fin n) (Fin n) ℝ) (x y : Fin n → ℝ) :
+    bilin (-A) x y = -bilin A x y := by
+  simp only [bilin, Matrix.neg_mulVec, dotProduct_neg]
+
 
 end Pconstructible
 
@@ -1324,8 +1332,9 @@ namespace Pconstructible
 `Finset.sum_Pconstructible` is the induction behind `bilin_Pconstructible`,
 `Lcomb_Pconstructible` and their relatives. -/
 
-lemma Finset.sum_Pconstructible {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → ℝ)
+lemma Finset.sum_Pconstructible {ι : Type*} (s : Finset ι) (f : ι → ℝ)
     (hf : ∀ i ∈ s, PConstructible (f i)) : PConstructible (s.sum f) := by
+  classical
   induction s using Finset.induction_on with
   | empty => simpa using zero_Pconstructible
   | insert a s ha ih =>
@@ -1359,7 +1368,7 @@ theorem cubic_exists_root_of_pos {a b c d : ℝ} (hd : 0 < d) :
   have hnat : p.natDegree = 3 := Polynomial.natDegree_eq_of_degree_eq_some hdeg3
   have hdeg : 0 < p.degree := by rw [hdeg3]; norm_num
   have hlc : p.leadingCoeff = d := by
-    show p.coeff p.natDegree = d
+    change p.coeff p.natDegree = d
     rw [hnat, hp]
     simp
   have hcont : Continuous (fun x : ℝ => p.eval x) := by
@@ -1466,7 +1475,7 @@ theorem svec_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k)
   trace_pow_companion7_Pconstructible q hq i.val
 
 theorem svec_zero (q : ℝ[X]) : svec q 0 = 7 := by
-  show Matrix.trace ((companion7 q) ^ 0) = 7
+  change Matrix.trace ((companion7 q) ^ 0) = 7
   rw [pow_zero, Matrix.trace_one]
   norm_num
 
@@ -4123,7 +4132,7 @@ theorem exists_orth_projection {A : Matrix (Fin 6) (Fin 6) ℝ}
 
 -- Theorem: if `Q = qform A` is negative definite on the real plane spanned by `v₁, v₂`, then
 -- there is a P-constructible `e` with `bilin A P₀ e = 0` and `Q e < 0`.
-theorem exists_orth_neg_Pconstructible {A : Matrix (Fin 6) (Fin 6) ℝ} (_hAsym : Aᵀ = A)
+theorem exists_orth_neg_Pconstructible {A : Matrix (Fin 6) (Fin 6) ℝ}
     (hA : ∀ i j, PConstructible (A i j)) {P₀ : Fin 6 → ℝ} (hP₀ : ∀ i, PConstructible (P₀ i))
     {v₁ v₂ : Fin 6 → ℝ}
     (hdef : ∀ a b : ℝ, (a ≠ 0 ∨ b ≠ 0) → qform A (a • v₁ + b • v₂) < 0) :
@@ -4211,26 +4220,19 @@ theorem exists_tschirnhaus_traces (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDeg
   obtain ⟨v1, v2, hneg⟩ := neg_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
   obtain ⟨w1, w2, hpos⟩ := pos_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
   obtain ⟨e, heP, hBe, heQ⟩ :=
-    exists_orth_neg_Pconstructible (Gram_symm q) (Gram_Pconstructible q hq) hP₀P hneg
+    exists_orth_neg_Pconstructible (Gram_Pconstructible q hq) hP₀P hneg
   have hdefpos : ∀ a b : ℝ, (a ≠ 0 ∨ b ≠ 0) → qform (-Gram q) (a • w1 + b • w2) < 0 := by
     intro a b hab
-    have h := hpos a b hab
-    have hq : qform (-Gram q) (a • w1 + b • w2) = -qform (Gram q) (a • w1 + b • w2) := by
-      simp only [qform, Matrix.neg_mulVec, dotProduct_neg]
-    rw [hq]
-    linarith
+    rw [qform_neg]
+    linarith [hpos a b hab]
   obtain ⟨f, hfP, hBfneg, hfQneg⟩ :=
-    exists_orth_neg_Pconstructible (A := -Gram q) (by rw [Matrix.transpose_neg, Gram_symm])
+    exists_orth_neg_Pconstructible (A := -Gram q)
       (fun i j => neg_Pconstructible (Gram_Pconstructible q hq i j)) hP₀P hdefpos
   have hBf : bilin (Gram q) P₀ f = 0 := by
-    have hneg : bilin (-Gram q) P₀ f = -bilin (Gram q) P₀ f := by
-      simp only [bilin, Matrix.neg_mulVec, dotProduct_neg]
-    rw [hneg] at hBfneg
+    rw [bilin_neg] at hBfneg
     linarith
   have hfQ : 0 < qform (Gram q) f := by
-    have hneg : qform (-Gram q) f = -qform (Gram q) f := by
-      simp only [qform, Matrix.neg_mulVec, dotProduct_neg]
-    rw [hneg] at hfQneg
+    rw [qform_neg] at hfQneg
     linarith
   obtain ⟨x, hxP, hQx, hBx, hxpar⟩ :=
     exists_isotropic_orth_Pconstructible q hq hQ₀ heP hfP hBe hBf heQ hfQ
