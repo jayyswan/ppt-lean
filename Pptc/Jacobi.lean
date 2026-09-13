@@ -650,7 +650,10 @@ section Outlook
 Collecting what is settled: the four Jacobi functions are equiconstructible with one
 another at every argument, they are P-constructible at every argument *presented* as
 `F(φ)` for a P-constructible angle `φ`, and the corresponding question for the second-kind
-integral — the amplitude of `E` — has the positive answer proved above. -/
+integral — the amplitude of `E` — has the positive answer proved above. The local-to-global
+reduction in `Pptc.JacobiAddition` (`jacobiAm_Pconstructible_of_near_zero`) shows that the
+remaining question is local: it suffices to construct the amplitude at P-constructible
+arguments in an arbitrary neighbourhood of `0`. -/
 
 -- Theorem: at an argument presented as a first-kind integral of a P-constructible angle,
 -- the amplitude is that angle, so all four functions are P-constructible there. The

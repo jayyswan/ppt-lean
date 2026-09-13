@@ -21,11 +21,19 @@ import Mathlib.Topology.Order.MonotoneContinuity
 
 /-! # Pptc.JacobiAddition
 
-Derivatives of the Jacobi amplitude and of `sn`, `cn`, `dn`, the first step of the
-addition theorem. Phase 2 shows a certain expression has derivative zero, which needs
-these four. The amplitude inverts the strictly monotone first-kind integral `F`, so its
-derivative is the reciprocal of the derivative of `F`; the other three follow by the
-chain rule. The results are also worth having on their own.
+This file carries the three phases of the addition-theorem work on the Jacobi amplitude:
+
+* Phase 1 computes derivatives. The amplitude inverts the strictly monotone first-kind
+  integral `F`, so its derivative is the reciprocal of the derivative of `F`; `sn`, `cn`
+  and `dn` follow by the chain rule.
+* Phase 2 proves the addition theorem for `cn` (Euler's argument: a certain quotient has
+  derivative zero), and deduces that the amplitudes at which `am` is P-constructible are
+  closed under addition, `jacobiAm_Pconstructible_add`.
+* Phase 3 reduces the remaining question to a local one. Addition gives the constructibility
+  of `am` at every integer multiple `n u` once it holds at `u`
+  (`jacobiAm_Pconstructible_nsmul`), and the archimedean property then shows that it is
+  enough to construct the amplitude at P-constructible arguments in an arbitrary
+  neighbourhood of `0` (`jacobiAm_Pconstructible_of_near_zero`).
 -/
 
 namespace Pconstructible
@@ -277,6 +285,50 @@ theorem jacobiAm_Pconstructible_add {c u v : ℝ} (hcP : PConstructible c) (hc :
   pconstructible
 
 end Addition
+
+section LocalToGlobal
+
+/-! ### From small arguments to all arguments
+
+`am` is additive in its argument wherever its values are constructible, so constructibility
+at `u` propagates to every integer multiple `n u`. The archimedean property of `ℝ` then makes
+the problem local: dividing an arbitrary constructible `u` by a large enough `n` brings it
+into any prescribed neighbourhood of `0`, and multiplying back by `n` recovers `u`. So a
+construction of the amplitude that only works near `0` extends to the whole line. -/
+
+-- Theorem: `am` at `n u` is P-constructible whenever it is at `u`.
+theorem jacobiAm_Pconstructible_nsmul {c u : ℝ} (hcP : PConstructible c) (hc : c < 1)
+    (hu : PConstructible (jacobiAm c u)) (n : ℕ) :
+    PConstructible (jacobiAm c (n * u)) := by
+  induction n with
+  | zero =>
+      rw [Nat.cast_zero, zero_mul, jacobiAm_zero hc]
+      exact zero_Pconstructible
+  | succ n ih =>
+      rw [Nat.cast_succ, add_mul, one_mul]
+      exact jacobiAm_Pconstructible_add hcP hc ih hu
+
+-- Theorem: if the amplitude is P-constructible at every P-constructible argument near `0`,
+-- it is P-constructible at every P-constructible argument.
+theorem jacobiAm_Pconstructible_of_near_zero {c ε : ℝ} (hcP : PConstructible c) (hc : c < 1)
+    (hε : 0 < ε)
+    (hloc : ∀ u, PConstructible u → |u| < ε → PConstructible (jacobiAm c u))
+    {u : ℝ} (huP : PConstructible u) : PConstructible (jacobiAm c u) := by
+  obtain ⟨n, hn⟩ := exists_nat_gt (|u| / ε)
+  have hnpos : (0 : ℝ) < n :=
+    lt_of_le_of_lt (div_nonneg (abs_nonneg u) hε.le) hn
+  have hnne : (n : ℝ) ≠ 0 := ne_of_gt hnpos
+  have hvP : PConstructible (u / n) := PConstructible.div huP (nat_Pconstructible n)
+  have hvε : |u / n| < ε := by
+    rw [abs_div, abs_of_pos hnpos, div_lt_iff₀ hnpos, mul_comm]
+    exact (div_lt_iff₀ hε).mp hn
+  have hvam : PConstructible (jacobiAm c (u / n)) := hloc (u / n) hvP hvε
+  have hnu : (n : ℝ) * (u / n) = u := by
+    rw [mul_comm, div_mul_cancel₀ u hnne]
+  have hmain := jacobiAm_Pconstructible_nsmul hcP hc hvam n
+  rwa [hnu] at hmain
+
+end LocalToGlobal
 
 end Pconstructible
 
