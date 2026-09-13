@@ -125,79 +125,105 @@ theorem companion7_entries_Pconstructible {q : ℝ[X]}
     · simp only [hj, ↓reduceIte]
       exact zero_Pconstructible
 
-theorem companion7_mulVec_apply_of_lt (q : ℝ[X]) (w : Fin 7 → ℝ)
+/-! ### A generic companion matrix and its eigenvectors
+
+`companion7` is the `ℝ`-specialization of the generic `companion7'`; the eigenvector
+lemmas are proved once over a commutative ring. -/
+
+/-- The companion matrix of `q`, over an arbitrary commutative ring. -/
+def companion7' {R : Type*} [CommRing R] (q : R[X]) : Matrix (Fin 7) (Fin 7) R :=
+  fun i j => if i.val = 6 then -q.coeff j.val else if j.val = i.val + 1 then 1 else 0
+
+theorem companion7'_apply {R : Type*} [CommRing R] (q : R[X]) (i j : Fin 7) :
+    companion7' q i j = if i.val = 6 then -q.coeff j.val
+      else if j.val = i.val + 1 then 1 else 0 := rfl
+
+/-- The vector `(1, z, …, z⁶)`. -/
+def companionVecC {K : Type*} [Monoid K] (z : K) : Fin 7 → K := fun k => z ^ k.val
+
+theorem companion7'_mulVec_apply_of_lt {K : Type*} [CommRing K] (q : K[X]) (w : Fin 7 → K)
     {i : Fin 7} (hi : i.val < 6) :
-    (companion7 q *ᵥ w) i = w ⟨i.val + 1, by omega⟩ := by
+    (companion7' q *ᵥ w) i = w ⟨i.val + 1, by omega⟩ := by
   have hi6 : i.val ≠ 6 := by omega
   rw [Matrix.mulVec, dotProduct, Finset.sum_eq_single ⟨i.val + 1, by omega⟩]
-  · simp [companion7, hi6]
+  · simp [companion7', hi6]
   · intro j _ hne
-    have hne' : j.val ≠ i.val + 1 := by
-      intro hh; exact hne (Fin.ext (by simpa using hh))
-    simp [companion7, hi6, hne']
+    have hne' : j.val ≠ i.val + 1 := fun hh => hne (Fin.ext (by simpa using hh))
+    simp [companion7', hi6, hne']
   · intro hnot; exact absurd (Finset.mem_univ _) hnot
 
-theorem companion7_mulVec_apply_last (q : ℝ[X]) (w : Fin 7 → ℝ) :
-    (companion7 q *ᵥ w) ⟨6, by norm_num⟩ = -∑ j : Fin 7, q.coeff j.val * w j := by
+theorem companion7'_mulVec_apply_last {K : Type*} [CommRing K] (q : K[X]) (w : Fin 7 → K) :
+    (companion7' q *ᵥ w) ⟨6, by norm_num⟩ = -∑ j : Fin 7, q.coeff j.val * w j := by
   rw [Matrix.mulVec, dotProduct]
-  simp only [companion7, ↓reduceIte]
+  simp only [companion7', ↓reduceIte]
   simp_rw [neg_mul]
   rw [Finset.sum_neg_distrib]
 
-theorem companion7_mulVec_companionVec {q : ℝ[X]} {β : ℝ}
-    (hβ : q.eval β = 0) (h7 : q.coeff 7 = 1) (hdeg : q.natDegree ≤ 7) :
-    companion7 q *ᵥ companionVec β = β • companionVec β := by
-  have hsum : (∑ k ∈ Finset.range 7, q.coeff k * β ^ k) = -β ^ 7 := by
-    have h := hβ
+theorem companion7'_mulVec_companionVecC {K : Type*} [Field K] {q : K[X]} {z : K}
+    (hz : q.eval z = 0) (h7 : q.coeff 7 = 1) (hdeg : q.natDegree ≤ 7) :
+    companion7' q *ᵥ companionVecC z = z • companionVecC z := by
+  have hsum : (∑ k ∈ Finset.range 7, q.coeff k * z ^ k) = -z ^ 7 := by
+    have h := hz
     rw [Polynomial.eval_eq_sum_range' (p := q) (n := 8) (by omega)] at h
     rw [Finset.sum_range_succ, h7, one_mul] at h
-    linarith
+    exact eq_neg_of_add_eq_zero_left h
   funext i
   by_cases hi : i.val = 6
   · have hι : i = ⟨6, by norm_num⟩ := Fin.ext (by simpa using hi)
     subst hι
-    rw [companion7_mulVec_apply_last]
-    simp only [companionVec]
-    rw [Fin.sum_univ_eq_sum_range (fun k => q.coeff k * β ^ k) 7, hsum, neg_neg]
-    simp only [Pi.smul_apply, companionVec, smul_eq_mul]
+    rw [companion7'_mulVec_apply_last]
+    simp only [companionVecC]
+    rw [Fin.sum_univ_eq_sum_range (fun k => q.coeff k * z ^ k) 7, hsum, neg_neg]
+    simp only [Pi.smul_apply, companionVecC, smul_eq_mul]
     rw [pow_succ']
   · have hlt : i.val < 6 := by have := i.isLt; omega
-    rw [companion7_mulVec_apply_of_lt q (companionVec β) hlt]
-    simp only [Pi.smul_apply, companionVec, smul_eq_mul]
+    rw [companion7'_mulVec_apply_of_lt q (companionVecC z) hlt]
+    simp only [Pi.smul_apply, companionVecC, smul_eq_mul]
     rw [pow_succ']
 
-/-! ### D3: `φ β` is a root of `charpoly (φ (companion q))` -/
-
-theorem pow_mulVec_eigenvector {n : Type*} [Fintype n] [DecidableEq n]
-    (M : Matrix n n ℝ) {β : ℝ} {v : n → ℝ} (hv : M *ᵥ v = β • v) :
+theorem pow_mulVec_eigenvector_gen {K : Type*} [CommRing K] {n : Type*} [Fintype n]
+    [DecidableEq n] (M : Matrix n n K) {β : K} {v : n → K} (hv : M *ᵥ v = β • v) :
     ∀ k : ℕ, (M ^ k) *ᵥ v = (β ^ k) • v
   | 0 => by rw [pow_zero, Matrix.one_mulVec, pow_zero, one_smul]
   | k + 1 => by
       rw [pow_succ, ← Matrix.mulVec_mulVec v (M ^ k) M, hv, Matrix.mulVec_smul,
-        pow_mulVec_eigenvector M hv k, smul_smul, pow_succ']
+        pow_mulVec_eigenvector_gen M hv k, smul_smul, pow_succ']
 
-theorem aeval_mulVec_eigenvector {n : Type*} [Fintype n] [DecidableEq n]
-    (M : Matrix n n ℝ) {β : ℝ} {v : n → ℝ} (hv : M *ᵥ v = β • v) (p : ℝ[X]) :
+theorem aeval_mulVec_eigenvector_gen {K : Type*} [CommRing K] {n : Type*} [Fintype n]
+    [DecidableEq n] (M : Matrix n n K) {β : K} {v : n → K} (hv : M *ᵥ v = β • v)
+    (p : K[X]) :
     (aeval M p) *ᵥ v = (p.eval β) • v := by
   induction p using Polynomial.induction_on' with
   | add p q hp hq =>
       rw [map_add, Matrix.add_mulVec, hp, hq, Polynomial.eval_add, add_smul]
   | monomial n a =>
       rw [Polynomial.aeval_monomial, Algebra.algebraMap_eq_smul_one, Matrix.smul_mul,
-        Matrix.one_mul, Matrix.smul_mulVec, pow_mulVec_eigenvector M hv n,
+        Matrix.one_mul, Matrix.smul_mulVec, pow_mulVec_eigenvector_gen M hv n,
         Polynomial.eval_monomial, smul_smul]
 
+-- Theorem: the real companion matrix is the generic companion matrix.
+theorem companion7_eq_companion7' (q : ℝ[X]) : companion7 q = companion7' q := rfl
+
+
+/-! ### D3: `φ β` is a root of `charpoly (φ (companion q))` -/
+
+-- Theorem: `φ β` is a root of the characteristic polynomial of `φ (companion7 q)`,
+-- for any root `β` of the monic degree-7 polynomial `q`.
 theorem companion7_charpoly_aeval_isRoot {q φ : ℝ[X]} {β : ℝ}
     (hβ : q.eval β = 0) (h7 : q.coeff 7 = 1) (hdeg : q.natDegree ≤ 7) :
     ((aeval (companion7 q) φ).charpoly).eval (φ.eval β) = 0 := by
-  set M := companion7 q with hM
-  set v : Fin 7 → ℝ := companionVec β with hv
-  have hMv : M *ᵥ v = β • v := companion7_mulVec_companionVec hβ h7 hdeg
+  rw [companion7_eq_companion7']
+  set M := companion7' q with hM
+  set v : Fin 7 → ℝ := companionVecC β with hv
+  have hMv : M *ᵥ v = β • v := by
+    rw [hM, hv]
+    exact companion7'_mulVec_companionVecC hβ h7 hdeg
   have hvne : v ≠ 0 := by
     intro h0
     have h1 := congrFun h0 0
-    simp [hv, companionVec] at h1
-  have hNv : (aeval M φ) *ᵥ v = (φ.eval β) • v := aeval_mulVec_eigenvector M hMv φ
+    simp [hv, companionVecC] at h1
+  have hNv : (aeval M φ) *ᵥ v = (φ.eval β) • v :=
+    aeval_mulVec_eigenvector_gen M hMv φ
   have hzero : (Matrix.scalar (Fin 7) (φ.eval β) - aeval M φ) *ᵥ v = 0 := by
     rw [Matrix.sub_mulVec, hNv, Matrix.scalar_apply, Matrix.diagonal_const_mulVec, sub_self]
   rw [Matrix.eval_charpoly]
@@ -315,69 +341,12 @@ namespace Pconstructible
 
 noncomputable section
 
-/-! ### A generic companion matrix and its eigenvectors
-
-`ScratchD` defines the companion matrix over `ℝ`.  For the spectral identity we need it
-over an arbitrary field (eventually `ℂ`), so we restate it generically and prove that the
-vectors `z ↦ (1, z, …, z⁶)` are eigenvectors. -/
-
-/-- The companion matrix of `q`, over an arbitrary commutative ring. -/
-def companion7' {R : Type*} [CommRing R] (q : R[X]) : Matrix (Fin 7) (Fin 7) R :=
-  fun i j => if i.val = 6 then -q.coeff j.val else if j.val = i.val + 1 then 1 else 0
-
-theorem companion7'_apply {R : Type*} [CommRing R] (q : R[X]) (i j : Fin 7) :
-    companion7' q i j = if i.val = 6 then -q.coeff j.val
-      else if j.val = i.val + 1 then 1 else 0 := rfl
-
 /-- Mapping the real companion matrix is the generic companion of the mapped polynomial. -/
 theorem companion7_map_eq {S : Type*} [CommRing S] (f : ℝ →+* S) (q : ℝ[X]) :
     (companion7 q).map f = companion7' (q.map f) := by
   ext i j
   simp only [Matrix.map_apply, companion7'_apply, companion7]
   by_cases h : i.val = 6 <;> simp [h]
-
-/-- The vector `(1, z, …, z⁶)`. -/
-def companionVecC {K : Type*} [Monoid K] (z : K) : Fin 7 → K := fun k => z ^ k.val
-
-theorem companion7'_mulVec_apply_of_lt {K : Type*} [CommRing K] (q : K[X]) (w : Fin 7 → K)
-    {i : Fin 7} (hi : i.val < 6) :
-    (companion7' q *ᵥ w) i = w ⟨i.val + 1, by omega⟩ := by
-  have hi6 : i.val ≠ 6 := by omega
-  rw [Matrix.mulVec, dotProduct, Finset.sum_eq_single ⟨i.val + 1, by omega⟩]
-  · simp [companion7', hi6]
-  · intro j _ hne
-    have hne' : j.val ≠ i.val + 1 := fun hh => hne (Fin.ext (by simpa using hh))
-    simp [companion7', hi6, hne']
-  · intro hnot; exact absurd (Finset.mem_univ _) hnot
-
-theorem companion7'_mulVec_apply_last {K : Type*} [CommRing K] (q : K[X]) (w : Fin 7 → K) :
-    (companion7' q *ᵥ w) ⟨6, by norm_num⟩ = -∑ j : Fin 7, q.coeff j.val * w j := by
-  rw [Matrix.mulVec, dotProduct]
-  simp only [companion7', ↓reduceIte]
-  simp_rw [neg_mul]
-  rw [Finset.sum_neg_distrib]
-
-theorem companion7'_mulVec_companionVecC {K : Type*} [Field K] {q : K[X]} {z : K}
-    (hz : q.eval z = 0) (h7 : q.coeff 7 = 1) (hdeg : q.natDegree ≤ 7) :
-    companion7' q *ᵥ companionVecC z = z • companionVecC z := by
-  have hsum : (∑ k ∈ Finset.range 7, q.coeff k * z ^ k) = -z ^ 7 := by
-    have h := hz
-    rw [Polynomial.eval_eq_sum_range' (p := q) (n := 8) (by omega)] at h
-    rw [Finset.sum_range_succ, h7, one_mul] at h
-    exact eq_neg_of_add_eq_zero_left h
-  funext i
-  by_cases hi : i.val = 6
-  · have hι : i = ⟨6, by norm_num⟩ := Fin.ext (by simpa using hi)
-    subst hι
-    rw [companion7'_mulVec_apply_last]
-    simp only [companionVecC]
-    rw [Fin.sum_univ_eq_sum_range (fun k => q.coeff k * z ^ k) 7, hsum, neg_neg]
-    simp only [Pi.smul_apply, companionVecC, smul_eq_mul]
-    rw [pow_succ']
-  · have hlt : i.val < 6 := by have := i.isLt; omega
-    rw [companion7'_mulVec_apply_of_lt q (companionVecC z) hlt]
-    simp only [Pi.smul_apply, companionVecC, smul_eq_mul]
-    rw [pow_succ']
 
 /-- In a basis of eigenvectors, the trace of a power is the sum of the eigenvalues' powers. -/
 theorem trace_pow_eq_sum_eigen {K ι V : Type*} [Field K] [AddCommGroup V] [Module K V]
@@ -1005,31 +974,6 @@ theorem charpoly_eq_prod_of_eigenbasis {K ι V : Type*} [Field K] [AddCommGroup 
       simp
     · simp [h]
   rw [← LinearMap.charpoly_toMatrix F b, hmatrix, Matrix.charpoly_diagonal]
-
-/-! ### Eigenvector lemmas over an arbitrary commutative ring
-
-`ScratchD` proved these over `ℝ`; the same induction works over any commutative ring, which
-is what lets us move the companion matrix to `ℂ`. -/
-
-theorem pow_mulVec_eigenvector_gen {K : Type*} [CommRing K] {n : Type*} [Fintype n]
-    [DecidableEq n] (M : Matrix n n K) {β : K} {v : n → K} (hv : M *ᵥ v = β • v) :
-    ∀ k : ℕ, (M ^ k) *ᵥ v = (β ^ k) • v
-  | 0 => by rw [pow_zero, Matrix.one_mulVec, pow_zero, one_smul]
-  | k + 1 => by
-      rw [pow_succ, ← Matrix.mulVec_mulVec v (M ^ k) M, hv, Matrix.mulVec_smul,
-        pow_mulVec_eigenvector_gen M hv k, smul_smul, pow_succ']
-
-theorem aeval_mulVec_eigenvector_gen {K : Type*} [CommRing K] {n : Type*} [Fintype n]
-    [DecidableEq n] (M : Matrix n n K) {β : K} {v : n → K} (hv : M *ᵥ v = β • v)
-    (p : K[X]) :
-    (aeval M p) *ᵥ v = (p.eval β) • v := by
-  induction p using Polynomial.induction_on' with
-  | add p q hp hq =>
-      rw [map_add, Matrix.add_mulVec, hp, hq, Polynomial.eval_add, add_smul]
-  | monomial n a =>
-      rw [Polynomial.aeval_monomial, Algebra.algebraMap_eq_smul_one, Matrix.smul_mul,
-        Matrix.one_mul, Matrix.smul_mulVec, pow_mulVec_eigenvector_gen M hv n,
-        Polynomial.eval_monomial, smul_smul]
 
 /-! ### The characteristic polynomial of a polynomial in the generic companion matrix
 
