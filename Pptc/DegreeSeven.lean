@@ -104,9 +104,6 @@ def companion7 (q : ℝ[X]) : Matrix (Fin 7) (Fin 7) ℝ :=
   fun i j => if i.val = 6 then -q.coeff j.val
              else if j.val = i.val + 1 then 1 else 0
 
-/-- The vector `(1, β, β², …, β⁶)`. -/
-def companionVec (β : ℝ) : Fin 7 → ℝ := fun k => β ^ k.val
-
 theorem companion7_apply (q : ℝ[X]) (i j : Fin 7) :
     companion7 q i j = if i.val = 6 then -q.coeff j.val
       else if j.val = i.val + 1 then 1 else 0 := rfl
