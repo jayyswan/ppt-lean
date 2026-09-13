@@ -711,16 +711,30 @@ forwards and unavailable going backwards: laying out an arc of length `L` along 
 gives the `T` with `J(T) = L`, not the `T` with `J(T) - (algebraic in T) = L`, and it is
 the second equation that the amplitude solves.
 
-Nor does some other curve help. An arc length is `∫√(x'² + y'²)`, so along a rationally
-parametrized curve it is `∫ R w dt` for a rational `R`, where `w² = Q` is the quartic of
-the associated elliptic curve: a differential with poles, whose reduction always leaves a
-boundary term behind. `F` is `∫ dt / w`, the differential with no poles at all. Curves
-whose arc length is a first-kind integral on the nose do exist — the lemniscate is the
-classical one, with `ds = dr/√(1 - r⁴)` — but they are not rationally parametrized, and
-every algebraic curve this program draws is: conics, polynomial graphs, power laws
-`y = a x^b` with `b` rational, cubic Béziers, and affine images of those. `offset` does
-produce non-rational curves, but no new arc lengths: an offset at distance `d` has length
-`s - d · (turning angle)`, and the turning angle is elementary.
+Nor does some other drawable curve help, and the reason is not rationality. Curves whose
+arc length is a first-kind integral on the nose exist, and some are rational: the
+lemniscate `x = t(1 + t²)/(1 + t⁴)`, `y = t(1 - t²)/(1 + t⁴)` moves at speed
+`√2 / √(1 + t⁴)`, and Serret (1845–46) found a family of such curves. What they have and
+the drawable curves lack is an arc-length differential with no poles, which is what `F` is.
+
+* An unbounded algebraic curve — polynomial graph, power law, Bézier continued past its
+  ends — has an arc-length differential with a pole at infinity. That leaves a second-kind
+  part or a boundary term. `y = x³` is the cleanest case:
+  `∫√(1 + 9x⁴) = x √(1 + 9x⁴)/3 + (2/3) ∫ dx/√(1 + 9x⁴)`, first kind plus exactly the
+  boundary term that laying out a length cannot remove.
+* The graphs of `sin` and `2 ^ x` carry the same kind of pole at the end of their
+  parameter, and no linear map removes it.
+* The ellipse is bounded, but its arc length is of the second kind.
+* `offset` alone adds only `-d` times the turning angle, which is elementary. Offsets
+  interleaved with scalings add terms `√Q_n / Q_k^{3/2}` in the velocity quadratic forms
+  `Q_k` of the stages. These are regular at the poles above, so they cannot cancel them;
+  and for ellipses they have poles of their own, at the complex zeros of `Q_k`.
+
+Chaining operations does not obviously help either. If `am u = G T` where `T` inverts one
+drawn arc length at `L u`, differentiating shows that `L` is affine — granted that `am`
+composed with an elementary function is not elementary unless constant — and then the
+drawn curve has first-kind arc length after all. That argument does not reach curves whose
+parameters are computed from `u`, nor several inversions whose derivatives cancel.
 
 The same verdict covers what would have come after `sn`. The lemniscatic sine is the
 amplitude at the lemniscatic modulus, and the Weierstrass function inverts
@@ -728,10 +742,13 @@ amplitude at the lemniscatic modulus, and the Weierstrass function inverts
 same question in other coordinates, not further targets.
 
 None of this is a proof that `sn` is *not* P-constructible. That would take a genuine
-independence argument, and nothing here supplies one. What it says is where a construction
-cannot come from, and so what would have to change for one to exist: a constructor that
-draws a curve of positive genus, or an identity expressing `am` in terms of quantities
-already in hand. -/
+independence argument, and nothing here supplies one. What is in hand is partial. By
+`Pptc.JacobiAddition`, the arguments at which the amplitude is P-constructible are closed
+under addition, contain `F(φ)` for every P-constructible `φ`, and it suffices to fill a
+neighbourhood of `0`. The most economical change that would settle the question is a base
+curve: Serret's generating-triangle curve with real parameter `n = c/(1 - c)` has arc length
+`√n · F(α, c)` from its vertex. The abutting-arcs argument of
+`ellipticEAm_Pconstructible_of_mem_Icc` would then invert `F` exactly as it inverted `E`. -/
 
 end Outlook
 
