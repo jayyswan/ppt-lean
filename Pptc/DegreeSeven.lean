@@ -2867,136 +2867,6 @@ theorem p1vec_smul_add (q : ℝ[X]) (s t : ℝ) (x y : Fin 7 → ℝ) :
   simp only [smul_eq_mul]
 
 
-/-! ### The main trace-killing Tschirnhaus polynomial
-
-Assembly of the `s ≥ 2` construction: the two definite two-planes from `neg_dir_of_pair` and
-`pos_dir_of_pair` produce, via inertia and diagonalisation, a totally isotropic plane for the
-quadratic part on `{p1 = 0}`; the cubic part restricted to that plane is a binary cubic, and
-`binary_cubic_zero` picks a P-constructible zero `s • cv + t • cw`. The resulting `φ` has
-vanishing first three trace power sums. -/
-
--- Theorem: if `w` is not a scalar multiple of a nonzero `v`, then `s • v + t • w = 0` forces
--- `s = t = 0` (used to show the constructed `φ` is nonzero).
-theorem smul_add_smul_eq_zero_of_not_parallel {V : Type*} [AddCommGroup V] [Module ℝ V]
-    {v w : V} (hv : v ≠ 0) (h : ¬ ∃ c : ℝ, w = c • v) {s t : ℝ}
-    (hst : s • v + t • w = 0) : s = 0 ∧ t = 0 := by
-  by_cases ht : t = 0
-  · subst ht
-    simp only [zero_smul, add_zero] at hst
-    rcases smul_eq_zero.mp hst with h1 | h1
-    · exact ⟨h1, rfl⟩
-    · exact absurd h1 hv
-  · exfalso
-    apply h
-    refine ⟨-(s * t⁻¹), ?_⟩
-    have h1 : t • w = -(s • v) := eq_neg_of_add_eq_zero_right hst
-    calc w = t⁻¹ • (t • w) := by rw [smul_smul, inv_mul_cancel₀ ht, one_smul]
-      _ = t⁻¹ • (-(s • v)) := by rw [h1]
-      _ = (-(s * t⁻¹)) • v := by rw [smul_neg, smul_smul, ← neg_smul, mul_comm]
-
-theorem exists_tschirnhaus_traces (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
-    (hsep : q.Separable) (hq : ∀ k, PConstructible (q.coeff k)) {z w : ℂ}
-    (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0)
-    (hw : (q.map (algebraMap ℝ ℂ)).eval w = 0) (hwim : w.im ≠ 0)
-    (hzw : z ≠ w) (hzw' : z ≠ starRingEnd ℂ w) :
-    ∃ φ : ℝ[X], (∀ k, PConstructible (φ.coeff k)) ∧ φ.natDegree ≤ 6 ∧ φ ≠ 0 ∧
-      Matrix.trace (aeval (companion7 q) φ) = 0 ∧
-      Matrix.trace ((aeval (companion7 q) φ) ^ 2) = 0 ∧
-      Matrix.trace ((aeval (companion7 q) φ) ^ 3) = 0 := by
-  obtain ⟨v1, v2, hneg⟩ := neg_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
-  obtain ⟨w1, w2, hpos⟩ := pos_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
-  obtain ⟨U, D, hUP, hDP, hDdiag, hUD, hUdet⟩ :=
-    exists_diag_congruence (Gram q) (Gram_symm q) (Gram_Pconstructible q hq)
-  obtain ⟨i1, i2, hi12, hi1, hi2⟩ := two_neg_diag_of_pair hDdiag hUD hUdet hneg
-  obtain ⟨j1, j2, hj12, hj1, hj2⟩ := two_pos_diag_of_pair hDdiag hUD hUdet hpos
-  obtain ⟨v, wv, hvP, hwP, hvne, hwne, hqv, hqw, hbvw, hindep⟩ :=
-    exists_diagonal_isotropic_vectors (fun i => D i i) (fun i => hDP i i) (by norm_num)
-      ⟨j1, j2, hj12, hj1, hj2⟩ ⟨i1, i2, hi12, hi1, hi2⟩
-  set cv : Fin 7 → ℝ := Lcomb q (U *ᵥ v) with hcv
-  set cw : Fin 7 → ℝ := Lcomb q (U *ᵥ wv) with hcw
-  have hcvP : ∀ i, PConstructible (cv i) :=
-    Lcomb_Pconstructible q hq (mulVec_Pconstructible hUP hvP)
-  have hcwP : ∀ i, PConstructible (cw i) :=
-    Lcomb_Pconstructible q hq (mulVec_Pconstructible hUP hwP)
-  have hqformv : qform (Hmat q) cv = 0 := by
-    rw [hcv, qform_Hmat_Lcomb, ← qform_congr, hUD, qform_diag hDdiag, hqv]
-  have hqformw : qform (Hmat q) cw = 0 := by
-    rw [hcw, qform_Hmat_Lcomb, ← qform_congr, hUD, qform_diag hDdiag, hqw]
-  have hbilinc : bilin (Hmat q) cv cw = 0 := by
-    rw [hcv, hcw, bilin_Hmat_Lcomb, ← bilin_congr, hUD, bilin_diag hDdiag, hbvw]
-  have hp1v : p1vec q cv = 0 := by rw [hcv, p1vec_Lcomb]
-  have hp1w : p1vec q cw = 0 := by rw [hcw, p1vec_Lcomb]
-  have hindep' : ¬ ∃ c : ℝ, cw = c • cv := by
-    rintro ⟨c, hc⟩
-    have h1 : Lcomb q (U *ᵥ wv - c • (U *ᵥ v)) = 0 := by
-      rw [Lcomb_sub, Lcomb_smul, ← hcw, ← hcv, hc, sub_self]
-    have h2 : U *ᵥ wv - c • (U *ᵥ v) = 0 := Lcomb_injective q h1
-    have h3 : U *ᵥ (wv - c • v) = 0 := by
-      rw [Matrix.mulVec_sub, Matrix.mulVec_smul, h2]
-    have h4 : wv - c • v = 0 := mulVec_eq_zero_of_det_ne_zero hUdet h3
-    exact hindep ⟨c, sub_eq_zero.mp h4⟩
-  have hcvne : cv ≠ 0 := by
-    intro h0
-    have h1 : U *ᵥ v = 0 := Lcomb_injective q (by rw [hcv] at h0; exact h0)
-    exact hvne (mulVec_eq_zero_of_det_ne_zero hUdet h1)
-  have hcwne : cw ≠ 0 := by
-    intro h0
-    have h1 : U *ᵥ wv = 0 := Lcomb_injective q (by rw [hcw] at h0; exact h0)
-    exact hwne (mulVec_eq_zero_of_det_ne_zero hUdet h1)
-  set Ncv : Matrix (Fin 7) (Fin 7) ℝ := aeval (companion7 q) (polyOfVec cv) with hNcv
-  set Ncw : Matrix (Fin 7) (Fin 7) ℝ := aeval (companion7 q) (polyOfVec cw) with hNcw
-  have hNcvP : ∀ i j, PConstructible (Ncv i j) := by
-    intro i j
-    rw [hNcv]
-    exact aeval_entries_Pconstructible _ (companion7_entries_Pconstructible hq) _
-      (polyOfVec_coeff_Pconstructible cv hcvP) i j
-  have hNcwP : ∀ i j, PConstructible (Ncw i j) := by
-    intro i j
-    rw [hNcw]
-    exact aeval_entries_Pconstructible _ (companion7_entries_Pconstructible hq) _
-      (polyOfVec_coeff_Pconstructible cw hcwP) i j
-  have hA : PConstructible (p3vec q cv) := by
-    rw [p3vec, ← hNcv]; exact trace_pow_Pconstructible hNcvP 3
-  have hDc : PConstructible (p3vec q cw) := by
-    rw [p3vec, ← hNcw]; exact trace_pow_Pconstructible hNcwP 3
-  have hB : PConstructible (3 * Matrix.trace (Ncv ^ 2 * Ncw)) :=
-    PConstructible.mul (by pconstructible)
-      (trace_mul_Pconstructible (matrix_pow_entries_Pconstructible hNcvP 2) hNcwP)
-  have hC : PConstructible (3 * Matrix.trace (Ncv * Ncw ^ 2)) :=
-    PConstructible.mul (by pconstructible)
-      (trace_mul_Pconstructible hNcvP (matrix_pow_entries_Pconstructible hNcwP 2))
-  obtain ⟨s, t, hsP, htP, _hstne, hcub⟩ :=
-    binary_cubic_zero (a := p3vec q cv) (b := 3 * Matrix.trace (Ncv ^ 2 * Ncw))
-      (c := 3 * Matrix.trace (Ncv * Ncw ^ 2)) (d := p3vec q cw) hA hB hC hDc
-  set ψ : Fin 7 → ℝ := s • cv + t • cw with hψ
-  have hψP : ∀ i, PConstructible (ψ i) := by
-    intro i
-    rw [hψ, Pi.add_apply, Pi.smul_apply, Pi.smul_apply, smul_eq_mul, smul_eq_mul]
-    exact PConstructible.add (PConstructible.mul hsP (hcvP i))
-      (PConstructible.mul htP (hcwP i))
-  have hψne : ψ ≠ 0 := by
-    intro h0
-    have hcomb : s • cv + t • cw = 0 := by rw [← hψ]; exact h0
-    obtain ⟨hs0, ht0⟩ := smul_add_smul_eq_zero_of_not_parallel hcvne hindep' hcomb
-    rcases _hstne with h | h
-    · exact h hs0
-    · exact h ht0
-  refine ⟨polyOfVec ψ, polyOfVec_coeff_Pconstructible ψ hψP, polyOfVec_natDegree_le ψ,
-    polyOfVec_ne_zero hψne, ?_, ?_, ?_⟩
-  · rw [← p1vec_eq_trace, hψ, p1vec_smul_add, hp1v, hp1w]
-    ring
-  · rw [← hermiteForm_eq_trace_sq q ψ, ← qform_Hmat_eq_hermiteForm, hψ,
-      qform_smul_add (Hmat q) (Hmat_symm q), hqformv, hbilinc, hqformw]
-    ring
-  · have haeval : aeval (companion7 q) (polyOfVec ψ) = s • Ncv + t • Ncw := by
-      rw [hψ, aeval_polyOfVec_smul_add, hNcv, hNcw]
-    have hAc : p3vec q cv = Matrix.trace (Ncv ^ 3) := by rw [p3vec, ← hNcv]
-    have hDc' : p3vec q cw = Matrix.trace (Ncw ^ 3) := by rw [p3vec, ← hNcw]
-    rw [haeval, trace_cube_smul_add]
-    rw [hAc, hDc'] at hcub
-    ring_nf at hcub ⊢
-    linarith
-
 end
 
 end Pconstructible
@@ -3392,29 +3262,6 @@ theorem natDegree_ne_zero_of_trace_zero {q φ : ℝ[X]}
   rw [hc0, Polynomial.C_0] at hc
   exact hφne hc.symm
 
--- Theorem: a real root `β` of a monic septic `q` with P-constructible coefficients and two
--- non-real roots `z, w` in distinct conjugate classes is P-constructible. This is the `s ≥ 2`
--- case of issue #6.  Separability is not assumed: if `q` is not separable, either the
--- normalised `gcd q q'` or the quotient of `q` by it has degree at most `6` and kills `β`,
--- and the sextic engine already recovers `β` (`ScratchSep`); only the separable case goes
--- through the Bring–Jerrard reduction.
-theorem root_Pconstructible_of_two_conjugate_pairs_monic {q : ℝ[X]} (hmon : q.Monic)
-    (hnat : q.natDegree = 7) (hq : ∀ k, PConstructible (q.coeff k))
-    {z w : ℂ} (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0)
-    (hw : (q.map (algebraMap ℝ ℂ)).eval w = 0) (hwim : w.im ≠ 0)
-    (hzw : z ≠ w) (hzw' : z ≠ starRingEnd ℂ w) {β : ℝ} (hβ : q.eval β = 0) :
-    PConstructible β := by
-  by_cases hsep : q.Separable
-  · obtain ⟨φ, hφc, hφdeg, hφne, hp1, hp2, hp3⟩ :=
-      exists_tschirnhaus_traces q hmon hnat hsep hq hz hzim hw hwim hzw hzw'
-    have hkill := charpoly_aeval_coeff_6_5_4_eq_zero hmon hnat hsep hp1 hp2 hp3
-    have h7 : q.coeff 7 = 1 := by rw [← hnat]; exact hmon.coeff_natDegree
-    have hdeg : q.natDegree ≤ 7 := le_of_eq hnat
-    obtain ⟨c₀, c₁, c₂, c₃, hc₀, hc₁, hc₂, hc₃, hpow⟩ :=
-      resolvent_powerLaw hq hβ h7 hdeg hφc hkill
-    exact root_Pconstructible_of_powerLaw hφc hφdeg
-      (natDegree_ne_zero_of_trace_zero hp1 hφne) hc₀ hc₁ hc₂ hc₃ hpow
-  · exact root_Pconstructible_of_nonSeparable hmon hq (le_of_eq hnat) hsep hβ
 
 end Pconstructible
 
@@ -4998,6 +4845,161 @@ theorem stereo_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff 
   exact PConstructible.sub (PConstructible.mul hqform (hP₀ i))
     (PConstructible.mul (PConstructible.mul (by pconstructible) hbilin) (hd i))
 
+
+/-! ### The `s ≥ 2` case: a totally isotropic plane through the cone point
+
+From the P-constructible cone point `P₀` of `qform (Gram q)` and the definite two-planes of
+`neg_dir_of_pair` / `pos_dir_of_pair`, project to the hyperplane `bilin (Gram q) P₀ · = 0`
+and rationalise to obtain P-constructible `e`, `f` orthogonal to `P₀` with `Q e < 0 < Q f`.
+The line `e + t f` then meets the cone again at a P-constructible `x ⊥ P₀` that is
+independent of `P₀`, so `(P₀, x)` is a totally isotropic plane; `binary_cubic_zero` kills
+the binary cubic on it. -/
+
+-- Theorem: if `w` is not a scalar multiple of a nonzero `v`, then `s • v + t • w = 0` forces
+-- `s = t = 0` (used to show the constructed `φ` is nonzero).
+theorem smul_add_smul_eq_zero_of_not_parallel {V : Type*} [AddCommGroup V] [Module ℝ V]
+    {v w : V} (hv : v ≠ 0) (h : ¬ ∃ c : ℝ, w = c • v) {s t : ℝ}
+    (hst : s • v + t • w = 0) : s = 0 ∧ t = 0 := by
+  by_cases ht : t = 0
+  · subst ht
+    simp only [zero_smul, add_zero] at hst
+    rcases smul_eq_zero.mp hst with h1 | h1
+    · exact ⟨h1, rfl⟩
+    · exact absurd h1 hv
+  · exfalso
+    apply h
+    refine ⟨-(s * t⁻¹), ?_⟩
+    have h1 : t • w = -(s • v) := eq_neg_of_add_eq_zero_right hst
+    calc w = t⁻¹ • (t • w) := by rw [smul_smul, inv_mul_cancel₀ ht, one_smul]
+      _ = t⁻¹ • (-(s • v)) := by rw [h1]
+      _ = (-(s * t⁻¹)) • v := by rw [smul_neg, smul_smul, ← neg_smul, mul_comm]
+
+theorem exists_tschirnhaus_traces (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
+    (hsep : q.Separable) (hq : ∀ k, PConstructible (q.coeff k)) {z w : ℂ}
+    (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0)
+    (hw : (q.map (algebraMap ℝ ℂ)).eval w = 0) (hwim : w.im ≠ 0)
+    (hzw : z ≠ w) (hzw' : z ≠ starRingEnd ℂ w) :
+    ∃ φ : ℝ[X], (∀ k, PConstructible (φ.coeff k)) ∧ φ.natDegree ≤ 6 ∧ φ ≠ 0 ∧
+      Matrix.trace (aeval (companion7 q) φ) = 0 ∧
+      Matrix.trace ((aeval (companion7 q) φ) ^ 2) = 0 ∧
+      Matrix.trace ((aeval (companion7 q) φ) ^ 3) = 0 := by
+  obtain ⟨v1, v2, hneg⟩ := neg_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
+  obtain ⟨w1, w2, hpos⟩ := pos_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
+  obtain ⟨U, D, hUP, hDP, hDdiag, hUD, hUdet⟩ :=
+    exists_diag_congruence (Gram q) (Gram_symm q) (Gram_Pconstructible q hq)
+  obtain ⟨i1, i2, hi12, hi1, hi2⟩ := two_neg_diag_of_pair hDdiag hUD hUdet hneg
+  obtain ⟨j1, j2, hj12, hj1, hj2⟩ := two_pos_diag_of_pair hDdiag hUD hUdet hpos
+  obtain ⟨v, wv, hvP, hwP, hvne, hwne, hqv, hqw, hbvw, hindep⟩ :=
+    exists_diagonal_isotropic_vectors (fun i => D i i) (fun i => hDP i i) (by norm_num)
+      ⟨j1, j2, hj12, hj1, hj2⟩ ⟨i1, i2, hi12, hi1, hi2⟩
+  set cv : Fin 7 → ℝ := Lcomb q (U *ᵥ v) with hcv
+  set cw : Fin 7 → ℝ := Lcomb q (U *ᵥ wv) with hcw
+  have hcvP : ∀ i, PConstructible (cv i) :=
+    Lcomb_Pconstructible q hq (mulVec_Pconstructible hUP hvP)
+  have hcwP : ∀ i, PConstructible (cw i) :=
+    Lcomb_Pconstructible q hq (mulVec_Pconstructible hUP hwP)
+  have hqformv : qform (Hmat q) cv = 0 := by
+    rw [hcv, qform_Hmat_Lcomb, ← qform_congr, hUD, qform_diag hDdiag, hqv]
+  have hqformw : qform (Hmat q) cw = 0 := by
+    rw [hcw, qform_Hmat_Lcomb, ← qform_congr, hUD, qform_diag hDdiag, hqw]
+  have hbilinc : bilin (Hmat q) cv cw = 0 := by
+    rw [hcv, hcw, bilin_Hmat_Lcomb, ← bilin_congr, hUD, bilin_diag hDdiag, hbvw]
+  have hp1v : p1vec q cv = 0 := by rw [hcv, p1vec_Lcomb]
+  have hp1w : p1vec q cw = 0 := by rw [hcw, p1vec_Lcomb]
+  have hindep' : ¬ ∃ c : ℝ, cw = c • cv := by
+    rintro ⟨c, hc⟩
+    have h1 : Lcomb q (U *ᵥ wv - c • (U *ᵥ v)) = 0 := by
+      rw [Lcomb_sub, Lcomb_smul, ← hcw, ← hcv, hc, sub_self]
+    have h2 : U *ᵥ wv - c • (U *ᵥ v) = 0 := Lcomb_injective q h1
+    have h3 : U *ᵥ (wv - c • v) = 0 := by
+      rw [Matrix.mulVec_sub, Matrix.mulVec_smul, h2]
+    have h4 : wv - c • v = 0 := mulVec_eq_zero_of_det_ne_zero hUdet h3
+    exact hindep ⟨c, sub_eq_zero.mp h4⟩
+  have hcvne : cv ≠ 0 := by
+    intro h0
+    have h1 : U *ᵥ v = 0 := Lcomb_injective q (by rw [hcv] at h0; exact h0)
+    exact hvne (mulVec_eq_zero_of_det_ne_zero hUdet h1)
+  have hcwne : cw ≠ 0 := by
+    intro h0
+    have h1 : U *ᵥ wv = 0 := Lcomb_injective q (by rw [hcw] at h0; exact h0)
+    exact hwne (mulVec_eq_zero_of_det_ne_zero hUdet h1)
+  set Ncv : Matrix (Fin 7) (Fin 7) ℝ := aeval (companion7 q) (polyOfVec cv) with hNcv
+  set Ncw : Matrix (Fin 7) (Fin 7) ℝ := aeval (companion7 q) (polyOfVec cw) with hNcw
+  have hNcvP : ∀ i j, PConstructible (Ncv i j) := by
+    intro i j
+    rw [hNcv]
+    exact aeval_entries_Pconstructible _ (companion7_entries_Pconstructible hq) _
+      (polyOfVec_coeff_Pconstructible cv hcvP) i j
+  have hNcwP : ∀ i j, PConstructible (Ncw i j) := by
+    intro i j
+    rw [hNcw]
+    exact aeval_entries_Pconstructible _ (companion7_entries_Pconstructible hq) _
+      (polyOfVec_coeff_Pconstructible cw hcwP) i j
+  have hA : PConstructible (p3vec q cv) := by
+    rw [p3vec, ← hNcv]; exact trace_pow_Pconstructible hNcvP 3
+  have hDc : PConstructible (p3vec q cw) := by
+    rw [p3vec, ← hNcw]; exact trace_pow_Pconstructible hNcwP 3
+  have hB : PConstructible (3 * Matrix.trace (Ncv ^ 2 * Ncw)) :=
+    PConstructible.mul (by pconstructible)
+      (trace_mul_Pconstructible (matrix_pow_entries_Pconstructible hNcvP 2) hNcwP)
+  have hC : PConstructible (3 * Matrix.trace (Ncv * Ncw ^ 2)) :=
+    PConstructible.mul (by pconstructible)
+      (trace_mul_Pconstructible hNcvP (matrix_pow_entries_Pconstructible hNcwP 2))
+  obtain ⟨s, t, hsP, htP, _hstne, hcub⟩ :=
+    binary_cubic_zero (a := p3vec q cv) (b := 3 * Matrix.trace (Ncv ^ 2 * Ncw))
+      (c := 3 * Matrix.trace (Ncv * Ncw ^ 2)) (d := p3vec q cw) hA hB hC hDc
+  set ψ : Fin 7 → ℝ := s • cv + t • cw with hψ
+  have hψP : ∀ i, PConstructible (ψ i) := by
+    intro i
+    rw [hψ, Pi.add_apply, Pi.smul_apply, Pi.smul_apply, smul_eq_mul, smul_eq_mul]
+    exact PConstructible.add (PConstructible.mul hsP (hcvP i))
+      (PConstructible.mul htP (hcwP i))
+  have hψne : ψ ≠ 0 := by
+    intro h0
+    have hcomb : s • cv + t • cw = 0 := by rw [← hψ]; exact h0
+    obtain ⟨hs0, ht0⟩ := smul_add_smul_eq_zero_of_not_parallel hcvne hindep' hcomb
+    rcases _hstne with h | h
+    · exact h hs0
+    · exact h ht0
+  refine ⟨polyOfVec ψ, polyOfVec_coeff_Pconstructible ψ hψP, polyOfVec_natDegree_le ψ,
+    polyOfVec_ne_zero hψne, ?_, ?_, ?_⟩
+  · rw [← p1vec_eq_trace, hψ, p1vec_smul_add, hp1v, hp1w]
+    ring
+  · rw [← hermiteForm_eq_trace_sq q ψ, ← qform_Hmat_eq_hermiteForm, hψ,
+      qform_smul_add (Hmat q) (Hmat_symm q), hqformv, hbilinc, hqformw]
+    ring
+  · have haeval : aeval (companion7 q) (polyOfVec ψ) = s • Ncv + t • Ncw := by
+      rw [hψ, aeval_polyOfVec_smul_add, hNcv, hNcw]
+    have hAc : p3vec q cv = Matrix.trace (Ncv ^ 3) := by rw [p3vec, ← hNcv]
+    have hDc' : p3vec q cw = Matrix.trace (Ncw ^ 3) := by rw [p3vec, ← hNcw]
+    rw [haeval, trace_cube_smul_add]
+    rw [hAc, hDc'] at hcub
+    ring_nf at hcub ⊢
+    linarith
+
+-- Theorem: a real root `β` of a monic septic `q` with P-constructible coefficients and two
+-- non-real roots `z, w` in distinct conjugate classes is P-constructible. This is the `s ≥ 2`
+-- case of issue #6.  Separability is not assumed: if `q` is not separable, either the
+-- normalised `gcd q q'` or the quotient of `q` by it has degree at most `6` and kills `β`,
+-- and the sextic engine already recovers `β` (`ScratchSep`); only the separable case goes
+-- through the Bring–Jerrard reduction.
+theorem root_Pconstructible_of_two_conjugate_pairs_monic {q : ℝ[X]} (hmon : q.Monic)
+    (hnat : q.natDegree = 7) (hq : ∀ k, PConstructible (q.coeff k))
+    {z w : ℂ} (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0)
+    (hw : (q.map (algebraMap ℝ ℂ)).eval w = 0) (hwim : w.im ≠ 0)
+    (hzw : z ≠ w) (hzw' : z ≠ starRingEnd ℂ w) {β : ℝ} (hβ : q.eval β = 0) :
+    PConstructible β := by
+  by_cases hsep : q.Separable
+  · obtain ⟨φ, hφc, hφdeg, hφne, hp1, hp2, hp3⟩ :=
+      exists_tschirnhaus_traces q hmon hnat hsep hq hz hzim hw hwim hzw hzw'
+    have hkill := charpoly_aeval_coeff_6_5_4_eq_zero hmon hnat hsep hp1 hp2 hp3
+    have h7 : q.coeff 7 = 1 := by rw [← hnat]; exact hmon.coeff_natDegree
+    have hdeg : q.natDegree ≤ 7 := le_of_eq hnat
+    obtain ⟨c₀, c₁, c₂, c₃, hc₀, hc₁, hc₂, hc₃, hpow⟩ :=
+      resolvent_powerLaw hq hβ h7 hdeg hφc hkill
+    exact root_Pconstructible_of_powerLaw hφc hφdeg
+      (natDegree_ne_zero_of_trace_zero hp1 hφne) hc₀ hc₁ hc₂ hc₃ hpow
+  · exact root_Pconstructible_of_nonSeparable hmon hq (le_of_eq hnat) hsep hβ
 /-! ### The one-conjugate-pair case
 
 With all the pieces in place the proof follows `PLAN-degree7-s1.md` Steps 1-7: build a
