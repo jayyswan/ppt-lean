@@ -1032,8 +1032,7 @@ theorem trace_aeval_eq_zero_of_vanishes (q : ℝ[X]) (hmon : q.Monic) (hnat : q.
     algebraMap ℝ ℂ (Matrix.trace (aeval (companion7 q) F)) = 0 := by
   have hqCne : (q.map (algebraMap ℝ ℂ)) ≠ 0 := (hmon.map (algebraMap ℝ ℂ)).ne_zero
   rw [companion7_trace_aeval q F hmon hnat hsep]
-  apply Multiset.sum_eq_zero
-  intro y hy
+  refine Multiset.sum_eq_zero fun y hy => ?_
   obtain ⟨x, hx, rfl⟩ := Multiset.mem_map.mp hy
   exact hF x ((Polynomial.mem_roots hqCne).mp hx)
 
@@ -1733,13 +1732,11 @@ theorem qform_diag {D : Matrix (Fin n) (Fin n) ℝ} (hdiag : ∀ i j, i ≠ j �
     (z : Fin n → ℝ) :
     qform D z = ∑ i, D i i * z i ^ 2 := by
   simp only [qform, Matrix.mulVec, dotProduct]
-  apply Finset.sum_congr rfl
-  intro i _
-  rw [Finset.sum_eq_single i]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [Finset.sum_eq_single_of_mem i (Finset.mem_univ i)]
   · ring
   · intro j _ hji
     rw [hdiag i j (Ne.symm hji), zero_mul]
-  · intro hi; exact absurd (Finset.mem_univ i) hi
 
 -- Theorem: a diagonal form whose weighted square sum is negative along two
 -- independent directions has two negative diagonal entries.
@@ -1781,10 +1778,8 @@ theorem two_neg_of_negDef {D : Matrix (Fin n) (Fin n) ℝ}
       intro i
       by_contra hlt
       exact hk ⟨i, lt_of_not_ge hlt⟩
-    have hnn : 0 ≤ ∑ i, D i i * (1 * v1 i + 0 * v2 i) ^ 2 := by
-      apply Finset.sum_nonneg
-      intro i _
-      exact mul_nonneg (hnonneg i) (sq_nonneg _)
+    have hnn : 0 ≤ ∑ i, D i i * (1 * v1 i + 0 * v2 i) ^ 2 :=
+      Finset.sum_nonneg fun i _ => mul_nonneg (hnonneg i) (sq_nonneg _)
     have hsum := hneg 1 0 (Or.inl one_ne_zero)
     linarith
 
@@ -1795,45 +1790,9 @@ theorem two_pos_of_posDef {D : Matrix (Fin n) (Fin n) ℝ}
     (hpos : ∀ a b : ℝ, (a ≠ 0 ∨ b ≠ 0) →
       0 < (∑ i, D i i * (a * v1 i + b * v2 i) ^ 2)) :
     ∃ i j : Fin n, i ≠ j ∧ 0 < D i i ∧ 0 < D j j := by
-  by_contra h
-  have hno : ∀ i j, i ≠ j → 0 < D i i → 0 < D j j → False := by
-    intro i j hij hi hj
-    exact h ⟨i, j, hij, hi, hj⟩
-  by_cases hk : ∃ k, 0 < D k k
-  · obtain ⟨k, hk⟩ := hk
-    have hother : ∀ i, i ≠ k → D i i ≤ 0 := by
-      intro i hik
-      by_contra hlt
-      exact hno k i (Ne.symm hik) hk (lt_of_not_ge hlt)
-    by_cases hv1 : v1 k = 0
-    · have hsum := hpos 1 0 (Or.inl one_ne_zero)
-      have hnp : (∑ i, D i i * (1 * v1 i + 0 * v2 i) ^ 2) ≤ 0 := by
-        apply Finset.sum_nonpos
-        intro i _
-        by_cases hik : i = k
-        · simp [hik, hv1]
-        · exact mul_nonpos_of_nonpos_of_nonneg (hother i hik) (sq_nonneg _)
-      linarith
-    · have hsum := hpos (v2 k) (-v1 k) (Or.inr (neg_ne_zero.mpr hv1))
-      have hnp : (∑ i, D i i * (v2 k * v1 i + (-v1 k) * v2 i) ^ 2) ≤ 0 := by
-        apply Finset.sum_nonpos
-        intro i _
-        by_cases hik : i = k
-        · rw [hik]
-          have hz : v2 k * v1 k + -v1 k * v2 k = 0 := by ring
-          rw [hz]; norm_num
-        · exact mul_nonpos_of_nonpos_of_nonneg (hother i hik) (sq_nonneg _)
-      linarith
-  · have hnonpos : ∀ i, D i i ≤ 0 := by
-      intro i
-      by_contra hlt
-      exact hk ⟨i, lt_of_not_ge hlt⟩
-    have hnp : (∑ i, D i i * (1 * v1 i + 0 * v2 i) ^ 2) ≤ 0 := by
-      apply Finset.sum_nonpos
-      intro i _
-      exact mul_nonpos_of_nonpos_of_nonneg (hnonpos i) (sq_nonneg _)
-    have hsum := hpos 1 0 (Or.inl one_ne_zero)
-    linarith
+  obtain ⟨i, j, hij, hi, hj⟩ := two_neg_of_negDef (D := -D) (v1 := v1) (v2 := v2)
+    (fun i j h => by simp [_hdiag i j h]) fun a b hab => by simpa using hpos a b hab
+  exact ⟨i, j, hij, neg_neg_iff_pos.mp hi, neg_neg_iff_pos.mp hj⟩
 
 -- Theorem: under an invertible congruence, two negative directions for `A`
 -- force two negative diagonal entries of any diagonal `D` congruent to `A`.
@@ -1865,21 +1824,10 @@ theorem two_pos_diag_of_pair {A D U : Matrix (Fin n) (Fin n) ℝ}
     {v1 v2 : Fin n → ℝ}
     (hpos : ∀ a b : ℝ, (a ≠ 0 ∨ b ≠ 0) → 0 < qform A (a • v1 + b • v2)) :
     ∃ i j : Fin n, i ≠ j ∧ 0 < D i i ∧ 0 < D j j := by
-  let z1 : Fin n → ℝ := U⁻¹ *ᵥ v1
-  let z2 : Fin n → ℝ := U⁻¹ *ᵥ v2
-  have hUi : U * U⁻¹ = 1 := Matrix.mul_nonsing_inv U (isUnit_iff_ne_zero.mpr hdet)
-  have hzv : ∀ a b : ℝ, U *ᵥ (a • z1 + b • z2) = a • v1 + b • v2 := by
-    intro a b
-    simp only [z1, z2, Matrix.mulVec_add, Matrix.mulVec_smul, Matrix.mulVec_mulVec,
-      hUi, Matrix.one_mulVec]
-  refine two_pos_of_posDef hdiag (v1 := z1) (v2 := z2) (fun a b hab => ?_)
-  have hq : qform D (a • z1 + b • z2) = qform A (a • v1 + b • v2) := by
-    rw [← hUD, qform_congr, hzv]
-  have hsum : (∑ i, D i i * (a * z1 i + b * z2 i) ^ 2) = qform D (a • z1 + b • z2) := by
-    rw [qform_diag hdiag]
-    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-  rw [hsum, hq]
-  exact hpos a b hab
+  obtain ⟨i, j, hij, hi, hj⟩ := two_neg_diag_of_pair (A := -A) (D := -D) (v1 := v1) (v2 := v2)
+    (fun i j h => by simp [hdiag i j h]) (by simp [hUD]) hdet fun a b hab => by
+      simpa only [qform, Matrix.neg_mulVec, dotProduct_neg, neg_neg_iff_pos] using hpos a b hab
+  exact ⟨i, j, hij, neg_neg_iff_pos.mp hi, neg_neg_iff_pos.mp hj⟩
 
 end Pconstructible
 
@@ -2456,16 +2404,8 @@ lemma hyper_symm {α : Type} [DecidableEq α] (i j : α) : (hyper i j)ᵀ = hype
   · subst hpq; simp
   · rw [if_neg hpq, if_neg (Ne.symm hpq)]
     by_cases h : (p = i ∧ q = j) ∨ (p = j ∧ q = i)
-    · rw [if_pos h]
-      apply if_pos
-      rcases h with ⟨h1, h2⟩ | ⟨h1, h2⟩
-      · exact Or.inr ⟨h2, h1⟩
-      · exact Or.inl ⟨h2, h1⟩
-    · rw [if_neg h]
-      apply if_neg
-      rintro (⟨h1, h2⟩ | ⟨h1, h2⟩)
-      · exact h (Or.inr ⟨h2, h1⟩)
-      · exact h (Or.inl ⟨h2, h1⟩)
+    · rw [if_pos h, if_pos (h.symm.imp And.symm And.symm)]
+    · rw [if_neg h, if_neg fun h' => h (h'.symm.imp And.symm And.symm)]
 
 lemma hyper_self {α : Type} [DecidableEq α] (i j : α) : hyper i j i i = 1 := by
   simp [hyper]
@@ -3489,12 +3429,8 @@ theorem Lcomb_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k
     (fun j _ => PConstructible.mul (hx j) (bvec_Pconstructible q hq j i))
 
 theorem mulVec_eq_zero_of_det_ne_zero {U : Matrix (Fin n) (Fin n) ℝ} (hU : U.det ≠ 0)
-    {z : Fin n → ℝ} (h : U *ᵥ z = 0) : z = 0 := by
-  have h1 : U⁻¹ * U = 1 := nonsing_inv_mul U (isUnit_iff_ne_zero.mpr hU)
-  calc z = 1 *ᵥ z := (Matrix.one_mulVec z).symm
-    _ = (U⁻¹ * U) *ᵥ z := by rw [h1]
-    _ = U⁻¹ *ᵥ (U *ᵥ z) := by rw [Matrix.mulVec_mulVec]
-    _ = 0 := by rw [h, Matrix.mulVec_zero]
+    {z : Fin n → ℝ} (h : U *ᵥ z = 0) : z = 0 :=
+  Matrix.eq_zero_of_mulVec_eq_zero hU h
 
 theorem bilin_eq_sum (A : Matrix (Fin n) (Fin n) ℝ) (x y : Fin n → ℝ) :
     bilin A x y = ∑ j, ∑ k, x j * A j k * y k := by
@@ -4976,11 +4912,8 @@ private theorem sum_sq_add_pair_re {q H : ℝ[X]} (hmon : q.Monic) (hnat : q.nat
     rw [ofReal_sum_sq, hS]
   rw [hzbar, hRmap] at hsum
   have hmain : (2 * (w ^ 2).re + S : ℝ) = 0 := by
-    apply Complex.ofReal_eq_zero.mp
-    push_cast
     rw [← add_assoc, Complex.add_conj] at hsum
-    push_cast at hsum
-    exact hsum
+    exact_mod_cast hsum
   rw [hS]
   linarith
 
