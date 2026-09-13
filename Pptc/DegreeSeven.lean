@@ -4882,6 +4882,165 @@ theorem smul_add_smul_eq_zero_of_not_parallel {V : Type*} [AddCommGroup V] [Modu
       _ = t⁻¹ • (-(s • v)) := by rw [h1]
       _ = (-(s * t⁻¹)) • v := by rw [smul_neg, smul_smul, ← neg_smul, mul_comm]
 
+-- Theorem: a monic separable septic with a non-real root has a P-constructible nonzero
+-- cone point for the trace form on `{p1 = 0}`.
+theorem exists_cone_point_Pconstructible (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
+    (hsep : q.Separable) (hq : ∀ k, PConstructible (q.coeff k)) {z : ℂ}
+    (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0) :
+    ∃ P₀ : Fin 6 → ℝ, (∀ i, PConstructible (P₀ i)) ∧ qform (Gram q) P₀ = 0 ∧ P₀ ≠ 0 := by
+  obtain ⟨fneg, hfnegdeg, hfneg1, hfneg2⟩ := exists_neg_trace q hmon hnat hsep hz hzim
+  obtain ⟨fpos, hfposdeg, hfpos1, hfpos2⟩ := exists_pos_trace q hmon hnat hsep hz hzim
+  have hvecneg_p1 : p1vec q (vecOf fneg) = 0 := by
+    rw [p1vec_vecOf q fneg hfnegdeg, hfneg1]
+  have hLneg : Lcomb q (coeff6 (vecOf fneg)) = vecOf fneg := Lcomb_coeff6 q hvecneg_p1
+  have hQneg : qform (Gram q) (coeff6 (vecOf fneg)) = -2 := by
+    rw [← qform_Hmat_Lcomb q (coeff6 (vecOf fneg)), hLneg, qform_Hmat_eq_hermiteForm,
+      hermiteForm_eq_trace_sq, polyOfVec_vecOf hfnegdeg, hfneg2]
+  set gpos : ℝ[X] := fpos - C (2 / 7) with hgpos
+  have hgposdeg : gpos.natDegree ≤ 6 := by
+    rw [hgpos]
+    refine le_trans (Polynomial.natDegree_sub_le fpos (C (2 / 7))) ?_
+    rw [Polynomial.natDegree_C, max_eq_left (Nat.zero_le _)]
+    exact hfposdeg
+  have hvecpos_p1 : p1vec q (vecOf gpos) = 0 := by
+    rw [p1vec_vecOf q gpos hgposdeg, hgpos, aeval_sub_C, Matrix.trace_sub,
+      Matrix.trace_smul, hfpos1, Matrix.trace_one]
+    norm_num
+  have hLpos : Lcomb q (coeff6 (vecOf gpos)) = vecOf gpos := Lcomb_coeff6 q hvecpos_p1
+  have hQpos : qform (Gram q) (coeff6 (vecOf gpos)) = 10 / 7 := by
+    rw [← qform_Hmat_Lcomb q (coeff6 (vecOf gpos)), hLpos, qform_Hmat_eq_hermiteForm,
+      hermiteForm_eq_trace_sq, polyOfVec_vecOf hgposdeg, hgpos, aeval_sub_C,
+      trace_sq_sub_scalar, hfpos1, hfpos2]
+    norm_num
+  obtain ⟨rneg, hrneg⟩ := exists_rat_vec_pos 6 (continuous_qform (Gram q)).neg
+    (x := coeff6 (vecOf fneg)) (by linarith : 0 < -qform (Gram q) (coeff6 (vecOf fneg)))
+  obtain ⟨rpos, hrpos⟩ := exists_rat_vec_pos 6 (continuous_qform (Gram q))
+    (x := coeff6 (vecOf gpos)) (by linarith : 0 < qform (Gram q) (coeff6 (vecOf gpos)))
+  set e : Fin 6 → ℝ := fun i => (rneg i : ℝ) with he
+  set f : Fin 6 → ℝ := fun i => (rpos i : ℝ) with hf
+  have heP : ∀ i, PConstructible (e i) := fun i => rat_Pconstructible (rneg i)
+  have hfP : ∀ i, PConstructible (f i) := fun i => rat_Pconstructible (rpos i)
+  have heQ : qform (Gram q) e < 0 := by simpa using hrneg
+  have hfQ : 0 < qform (Gram q) f := hrpos
+  exact exists_isotropic_Pconstructible q hq heP hfP heQ hfQ
+
+-- Theorem: there is a P-constructible affine projection onto the hyperplane
+-- `bilin A P₀ · = 0`, of the form `y ↦ c • y - bilin A P₀ y • u` with `c ≠ 0`.
+theorem exists_orth_projection {A : Matrix (Fin 6) (Fin 6) ℝ}
+    (hA : ∀ i j, PConstructible (A i j)) {P₀ : Fin 6 → ℝ} (hP₀ : ∀ i, PConstructible (P₀ i)) :
+    ∃ (c : ℝ) (u : Fin 6 → ℝ), c ≠ 0 ∧ PConstructible c ∧ (∀ i, PConstructible (u i)) ∧
+      ∀ y, bilin A P₀ (c • y - bilin A P₀ y • u) = 0 := by
+  classical
+  have hsingle : ∀ i j : Fin 6,
+      PConstructible ((Pi.single i (1 : ℝ) : Fin 6 → ℝ) j) := by
+    intro i j
+    by_cases hji : j = i
+    · subst hji; rw [Pi.single_eq_same]; exact PConstructible.base_one
+    · rw [Pi.single_eq_of_ne hji]; exact zero_Pconstructible
+  by_cases h : ∃ i : Fin 6, bilin A P₀ (Pi.single i (1 : ℝ)) ≠ 0
+  · obtain ⟨i, hi⟩ := h
+    refine ⟨bilin A P₀ (Pi.single i (1 : ℝ)), Pi.single i (1 : ℝ), hi,
+      bilin_Pconstructible hA hP₀ (hsingle i), hsingle i, ?_⟩
+    intro y
+    rw [sub_eq_add_neg, bilin_add_right, bilin_smul_right,
+      show -(bilin A P₀ y • Pi.single i (1 : ℝ))
+          = (-(bilin A P₀ y)) • Pi.single i (1 : ℝ) by rw [neg_smul],
+      bilin_smul_right]
+    ring
+  · push Not at h
+    refine ⟨1, 0, one_ne_zero, PConstructible.base_one, fun i => zero_Pconstructible, ?_⟩
+    intro y
+    have hy : y = ∑ i : Fin 6, y i • (Pi.single i (1 : ℝ) : Fin 6 → ℝ) := by
+      ext j
+      rw [Finset.sum_apply]
+      simp only [Pi.smul_apply, smul_eq_mul]
+      rw [Finset.sum_eq_single j]
+      · rw [Pi.single_eq_same, mul_one]
+      · intro k _ hkj
+        rw [Pi.single_eq_of_ne (Ne.symm hkj), mul_zero]
+      · intro hj; exact absurd (Finset.mem_univ j) hj
+    have hzero : bilin A P₀ y = 0 := by
+      rw [hy, bilin_sum_right]
+      refine Finset.sum_eq_zero (fun i _ => ?_)
+      rw [bilin_smul_right, h i, mul_zero]
+    simp [hzero]
+
+-- Theorem: if `Q = qform A` is negative definite on the real plane spanned by `v₁, v₂`, then
+-- there is a P-constructible `e` with `bilin A P₀ e = 0` and `Q e < 0`.
+theorem exists_orth_neg_Pconstructible {A : Matrix (Fin 6) (Fin 6) ℝ} (_hAsym : Aᵀ = A)
+    (hA : ∀ i j, PConstructible (A i j)) {P₀ : Fin 6 → ℝ} (hP₀ : ∀ i, PConstructible (P₀ i))
+    {v₁ v₂ : Fin 6 → ℝ}
+    (hdef : ∀ a b : ℝ, (a ≠ 0 ∨ b ≠ 0) → qform A (a • v₁ + b • v₂) < 0) :
+    ∃ e : Fin 6 → ℝ, (∀ i, PConstructible (e i)) ∧ bilin A P₀ e = 0 ∧ qform A e < 0 := by
+  classical
+  obtain ⟨c, u, hcne, hcP, huP, hproj⟩ := exists_orth_projection hA hP₀
+  have hreal : ∃ e₀ : Fin 6 → ℝ, bilin A P₀ e₀ = 0 ∧ qform A e₀ < 0 := by
+    by_cases hb : bilin A P₀ v₁ = 0 ∧ bilin A P₀ v₂ = 0
+    · exact ⟨v₁, hb.1, by simpa using hdef 1 0 (Or.inl one_ne_zero)⟩
+    · refine ⟨bilin A P₀ v₂ • v₁ - bilin A P₀ v₁ • v₂, ?_, ?_⟩
+      · rw [sub_eq_add_neg, bilin_add_right, bilin_smul_right,
+          show -(bilin A P₀ v₁ • v₂) = (-(bilin A P₀ v₁)) • v₂ by rw [neg_smul],
+          bilin_smul_right]
+        ring
+      · have hab : bilin A P₀ v₂ ≠ 0 ∨ (-(bilin A P₀ v₁)) ≠ 0 := by
+          by_contra hc
+          push Not at hc
+          exact hb ⟨neg_eq_zero.mp hc.2, hc.1⟩
+        have hq := hdef (bilin A P₀ v₂) (-(bilin A P₀ v₁)) hab
+        have heq : bilin A P₀ v₂ • v₁ - bilin A P₀ v₁ • v₂
+            = bilin A P₀ v₂ • v₁ + (-(bilin A P₀ v₁)) • v₂ := by
+          rw [sub_eq_add_neg, neg_smul]
+        rwa [heq]
+  obtain ⟨e₀, hBe₀, he₀Q⟩ := hreal
+  set π : (Fin 6 → ℝ) → (Fin 6 → ℝ) := fun y => c • y - (bilin A P₀ y) • u with hπ
+  have hcont : Continuous (fun y : Fin 6 → ℝ => -qform A (π y)) := by
+    have h2 : Continuous (fun y : Fin 6 → ℝ => c • y - (bilin A P₀ y) • u) := by
+      have h1 : Continuous (fun y : Fin 6 → ℝ => bilin A P₀ y) := continuous_bilin A P₀
+      have hc : Continuous (fun y : Fin 6 → ℝ => c • y) := continuous_id.const_smul c
+      have hu : Continuous (fun y : Fin 6 → ℝ => (bilin A P₀ y) • u) :=
+        h1.smul (continuous_const : Continuous (fun _ : Fin 6 → ℝ => u))
+      exact hc.sub hu
+    exact ((continuous_qform A).neg).comp h2
+  have hπe₀ : π e₀ = c • e₀ := by
+    change c • e₀ - (bilin A P₀ e₀) • u = c • e₀
+    rw [hBe₀, zero_smul, sub_zero]
+  have hx : 0 < -qform A (π e₀) := by
+    rw [hπe₀, qform_smul]
+    nlinarith [he₀Q, sq_pos_of_ne_zero hcne]
+  obtain ⟨r, hr⟩ := exists_rat_vec_pos 6 hcont (x := e₀) hx
+  set er : Fin 6 → ℝ := fun i => (r i : ℝ) with her
+  have herP : ∀ i, PConstructible (er i) := fun i => rat_Pconstructible (r i)
+  have hQer : qform A (π er) < 0 := neg_pos.mp hr
+  refine ⟨π er, ?_, ?_, hQer⟩
+  · intro i
+    have hbil : PConstructible (bilin A P₀ er) := bilin_Pconstructible hA hP₀ herP
+    rw [hπ]
+    simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
+    exact PConstructible.sub (PConstructible.mul hcP (herP i))
+      (PConstructible.mul hbil (huP i))
+  · simpa only [hπ] using hproj er
+
+-- Theorem: from a cone point `P₀` and P-constructible `e, f ⟂ P₀` with `Q e < 0 < Q f`,
+-- there is a P-constructible isotropic `x ⟂ P₀` independent of `P₀`.
+theorem exists_isotropic_orth_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k))
+    {P₀ e f : Fin 6 → ℝ} (hQ₀ : qform (Gram q) P₀ = 0)
+    (he : ∀ i, PConstructible (e i)) (hf : ∀ i, PConstructible (f i))
+    (hBe : bilin (Gram q) P₀ e = 0) (hBf : bilin (Gram q) P₀ f = 0)
+    (heQ : qform (Gram q) e < 0) (hfQ : 0 < qform (Gram q) f) :
+    ∃ x : Fin 6 → ℝ, (∀ i, PConstructible (x i)) ∧ qform (Gram q) x = 0 ∧
+      bilin (Gram q) P₀ x = 0 ∧ ¬ ∃ k : ℝ, x = k • P₀ := by
+  obtain ⟨t, htP, htpos, htroot⟩ := exists_pos_isotropic_param q hq he hf heQ hfQ
+  refine ⟨e + t • f, fun i => PConstructible.add (he i) (PConstructible.mul htP (hf i)),
+    htroot, ?_, ?_⟩
+  · rw [bilin_add_right, bilin_smul_right, hBe, hBf, mul_zero, add_zero]
+  · rintro ⟨k, hk⟩
+    have heq : e = k • P₀ - t • f := eq_sub_iff_add_eq.mpr hk
+    have hQe : qform (Gram q) e = t ^ 2 * qform (Gram q) f := by
+      rw [heq, show k • P₀ - t • f = k • P₀ + (-t) • f by rw [sub_eq_add_neg, neg_smul],
+        qform_smul_add (Gram q) (Gram_symm q) k (-t) P₀ f, hQ₀, hBf]
+      ring
+    nlinarith [heQ, hfQ, sq_pos_of_pos htpos]
+
 theorem exists_tschirnhaus_traces (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDegree = 7)
     (hsep : q.Separable) (hq : ∀ k, PConstructible (q.coeff k)) {z w : ℂ}
     (hz : (q.map (algebraMap ℝ ℂ)).eval z = 0) (hzim : z.im ≠ 0)
