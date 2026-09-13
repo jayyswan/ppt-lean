@@ -3426,6 +3426,26 @@ Given P-constructible directions `e` (negative) and `f` (positive) for the trace
 the light cone meets the segment between them at a P-constructible point `P₀`. -/
 
 -- Theorem: if `e` is P-constructible with `Q e < 0` and `f` is P-constructible with
+-- `Q f > 0`, then the line `e + t f` meets the cone at a positive P-constructible parameter.
+theorem exists_pos_isotropic_param (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k))
+    {e f : Fin 6 → ℝ} (he : ∀ i, PConstructible (e i)) (hf : ∀ i, PConstructible (f i))
+    (heQ : qform (Gram q) e < 0) (hfQ : 0 < qform (Gram q) f) :
+    ∃ t : ℝ, PConstructible t ∧ 0 < t ∧ qform (Gram q) (e + t • f) = 0 := by
+  have hG : ∀ i j, PConstructible (Gram q i j) := Gram_Pconstructible q hq
+  have hQe : PConstructible (qform (Gram q) e) := bilin_Pconstructible hG he he
+  have hQf : PConstructible (qform (Gram q) f) := bilin_Pconstructible hG hf hf
+  have hB : PConstructible (bilin (Gram q) e f) := bilin_Pconstructible hG he hf
+  obtain ⟨t, htP, htpos, htroot⟩ := exists_pos_quadratic_root hQf hB hQe hfQ heQ
+  refine ⟨t, htP, htpos, ?_⟩
+  have hqform : qform (Gram q) (e + t • f) =
+      qform (Gram q) e + 2 * t * bilin (Gram q) e f + t ^ 2 * qform (Gram q) f := by
+    rw [show e + t • f = (1 : ℝ) • e + t • f by rw [one_smul]]
+    rw [qform_smul_add (Gram q) (Gram_symm q) 1 t e f]
+    ring
+  rw [hqform]
+  linear_combination htroot
+
+-- Theorem: if `e` is P-constructible with `Q e < 0` and `f` is P-constructible with
 -- `Q f > 0`, then the cone `{Q = 0}` contains a P-constructible nonzero point, namely the
 -- second intersection of the line `e + t f` with the cone.
 theorem exists_isotropic_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible (q.coeff k))
@@ -3433,29 +3453,17 @@ theorem exists_isotropic_Pconstructible (q : ℝ[X]) (hq : ∀ k, PConstructible
     (heQ : qform (Gram q) e < 0) (hfQ : 0 < qform (Gram q) f) :
     ∃ P₀ : Fin 6 → ℝ,
       (∀ i, PConstructible (P₀ i)) ∧ qform (Gram q) P₀ = 0 ∧ P₀ ≠ 0 := by
-  have hG : ∀ i j, PConstructible (Gram q i j) := Gram_Pconstructible q hq
-  have hQe : PConstructible (qform (Gram q) e) := bilin_Pconstructible hG he he
-  have hQf : PConstructible (qform (Gram q) f) := bilin_Pconstructible hG hf hf
-  have hB : PConstructible (bilin (Gram q) e f) := bilin_Pconstructible hG he hf
-  obtain ⟨t, htP, htpos, htroot⟩ := exists_pos_quadratic_root hQf hB hQe hfQ heQ
-  refine ⟨e + t • f, ?_, ?_, ?_⟩
-  · intro i
-    exact PConstructible.add (he i) (PConstructible.mul htP (hf i))
-  · have hqform : qform (Gram q) (e + t • f) =
-        qform (Gram q) e + 2 * t * bilin (Gram q) e f + t ^ 2 * qform (Gram q) f := by
-      rw [show e + t • f = (1 : ℝ) • e + t • f by rw [one_smul]]
-      rw [qform_smul_add (Gram q) (Gram_symm q) 1 t e f]
-      ring
-    rw [hqform]
-    linear_combination htroot
-  · intro h0
-    have heq : e = -(t • f) := eq_neg_of_add_eq_zero_left h0
-    have hQe' : qform (Gram q) (-(t • f)) < 0 := by rw [← heq]; exact heQ
-    have hneg : qform (Gram q) (-(t • f)) = qform (Gram q) (t • f) := by
-      rw [show -(t • f) = (-1 : ℝ) • (t • f) by rw [neg_one_smul], qform_smul]
-      norm_num
-    rw [hneg, qform_smul] at hQe'
-    nlinarith [hfQ, sq_pos_of_pos htpos]
+  obtain ⟨t, htP, htpos, htroot⟩ := exists_pos_isotropic_param q hq he hf heQ hfQ
+  refine ⟨e + t • f, fun i => PConstructible.add (he i) (PConstructible.mul htP (hf i)),
+    htroot, ?_⟩
+  intro h0
+  have heq : e = -(t • f) := eq_neg_of_add_eq_zero_left h0
+  have hQe' : qform (Gram q) (-(t • f)) < 0 := by rw [← heq]; exact heQ
+  have hneg : qform (Gram q) (-(t • f)) = qform (Gram q) (t • f) := by
+    rw [show -(t • f) = (-1 : ℝ) • (t • f) by rw [neg_one_smul], qform_smul]
+    norm_num
+  rw [hneg, qform_smul] at hQe'
+  nlinarith [hfQ, sq_pos_of_pos htpos]
 
 /-! ### E1. Rational witnesses by density
 
