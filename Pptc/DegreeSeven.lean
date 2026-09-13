@@ -5050,46 +5050,57 @@ theorem exists_tschirnhaus_traces (q : ℝ[X]) (hmon : q.Monic) (hnat : q.natDeg
       Matrix.trace (aeval (companion7 q) φ) = 0 ∧
       Matrix.trace ((aeval (companion7 q) φ) ^ 2) = 0 ∧
       Matrix.trace ((aeval (companion7 q) φ) ^ 3) = 0 := by
+  obtain ⟨P₀, hP₀P, hQ₀, hP₀ne⟩ :=
+    exists_cone_point_Pconstructible q hmon hnat hsep hq hz hzim
   obtain ⟨v1, v2, hneg⟩ := neg_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
   obtain ⟨w1, w2, hpos⟩ := pos_dir_of_pair q hmon hnat hsep hz hzim hw hwim hzw hzw'
-  obtain ⟨U, D, hUP, hDP, hDdiag, hUD, hUdet⟩ :=
-    exists_diag_congruence (Gram q) (Gram_symm q) (Gram_Pconstructible q hq)
-  obtain ⟨i1, i2, hi12, hi1, hi2⟩ := two_neg_diag_of_pair hDdiag hUD hUdet hneg
-  obtain ⟨j1, j2, hj12, hj1, hj2⟩ := two_pos_diag_of_pair hDdiag hUD hUdet hpos
-  obtain ⟨v, wv, hvP, hwP, hvne, hwne, hqv, hqw, hbvw, hindep⟩ :=
-    exists_diagonal_isotropic_vectors (fun i => D i i) (fun i => hDP i i) (by norm_num)
-      ⟨j1, j2, hj12, hj1, hj2⟩ ⟨i1, i2, hi12, hi1, hi2⟩
-  set cv : Fin 7 → ℝ := Lcomb q (U *ᵥ v) with hcv
-  set cw : Fin 7 → ℝ := Lcomb q (U *ᵥ wv) with hcw
-  have hcvP : ∀ i, PConstructible (cv i) :=
-    Lcomb_Pconstructible q hq (mulVec_Pconstructible hUP hvP)
-  have hcwP : ∀ i, PConstructible (cw i) :=
-    Lcomb_Pconstructible q hq (mulVec_Pconstructible hUP hwP)
+  obtain ⟨e, heP, hBe, heQ⟩ :=
+    exists_orth_neg_Pconstructible (Gram_symm q) (Gram_Pconstructible q hq) hP₀P hneg
+  have hdefpos : ∀ a b : ℝ, (a ≠ 0 ∨ b ≠ 0) → qform (-Gram q) (a • w1 + b • w2) < 0 := by
+    intro a b hab
+    have h := hpos a b hab
+    have hq : qform (-Gram q) (a • w1 + b • w2) = -qform (Gram q) (a • w1 + b • w2) := by
+      simp only [qform, Matrix.neg_mulVec, dotProduct_neg]
+    rw [hq]
+    linarith
+  obtain ⟨f, hfP, hBfneg, hfQneg⟩ :=
+    exists_orth_neg_Pconstructible (A := -Gram q) (by rw [Matrix.transpose_neg, Gram_symm])
+      (fun i j => neg_Pconstructible (Gram_Pconstructible q hq i j)) hP₀P hdefpos
+  have hBf : bilin (Gram q) P₀ f = 0 := by
+    have hneg : bilin (-Gram q) P₀ f = -bilin (Gram q) P₀ f := by
+      simp only [bilin, Matrix.neg_mulVec, dotProduct_neg]
+    rw [hneg] at hBfneg
+    linarith
+  have hfQ : 0 < qform (Gram q) f := by
+    have hneg : qform (-Gram q) f = -qform (Gram q) f := by
+      simp only [qform, Matrix.neg_mulVec, dotProduct_neg]
+    rw [hneg] at hfQneg
+    linarith
+  obtain ⟨x, hxP, hQx, hBx, hxpar⟩ :=
+    exists_isotropic_orth_Pconstructible q hq hQ₀ heP hfP hBe hBf heQ hfQ
+  set cv : Fin 7 → ℝ := Lcomb q P₀ with hcv
+  set cw : Fin 7 → ℝ := Lcomb q x with hcw
+  have hcvP : ∀ i, PConstructible (cv i) := Lcomb_Pconstructible q hq hP₀P
+  have hcwP : ∀ i, PConstructible (cw i) := Lcomb_Pconstructible q hq hxP
   have hqformv : qform (Hmat q) cv = 0 := by
-    rw [hcv, qform_Hmat_Lcomb, ← qform_congr, hUD, qform_diag hDdiag, hqv]
+    rw [hcv, qform_Hmat_Lcomb, hQ₀]
   have hqformw : qform (Hmat q) cw = 0 := by
-    rw [hcw, qform_Hmat_Lcomb, ← qform_congr, hUD, qform_diag hDdiag, hqw]
+    rw [hcw, qform_Hmat_Lcomb, hQx]
   have hbilinc : bilin (Hmat q) cv cw = 0 := by
-    rw [hcv, hcw, bilin_Hmat_Lcomb, ← bilin_congr, hUD, bilin_diag hDdiag, hbvw]
+    rw [hcv, hcw, bilin_Hmat_Lcomb, hBx]
   have hp1v : p1vec q cv = 0 := by rw [hcv, p1vec_Lcomb]
   have hp1w : p1vec q cw = 0 := by rw [hcw, p1vec_Lcomb]
   have hindep' : ¬ ∃ c : ℝ, cw = c • cv := by
     rintro ⟨c, hc⟩
-    have h1 : Lcomb q (U *ᵥ wv - c • (U *ᵥ v)) = 0 := by
+    apply hxpar
+    refine ⟨c, ?_⟩
+    have h1 : Lcomb q (x - c • P₀) = 0 := by
       rw [Lcomb_sub, Lcomb_smul, ← hcw, ← hcv, hc, sub_self]
-    have h2 : U *ᵥ wv - c • (U *ᵥ v) = 0 := Lcomb_injective q h1
-    have h3 : U *ᵥ (wv - c • v) = 0 := by
-      rw [Matrix.mulVec_sub, Matrix.mulVec_smul, h2]
-    have h4 : wv - c • v = 0 := mulVec_eq_zero_of_det_ne_zero hUdet h3
-    exact hindep ⟨c, sub_eq_zero.mp h4⟩
+    exact sub_eq_zero.mp (Lcomb_injective q h1)
   have hcvne : cv ≠ 0 := by
     intro h0
-    have h1 : U *ᵥ v = 0 := Lcomb_injective q (by rw [hcv] at h0; exact h0)
-    exact hvne (mulVec_eq_zero_of_det_ne_zero hUdet h1)
-  have hcwne : cw ≠ 0 := by
-    intro h0
-    have h1 : U *ᵥ wv = 0 := Lcomb_injective q (by rw [hcw] at h0; exact h0)
-    exact hwne (mulVec_eq_zero_of_det_ne_zero hUdet h1)
+    have h1 : P₀ = 0 := Lcomb_injective q (by rw [hcv] at h0; exact h0)
+    exact hP₀ne h1
   set Ncv : Matrix (Fin 7) (Fin 7) ℝ := aeval (companion7 q) (polyOfVec cv) with hNcv
   set Ncw : Matrix (Fin 7) (Fin 7) ℝ := aeval (companion7 q) (polyOfVec cw) with hNcw
   have hNcvP : ∀ i j, PConstructible (Ncv i j) := by
@@ -5186,43 +5197,9 @@ theorem root_Pconstructible_of_one_conjugate_pair {q : ℝ[X]} (hmon : q.Monic)
     {β : ℝ} (hβ : q.eval β = 0) :
     PConstructible β := by
   classical
-  -- Step 1: P-constructible directions with `Q e < 0 < Q f`.
-  obtain ⟨fneg, hfnegdeg, hfneg1, hfneg2⟩ := exists_neg_trace q hmon hnat hsep hz hzim
-  obtain ⟨fpos, hfposdeg, hfpos1, hfpos2⟩ := exists_pos_trace q hmon hnat hsep hz hzim
-  have hvecneg_p1 : p1vec q (vecOf fneg) = 0 := by
-    rw [p1vec_vecOf q fneg hfnegdeg, hfneg1]
-  have hLneg : Lcomb q (coeff6 (vecOf fneg)) = vecOf fneg := Lcomb_coeff6 q hvecneg_p1
-  have hQneg : qform (Gram q) (coeff6 (vecOf fneg)) = -2 := by
-    rw [← qform_Hmat_Lcomb q (coeff6 (vecOf fneg)), hLneg, qform_Hmat_eq_hermiteForm,
-      hermiteForm_eq_trace_sq, polyOfVec_vecOf hfnegdeg, hfneg2]
-  set gpos : ℝ[X] := fpos - C (2 / 7) with hgpos
-  have hgposdeg : gpos.natDegree ≤ 6 := by
-    rw [hgpos]
-    refine le_trans (Polynomial.natDegree_sub_le fpos (C (2 / 7))) ?_
-    rw [Polynomial.natDegree_C, max_eq_left (Nat.zero_le _)]
-    exact hfposdeg
-  have hvecpos_p1 : p1vec q (vecOf gpos) = 0 := by
-    rw [p1vec_vecOf q gpos hgposdeg, hgpos, aeval_sub_C, Matrix.trace_sub,
-      Matrix.trace_smul, hfpos1, Matrix.trace_one]
-    norm_num
-  have hLpos : Lcomb q (coeff6 (vecOf gpos)) = vecOf gpos := Lcomb_coeff6 q hvecpos_p1
-  have hQpos : qform (Gram q) (coeff6 (vecOf gpos)) = 10 / 7 := by
-    rw [← qform_Hmat_Lcomb q (coeff6 (vecOf gpos)), hLpos, qform_Hmat_eq_hermiteForm,
-      hermiteForm_eq_trace_sq, polyOfVec_vecOf hgposdeg, hgpos, aeval_sub_C,
-      trace_sq_sub_scalar, hfpos1, hfpos2]
-    norm_num
-  obtain ⟨rneg, hrneg⟩ := exists_rat_vec_pos 6 (continuous_qform (Gram q)).neg
-    (x := coeff6 (vecOf fneg)) (by linarith : 0 < -qform (Gram q) (coeff6 (vecOf fneg)))
-  obtain ⟨rpos, hrpos⟩ := exists_rat_vec_pos 6 (continuous_qform (Gram q))
-    (x := coeff6 (vecOf gpos)) (by linarith : 0 < qform (Gram q) (coeff6 (vecOf gpos)))
-  set e : Fin 6 → ℝ := fun i => (rneg i : ℝ) with he
-  set f : Fin 6 → ℝ := fun i => (rpos i : ℝ) with hf
-  have heP : ∀ i, PConstructible (e i) := fun i => rat_Pconstructible (rneg i)
-  have hfP : ∀ i, PConstructible (f i) := fun i => rat_Pconstructible (rpos i)
-  have heQ : qform (Gram q) e < 0 := by simpa using hrneg
-  have hfQ : 0 < qform (Gram q) f := hrpos
-  -- Step 2: a P-constructible point `P₀` on the cone.
-  obtain ⟨P₀, hP₀P, hQ₀, hP₀ne⟩ := exists_isotropic_Pconstructible q hq heP hfP heQ hfQ
+  -- Steps 1-2: a P-constructible point `P₀` on the cone.
+  obtain ⟨P₀, hP₀P, hQ₀, hP₀ne⟩ :=
+    exists_cone_point_Pconstructible q hmon hnat hsep hq hz hzim
   -- Step 3: a sign change of the stereographic cubic on the cone.
   obtain ⟨dplus, dminus, hdplus, hdminus⟩ :=
     exists_sign_change hmon hnat hsep hz hzim hone hQ₀ hP₀ne
