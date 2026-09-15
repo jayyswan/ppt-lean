@@ -396,4 +396,152 @@ theorem wss_pair_close {K : Type*} [NormedField K] {w x q : Fin 2 → K} {ε B :
 
 end CloseBound
 
+/-! ### WP5.3 — the finite set of bad primes -/
+
+section PlaceSet
+
+-- Theorem: the finite set of primes dividing the numerator or denominator of some weight,
+-- together with `2`.  Off this set every weight is a `p`-adic unit.
+noncomputable def smallPrimes {ι : Type*} [Fintype ι] (w : ι → ℚ) : Finset Nat.Primes :=
+  let m : ℕ := ∏ i, (w i).num.natAbs * (w i).den
+  insert ⟨2, Nat.prime_two⟩
+    (((m.divisors.filter Nat.Prime).attach).image
+      (fun x => (⟨x.1, (Finset.mem_filter.mp x.2).2⟩ : Nat.Primes)))
+
+-- Theorem: a prime outside `smallPrimes w` divides no numerator and no denominator.
+theorem notMem_smallPrimes {ι : Type*} [Fintype ι] {w : ι → ℚ} (hw : ∀ i, w i ≠ 0)
+    {p : Nat.Primes} (hp : p ∉ smallPrimes w) (i : ι) :
+    ¬ (p : ℕ) ∣ (w i).num.natAbs ∧ ¬ (p : ℕ) ∣ (w i).den := by
+  have hm0 : (∏ j, (w j).num.natAbs * (w j).den) ≠ 0 := by
+    refine Finset.prod_ne_zero_iff.mpr fun j _ => ?_
+    exact mul_ne_zero (Int.natAbs_ne_zero.mpr (Rat.num_ne_zero.mpr (hw j))) (Rat.den_ne_zero _)
+  have hp2 : (p : ℕ) ≠ 2 := by
+    intro h
+    exact hp (by
+      simp only [smallPrimes]
+      exact Finset.mem_insert.mpr (Or.inl (Subtype.ext h)))
+  have hpdvd : ¬ (p : ℕ) ∣ ∏ j, (w j).num.natAbs * (w j).den := by
+    intro hd
+    apply hp
+    simp only [smallPrimes]
+    refine Finset.mem_insert.mpr (Or.inr ?_)
+    refine Finset.mem_image.mpr ⟨⟨(p : ℕ), ?_⟩, Finset.mem_attach _ _, rfl⟩
+    exact Finset.mem_filter.mpr ⟨Nat.mem_divisors.mpr ⟨hd, hm0⟩, p.2⟩
+  constructor
+  · intro hnum
+    exact hpdvd (dvd_trans (dvd_mul_of_dvd_left hnum _)
+      (Finset.dvd_prod_of_mem _ (Finset.mem_univ i)))
+  · intro hden
+    exact hpdvd (dvd_trans (dvd_mul_of_dvd_right hden _)
+      (Finset.dvd_prod_of_mem _ (Finset.mem_univ i)))
+
+-- Theorem: off `smallPrimes w`, every rational weight has `p`-adic norm `1`.
+theorem norm_eq_one_of_notMem_smallPrimes {ι : Type*} [Fintype ι] {w : ι → ℚ}
+    (hw : ∀ i, w i ≠ 0) {p : Nat.Primes} (hp : p ∉ smallPrimes w) (i : ι) :
+    ‖((w i : ℚ) : ℚ_[p])‖ = 1 := by
+  obtain ⟨hnum, hden⟩ := notMem_smallPrimes hw hp i
+  have hq : (((w i : ℚ)) : ℚ_[p]) ≠ 0 := by exact_mod_cast hw i
+  have hv : Padic.valuation (((w i : ℚ)) : ℚ_[p]) = 0 := by
+    rw [Padic.valuation_ratCast, padicValRat_def]
+    rw [show padicValInt (p : ℕ) (w i).num = padicValNat (p : ℕ) (w i).num.natAbs from rfl,
+      padicValNat.eq_zero_of_not_dvd hnum, padicValNat.eq_zero_of_not_dvd hden]
+    norm_num
+  rw [Padic.norm_eq_zpow_neg_valuation hq, hv, neg_zero, zpow_zero]
+
+end PlaceSet
+
+/-! ### WP5.3 — base change and the rank-lowering assembly -/
+
+section Assembly
+
+-- Theorem: base change of a binary rational weighted sum of squares.
+theorem wss_cast_val {K : Type*} [CommSemiring K] [Algebra ℚ K] (v z : Fin 2 → ℚ) :
+    (algebraMap ℚ K ((weightedSumSquares ℚ v) z)) =
+      (weightedSumSquares K (fun i => algebraMap ℚ K (v i)))
+        (fun i => algebraMap ℚ K (z i)) := by
+  simp only [weightedSumSquares_apply, Fin.sum_univ_two, smul_eq_mul, map_add, map_mul]
+
+-- Theorem: negating all weights preserves isotropy.
+theorem isotropic_wss_neg {K : Type*} [Field K] {m : ℕ} {w : Fin m → K}
+    (h : (weightedSumSquares K w).Isotropic) :
+    (weightedSumSquares K (fun j => -(w j))).Isotropic := by
+  obtain ⟨y, hy, hyv⟩ := h
+  refine ⟨y, hy, ?_⟩
+  simp only [weightedSumSquares_apply, smul_eq_mul] at hyv ⊢
+  have hneg : (∑ j, (-(w j)) * (y j * y j)) = -(∑ j, w j * (y j * y j)) := by
+    rw [← Finset.sum_neg_distrib]
+    exact Finset.sum_congr rfl fun j _ => by ring
+  rw [hneg, hyv, neg_zero]
+
+-- Theorem: if `Q` represents `-av` and `A/av` is a square (with `A ≠ 0`), then `Q`
+-- represents `-A`: scale a representing vector by a square root of `A/av`.
+theorem represents_neg_of_represents_neg_of_square {K : Type*} [Field K] {V : Type*}
+    [AddCommGroup V] [Module K V] {Q : QuadraticForm K V} {av A : K} (hA : A ≠ 0)
+    (hav : av ≠ 0) (h : Q.represents (-av)) (hs : IsSquare (A / av)) :
+    Q.represents (-A) := by
+  obtain ⟨s, hs⟩ := hs
+  obtain ⟨y, hy, hyv⟩ := h
+  have hs0 : s ≠ 0 := by
+    rintro rfl
+    rw [mul_zero] at hs
+    exact (div_ne_zero hA hav) hs
+  refine ⟨s • y, smul_ne_zero hs0 hy, ?_⟩
+  have hval : Q (s • y) = s * (s * Q y) := by
+    rw [QuadraticMap.map_smul]; ring
+  rw [hval, hyv, show s * (s * -av) = -(s * s * av) by ring, hs.symm, div_mul_cancel₀ A hav]
+
+-- Theorem: `⟨c⟩ ⊥ ⟨-w⟩` is isotropic when `⟨w⟩` represents `-c`.
+theorem wss_cons_neg_isotropic_of_represents {K : Type*} [Field K] {m : ℕ} (c : K)
+    {w : Fin m → K} (h : (weightedSumSquares K w).represents (-c)) :
+    (weightedSumSquares K (Fin.cons (-c) (fun j => -(w j)))).Isotropic := by
+  obtain ⟨y, hy, hyv⟩ := h
+  refine ⟨Fin.cons 1 y, ?_, ?_⟩
+  · intro h0
+    have h1 : (1 : K) = 0 := by simpa using congr_fun h0 0
+    exact one_ne_zero h1
+  · have hval : (weightedSumSquares K (Fin.cons (-c) (fun j => -(w j)))) (Fin.cons 1 y) =
+        (-c) * 1 ^ 2 + (weightedSumSquares K (fun j => -(w j))) y := by
+      simp only [weightedSumSquares_apply, smul_eq_mul]
+      rw [Fin.sum_univ_succ]
+      simp
+    have hneg : (weightedSumSquares K (fun j => -(w j))) y = -(weightedSumSquares K w) y := by
+      simp only [weightedSumSquares_apply, smul_eq_mul]
+      rw [← Finset.sum_neg_distrib]
+      exact Finset.sum_congr rfl fun j _ => by ring
+    rw [hval, hneg, hyv]
+    ring
+
+-- Theorem: `⟨c⟩ ⊥ ⟨-w⟩` is isotropic when `⟨-w⟩` is isotropic.
+theorem wss_cons_neg_isotropic_of_tail {K : Type*} [Field K] {m : ℕ} (c : K)
+    {w : Fin m → K} (h : (weightedSumSquares K (fun j => -(w j))).Isotropic) :
+    (weightedSumSquares K (Fin.cons (-c) (fun j => -(w j)))).Isotropic := by
+  obtain ⟨y, hy, hyv⟩ := h
+  refine ⟨Fin.cons 0 y, ?_, ?_⟩
+  · intro h0
+    apply hy
+    funext j
+    simpa using congr_fun h0 j.succ
+  · have hval : (weightedSumSquares K (Fin.cons (-c) (fun j => -(w j)))) (Fin.cons 0 y) =
+        (-c) * 0 ^ 2 + (weightedSumSquares K (fun j => -(w j))) y := by
+      simp only [weightedSumSquares_apply, smul_eq_mul]
+      rw [Fin.sum_univ_succ]
+      simp
+    rw [hval, hyv]
+    ring
+
+end Assembly
+
+/-! ### The high-rank diagonal input -/
+
+/-- Diagonal Hasse–Minkowski over `ℚ` in rank `n ≥ 5`: a diagonal form with nonzero rational
+weights that is isotropic over every `p`-adic completion and over `ℝ` is isotropic over `ℚ`.
+This is the WP5.3 statement, recorded as a `Prop` so that the assembly of `hasseMinkowski`
+(WP6.2) can be developed against it while the induction is proved. -/
+def RankFiveLeDiagonalHM : Prop :=
+  ∀ {n : ℕ}, 5 ≤ n → ∀ w : Fin n → ℚ, (∀ i, w i ≠ 0) →
+    (∀ (p : ℕ) [Fact (Nat.Prime p)],
+      (weightedSumSquares ℚ_[p] (fun i => (w i : ℚ_[p]))).Isotropic) →
+    (weightedSumSquares ℝ (fun i => (w i : ℝ))).Isotropic →
+    (weightedSumSquares ℚ w).Isotropic
+
 end Pptc.HasseMinkowski

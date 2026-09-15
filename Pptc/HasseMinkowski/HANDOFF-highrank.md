@@ -116,3 +116,9 @@ Not delivered: `diagonal_hm_five_le`, `isotropic_of_five_le_card`.
    combine with `h rep A` (vector `Fin.cons (q 0) (Fin.cons (q 1) y)`).
 4. **General index**: reindex by `Fintype.equivFin ι` (a linear isometry
    `(ι → ℚ) ≃ₗ (Fin n → ℚ)` sending `w` to `w ∘ e.symm`), then apply the `Fin n` version.
+
+## ROUND 3 (resume)
+- `Padic.norm_eq_zpow_neg_valuation`, `Padic.valuation_ratCast`, `padicValRat_def`,
+  `padicValNat.eq_zero_of_not_dvd` are the norm-1 API (pattern copied from
+  `Reciprocity.lean` L105-114). `exists_padicUnit_of_norm_eq_one` converts to a unit.
+- Adding `smallPrimes` + `notMem_smallPrimes` + `norm_eq_one_of_notMem_smallPrimes`.
