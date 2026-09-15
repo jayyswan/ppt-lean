@@ -229,6 +229,178 @@ theorem eight_dvd_M (a : I → ℤ) : 8 ∣ M a := by
   obtain ⟨c, hc⟩ := hdvd
   exact ⟨c, by rw [hc]; ring⟩
 
+-- Theorem: a prime of `S` divides the modulus `M`.
+theorem dvd_M_of_mem_S (a : I → ℤ) {p : Primes} (hpS : p ∈ S a) : (p : ℕ) ∣ M a := by
+  rw [M]
+  by_cases hp2 : (p : ℕ) = 2
+  · rw [hp2]
+    exact dvd_mul_of_dvd_left (by norm_num : 2 ∣ 4) _
+  · exact dvd_mul_of_dvd_right (Finset.dvd_prod_of_mem (fun s : Primes => (s : ℕ)) hpS) 4
+
+-- Theorem: a prime strictly below a prime `ℓ` does not divide `ℓ`.
+theorem prime_not_dvd_of_lt {p : Primes} {ℓ : ℕ} (hℓ : ℓ.Prime) (hlt : (p : ℕ) < ℓ) :
+    ¬ (p : ℕ) ∣ ℓ := by
+  have hp2 : 1 < (p : ℕ) := p.2.one_lt
+  rintro h
+  rcases (Nat.dvd_prime hℓ).mp h with h1 | h2
+  · omega
+  · omega
+
+/-- Coercion of an integral square to a rational square. -/
+private lemma isSquare_ratCast_of_isSquare_intCast {p : ℕ} [Fact (Nat.Prime p)] {n : ℕ}
+    (h : IsSquare ((n : ℤ_[p]))) : IsSquare ((n : ℚ_[p])) := by
+  obtain ⟨z, hz⟩ := h
+  refine ⟨(z : ℚ_[p]), ?_⟩
+  have hc := congrArg (fun t : ℤ_[p] => (t : ℚ_[p])) hz
+  push_cast at hc
+  simpa using hc
+
+/-- An odd-`p` natural whose reduction mod `p` is a square is a square in `ℚ_[p]`. -/
+private lemma isSquare_odd_natCast_of_mod {p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2)
+    {n : ℕ} (hm : ¬ (p : ℤ_[p]) ∣ (n : ℤ_[p])) (hmod : IsSquare ((n : ZMod p))) :
+    IsSquare ((n : ℚ_[p])) :=
+  isSquare_ratCast_of_isSquare_intCast (PadicInt.isSquare_of_zmod hp hm (by simpa using hmod))
+
+/-- A natural congruent to `1` mod `8` is a square in `ℚ_[2]`. -/
+private lemma isSquare_two_natCast_of_mod8 {n : ℕ} (hm8 : (n : ZMod 8) = 1) :
+    IsSquare ((n : ℚ_[2])) := by
+  have h2 : (n : ZMod 2) = 1 := by
+    have hc := congrArg (ZMod.castHom (by norm_num : 2 ∣ 8) (ZMod 2)) hm8
+    simpa using hc
+  have hndvd : ¬ (2 : ℤ_[2]) ∣ (n : ℤ_[2]) := by
+    intro hd
+    have hd' : (n : ℤ_[2]).toZMod = 0 :=
+      (PadicInt.p_dvd_iff_toZMod_eq_zero (p := 2)).mp hd
+    rw [map_natCast, h2] at hd'
+    exact one_ne_zero hd'
+  obtain ⟨z, hz⟩ := PadicInt.isSquare_of_zmodPow hndvd (by
+    rw [map_natCast, hm8]
+    exact IsSquare.one)
+  refine ⟨(z : ℚ_[2]), ?_⟩
+  have hc := congrArg (fun t : ℤ_[2] => (t : ℚ_[2])) hz
+  push_cast at hc
+  simpa using hc
+
+-- Theorem: for `p ∈ S a`, the number `A · ℓ` is a square in `ℚ_[p]`.
+theorem isSquare_A_mul_ell_of_mem_S
+    (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
+    (hdisj : Disjoint (S a) (T hε h1)) {ℓ : ℕ} (hℓ : ℓ.Prime)
+    (hℓA : ℓ ≡ A hε h1 [MOD M a]) (hℓgt : ∀ s ∈ S a ∪ T hε h1, (s : ℕ) < ℓ)
+    {p : Primes} (hpS : p ∈ S a) :
+    IsSquare ((((A hε h1) * ℓ : ℕ) : ℚ_[p])) := by
+  set A' : ℕ := A hε h1 with hA'
+  set n : ℕ := A' * ℓ with hn
+  have hpMdvd : (p : ℕ) ∣ M a := dvd_M_of_mem_S a hpS
+  have hpT : p ∉ T hε h1 := disjoint_left.mp hdisj hpS
+  have hAnot2 : ¬ 2 ∣ A' := by rw [hA']; exact not_two_dvd_A hε h1 hdisj
+  have hpAd : ¬ (p : ℕ) ∣ A' := by rw [hA']; exact not_dvd_A_of_notMem_T hε h1 hpT
+  have hplt : (p : ℕ) < ℓ := hℓgt p (Finset.mem_union.mpr (Or.inl hpS))
+  have hpℓ : ¬ (p : ℕ) ∣ ℓ := prime_not_dvd_of_lt hℓ hplt
+  have hpn : ¬ (p : ℕ) ∣ n := by
+    rw [hn]
+    exact p.2.not_dvd_mul hpAd hpℓ
+  have hmodp : ℓ ≡ A' [MOD (p : ℕ)] := by rw [hA']; exact hℓA.of_dvd hpMdvd
+  have hzeq : ((ℓ : ZMod (p : ℕ))) = ((A' : ZMod (p : ℕ))) :=
+    (ZMod.natCast_eq_natCast_iff ℓ A' (p : ℕ)).mpr hmodp
+  have hnz : ((n : ZMod (p : ℕ))) = (A' : ZMod (p : ℕ)) ^ 2 := by
+    rw [hn, Nat.cast_mul, hzeq, sq]
+  by_cases hp2 : (p : ℕ) = 2
+  · have hmod8 : ℓ ≡ A' [MOD 8] := by rw [hA']; exact hℓA.of_dvd (eight_dvd_M a)
+    have hℓ8 : ((ℓ : ZMod 8)) = ((A' : ZMod 8)) :=
+      (ZMod.natCast_eq_natCast_iff ℓ A' 8).mpr hmod8
+    have hn8 : ((n : ZMod 8)) = (A' : ZMod 8) ^ 2 := by
+      rw [hn, Nat.cast_mul, hℓ8, sq]
+    have hAodd : Odd A' :=
+      Nat.not_even_iff_odd.mp (fun he => hAnot2 (even_iff_two_dvd.mp he))
+    have hAsq : ((A' : ZMod 8)) ^ 2 = 1 := by
+      set r : ℕ := A' % 8 with hr
+      have hrval : ((r : ℕ) : ZMod 8) = (A' : ZMod 8) := by
+        rw [hr]
+        exact (ZMod.natCast_eq_natCast_iff (A' % 8) A' 8).mpr (Nat.mod_modEq A' 8)
+      have hlt : r < 8 := by rw [hr]; exact Nat.mod_lt _ (by norm_num)
+      have hodd : r % 2 = 1 := by
+        rw [hr, Nat.mod_mod_of_dvd A' (by norm_num : 2 ∣ 8)]
+        exact Nat.odd_iff.mp hAodd
+      rw [← hrval]
+      interval_cases r <;> (norm_num at hodd) <;> decide
+    have hn1 : ((n : ZMod 8)) = 1 := by rw [hn8, hAsq]
+    obtain rfl : p = ⟨2, Nat.prime_two⟩ := Subtype.ext hp2
+    exact isSquare_two_natCast_of_mod8 hn1
+  · have hm : ¬ (p : ℤ_[p]) ∣ (n : ℤ_[p]) := by
+      intro hd
+      have hd' : (n : ℤ_[p]).toZMod = 0 := (PadicInt.p_dvd_iff_toZMod_eq_zero).mp hd
+      rw [map_natCast, ← Nat.cast_zero] at hd'
+      exact hpn (Nat.modEq_zero_iff_dvd.mp ((ZMod.natCast_eq_natCast_iff n 0 (p : ℕ)).mp hd'))
+    exact isSquare_odd_natCast_of_mod hp2 hm ⟨(A' : ZMod (p : ℕ)), by rw [hnz]; ring⟩
+
+-- Theorem: for `p ∈ S a` and any `i`, the symbol `(a i, A·ℓ)_p` is `1`.
+theorem hilbertSym_A_mul_ell_eq_one_of_mem_S (ha : ∀ i, a i ≠ 0)
+    (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
+    (hdisj : Disjoint (S a) (T hε h1)) {ℓ : ℕ} (hℓ : ℓ.Prime)
+    (hℓA : ℓ ≡ A hε h1 [MOD M a]) (hℓgt : ∀ s ∈ S a ∪ T hε h1, (s : ℕ) < ℓ)
+    {p : Primes} (hpS : p ∈ S a) (i : I) :
+    hilbertSym (a i : ℚ_[p]) (((A hε h1) * ℓ : ℕ) : ℚ_[p]) = 1 := by
+  obtain ⟨y, hy⟩ := isSquare_A_mul_ell_of_mem_S hε h1 hdisj hℓ hℓA hℓgt hpS
+  have hn0 : (((A hε h1) * ℓ : ℕ) : ℚ_[p]) ≠ 0 := by
+    push_cast
+    exact mul_ne_zero (by exact_mod_cast A_ne_zero hε h1) (by exact_mod_cast hℓ.ne_zero)
+  have hy0 : y ≠ 0 := by
+    rintro rfl
+    rw [mul_zero] at hy
+    exact hn0 hy
+  have hai : (a i : ℚ_[p]) ≠ 0 := by exact_mod_cast ha i
+  rw [hy, ← pow_two]
+  exact hilbertSym_sq_right hai hy0
+
+/-! ### The symbol at a `p`-adic unit against an arbitrary element
+
+For odd `p`, if the first argument is a unit then only the parity of the valuation of the
+second argument matters: `(u,b)_p = χ(u)` for odd valuation and `= 1` for even valuation. -/
+
+-- Theorem: unfolding `padicUnit` to its underlying `p`-adic number.
+private lemma coe_padicUnitE {p : ℕ} [Fact (Nat.Prime p)] (a : ℚ_[p]) (ha : a ≠ 0) :
+    ((padicUnit a ha : ℤ_[p]) : ℚ_[p]) = a * (p : ℚ_[p]) ^ (-(a.valuation)) := by
+  rw [padicUnit]
+  exact congrArg (fun t : ℤ_[p] => (t : ℚ_[p])) (IsUnit.unit_spec _)
+
+-- Theorem: the valuation of a `p`-adic unit is `0`.
+private lemma valuation_unit_eq_zero {p : ℕ} [Fact (Nat.Prime p)] (u : ℤ_[p]ˣ) :
+    Padic.valuation ((u : ℤ_[p]) : ℚ_[p]) = 0 := by
+  have hne : ((u : ℤ_[p]) : ℚ_[p]) ≠ 0 := by
+    rw [PadicInt.coe_ne_zero]
+    exact u.ne_zero
+  have hnorm : ‖((u : ℤ_[p]) : ℚ_[p])‖ = 1 := by
+    rw [← PadicInt.norm_def, PadicInt.norm_units]
+  have hp0 : (0 : ℝ) < p := by exact_mod_cast Nat.Prime.pos Fact.out
+  have hp1 : (p : ℝ) ≠ 1 := by exact_mod_cast (ne_of_gt (Nat.Prime.one_lt Fact.out))
+  have h : (p : ℝ) ^ (-(Padic.valuation ((u : ℤ_[p]) : ℚ_[p]))) = (p : ℝ) ^ (0 : ℤ) := by
+    rw [zpow_zero, ← Padic.norm_eq_zpow_neg_valuation hne, hnorm]
+  have := (zpow_right_inj₀ hp0 hp1).mp h
+  simpa using this
+
+-- Theorem: the unit part of a `p`-adic unit is that unit.
+private lemma padicUnit_unit {p : ℕ} [Fact (Nat.Prime p)] (u : ℤ_[p]ˣ)
+    (hu : ((u : ℤ_[p]) : ℚ_[p]) ≠ 0) :
+    padicUnit ((u : ℤ_[p]) : ℚ_[p]) hu = u := by
+  apply Units.ext
+  apply Subtype.ext
+  rw [coe_padicUnitE, valuation_unit_eq_zero, neg_zero, zpow_zero, mul_one]
+
+-- Theorem: for odd `p`, `(u,b)_p` for a unit `u` depends only on the parity of `b`'s
+-- valuation: it is `χ(u)` for odd valuation and `1` for even valuation.
+private lemma hilbertSym_unit_eq_parity {p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2)
+    (u : ℤ_[p]ˣ) {b : ℚ_[p]} (hb : b ≠ 0) :
+    hilbertSym ((u : ℤ_[p]) : ℚ_[p]) b =
+      if Even b.valuation then 1
+        else (quadraticChar (ZMod p)) (PadicInt.toZMod (u : ℤ_[p])) := by
+  have hu : ((u : ℤ_[p]) : ℚ_[p]) ≠ 0 := by
+    rw [PadicInt.coe_ne_zero]
+    exact u.ne_zero
+  rw [hilbertSym_padic_odd_eq hp hu hb, valuation_unit_eq_zero u, padicUnit_unit u hu]
+  simp [parityPow]
+
 /-! ### The product-formula obstruction
 
 The hypotheses of `exists_disjoint` force the construction `x = A · ℓ`, but they do not

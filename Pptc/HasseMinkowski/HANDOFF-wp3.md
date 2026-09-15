@@ -1,5 +1,17 @@
 # HANDOFF WP3.1 — disjoint case of Serre existence theorem
 
+## UPDATE (round 2): corrected theorem with `h2`
+Caller confirmed the missing hypothesis and re-issued the target WITH
+`h2 : ∀ i, (∏ᶠ p : Primes, ep i p) = 1`.  Now proving:
+```lean
+theorem exists_disjoint {I} [Finite I] (a : I → ℤ) (ha) (hsq) (ep) (hε) (h1) (h2) (h3)
+    {ℓ} (hℓ) (hℓA) (hℓgt) :
+    ∃ x : ℚ, x ≠ 0 ∧ ∀ i p, hilbertSym (a i : ℚ_[p]) x = ep i p
+```
+with `x := (A : ℚ) * ℓ`.  Place cases: S (square mod p), T (Legendre char), outside
+S∪T∪{ℓ} (units), ℓ (reciprocity + h2).
+Log round 2 below.
+
 Target file: `Pptc/HasseMinkowski/HilbertSymbol/Existence.lean` (extend, namespace
 `Pptc.HasseMinkowski.Existence`).
 
@@ -35,6 +47,41 @@ which the task text calls "h2-like constraint" but which is not implied by h3.
 NOTE also: the conclusion is only about finite places (no real place), so εR never
 appears; in the disjoint case the construction forces εR ≡ 1 (x = A·ℓ > 0), and then
 h2 at i is exactly ∏_p ep i p = 1, which is NOT automatic.
+
+## Round 2 log (corrected theorem with `h2`)
+- `dvd_M_of_mem_S`, `prime_not_dvd_of_lt` (helpers): compile.
+- `isSquare_ratCast_of_isSquare_intCast`, `isSquare_odd_natCast_of_mod`,
+  `isSquare_two_natCast_of_mod8`: compile.
+- `isSquare_A_mul_ell_of_mem_S`: **proved** — for `p ∈ S`, `A·ℓ` is a square in `ℚ_[p]`
+  (using `8 ∣ M` for the `p=2` branch; `interval_cases` on `A' % 8`).
+- `hilbertSym_A_mul_ell_eq_one_of_mem_S`: **proved** — S case of the theorem.
+- `coe_padicUnitE`, `valuation_unit_eq_zero`, `padicUnit_unit`,
+  `hilbertSym_unit_eq_parity`: **proved** — for odd `p`, unit `u`, nonzero `b`,
+  `(u,b)_p = if Even b.valuation then 1 else χ(u)`.
+All compile (`lean_diagnostic_messages` clean).
+
+### Round 2 declaration lines
+233 `dvd_M_of_mem_S`, 241 `prime_not_dvd_of_lt`, 250 `isSquare_ratCast_of_isSquare_intCast`,
+259 `isSquare_odd_natCast_of_mod`, 265 `isSquare_two_natCast_of_mod8`,
+285 `isSquare_A_mul_ell_of_mem_S`, 338 `hilbertSym_A_mul_ell_eq_one_of_mem_S`,
+363 `coe_padicUnitE`, 369 `valuation_unit_eq_zero`, 384 `padicUnit_unit`,
+393 `hilbertSym_unit_eq_parity`, 422 `not_realizable_of_single_neg`.
+`lake_check` → OK (no errors/warnings).  `exists_disjoint` still not delivered
+(remaining cases 1–4 below); file compiles with no `sorry`.
+
+### Remaining pieces of `exists_disjoint` (round 2)
+1. `p ∈ T` case: need `v_p(x) = 1` for `x = A·ℓ`, i.e. `padicValNat p (A hε h1) = 1`
+   (exact valuation of `A` at a prime of `T`; NOT yet proved). Then apply
+   `hilbertSym_unit_eq_parity` to `x` and to the `h3 p` witness `x_p`, and use that some
+   `εp j p = -1` forces `v_p(x_p)` odd (via `hilbertSym_unit_eq_parity` + `parityPow`).
+   Note `padicValNat p A` needs `A` squarefree / product-of-distinct-primes.
+2. `p ∉ S ∪ T ∪ {ℓ}`: `a i` unit (`is_unit_ai_of_p_notMem_S`, via `Padic.valuation_intCast`),
+   `x` unit (`p ∤ A` and `p ≠ ℓ`), so symbol `1` (`hilbertSym_unit_eq_parity` with even
+   valuation `0`, or `hilbertSym_padic_odd_eq`); `ep i p = 1` from `ep_eq_one_of_not_mem_T`.
+3. `p = ℓ`: `hilbertReciprocity`, `(a i, x)_ℝ = 1` (`x > 0`), finite factors `= εp i p`
+   except possibly `ℓ`; with `h2` conclude `(a i, x)_ℓ = 1`; `ep i ℓ = 1` via
+   `ep_eq_one_prime_of_lt` (`ℓ ∉ T`).
+4. Assembly.
 
 ## Proved sub-lemmas (all compile, `lean_diagnostic_messages` clean)
 - `prime_notMem_T_of_lt` : ℓ ∉ T.
