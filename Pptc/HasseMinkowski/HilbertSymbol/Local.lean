@@ -7,6 +7,7 @@ import Pptc.HasseMinkowski.Basic
 import Pptc.HasseMinkowski.Prod
 import Pptc.HasseMinkowski.RankCriteria
 import Pptc.HasseMinkowski.HilbertSymbol.Padic
+import Pptc.HasseMinkowski.HilbertSymbol.Real
 import Pptc.HasseMinkowski.HilbertSymbol.Two
 
 /-!
@@ -132,5 +133,312 @@ theorem represents_weightedSumSquares_two_iff {a b x : k} [HasBilinHilbertSym k]
     (hilbertSym_eq_one_or_neg_one_of_ne_zero ha hb)
 
 end TwoRepresents
+
+/-! ### Nontriviality of `x ↦ (x, c)` for a nonsquare `c`
+
+For a nonsquare `c ≠ 0` the character `x ↦ (x, c)_k` is nontrivial.  Over `ℝ` this is
+immediate from `hilbertSym_real_eq`; over `ℚ_[p]` it is read off Serre's closed formulas,
+using the decomposition `c = p ^ α · u`. -/
+
+section Nontriviality
+
+-- Theorem: over `ℝ`, a negative `c` has `(-1, c)_ℝ = -1`.
+theorem exists_hilbertSym_eq_neg_one_real {c : ℝ} (hc : c < 0) :
+    ∃ x : ℝ, x ≠ 0 ∧ hilbertSym x c = -1 := by
+  refine ⟨-1, by norm_num, ?_⟩
+  rw [hilbertSym_real_eq (by norm_num) (ne_of_lt hc)]
+  have h : ¬ (0 < (-1 : ℝ) ∨ 0 < c) := by
+    rintro (h | h) <;> linarith
+  rw [if_neg h]
+
+end Nontriviality
+
+section OddPrime
+
+variable {p : ℕ} [Fact p.Prime]
+
+-- Theorem: `p` is nonzero as an element of `ℚ_[p]`.
+private lemma padic_p_ne_zero_local : (p : ℚ_[p]) ≠ 0 := by
+  intro h
+  have hnorm : ‖(p : ℚ_[p])‖ = 0 := by rw [h, norm_zero]
+  rw [Padic.norm_p] at hnorm
+  exact (inv_ne_zero (Nat.cast_ne_zero.mpr (Nat.Prime.ne_zero Fact.out))) hnorm
+
+-- Theorem: the underlying `p`-adic number of `padicUnit a ha` is `a * p ^ (-(a.valuation))`.
+private lemma coe_padicUnit_local (a : ℚ_[p]) (ha : a ≠ 0) :
+    ((padicUnit a ha : ℤ_[p]) : ℚ_[p]) = a * (p : ℚ_[p]) ^ (-(a.valuation)) := by
+  rw [padicUnit]
+  exact congrArg (fun t : ℤ_[p] => (t : ℚ_[p])) (IsUnit.unit_spec _)
+
+-- Theorem: every nonzero `p`-adic number is `p ^ a.valuation` times its unit part.
+private lemma padicUnit_spec_local (a : ℚ_[p]) (ha : a ≠ 0) :
+    a = (p : ℚ_[p]) ^ a.valuation * ((padicUnit a ha : ℤ_[p]) : ℚ_[p]) := by
+  have hp0 := padic_p_ne_zero_local (p := p)
+  rw [coe_padicUnit_local]
+  calc a = a * 1 := (mul_one a).symm
+    _ = a * ((p : ℚ_[p]) ^ a.valuation * (p : ℚ_[p]) ^ (-(a.valuation))) := by
+          rw [← zpow_add₀ hp0, add_neg_cancel, zpow_zero]
+    _ = (p : ℚ_[p]) ^ a.valuation * (a * (p : ℚ_[p]) ^ (-(a.valuation))) := by ring
+
+-- Theorem: a nonzero element of valuation `0` is its own unit part.
+private lemma coe_padicUnit_of_valuation_zero (a : ℚ_[p]) (ha : a ≠ 0) (h0 : a.valuation = 0) :
+    ((padicUnit a ha : ℤ_[p]) : ℚ_[p]) = a := by
+  rw [coe_padicUnit_local, h0, neg_zero, zpow_zero, mul_one]
+
+-- Theorem: the unit part of a natural number of valuation `0` is that natural number.
+private lemma padicUnit_eq_natCast_of_valuation_zero {a : ℚ_[p]} (ha : a ≠ 0)
+    (h0 : a.valuation = 0) {n : ℕ} (hn : a = (n : ℚ_[p])) :
+    (padicUnit a ha : ℤ_[p]) = (n : ℤ_[p]) := by
+  apply PadicInt.ext
+  rw [coe_padicUnit_of_valuation_zero a ha h0]
+  simpa using hn
+
+-- Theorem: a unit (valuation `0`) with quadratic character `-1` pairs to `-1` against an
+-- element of odd valuation.
+private lemma hilbertSym_padic_odd_unit_of_neg_valuation (hp : p ≠ 2) {x c : ℚ_[p]}
+    (hx : x ≠ 0) (hc : c ≠ 0) (hx0 : x.valuation = 0) (hβ : ¬ Even c.valuation)
+    (hchi : (quadraticChar (ZMod p))
+      (PadicInt.toZMod (padicUnit x hx : ℤ_[p])) = -1) :
+    hilbertSym x c = -1 := by
+  rw [hilbertSym_padic_odd_eq hp hx hc, hx0]
+  simp only [zero_mul]
+  rw [show parityPow ((quadraticChar (ZMod p)) (-1 : ZMod p)) 0 = 1 by
+        rw [parityPow, if_pos ⟨0, by ring⟩],
+      show parityPow ((quadraticChar (ZMod p))
+          (PadicInt.toZMod (padicUnit x hx : ℤ_[p]))) c.valuation
+          = (quadraticChar (ZMod p)) (PadicInt.toZMod (padicUnit x hx : ℤ_[p])) by
+        rw [parityPow, if_neg hβ],
+      show parityPow ((quadraticChar (ZMod p))
+          (PadicInt.toZMod (padicUnit c hc : ℤ_[p]))) 0 = 1 by
+        rw [parityPow, if_pos ⟨0, by ring⟩],
+      hchi]
+  norm_num
+
+-- Theorem: for even valuation, `(p, c)_p = -1` when the unit part of `c` is a quadratic
+-- non-residue.
+private lemma hilbertSym_padic_odd_p_of_nonresidue (hp : p ≠ 2) {c : ℚ_[p]} (hc : c ≠ 0)
+    (hβ : Even c.valuation)
+    (hchi : (quadraticChar (ZMod p))
+      (PadicInt.toZMod (padicUnit c hc : ℤ_[p])) = -1) :
+    hilbertSym (p : ℚ_[p]) c = -1 := by
+  have hx := padic_p_ne_zero_local (p := p)
+  have hup : PadicInt.toZMod (padicUnit (p : ℚ_[p]) hx : ℤ_[p]) = 1 := by
+    have hcoe : ((padicUnit (p : ℚ_[p]) hx : ℤ_[p]) : ℚ_[p]) = 1 := by
+      rw [coe_padicUnit_local, Padic.valuation_p]
+      rw [show (-(1 : ℤ)) = -1 by norm_num, zpow_neg_one]
+      exact mul_inv_cancel₀ hx
+    have hone : (padicUnit (p : ℚ_[p]) hx : ℤ_[p]) = 1 := by
+      apply PadicInt.ext
+      rw [hcoe]
+      simp
+    rw [hone, map_one]
+  rw [hilbertSym_padic_odd_eq hp hx hc, Padic.valuation_p]
+  simp only [one_mul]
+  rw [hup,
+    show parityPow ((quadraticChar (ZMod p)) (-1 : ZMod p)) c.valuation = 1 by
+      rw [parityPow, if_pos hβ],
+    show parityPow ((quadraticChar (ZMod p)) (1 : ZMod p)) c.valuation = 1 by
+      rw [map_one, parityPow, if_pos hβ],
+    show parityPow ((quadraticChar (ZMod p))
+        (PadicInt.toZMod (padicUnit c hc : ℤ_[p]))) 1
+        = (quadraticChar (ZMod p)) (PadicInt.toZMod (padicUnit c hc : ℤ_[p])) by
+      rw [parityPow, if_neg (show ¬ Even (1 : ℤ) by norm_num)],
+    hchi]
+  norm_num
+
+-- Theorem: for odd `p` and nonsquare `c ≠ 0`, some `x` has `(x, c)_p = -1`.
+private theorem exists_hilbertSym_eq_neg_one_odd (hp : p ≠ 2) {c : ℚ_[p]}
+    (hc : c ≠ 0) (hcsq : ¬ IsSquare c) :
+    ∃ x : ℚ_[p], x ≠ 0 ∧ hilbertSym x c = -1 := by
+  by_cases hβ : Even c.valuation
+  · -- even valuation: use `x = p`, the unit part of `c` is a non-residue
+    refine ⟨(p : ℚ_[p]), padic_p_ne_zero_local (p := p), ?_⟩
+    refine hilbertSym_padic_odd_p_of_nonresidue hp hc hβ ?_
+    rw [quadraticChar_neg_one_iff_not_isSquare]
+    intro hmod
+    have hnd : ¬ (p : ℤ_[p]) ∣ (padicUnit c hc : ℤ_[p]) := by
+      rw [PadicInt.p_dvd_iff_toZMod_eq_zero]
+      exact (IsUnit.map (PadicInt.toZMod (p := p)) (padicUnit c hc).isUnit).ne_zero
+    obtain ⟨z, hz⟩ := PadicInt.isSquare_of_zmod hp hnd hmod
+    obtain ⟨k, hk⟩ := hβ
+    have hv : ((padicUnit c hc : ℤ_[p]) : ℚ_[p]) = (z : ℚ_[p]) ^ 2 := by
+      rw [hz]; push_cast; ring
+    have hpβ : (p : ℚ_[p]) ^ c.valuation = ((p : ℚ_[p]) ^ k) ^ 2 := by
+      rw [hk, pow_two, ← zpow_add₀ (padic_p_ne_zero_local (p := p))]
+    refine (hcsq ⟨(z : ℚ_[p]) * (p : ℚ_[p]) ^ k, ?_⟩)
+    rw [padicUnit_spec_local c hc, hpβ, hv]
+    ring
+  · -- odd valuation: use a quadratic non-residue `x` of valuation `0`
+    have hring : ringChar (ZMod p) ≠ 2 := by
+      rw [ZMod.ringChar_zmod_n]
+      exact hp
+    obtain ⟨a, ha⟩ := quadraticChar_exists_neg_one' (F := ZMod p) hring
+    let n : ℕ := (a : ZMod p).val
+    have hnZ : (n : ZMod p) = (a : ZMod p) := ZMod.natCast_zmod_val _
+    have hnd : ¬ p ∣ n := by
+      intro hd
+      have h0 : (n : ZMod p) = 0 := (ZMod.natCast_eq_zero_iff n p).mpr hd
+      rw [hnZ] at h0
+      exact a.ne_zero h0
+    let x : ℚ_[p] := (n : ℚ_[p])
+    have hx : x ≠ 0 := by
+      intro h
+      have hn0 : n = 0 := by simpa [x] using h
+      exact hnd (by rw [hn0]; exact dvd_zero p)
+    have hxval : x.valuation = 0 := by
+      change (n : ℚ_[p]).valuation = 0
+      rw [Padic.valuation_natCast, padicValNat.eq_zero_of_not_dvd hnd]
+      norm_num
+    refine ⟨x, hx, ?_⟩
+    refine hilbertSym_padic_odd_unit_of_neg_valuation hp hx hc hxval hβ ?_
+    have hunit : (padicUnit x hx : ℤ_[p]) = (n : ℤ_[p]) :=
+      padicUnit_eq_natCast_of_valuation_zero (a := x) (n := n) hx hxval rfl
+    rw [hunit, map_natCast, hnZ]
+    exact ha
+
+end OddPrime
+
+section TwoAdic
+
+-- Theorem: every nonzero `2`-adic number is `2 ^ a.valuation` times its unit part.
+private lemma twoAdicUnit_spec_local (a : ℚ_[2]) (ha : a ≠ 0) :
+    a = (2 : ℚ_[2]) ^ a.valuation * ((twoAdicUnit a ha : ℤ_[2]) : ℚ_[2]) := by
+  simpa [twoAdicUnit] using padicUnit_spec_local (p := 2) a ha
+
+-- Theorem: `(5, c)_2` is the parity of `c.valuation` (`5 ≡ 1 (mod 4)`, `5 ≢ ±1 (mod 8)`).
+private lemma hilbertSym_two_five_eq {c : ℚ_[2]} (hc : c ≠ 0) :
+    hilbertSym (5 : ℚ_[2]) c = parityPow (-1) c.valuation := by
+  have hx : (5 : ℚ_[2]) ≠ 0 := by norm_num
+  have hval : ((5 : ℚ_[2])).valuation = 0 := by
+    rw [show (5 : ℚ_[2]) = ((5 : ℕ) : ℚ_[2]) by norm_num, Padic.valuation_natCast,
+      padicValNat.eq_zero_of_not_dvd (by decide : ¬ 2 ∣ 5)]
+    norm_num
+  have hunit : (twoAdicUnit (5 : ℚ_[2]) hx : ℤ_[2]) = ((5 : ℕ) : ℤ_[2]) :=
+    padicUnit_eq_natCast_of_valuation_zero hx hval rfl
+  have heps : eps (twoAdicUnit (5 : ℚ_[2]) hx) = 0 := by
+    have h : (twoAdicUnit (5 : ℚ_[2]) hx : ℤ_[2]).toZModPow 2 = 1 := by
+      rw [hunit, map_natCast]
+      decide
+    rw [eps, if_pos h]
+  have homg : omg (twoAdicUnit (5 : ℚ_[2]) hx) = 1 := by
+    have h : ¬ ((twoAdicUnit (5 : ℚ_[2]) hx : ℤ_[2]).toZModPow 3 = 1 ∨
+        (twoAdicUnit (5 : ℚ_[2]) hx : ℤ_[2]).toZModPow 3 = 7) := by
+      rw [hunit, map_natCast]
+      decide
+    rw [omg, if_neg h]
+  rw [hilbertSym_padic_two_eq hx hc, hval, heps, homg]
+  simp only [zero_mul, mul_one, zero_add]
+
+-- Theorem: `(7, c)_2` is the `ε` character of the unit part of `c` (`7 ≡ 3 (mod 4)`,
+-- `7 ≡ -1 (mod 8)`).
+private lemma hilbertSym_two_seven_eq {c : ℚ_[2]} (hc : c ≠ 0) :
+    hilbertSym (7 : ℚ_[2]) c = parityPow (-1) (eps (twoAdicUnit c hc)) := by
+  have hx : (7 : ℚ_[2]) ≠ 0 := by norm_num
+  have hval : ((7 : ℚ_[2])).valuation = 0 := by
+    rw [show (7 : ℚ_[2]) = ((7 : ℕ) : ℚ_[2]) by norm_num, Padic.valuation_natCast,
+      padicValNat.eq_zero_of_not_dvd (by decide : ¬ 2 ∣ 7)]
+    norm_num
+  have hunit : (twoAdicUnit (7 : ℚ_[2]) hx : ℤ_[2]) = ((7 : ℕ) : ℤ_[2]) :=
+    padicUnit_eq_natCast_of_valuation_zero hx hval rfl
+  have heps : eps (twoAdicUnit (7 : ℚ_[2]) hx) = 1 := by
+    have h : ¬ ((twoAdicUnit (7 : ℚ_[2]) hx : ℤ_[2]).toZModPow 2 = 1) := by
+      rw [hunit, map_natCast]
+      decide
+    rw [eps, if_neg h]
+  have homg : omg (twoAdicUnit (7 : ℚ_[2]) hx) = 0 := by
+    have h : (twoAdicUnit (7 : ℚ_[2]) hx : ℤ_[2]).toZModPow 3 = 7 := by
+      rw [hunit, map_natCast]
+      decide
+    rw [omg, if_pos (Or.inr h)]
+  rw [hilbertSym_padic_two_eq hx hc, hval, heps, homg]
+  simp only [one_mul, zero_mul, mul_zero, add_zero]
+
+-- Theorem: `(2, c)_2` is the `ω` character of the unit part of `c`.
+private lemma hilbertSym_two_two_eq {c : ℚ_[2]} (hc : c ≠ 0) :
+    hilbertSym (2 : ℚ_[2]) c = parityPow (-1) (omg (twoAdicUnit c hc)) := by
+  have hx : (2 : ℚ_[2]) ≠ 0 := by norm_num
+  have hval : ((2 : ℚ_[2])).valuation = 1 := Padic.valuation_p (p := 2)
+  have hunit : (twoAdicUnit (2 : ℚ_[2]) hx : ℤ_[2]) = 1 := by
+    apply PadicInt.ext
+    rw [twoAdicUnit, coe_padicUnit_local (p := 2), hval]
+    rw [show (-(1 : ℤ)) = -1 by norm_num, zpow_neg_one]
+    simp
+  have heps : eps (twoAdicUnit (2 : ℚ_[2]) hx) = 0 := by
+    have h : (twoAdicUnit (2 : ℚ_[2]) hx : ℤ_[2]).toZModPow 2 = 1 := by
+      rw [hunit, map_one]
+    rw [eps, if_pos h]
+  have homg : omg (twoAdicUnit (2 : ℚ_[2]) hx) = 0 := by
+    have h : (twoAdicUnit (2 : ℚ_[2]) hx : ℤ_[2]).toZModPow 3 = 1 := by
+      rw [hunit, map_one]
+    rw [omg, if_pos (Or.inl h)]
+  rw [hilbertSym_padic_two_eq hx hc, hval, heps, homg]
+  simp only [zero_mul, one_mul, mul_zero, zero_add, add_zero]
+
+-- Theorem: for even valuation and nonsquare `c`, if the `ε` character of the unit part of
+-- `c` vanishes then the `ω` character does not.
+private lemma omg_eq_one_of_eps_eq_zero {c : ℚ_[2]} (hc : c ≠ 0)
+    (hcsq : ¬ IsSquare c) (hβ : Even c.valuation)
+    (hε0 : eps (twoAdicUnit c hc) = 0) : omg (twoAdicUnit c hc) = 1 := by
+  have hpow2 : (twoAdicUnit c hc : ℤ_[2]).toZModPow 2 = 1 := by
+    by_contra h
+    rw [show eps (twoAdicUnit c hc) = 1 by rw [eps, if_neg h]] at hε0
+    exact one_ne_zero hε0
+  have hnd : ¬ ((2 : ℕ) : ℤ_[2]) ∣ (twoAdicUnit c hc : ℤ_[2]) := by
+    rw [PadicInt.p_dvd_iff_toZMod_eq_zero]
+    exact (IsUnit.map (PadicInt.toZMod (p := 2)) (twoAdicUnit c hc).isUnit).ne_zero
+  have hnot : ¬ ((twoAdicUnit c hc : ℤ_[2]).toZModPow 3 = 1 ∨
+      (twoAdicUnit c hc : ℤ_[2]).toZModPow 3 = 7) := by
+    rintro (h3 | h3)
+    · obtain ⟨z, hz⟩ := PadicInt.isSquare_of_zmodPow hnd ⟨1, by rw [h3]; ring⟩
+      apply hcsq
+      obtain ⟨k, hk⟩ := hβ
+      have h2 : (2 : ℚ_[2]) ≠ 0 := by norm_num
+      have hpβ : (2 : ℚ_[2]) ^ c.valuation = ((2 : ℚ_[2]) ^ k) ^ 2 := by
+        rw [hk, pow_two, ← zpow_add₀ h2]
+      have huval : ((twoAdicUnit c hc : ℤ_[2]) : ℚ_[2]) = (z : ℚ_[2]) ^ 2 := by
+        rw [hz]; push_cast; ring
+      refine ⟨(2 : ℚ_[2]) ^ k * (z : ℚ_[2]), ?_⟩
+      rw [twoAdicUnit_spec_local c hc, hpβ, huval]
+      ring
+    · have hcast : (twoAdicUnit c hc : ℤ_[2]).toZModPow 2
+          = ZMod.cast ((twoAdicUnit c hc : ℤ_[2]).toZModPow 3) :=
+        (PadicInt.cast_toZModPow 2 3 (by norm_num) (twoAdicUnit c hc : ℤ_[2])).symm
+      rw [h3, hpow2] at hcast
+      exact absurd hcast (by decide)
+  rw [omg, if_neg hnot]
+
+-- Theorem: for `p = 2` and nonsquare `c ≠ 0`, some `x` has `(x, c)_2 = -1`.
+private theorem exists_hilbertSym_eq_neg_one_two {c : ℚ_[2]} (hc : c ≠ 0)
+    (hcsq : ¬ IsSquare c) : ∃ x : ℚ_[2], x ≠ 0 ∧ hilbertSym x c = -1 := by
+  by_cases hβ : Even c.valuation
+  · by_cases hε : eps (twoAdicUnit c hc) = 1
+    · refine ⟨7, by norm_num, ?_⟩
+      rw [hilbertSym_two_seven_eq hc, hε]
+      rw [show parityPow (-1) 1 = -1 by rw [parityPow, if_neg (by norm_num)]]
+    · have hε0 : eps (twoAdicUnit c hc) = 0 := by
+        by_cases h : (twoAdicUnit c hc : ℤ_[2]).toZModPow 2 = 1
+        · rw [eps, if_pos h]
+        · exact absurd (by rw [eps, if_neg h]) hε
+      have hω : omg (twoAdicUnit c hc) = 1 := omg_eq_one_of_eps_eq_zero hc hcsq hβ hε0
+      refine ⟨2, by norm_num, ?_⟩
+      rw [hilbertSym_two_two_eq hc, hω]
+      rw [show parityPow (-1) 1 = -1 by rw [parityPow, if_neg (by norm_num)]]
+  · refine ⟨5, by norm_num, ?_⟩
+    rw [hilbertSym_two_five_eq hc]
+    rw [show parityPow (-1) c.valuation = -1 by rw [parityPow, if_neg hβ]]
+
+end TwoAdic
+
+/-! ### Nontriviality of the local Hilbert symbol character -/
+
+-- Theorem: for a nonsquare nonzero `c` over `ℚ_[p]`, the character `x ↦ (x, c)_p` is
+-- nontrivial: some `x` has `(x, c)_p = -1`.
+theorem exists_hilbertSym_eq_neg_one_padic (p : ℕ) [Fact p.Prime] {c : ℚ_[p]}
+    (hc : c ≠ 0) (hcsq : ¬ IsSquare c) :
+    ∃ x : ℚ_[p], x ≠ 0 ∧ hilbertSym x c = -1 := by
+  by_cases hp : p = 2
+  · subst hp
+    exact exists_hilbertSym_eq_neg_one_two hc hcsq
+  · exact exists_hilbertSym_eq_neg_one_odd hp hc hcsq
 
 end Pptc.HasseMinkowski
