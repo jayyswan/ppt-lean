@@ -33,3 +33,11 @@ Plan: by_cases p=2; p=2 uses Two's instance; p≠2 uses hilbertSym_padic_odd_mul
   `lean_verify exists_hilbertSym_eq_neg_one_padic`: {propext, Classical.choice, Quot.sound}.
   Lines: exists_hilbertSym_eq_neg_one_real 146; ..._odd (private) 250; ..._two (private) 411;
   ..._padic 436. p=2 witnesses: 5 (v(c) odd), 7 (v(c) even, eps=1), 2 (v(c) even, eps=0).
+- WP2.5 + WP2.4 appended (section Prescribed). Key: even_valuation_of_isSquare /
+  not_isSquare_of_odd_valuation; exists_nonsquare_unit (odd: lifted non-residue; p=2: 7);
+  2.5 picks c₂=p when v(c) even, c₂=unit-nonsquare when v(c) odd. 2.4 by explicit case
+  analysis on the signs s=(y,c₂), t=(w,c₁) using y,w,z from hnd. Diagnostics clean.
+- DONE WP2.4+2.5. lake_check Local.lean: OK, no errors or warnings. lean_verify both: clean.
+  Lines: even_valuation_of_isSquare 449, not_isSquare_of_odd_valuation 456,
+  exists_nonsquare_unit 461, exists_not_isSquare_and_not_isSquare_mul 540,
+  exists_hilbertSym_two_prescribed 561.

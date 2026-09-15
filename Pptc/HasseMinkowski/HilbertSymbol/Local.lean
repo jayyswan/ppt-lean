@@ -441,4 +441,207 @@ theorem exists_hilbertSym_eq_neg_one_padic (p : ℕ) [Fact p.Prime] {c : ℚ_[p]
     exact exists_hilbertSym_eq_neg_one_two hc hcsq
   · exact exists_hilbertSym_eq_neg_one_odd hp hc hcsq
 
+/-! ### Two prescribed Hilbert symbols (WP2.4) and the pair of non-squares (WP2.5) -/
+
+section Prescribed
+
+-- Theorem: a square in `ℚ_[p]` has even valuation.
+private lemma even_valuation_of_isSquare {p : ℕ} [Fact p.Prime] {x : ℚ_[p]}
+    (h : IsSquare x) : Even x.valuation := by
+  obtain ⟨y, hy⟩ := h
+  rw [hy, ← pow_two, Padic.valuation_pow]
+  exact ⟨y.valuation, by ring⟩
+
+-- Theorem: an element of odd valuation is not a square.
+private lemma not_isSquare_of_odd_valuation {p : ℕ} [Fact p.Prime] {x : ℚ_[p]}
+    (h : ¬ Even x.valuation) : ¬ IsSquare x :=
+  fun hs => h (even_valuation_of_isSquare hs)
+
+-- Theorem: over `ℚ_[p]` there is a unit (element of valuation `0`) that is not a square.
+private lemma exists_nonsquare_unit (p : ℕ) [Fact p.Prime] :
+    ∃ u : ℚ_[p], u ≠ 0 ∧ u.valuation = 0 ∧ ¬ IsSquare u := by
+  by_cases hp : p = 2
+  · subst hp
+    refine ⟨(7 : ℚ_[2]), by norm_num, ?_, ?_⟩
+    · rw [show (7 : ℚ_[2]) = ((7 : ℕ) : ℚ_[2]) by norm_num, Padic.valuation_natCast,
+        padicValNat.eq_zero_of_not_dvd (by decide : ¬ 2 ∣ 7)]
+      norm_num
+    · intro hs
+      have h7 : (7 : ℚ_[2]) ≠ 0 := by norm_num
+      have h1 : hilbertSym (7 : ℚ_[2]) (7 : ℚ_[2]) = 1 := by
+        obtain ⟨y, hy⟩ := hs
+        have hy_ne : y ≠ 0 := by
+          rintro rfl
+          rw [mul_zero] at hy
+          exact h7 hy
+        nth_rewrite 1 [hy]
+        rw [← pow_two]
+        exact hilbertSym_sq_left hy_ne h7
+      have h2 : hilbertSym (7 : ℚ_[2]) (7 : ℚ_[2]) = -1 := by
+        have hval7 : ((7 : ℚ_[2])).valuation = 0 := by
+          rw [show (7 : ℚ_[2]) = ((7 : ℕ) : ℚ_[2]) by norm_num, Padic.valuation_natCast,
+            padicValNat.eq_zero_of_not_dvd (by decide : ¬ 2 ∣ 7)]
+          norm_num
+        have hunit : (twoAdicUnit (7 : ℚ_[2]) h7 : ℤ_[2]) = ((7 : ℕ) : ℤ_[2]) :=
+          padicUnit_eq_natCast_of_valuation_zero h7 hval7 rfl
+        have heps : eps (twoAdicUnit (7 : ℚ_[2]) h7) = 1 := by
+          have h : ¬ ((twoAdicUnit (7 : ℚ_[2]) h7 : ℤ_[2]).toZModPow 2 = 1) := by
+            rw [hunit, map_natCast]
+            decide
+          rw [eps, if_neg h]
+        rw [hilbertSym_two_seven_eq h7, heps]
+        rw [show parityPow (-1) 1 = -1 by rw [parityPow, if_neg (by norm_num)]]
+      linarith
+  · -- odd `p`: lift a quadratic non-residue modulo `p`
+    have hring : ringChar (ZMod p) ≠ 2 := by rw [ZMod.ringChar_zmod_n]; exact hp
+    obtain ⟨a, ha⟩ := quadraticChar_exists_neg_one' (F := ZMod p) hring
+    let n : ℕ := (a : ZMod p).val
+    have hnZ : (n : ZMod p) = (a : ZMod p) := ZMod.natCast_zmod_val _
+    have hnd : ¬ p ∣ n := by
+      intro hd
+      have h0 : (n : ZMod p) = 0 := (ZMod.natCast_eq_zero_iff n p).mpr hd
+      rw [hnZ] at h0
+      exact a.ne_zero h0
+    have hn0 : n ≠ 0 := fun h => hnd (by rw [h]; exact dvd_zero p)
+    have huval : ((n : ℚ_[p])).valuation = 0 := by
+      rw [Padic.valuation_natCast, padicValNat.eq_zero_of_not_dvd hnd]
+      norm_num
+    refine ⟨(n : ℚ_[p]), Nat.cast_ne_zero.mpr hn0, huval, ?_⟩
+    intro hs
+    obtain ⟨y, hy⟩ := hs
+    have hy_ne : y ≠ 0 := by
+      rintro rfl
+      rw [mul_zero] at hy
+      exact (Nat.cast_ne_zero.mpr hn0) hy
+    have hyval : y.valuation = 0 := by
+      have h : (y * y).valuation = 0 := by rw [← hy]; exact huval
+      rw [← pow_two, Padic.valuation_pow] at h
+      omega
+    have hynorm : ‖y‖ = 1 := by
+      rw [Padic.norm_eq_zpow_neg_valuation hy_ne, hyval, neg_zero, zpow_zero]
+    let Y : ℤ_[p] := ⟨y, le_of_eq hynorm⟩
+    have hYcoe : ((Y : ℤ_[p]) : ℚ_[p]) = y := rfl
+    have hYsq : Y * Y = (n : ℤ_[p]) := by
+      apply PadicInt.ext
+      rw [PadicInt.coe_mul, hYcoe, ← hy]
+      simp
+    have hnsqZ : IsSquare ((n : ZMod p)) := by
+      refine ⟨PadicInt.toZMod (p := p) Y, ?_⟩
+      have h := congrArg (PadicInt.toZMod (p := p)) hYsq
+      simp only [map_mul, map_natCast] at h
+      rw [h]
+    have hchi1 : (quadraticChar (ZMod p)) ((n : ZMod p)) = 1 :=
+      (quadraticChar_one_iff_isSquare (by rw [hnZ]; exact a.ne_zero)).mpr hnsqZ
+    rw [hnZ] at hchi1
+    linarith [ha, hchi1]
+
+-- Theorem: for a nonsquare `c` over `ℚ_[p]` there is a nonsquare `c₂` with `c * c₂` also
+-- nonsquare.
+theorem exists_not_isSquare_and_not_isSquare_mul (p : ℕ) [Fact p.Prime] {c : ℚ_[p]}
+    (hc : c ≠ 0) (hcsq : ¬ IsSquare c) :
+    ∃ c₂ : ℚ_[p], ¬ IsSquare c₂ ∧ ¬ IsSquare (c * c₂) := by
+  have _ := hcsq
+  by_cases hβ : Even c.valuation
+  · refine ⟨(p : ℚ_[p]), ?_, ?_⟩
+    · exact not_isSquare_of_odd_valuation (by rw [Padic.valuation_p]; norm_num)
+    · apply not_isSquare_of_odd_valuation
+      rw [Padic.valuation_mul hc (padic_p_ne_zero_local (p := p)), Padic.valuation_p]
+      intro h
+      obtain ⟨k, hk⟩ := hβ
+      obtain ⟨m, hm⟩ := h
+      omega
+  · obtain ⟨u, hu_ne, huval, hu⟩ := exists_nonsquare_unit p
+    refine ⟨u, hu, ?_⟩
+    apply not_isSquare_of_odd_valuation
+    rw [Padic.valuation_mul hc hu_ne, huval, add_zero]
+    exact hβ
+
+-- Theorem: two prescribed values `e₁, e₂ ∈ {±1}` of the Hilbert symbol against `c₁`,
+-- `c₂` can be realised by a single nonzero `x`, when `c₁`, `c₂`, `c₁ c₂` are all nonsquares.
+theorem exists_hilbertSym_two_prescribed {k : Type*} [Field k] [HasBilinHilbertSym k]
+    {c₁ c₂ : k} (h1 : c₁ ≠ 0) (h2 : c₂ ≠ 0)
+    (hc1 : ¬ IsSquare c₁) (hc2 : ¬ IsSquare c₂) (hc12 : ¬ IsSquare (c₁ * c₂))
+    (hnd : ∀ c : k, c ≠ 0 → ¬ IsSquare c → ∃ x : k, x ≠ 0 ∧ hilbertSym x c = -1)
+    {e₁ e₂ : ℤ} (he1 : e₁ = 1 ∨ e₁ = -1) (he2 : e₂ = 1 ∨ e₂ = -1) :
+    ∃ x : k, x ≠ 0 ∧ hilbertSym x c₁ = e₁ ∧ hilbertSym x c₂ = e₂ := by
+  obtain ⟨y, hy_ne, hy⟩ := hnd c₁ h1 hc1
+  obtain ⟨w, hw_ne, hw⟩ := hnd c₂ h2 hc2
+  obtain ⟨z, hz_ne, hz⟩ := hnd (c₁ * c₂) (mul_ne_zero h1 h2) hc12
+  have hzprod : hilbertSym z c₁ * hilbertSym z c₂ = -1 := by
+    rw [← HasBilinHilbertSym.mul_right_eq, hz]
+  have hs_or : hilbertSym y c₂ = 1 ∨ hilbertSym y c₂ = -1 :=
+    hilbertSym_eq_one_or_neg_one_of_ne_zero hy_ne h2
+  have ht_or : hilbertSym w c₁ = 1 ∨ hilbertSym w c₁ = -1 :=
+    hilbertSym_eq_one_or_neg_one_of_ne_zero hw_ne h1
+  have ha_or : hilbertSym z c₁ = 1 ∨ hilbertSym z c₁ = -1 :=
+    hilbertSym_eq_one_or_neg_one_of_ne_zero hz_ne h1
+  rcases he1 with rfl | rfl <;> rcases he2 with rfl | rfl
+  · refine ⟨w * w, mul_ne_zero hw_ne hw_ne, ?_, ?_⟩
+    · rw [HasBilinHilbertSym.mul_left_eq]
+      rcases ht_or with ht | ht <;> rw [ht] <;> norm_num
+    · rw [HasBilinHilbertSym.mul_left_eq, hw]; norm_num
+  · by_cases ht1 : hilbertSym w c₁ = 1
+    · exact ⟨w, hw_ne, ht1, hw⟩
+    · have ht' : hilbertSym w c₁ = -1 := by
+        rcases ht_or with h | h
+        · exact absurd h ht1
+        · exact h
+      by_cases hs1 : hilbertSym y c₂ = 1
+      · refine ⟨y * w, mul_ne_zero hy_ne hw_ne, ?_, ?_⟩
+        · rw [HasBilinHilbertSym.mul_left_eq, hy, ht']; norm_num
+        · rw [HasBilinHilbertSym.mul_left_eq, hs1, hw]; norm_num
+      · have hs' : hilbertSym y c₂ = -1 := by
+          rcases hs_or with h | h
+          · exact absurd h hs1
+          · exact h
+        rcases ha_or with ha | ha
+        · have hzb : hilbertSym z c₂ = -1 := by
+            have h := hzprod; rw [ha] at h; linarith
+          exact ⟨z, hz_ne, ha, hzb⟩
+        · have hzb : hilbertSym z c₂ = 1 := by
+            have h := hzprod; rw [ha] at h; linarith
+          refine ⟨y * z, mul_ne_zero hy_ne hz_ne, ?_, ?_⟩
+          · rw [HasBilinHilbertSym.mul_left_eq, hy, ha]; norm_num
+          · rw [HasBilinHilbertSym.mul_left_eq, hs', hzb]; norm_num
+  · by_cases hs1 : hilbertSym y c₂ = 1
+    · exact ⟨y, hy_ne, hy, hs1⟩
+    · have hs' : hilbertSym y c₂ = -1 := by
+        rcases hs_or with h | h
+        · exact absurd h hs1
+        · exact h
+      by_cases ht1 : hilbertSym w c₁ = 1
+      · refine ⟨y * w, mul_ne_zero hy_ne hw_ne, ?_, ?_⟩
+        · rw [HasBilinHilbertSym.mul_left_eq, hy, ht1]; norm_num
+        · rw [HasBilinHilbertSym.mul_left_eq, hs', hw]; norm_num
+      · have ht' : hilbertSym w c₁ = -1 := by
+          rcases ht_or with h | h
+          · exact absurd h ht1
+          · exact h
+        rcases ha_or with ha | ha
+        · have hzb : hilbertSym z c₂ = -1 := by
+            have h := hzprod; rw [ha] at h; linarith
+          refine ⟨y * z, mul_ne_zero hy_ne hz_ne, ?_, ?_⟩
+          · rw [HasBilinHilbertSym.mul_left_eq, hy, ha]; norm_num
+          · rw [HasBilinHilbertSym.mul_left_eq, hs', hzb]; norm_num
+        · have hzb : hilbertSym z c₂ = 1 := by
+            have h := hzprod; rw [ha] at h; linarith
+          exact ⟨z, hz_ne, ha, hzb⟩
+  · by_cases hs1 : hilbertSym y c₂ = -1
+    · exact ⟨y, hy_ne, hy, hs1⟩
+    · have hs' : hilbertSym y c₂ = 1 := by
+        rcases hs_or with h | h
+        · exact h
+        · exact absurd h hs1
+      by_cases ht1 : hilbertSym w c₁ = -1
+      · exact ⟨w, hw_ne, ht1, hw⟩
+      · have ht' : hilbertSym w c₁ = 1 := by
+          rcases ht_or with h | h
+          · exact h
+          · exact absurd h ht1
+        refine ⟨y * w, mul_ne_zero hy_ne hw_ne, ?_, ?_⟩
+        · rw [HasBilinHilbertSym.mul_left_eq, hy, ht']; norm_num
+        · rw [HasBilinHilbertSym.mul_left_eq, hs', hw]; norm_num
+
+end Prescribed
+
 end Pptc.HasseMinkowski

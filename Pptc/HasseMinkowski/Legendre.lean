@@ -1,5 +1,6 @@
 import Pptc.HasseMinkowski.HilbertSymbol.Norm
 import Pptc.HasseMinkowski.HilbertSymbol.Padic
+import Pptc.HasseMinkowski.HilbertSymbol.Real
 import Mathlib.Data.Nat.Squarefree
 import Mathlib.Data.Nat.PrimeFin
 import Mathlib.Data.Nat.ChineseRemainder
@@ -20,6 +21,7 @@ Geometrically, `t + √a` has norm `t ^ 2 - a = b * b'` in `k(√a)`, so if `b` 
 -/
 
 set_option linter.style.openClassical false
+set_option linter.style.haveILetI false
 
 namespace Pptc.HasseMinkowski
 
@@ -364,5 +366,232 @@ theorem exists_sq_mod_of_hilbertSym (a b : ℤ) (hb : Squarefree b) (p : ℕ) [F
     have hs2 : s ^ 2 = ((a : ℤ) : ZMod p) := by rw [sq, hsa]
     rw [hs2]
     ring
+
+/-! ### WP1 1.5 — the integral descent (Legendre's theorem)
+
+Serre's proof (Cours d'arithmétique, IV.3.3) that a squarefree integer `a` which is a square
+modulo every prime dividing `b` is the norm of an element of `ℚ(√b)` — equivalently that
+`(a, b)_ℚ = 1` once `(a, b)_v = 1` at every place `v`. The argument is an elementary descent on
+`|a| + |b|`: by symmetry assume `|a| ≤ |b|`; for `|b| ≤ 1` all cases are immediate, while for
+`|b| ≥ 2` CRT (`exists_sq_mod_squarefree`) produces `t` with `t ^ 2 ≡ a (mod b)`, the size bound
+`2|t| ≤ |b|` makes `b' = (t ^ 2 - a) / b` strictly smaller than `b`, the norm-transfer lemma
+`hilbertSym_eq_of_sq_sub_eq_mul` moves every local hypothesis from `b` to `b'`, and stripping the
+square class of `b'` (`exists_squarefree_mul_sq_int`) lets the induction hypothesis finish. -/
+
+/-- **Integral descent.** If the Hilbert symbol `(a, b)_v` equals `1` at every finite place and
+at the real place, for squarefree integers `a`, `b`, then `(a, b)_ℚ = 1`. -/
+-- Theorem: squarefree `a`, `b` with `(a,b)_v = 1` for all `v` have
+-- `hilbertSym (a:ℚ) (b:ℚ) = 1`.
+theorem legendre_int (a b : ℤ) (ha : Squarefree a) (hb : Squarefree b)
+    (hp : ∀ (p : ℕ) [Fact (Nat.Prime p)], hilbertSym (a : ℚ_[p]) (b : ℚ_[p]) = 1)
+    (hr : hilbertSym (a : ℝ) (b : ℝ) = 1) : hilbertSym (a : ℚ) (b : ℚ) = 1 := by
+  have H : ∀ n : ℕ, (∀ a b : ℤ, a.natAbs + b.natAbs = n →
+      Squarefree a → Squarefree b →
+      (∀ (p : ℕ) [Fact (Nat.Prime p)], hilbertSym (a : ℚ_[p]) (b : ℚ_[p]) = 1) →
+      hilbertSym (a : ℝ) (b : ℝ) = 1 → hilbertSym (a : ℚ) (b : ℚ) = 1) := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | _ n ih =>
+      intro a b hab ha hb hp hr
+      -- the descent for a pair normalized by `a.natAbs ≤ b.natAbs`
+      have main : ∀ a b : ℤ, a.natAbs + b.natAbs = n → a.natAbs ≤ b.natAbs →
+          Squarefree a → Squarefree b →
+          (∀ (p : ℕ) [Fact (Nat.Prime p)], hilbertSym (a : ℚ_[p]) (b : ℚ_[p]) = 1) →
+          hilbertSym (a : ℝ) (b : ℝ) = 1 → hilbertSym (a : ℚ) (b : ℚ) = 1 := by
+        intro a b hab hle ha hb hp hr
+        by_cases hbase : b.natAbs ≤ 1
+        · -- base case: `a, b ∈ {±1}`
+          have ha_cases : a = 1 ∨ a = -1 := by
+            have h1 : a.natAbs = 1 := by
+              have := Int.natAbs_pos.mpr ha.ne_zero
+              omega
+            rcases Int.natAbs_eq a with h | h
+            · left; rw [h, h1]; norm_num
+            · right; rw [h, h1]; norm_num
+          have hb_cases : b = 1 ∨ b = -1 := by
+            have h1 : b.natAbs = 1 := by
+              have := Int.natAbs_pos.mpr hb.ne_zero
+              omega
+            rcases Int.natAbs_eq b with h | h
+            · left; rw [h, h1]; norm_num
+            · right; rw [h, h1]; norm_num
+          rcases ha_cases with rfl | rfl <;> rcases hb_cases with rfl | rfl
+          · simpa using hilbertSym_sq_left (k := ℚ) (a := (1 : ℚ)) (b := (1 : ℚ))
+              (by norm_num) (by norm_num)
+          · simpa using hilbertSym_sq_left (k := ℚ) (a := (1 : ℚ)) (b := (-1 : ℚ))
+              (by norm_num) (by norm_num)
+          · simpa using hilbertSym_sq_right (k := ℚ) (a := (-1 : ℚ)) (b := (1 : ℚ))
+              (by norm_num) (by norm_num)
+          · exfalso
+            have hreal := hilbertSym_real_eq (a := ((-1 : ℤ) : ℝ)) (b := ((-1 : ℤ) : ℝ))
+              (by norm_num) (by norm_num)
+            rw [if_neg (by norm_num :
+              ¬ (0 < ((-1 : ℤ) : ℝ) ∨ 0 < ((-1 : ℤ) : ℝ)))] at hreal
+            rw [hreal] at hr
+            norm_num at hr
+        · -- step: `2 ≤ b.natAbs`
+          have hb2 : 2 ≤ b.natAbs := by omega
+          have hbne : b ≠ 0 := hb.ne_zero
+          have ha0 : a ≠ 0 := ha.ne_zero
+          have hloc : ∀ p : ℕ, p.Prime → (p : ℤ) ∣ b →
+              ∃ t : ℤ, (p : ℤ) ∣ t ^ 2 - a := by
+            intro p hpp hpb
+            haveI : Fact (Nat.Prime p) := ⟨hpp⟩
+            exact exists_sq_mod_of_hilbertSym a b hb p hpb (hp p)
+          obtain ⟨t, hb_dvd, htsize⟩ := exists_sq_mod_squarefree a b hb hloc
+          by_cases htsq : t ^ 2 = a
+          · -- `a` is a square
+            have haQ : (a : ℚ) ≠ 0 := by exact_mod_cast ha0
+            have hbQ : (b : ℚ) ≠ 0 := by exact_mod_cast hbne
+            refine hilbertSym_eq_one_of_sol haQ hbQ ⟨(t : ℚ), 1, 0, by simp, ?_⟩
+            have ht : ((t : ℚ)) ^ 2 = (a : ℚ) := by exact_mod_cast htsq
+            rw [ht]
+            ring
+          · -- descent
+            let b' : ℤ := (t ^ 2 - a) / b
+            have hb'mul : b' * b = t ^ 2 - a := Int.ediv_mul_cancel hb_dvd
+            have hb'ne : b' ≠ 0 := by
+              intro h
+              apply htsq
+              have h' := hb'mul
+              rw [h, zero_mul] at h'
+              exact sub_eq_zero.mp h'.symm
+            -- the strict size bound `|b'| < |b|`
+            have hBpos : 0 < b.natAbs := by omega
+            have hnum : (t ^ 2 - a).natAbs ≤ t.natAbs ^ 2 + a.natAbs := by
+              have h1 : |t ^ 2 - a| ≤ |t| ^ 2 + |a| := by
+                calc |t ^ 2 - a| = |t ^ 2 + -a| := by ring_nf
+                  _ ≤ |t ^ 2| + |-a| := abs_add_le _ _
+                  _ = |t| ^ 2 + |a| := by rw [abs_neg, abs_pow]
+              have h1Z : (((t ^ 2 - a).natAbs : ℤ)) ≤
+                  ((t.natAbs : ℤ)) ^ 2 + (a.natAbs : ℤ) := by
+                calc ((t ^ 2 - a).natAbs : ℤ) = |t ^ 2 - a| := Int.natCast_natAbs _
+                  _ ≤ |t| ^ 2 + |a| := h1
+                  _ = ((t.natAbs : ℤ)) ^ 2 + (a.natAbs : ℤ) := by
+                      rw [Int.natCast_natAbs, Int.natCast_natAbs]
+              exact_mod_cast h1Z
+            have htbZ : (2 : ℤ) * (t.natAbs : ℤ) ≤ (b.natAbs : ℤ) := by
+              simpa only [Int.natCast_natAbs] using htsize
+            have hleZ : ((a.natAbs : ℤ)) ≤ ((b.natAbs : ℤ)) := by exact_mod_cast hle
+            have hb2Z : (2 : ℤ) ≤ ((b.natAbs : ℤ)) := by exact_mod_cast hb2
+            have hstrictZ :
+                ((t.natAbs : ℤ)) ^ 2 + (a.natAbs : ℤ) < ((b.natAbs : ℤ)) ^ 2 := by
+              have h4T : 4 * ((t.natAbs : ℤ)) ^ 2 ≤ ((b.natAbs : ℤ)) ^ 2 := by
+                have h := pow_le_pow_left₀ (show (0 : ℤ) ≤ 2 * (t.natAbs : ℤ) by positivity)
+                  htbZ 2
+                nlinarith [h]
+              have hkey : 4 * (((t.natAbs : ℤ)) ^ 2 + (a.natAbs : ℤ))
+                  < 4 * ((b.natAbs : ℤ)) ^ 2 := by nlinarith [h4T, hleZ, hb2Z]
+              nlinarith [hkey]
+            have hstrict : t.natAbs ^ 2 + a.natAbs < b.natAbs ^ 2 := by
+              exact_mod_cast hstrictZ
+            have hsmallnum : (t ^ 2 - a).natAbs < b.natAbs ^ 2 := lt_of_le_of_lt hnum hstrict
+            have hnat : b'.natAbs * b.natAbs = (t ^ 2 - a).natAbs := by
+              rw [← Int.natAbs_mul, hb'mul]
+            have hb'lt : b'.natAbs < b.natAbs := by
+              have hltmul : b.natAbs * b'.natAbs < b.natAbs * b.natAbs := by
+                rw [mul_comm b.natAbs b'.natAbs, hnat]
+                exact lt_of_lt_of_eq hsmallnum (by ring)
+              exact (Nat.mul_lt_mul_left hBpos).mp hltmul
+            obtain ⟨b'', u, hb''sf, hu_ne, hb'eq⟩ := exists_squarefree_mul_sq_int b' hb'ne
+            have hsmall : a.natAbs + b''.natAbs < n := by
+              have heq : b'.natAbs = b''.natAbs * u.natAbs ^ 2 := by
+                rw [hb'eq, Int.natAbs_mul, Int.natAbs_pow]
+              have hu2 : 0 < u.natAbs ^ 2 := by
+                have : 0 < u.natAbs := Int.natAbs_pos.mpr hu_ne
+                positivity
+              have hle'' : b''.natAbs ≤ b'.natAbs := by
+                rw [heq]
+                calc b''.natAbs = b''.natAbs * 1 := (mul_one _).symm
+                  _ ≤ b''.natAbs * u.natAbs ^ 2 := Nat.mul_le_mul_left _ hu2
+              omega
+            -- transfer the local hypotheses to `(a, b'')`
+            have hp'' : ∀ (p : ℕ) [Fact (Nat.Prime p)],
+                hilbertSym (a : ℚ_[p]) (b'' : ℚ_[p]) = 1 := by
+              intro p hpinst
+              haveI : Fact (Nat.Prime p) := hpinst
+              haveI h2p : Invertible (2 : ℚ_[p]) :=
+                invertibleOfNonzero (by exact_mod_cast (show (2 : ℤ) ≠ 0 by norm_num))
+              have hbQp : (b : ℚ_[p]) ≠ 0 := by exact_mod_cast hbne
+              have hb'Qp : (b' : ℚ_[p]) ≠ 0 := by exact_mod_cast hb'ne
+              have hcast : ((t : ℚ_[p])) ^ 2 - (a : ℚ_[p])
+                  = (b : ℚ_[p]) * (b' : ℚ_[p]) := by
+                have h := congrArg (fun z : ℤ => (z : ℚ_[p])) hb'mul.symm
+                push_cast at h
+                rwa [mul_comm] at h
+              have heqp : hilbertSym (a : ℚ_[p]) (b : ℚ_[p])
+                  = hilbertSym (a : ℚ_[p]) (b' : ℚ_[p]) :=
+                hilbertSym_eq_of_sq_sub_eq_mul hbQp hb'Qp hcast
+              have huQp : (u : ℚ_[p]) ≠ 0 := by exact_mod_cast hu_ne
+              have hb'fac : (b' : ℚ_[p]) = (b'' : ℚ_[p]) * (u : ℚ_[p]) ^ 2 := by
+                have h := congrArg (fun z : ℤ => (z : ℚ_[p])) hb'eq
+                push_cast at h
+                exact h
+              have heq2 : hilbertSym (a : ℚ_[p]) (b' : ℚ_[p])
+                  = hilbertSym (a : ℚ_[p]) (b'' : ℚ_[p]) := by
+                rw [hb'fac]
+                have := hilbertSym_mul_square_eq (k := ℚ_[p]) (a := (a : ℚ_[p])) (a' := 1)
+                  (b := (b'' : ℚ_[p])) (b' := (u : ℚ_[p])) (by norm_num) huQp
+                simpa using this
+              rw [← heq2, ← heqp]
+              exact hp p
+            have hr'' : hilbertSym (a : ℝ) (b'' : ℝ) = 1 := by
+              haveI h2r : Invertible (2 : ℝ) :=
+                invertibleOfNonzero (by exact_mod_cast (show (2 : ℤ) ≠ 0 by norm_num))
+              have hbR : (b : ℝ) ≠ 0 := by exact_mod_cast hbne
+              have hb'R : (b' : ℝ) ≠ 0 := by exact_mod_cast hb'ne
+              have hcast : ((t : ℝ)) ^ 2 - (a : ℝ) = (b : ℝ) * (b' : ℝ) := by
+                have h := congrArg (fun z : ℤ => (z : ℝ)) hb'mul.symm
+                push_cast at h
+                rwa [mul_comm] at h
+              have heqp : hilbertSym (a : ℝ) (b : ℝ) = hilbertSym (a : ℝ) (b' : ℝ) :=
+                hilbertSym_eq_of_sq_sub_eq_mul hbR hb'R hcast
+              have huR : (u : ℝ) ≠ 0 := by exact_mod_cast hu_ne
+              have hb'fac : (b' : ℝ) = (b'' : ℝ) * (u : ℝ) ^ 2 := by
+                have h := congrArg (fun z : ℤ => (z : ℝ)) hb'eq
+                push_cast at h
+                exact h
+              have heq2 : hilbertSym (a : ℝ) (b' : ℝ) = hilbertSym (a : ℝ) (b'' : ℝ) := by
+                rw [hb'fac]
+                have := hilbertSym_mul_square_eq (k := ℝ) (a := (a : ℝ)) (a' := 1)
+                  (b := (b'' : ℝ)) (b' := (u : ℝ)) (by norm_num) huR
+                simpa using this
+              rw [← heq2, ← heqp]
+              exact hr
+            have hIH := ih (a.natAbs + b''.natAbs) hsmall a b'' rfl ha hb''sf hp'' hr''
+            -- transfer back over `ℚ`
+            haveI h2q : Invertible (2 : ℚ) :=
+              invertibleOfNonzero (by exact_mod_cast (show (2 : ℤ) ≠ 0 by norm_num))
+            have hbQ : (b : ℚ) ≠ 0 := by exact_mod_cast hbne
+            have hb'Q : (b' : ℚ) ≠ 0 := by exact_mod_cast hb'ne
+            have hcast : ((t : ℚ)) ^ 2 - (a : ℚ) = (b : ℚ) * (b' : ℚ) := by
+              have h := congrArg (fun z : ℤ => (z : ℚ)) hb'mul.symm
+              push_cast at h
+              rwa [mul_comm] at h
+            have heqp : hilbertSym (a : ℚ) (b : ℚ) = hilbertSym (a : ℚ) (b' : ℚ) :=
+              hilbertSym_eq_of_sq_sub_eq_mul hbQ hb'Q hcast
+            have huQ : (u : ℚ) ≠ 0 := by exact_mod_cast hu_ne
+            have hb'fac : (b' : ℚ) = (b'' : ℚ) * (u : ℚ) ^ 2 := by
+              have h := congrArg (fun z : ℤ => (z : ℚ)) hb'eq
+              push_cast at h
+              exact h
+            have heq2 : hilbertSym (a : ℚ) (b' : ℚ) = hilbertSym (a : ℚ) (b'' : ℚ) := by
+              rw [hb'fac]
+              have := hilbertSym_mul_square_eq (k := ℚ) (a := (a : ℚ)) (a' := 1)
+                (b := (b'' : ℚ)) (b' := (u : ℚ)) (by norm_num) huQ
+              simpa using this
+            rw [heqp, heq2]
+            exact hIH
+      rcases le_total a.natAbs b.natAbs with hle | hle
+      · exact main a b hab hle ha hb hp hr
+      · have hmain : hilbertSym (b : ℚ) (a : ℚ) = 1 :=
+          main b a (by omega) hle hb ha
+            (fun p hpinst => by
+              haveI : Fact (Nat.Prime p) := hpinst
+              rw [hilbertSym_comm]
+              exact hp p)
+            (by rw [hilbertSym_comm]; exact hr)
+        rwa [hilbertSym_comm] at hmain
+  exact H (a.natAbs + b.natAbs) a b rfl ha hb hp hr
 
 end Pptc.HasseMinkowski
