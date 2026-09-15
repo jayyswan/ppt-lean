@@ -41,3 +41,26 @@ Plan: by_cases p=2; p=2 uses Two's instance; p≠2 uses hilbertSym_padic_odd_mul
   Lines: even_valuation_of_isSquare 449, not_isSquare_of_odd_valuation 456,
   exists_nonsquare_unit 461, exists_not_isSquare_and_not_isSquare_mul 540,
   exists_hilbertSym_two_prescribed 561.
+
+## WP2.6 (five-variable isotropy)
+
+- NOTE: the requested `represents_weightedSumSquares_three_iff` (`represents x ↔
+  ¬IsSquare(-(b₁b₂b₃)x)`) is FALSE: over ℚ_3, ⟨1,1,1⟩ is isotropic (hilbertSym(-1)(-1)=1,
+  case00) hence represents x=-1, but -(1·1·1)·(-1)=1 is a square. Delivering instead:
+  (i) `wss2_val`, `wss3_val`, `nondegenerate_wss3`, and the implication
+  `represents_three_of_not_isSquare` (condition → represents), which is what the proof needs.
+- `wss5_val`, `isotropic_weightedSumSquares_five` and `isotropic_weightedSumSquares_of_five_le`
+  now compile with `lean_diagnostic_messages` clean (no warnings).
+  Five-var route: c1 = -(w0w1); square → explicit isotropic vector; else WP2.5 gives c2,
+  WP2.4 gives x with (x,c1)=(w0,w1) and (x,c2) = -(w2w3w4,c2); then x·w2w3w4 is nonsquare,
+  so Piece-A implication gives ⟨-w2,-w3,-w4⟩ rep x; combine the two representations into a
+  Fin 5 vector. Corollary restricts via an injection Fin 5 ↪ ι and `Function.extend`-style
+  extension by zero.
+- DONE WP2.6. lake_check Local.lean: OK, no errors or warnings; lean_verify both clean.
+  Lines: wss2_val 652, wss3_val 657, nondegenerate_wss3 663,
+  represents_three_of_not_isSquare 675, wss5_val 771, isotropic_weightedSumSquares_five 777,
+  isotropic_weightedSumSquares_of_five_le 860.
+  NOTE on the requested `represents_weightedSumSquares_three_iff` (`↔ ¬IsSquare(-(b₁b₂b₃)x)`):
+  it is FALSE (counterexample over ℚ_3: ⟨1,1,1⟩ is isotropic because hilbertSym(-1)(-1)=1,
+  so it represents x = -1, but -1·1·1·(-1) = 1 is a square).  Delivered the true implication
+  `represents_three_of_not_isSquare` instead; it is exactly what WP2.6 needs.

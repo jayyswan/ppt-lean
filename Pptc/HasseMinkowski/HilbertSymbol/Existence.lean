@@ -37,13 +37,10 @@ three facts on which the place-by-place verification rests.
 
 ## Status
 
-This file currently provides the constructive core only: the Dirichlet/CRT construction of
-`S`, `T`, `A`, `M` and the squareness/valuation lemmas that the place-by-place verification
-consumes.  The verification itself is WP3 of `Plan-v3.md`; every ingredient it needs — the
-Serre formulas `hilbertSym_padic_odd_eq` / `hilbertSym_padic_two_eq`, the global product
-identity (`almost_all_one`, `hilbertReciprocity`) and the norm criterion
-(`HilbertSymbol/Norm.lean`) — now exists in the library, so only the assembly of WP3.1–3.2
-remains.  No `sorry` is introduced.
+This file provides the Dirichlet/CRT construction of `S`, `T`, `A`, `M`, the
+squareness/valuation lemmas at each place, and the **disjoint case** of the existence
+theorem, `exists_disjoint` (WP3.1 of `Plan-v3.md`).  The general case WP3.2 is not treated
+here.  No `sorry` is introduced.
 -/
 
 set_option linter.style.openClassical false
@@ -221,6 +218,25 @@ theorem not_two_dvd_A (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = 
     (hdisj : Disjoint (S a) (T hε h1)) : ¬ 2 ∣ A hε h1 :=
   not_dvd_A_of_notMem_T hε h1 (two_notMem_T_of_disjoint hε h1 hdisj)
 
+-- Theorem: every prime of `T` occurs to the first power in `A`: `padicValNat p A = 1`.
+theorem padicValNat_A_of_mem_T (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) {p : Primes}
+    (hp : p ∈ T hε h1) : padicValNat (p : ℕ) (A hε h1) = 1 := by
+  rw [← Nat.factorization_def (A hε h1) p.2, A]
+  rw [Nat.factorization_prod_apply (g := fun t : Primes => (t : ℕ)) (S := T hε h1)
+    (fun t _ => t.2.ne_zero)]
+  have hterm : ∀ t ∈ T hε h1,
+      ((t : ℕ)).factorization (p : ℕ) = if t = p then 1 else 0 := by
+    intro t _
+    by_cases htp : t = p
+    · rw [if_pos htp, htp, Nat.factorization_def _ p.2]
+      exact padicValNat_self
+    · rw [if_neg htp, Nat.factorization_eq_zero_of_not_dvd]
+      intro hdvd
+      exact htp (Subtype.ext ((Nat.prime_dvd_prime_iff_eq p.2 t.2).mp hdvd)).symm
+  rw [Finset.sum_congr rfl hterm, Finset.sum_ite_eq' (T hε h1) p (fun _ => (1 : ℕ)),
+    if_pos hp]
+
 -- Theorem: `M = 4 · ∏_{s ∈ S} s` is divisible by `8`, because `2 ∈ S`.
 theorem eight_dvd_M (a : I → ℤ) : 8 ∣ M a := by
   rw [M]
@@ -245,6 +261,15 @@ theorem prime_not_dvd_of_lt {p : Primes} {ℓ : ℕ} (hℓ : ℓ.Prime) (hlt : (
   rcases (Nat.dvd_prime hℓ).mp h with h1 | h2
   · omega
   · omega
+
+-- Theorem: a prime different from `ℓ` does not divide the prime `ℓ`.
+theorem prime_not_dvd_of_ne {p : Primes} {ℓ : ℕ} (hℓ : ℓ.Prime) (hne : (p : ℕ) ≠ ℓ) :
+    ¬ (p : ℕ) ∣ ℓ := by
+  have hp2 : 1 < (p : ℕ) := p.2.one_lt
+  rintro h
+  rcases (Nat.dvd_prime hℓ).mp h with h1 | h2
+  · omega
+  · exact hne h2
 
 /-- Coercion of an integral square to a rational square. -/
 private lemma isSquare_ratCast_of_isSquare_intCast {p : ℕ} [Fact (Nat.Prime p)] {n : ℕ}
@@ -401,6 +426,95 @@ private lemma hilbertSym_unit_eq_parity {p : ℕ} [Fact (Nat.Prime p)] (hp : p �
   rw [hilbertSym_padic_odd_eq hp hu hb, valuation_unit_eq_zero u, padicUnit_unit u hu]
   simp [parityPow]
 
+-- Theorem: for odd `p`, if the first argument has valuation `0` then `(a,b)_p` depends only
+-- on the parity of `b`'s valuation.
+private lemma hilbertSym_val_zero_eq_parity {p : ℕ} [Fact (Nat.Prime p)] (hp : p ≠ 2)
+    {a b : ℚ_[p]} (ha : a ≠ 0) (hva : Padic.valuation a = 0) (hb : b ≠ 0) :
+    hilbertSym a b = if Even (Padic.valuation b) then 1
+      else (quadraticChar (ZMod p)) (PadicInt.toZMod (padicUnit a ha : ℤ_[p])) := by
+  have hpu : (padicUnit a ha : ℚ_[p]) = a := by
+    rw [coe_padicUnitE, hva, neg_zero, zpow_zero, mul_one]
+  have h1 := hilbertSym_unit_eq_parity hp (padicUnit a ha) hb
+  rw [hpu] at h1
+  exact h1
+
+-- Theorem: the `T`-place of the construction: for `p ∈ T`, `(a i, A·ℓ)_p = ep i p`.
+theorem hilbertSym_A_mul_ell_eq_of_mem_T (ha : ∀ i, a i ≠ 0)
+    (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
+    (hdisj : Disjoint (S a) (T hε h1)) {ℓ : ℕ} (hℓ : ℓ.Prime)
+    (hℓgt : ∀ s ∈ S a ∪ T hε h1, (s : ℕ) < ℓ)
+    (h3 : ∀ p : Primes, ∃ x : ℚ_[p], x ≠ 0 ∧ ∀ i, hilbertSym (a i : ℚ_[p]) x = ep i p)
+    {p : Primes} (hpT : p ∈ T hε h1) (i : I) :
+    hilbertSym (a i : ℚ_[p]) ((A hε h1 * ℓ : ℕ) : ℚ_[p]) = ep i p := by
+  have hpS : p ∉ S a := disjoint_right.mp hdisj hpT
+  have hp2 : (p : ℕ) ≠ 2 := by
+    intro h
+    exact hpS (by rw [show p = ⟨2, Nat.prime_two⟩ from Subtype.ext h]; exact two_in_S a)
+  have hpℓ : ¬ (p : ℕ) ∣ ℓ :=
+    prime_not_dvd_of_lt hℓ (hℓgt p (Finset.mem_union.mpr (Or.inr hpT)))
+  have hai : (a i : ℚ_[p]) ≠ 0 := by exact_mod_cast ha i
+  have hva : Padic.valuation (a i : ℚ_[p]) = 0 := by
+    rw [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S a ha hpS i]
+    norm_num
+  have hx0 : ((A hε h1 * ℓ : ℕ) : ℚ_[p]) ≠ 0 := by
+    push_cast
+    exact mul_ne_zero (by exact_mod_cast A_ne_zero hε h1) (by exact_mod_cast hℓ.ne_zero)
+  have hvx : Padic.valuation ((A hε h1 * ℓ : ℕ) : ℚ_[p]) = 1 := by
+    rw [Padic.valuation_natCast,
+      padicValNat.mul (A_ne_zero hε h1) hℓ.ne_zero, padicValNat_A_of_mem_T hε h1 hpT,
+      padicValNat.eq_zero_of_not_dvd hpℓ, add_zero]
+    norm_num
+  have hxpar : hilbertSym (a i : ℚ_[p]) ((A hε h1 * ℓ : ℕ) : ℚ_[p])
+      = (quadraticChar (ZMod (p : ℕ)))
+        (PadicInt.toZMod (padicUnit (a i : ℚ_[p]) hai : ℤ_[p])) := by
+    rw [hilbertSym_val_zero_eq_parity hp2 hai hva hx0, hvx,
+      if_neg (by decide : ¬ Even (1 : ℤ))]
+  obtain ⟨j, hj⟩ : ∃ j, ep j p = -1 := by
+    by_contra hcon
+    push Not at hcon
+    exact (ep_eq_one_iff_not_mem_T hε h1 p).mpr
+      (fun k => (hε k p).resolve_right (hcon k)) hpT
+  obtain ⟨xp, hxp0, hxp⟩ := h3 p
+  have hxpj : hilbertSym (a j : ℚ_[p]) xp = -1 := by rw [hxp j, hj]
+  have haj : (a j : ℚ_[p]) ≠ 0 := by exact_mod_cast ha j
+  have hvaj : Padic.valuation (a j : ℚ_[p]) = 0 := by
+    rw [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S a ha hpS j]
+    norm_num
+  have hodd : ¬ Even (Padic.valuation xp) := by
+    intro heven
+    rw [hilbertSym_val_zero_eq_parity hp2 haj hvaj hxp0, if_pos heven] at hxpj
+    norm_num at hxpj
+  have hchi : ep i p = (quadraticChar (ZMod (p : ℕ)))
+      (PadicInt.toZMod (padicUnit (a i : ℚ_[p]) hai : ℤ_[p])) := by
+    rw [← hxp i, hilbertSym_val_zero_eq_parity hp2 hai hva hxp0, if_neg hodd]
+  rw [hxpar, ← hchi]
+
+-- Theorem: the unit place of the construction: for `p` in neither `S`, `T` nor `{ℓ}`, the
+-- symbol `(a i, A·ℓ)_p` is `1`.
+theorem hilbertSym_A_mul_ell_eq_one_of_notMem (ha : ∀ i, a i ≠ 0)
+    (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) {ℓ : ℕ} (hℓ : ℓ.Prime)
+    {p : Primes} (hpS : p ∉ S a) (hpT : p ∉ T hε h1) (hpℓ : (p : ℕ) ≠ ℓ) (i : I) :
+    hilbertSym (a i : ℚ_[p]) ((A hε h1 * ℓ : ℕ) : ℚ_[p]) = 1 := by
+  have hp2 : (p : ℕ) ≠ 2 := by
+    intro h
+    exact hpS (by rw [show p = ⟨2, Nat.prime_two⟩ from Subtype.ext h]; exact two_in_S a)
+  have hai : (a i : ℚ_[p]) ≠ 0 := by exact_mod_cast ha i
+  have hva : Padic.valuation (a i : ℚ_[p]) = 0 := by
+    rw [Padic.valuation_intCast, is_unit_ai_of_p_notMem_S a ha hpS i]
+    norm_num
+  have hx0 : ((A hε h1 * ℓ : ℕ) : ℚ_[p]) ≠ 0 := by
+    push_cast
+    exact mul_ne_zero (by exact_mod_cast A_ne_zero hε h1) (by exact_mod_cast hℓ.ne_zero)
+  have hvx : Padic.valuation ((A hε h1 * ℓ : ℕ) : ℚ_[p]) = 0 := by
+    rw [Padic.valuation_natCast, padicValNat.mul (A_ne_zero hε h1) hℓ.ne_zero,
+      padicValNat.eq_zero_of_not_dvd (not_dvd_A_of_notMem_T hε h1 hpT),
+      padicValNat.eq_zero_of_not_dvd (prime_not_dvd_of_ne hℓ hpℓ), add_zero]
+    norm_num
+  rw [hilbertSym_val_zero_eq_parity hp2 hai hva hx0, hvx,
+    if_pos (show Even (0 : ℤ) from ⟨0, by norm_num⟩)]
+
 /-! ### The product-formula obstruction
 
 The hypotheses of `exists_disjoint` force the construction `x = A · ℓ`, but they do not
@@ -413,12 +527,11 @@ genuine obstruction: if `a > 0` and a nonzero rational `x` realises the sign pat
 -- Theorem: for `a > 0` there is no `x ≠ 0` whose Hilbert symbols against `a` are `-1` at a
 -- single prime and `1` at every other prime.
 --
--- Concretely, taking `I = Unit`, `a = 3`, `ep p = if p = 5 then -1 else 1` satisfies all
--- the hypotheses of `exists_disjoint`: `S a = {2,3}`, `T = {5}` are disjoint, `h3` holds
--- (`x = 5` at `p = 5`, `x = 1` elsewhere), and `ℓ = 29` is a prime `> max(S ∪ T)` with
--- `29 ≡ 5 [MOD 24]`.  But the conclusion would give an `x` with `(3,x)_5 = -1` and
--- `(3,x)_p = 1` for all `p ≠ 5`, which this theorem rules out.  Hence `exists_disjoint`
--- cannot be proved as stated; a product-formula hypothesis is missing.
+-- Concretely, taking `I = Unit`, `a = 3`, `ep p = if p = 5 then -1 else 1` satisfies
+-- `hε`, `h1`, `h3` and the disjointness of `S a = {2,3}` and `T = {5}`, and `ℓ = 29` is a
+-- prime `> max(S ∪ T)` with `29 ≡ 5 [MOD 24]` — but the product `∏ᶠ p, ep p` is `-1`, so the
+-- product-formula hypothesis `h2` of `exists_disjoint` fails.  Hence `h2` is genuinely
+-- necessary, not a convenience.
 theorem not_realizable_of_single_neg {a : ℚ} (ha : 0 < a) {p₀ : Primes} {x : ℚ}
     (hx : x ≠ 0)
     (hother : ∀ p : Primes, p ≠ p₀ → hilbertSym (a : ℚ_[p]) (x : ℚ_[p]) = 1)
@@ -435,6 +548,137 @@ theorem not_realizable_of_single_neg {a : ℚ} (ha : 0 < a) {p₀ : Primes} {x :
   unfold hilbertProd at hprod
   rw [hfp, hreal] at hprod
   norm_num at hprod
+
+/-! ### The `ℓ`-place and the assembly
+
+At the new prime `ℓ` we use Hilbert reciprocity.  Since `x = A·ℓ > 0`, the archimedean factor
+is `1`, so the product of all finite symbols is `1`; all finite places other than `ℓ` have
+symbol `ep i p` (cases `S`, `T`, and the unit place), and the product of the `ep i p` is `1`
+by `h2`.  Hence the symbol at `ℓ` is `1`, matching `ep i ℓ = 1`. -/
+
+-- Theorem: if two integer-valued functions on the primes agree off a single point `ℓ'`, the
+-- second is `1` at `ℓ'`, and both have product `1`, then the first is `1` at `ℓ'` as well.
+private lemma finprod_eq_one_of_eq_off {F E : Primes → ℤ} {ℓ' : Primes}
+    (hEsupp : Function.HasFiniteMulSupport E)
+    (hFE : ∀ q, q ≠ ℓ' → F q = E q) (hE : E ℓ' = 1)
+    (hprodE : (∏ᶠ q, E q) = 1) (hprodF : (∏ᶠ q, F q) = 1) : F ℓ' = 1 := by
+  let G : Primes → ℤ := fun q => if q = ℓ' then F ℓ' else 1
+  have hGsupp : Function.HasFiniteMulSupport G :=
+    (Set.finite_singleton ℓ').subset (fun q hq => by
+      by_contra hne
+      exact hq (by dsimp only [G]; rw [if_neg (by simpa using hne)]))
+  have hFG : ∀ q, F q = E q * G q := by
+    intro q
+    by_cases hq : q = ℓ'
+    · rw [hq, hE]
+      dsimp only [G]
+      rw [if_pos rfl, one_mul]
+    · dsimp only [G]
+      rw [if_neg hq, mul_one, hFE q hq]
+  have hstep : (∏ᶠ q, F q) = (∏ᶠ q, E q) * (∏ᶠ q, G q) := by
+    rw [finprod_congr hFG]
+    exact finprod_mul_distrib hEsupp hGsupp
+  have hGprod : (∏ᶠ q, G q) = F ℓ' := by
+    rw [finprod_eq_single G ℓ' (fun q hq => by dsimp only [G]; rw [if_neg hq])]
+    dsimp only [G]
+    rw [if_pos rfl]
+  rw [hprodE, one_mul, hGprod, hprodF] at hstep
+  exact hstep.symm
+
+-- Theorem: Serre's existence theorem, disjoint case (Serre III Thm 4).  If the prescribed
+-- local symbols `ep i p` are almost all `1` (`h1`), have product `1` (`h2`), are locally
+-- realisable (`h3`), and the sets `S` and `T` are disjoint, then `x = A·ℓ` realises them.
+set_option linter.unusedVariables false in
+theorem exists_disjoint {I : Type*} [Finite I] (a : I → ℤ) (ha : ∀ i, a i ≠ 0)
+    (hsq : ∀ i, Squarefree (a i))
+    (εp : I → Primes → ℤ) (hε : ∀ i p, εp i p = 1 ∨ εp i p = -1)
+    (h1 : ∀ i, ∀ᶠ p : Primes in cofinite, εp i p = 1)
+    (h2 : ∀ i, (∏ᶠ p : Primes, εp i p) = 1)
+    (h3 : ∀ p : Primes, ∃ x : ℚ_[p], x ≠ 0 ∧ ∀ i, hilbertSym (a i : ℚ_[p]) x = εp i p)
+    {ℓ : ℕ} (hℓ : ℓ.Prime) (hℓA : ℓ ≡ A hε h1 [MOD M a])
+    (hℓgt : ∀ s ∈ S a ∪ T hε h1, (s : ℕ) < ℓ) :
+    ∃ x : ℚ, x ≠ 0 ∧ ∀ i (p : Primes), hilbertSym (a i : ℚ_[p]) x = εp i p := by
+  -- `S` and `T` are automatically disjoint: a common prime would divide both `M` and `A`,
+  -- hence would divide `ℓ`, forcing it to equal the prime `ℓ`, contrary to `hℓgt`.
+  have hdisj : Disjoint (S a) (T hε h1) := by
+    rw [Finset.disjoint_iff_ne]
+    intro q hqS q' hqT hqq
+    rw [← hqq] at hqT
+    have hq1 : 1 < (q : ℕ) := q.2.one_lt
+    have hlt : (q : ℕ) < ℓ := hℓgt q (Finset.mem_union.mpr (Or.inl hqS))
+    have hqℓ : (q : ℕ) ∣ ℓ := by
+      have hpdvd : (q : ℤ) ∣ (ℓ : ℤ) - (A hε h1 : ℤ) :=
+        dvd_trans (Int.ofNat_dvd.mpr (dvd_M_of_mem_S a hqS)) (M_dvd_int hε h1 hℓA)
+      have hqA : (q : ℤ) ∣ (A hε h1 : ℤ) :=
+        Int.ofNat_dvd.mpr (dvd_A_of_mem_T hε h1 hqT)
+      have hsum : (q : ℤ) ∣ (ℓ : ℤ) := by
+        have h := dvd_add hpdvd hqA
+        rwa [sub_add_cancel] at h
+      exact Int.ofNat_dvd.mp hsum
+    rcases (Nat.dvd_prime hℓ).mp hqℓ with h1 | h1
+    · omega
+    · omega
+  refine ⟨(A hε h1 : ℚ) * (ℓ : ℚ), ?_, ?_⟩
+  · exact mul_ne_zero (by exact_mod_cast A_ne_zero hε h1) (by exact_mod_cast hℓ.ne_zero)
+  · intro i p
+    have hcast : (((A hε h1 : ℚ) * (ℓ : ℚ) : ℚ) : ℚ_[p])
+        = ((A hε h1 * ℓ : ℕ) : ℚ_[p]) := by
+      push_cast
+      ring
+    rw [hcast]
+    by_cases hpS : p ∈ S a
+    · rw [hilbertSym_A_mul_ell_eq_one_of_mem_S ha hε h1 hdisj hℓ hℓA hℓgt hpS i,
+        ep_eq_one_of_mem_S_disjoint a hε h1 hdisj hpS i]
+    · by_cases hpT : p ∈ T hε h1
+      · exact hilbertSym_A_mul_ell_eq_of_mem_T ha hε h1 hdisj hℓ hℓgt h3 hpT i
+      · by_cases hpe : (p : ℕ) = ℓ
+        · have hpeq : p = ⟨ℓ, hℓ⟩ := Subtype.ext hpe
+          rw [hpeq]
+          let F : Primes → ℤ := fun q =>
+            hilbertSym (a i : ℚ_[q]) ((A hε h1 * ℓ : ℕ) : ℚ_[q])
+          have hxq : (A hε h1 : ℚ) * (ℓ : ℚ) ≠ 0 :=
+            mul_ne_zero (by exact_mod_cast A_ne_zero hε h1)
+              (by exact_mod_cast hℓ.ne_zero)
+          have hrealX : hilbertSym (((a i : ℚ) : ℝ))
+              ((((A hε h1 : ℚ) * (ℓ : ℚ) : ℚ) : ℝ)) = 1 := by
+            have hxR : ((((A hε h1 : ℚ) * (ℓ : ℚ) : ℚ) : ℝ)) ≠ 0 := by
+              exact_mod_cast hxq
+            have haR : (((a i : ℚ) : ℝ)) ≠ 0 := by exact_mod_cast ha i
+            rw [hilbertSym_real_eq haR hxR]
+            exact if_pos (Or.inr (by
+              push_cast
+              exact mul_pos (by exact_mod_cast A_pos hε h1)
+                (by exact_mod_cast hℓ.pos)))
+          have hEℓ : εp i ⟨ℓ, hℓ⟩ = 1 := ep_eq_one_prime_of_lt hε h1 hℓ hℓgt i
+          have hEsupp : Function.HasFiniteMulSupport (εp i) :=
+            Filter.eventually_cofinite.mp (h1 i)
+          have hFeq : ∀ q, q ≠ ⟨ℓ, hℓ⟩ → F q = εp i q := by
+            intro q hq
+            have hne : (q : ℕ) ≠ ℓ := fun h => hq (Subtype.ext h)
+            by_cases hqS : q ∈ S a
+            · rw [show F q = 1 from
+                  hilbertSym_A_mul_ell_eq_one_of_mem_S ha hε h1 hdisj hℓ hℓA hℓgt hqS i,
+                show εp i q = 1 from ep_eq_one_of_mem_S_disjoint a hε h1 hdisj hqS i]
+            · by_cases hqT : q ∈ T hε h1
+              · exact hilbertSym_A_mul_ell_eq_of_mem_T ha hε h1 hdisj hℓ hℓgt h3 hqT i
+              · rw [show F q = 1 from
+                    hilbertSym_A_mul_ell_eq_one_of_notMem ha hε h1 hℓ hqS hqT hne i,
+                  show εp i q = 1 from ep_eq_one_of_not_mem_T hε h1 hqT i]
+          have hfpF : (∏ᶠ q, F q) = 1 := by
+            have hrecip := hilbertReciprocity (a i : ℚ) ((A hε h1 : ℚ) * (ℓ : ℚ))
+              (by exact_mod_cast ha i) hxq
+            rw [hrealX, mul_one] at hrecip
+            have hcongr : (∏ᶠ q : Primes, hilbertSym (((a i : ℚ) : ℚ_[q]))
+                ((((A hε h1 : ℚ) * (ℓ : ℚ) : ℚ) : ℚ_[q]))) = ∏ᶠ q, F q := by
+              refine finprod_congr (fun q => ?_)
+              dsimp only [F]
+              (congr 2; push_cast; ring)
+            rw [hcongr] at hrecip
+            exact hrecip
+          rw [hEℓ]
+          exact finprod_eq_one_of_eq_off hEsupp hFeq hEℓ (h2 i) hfpF
+        · rw [hilbertSym_A_mul_ell_eq_one_of_notMem ha hε h1 hℓ hpS hpT hpe i,
+            ep_eq_one_of_not_mem_T hε h1 hpT i]
 
 end Existence
 

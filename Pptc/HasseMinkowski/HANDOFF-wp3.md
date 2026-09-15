@@ -60,6 +60,34 @@ h2 at i is exactly ∏_p ep i p = 1, which is NOT automatic.
   `(u,b)_p = if Even b.valuation then 1 else χ(u)`.
 All compile (`lean_diagnostic_messages` clean).
 
+## Round 3 log (finishing `exists_disjoint`)
+- `padicValNat_A_of_mem_T` (via `Nat.factorization_prod_apply` + `Finset.sum_ite_eq'`): PROVED.
+- `hilbertSym_val_zero_eq_parity`, `hilbertSym_A_mul_ell_eq_of_mem_T` (T-place): PROVED.
+- `prime_not_dvd_of_ne`, `hilbertSym_A_mul_ell_eq_one_of_notMem` (unit place): PROVED.
+- NOTE: the statement pasted in the round-3 message omits `hdisj : Disjoint (S a) (T hε h1)`,
+  but the disjoint-case construction `x = A·ℓ` requires it (if `p ∈ S ∩ T` the symbol is
+  forced both to `1` and to `-1`). I keep `hdisj` (it was in the round-1 WP3.1 statement).
+- `finprod_eq_one_of_eq_off` (finprod bookkeeping): PROVED.
+- **`exists_disjoint`: PROVED** (namespace `Pptc.HasseMinkowski.Existence`), with the EXACT
+  statement from the round-3 message (no `hdisj` parameter): `hdisj` is DERIVED internally
+  from `hℓA`/`hℓgt` (a common prime of `S` and `T` would divide both `M` and `A`, hence `ℓ`,
+  contradicting `hℓgt`).  Proof: `x = A·ℓ`; S/T/unit cases as lemmas; ℓ-place via
+  `hilbertReciprocity` + `h2` and `finprod_eq_one_of_eq_off`.
+- `lean_diagnostic_messages`: clean.
+
+## FINAL (WP3.1 COMPLETE)
+`exists_disjoint` PROVED at line 592; `lean_verify` axioms = propext, Classical.choice,
+Quot.sound; `lake_check` → OK (no errors or warnings).  Statement matches the round-3
+message exactly (no `hdisj` parameter; derived inside).
+Key declaration lines (all proved):
+222 `padicValNat_A_of_mem_T`; 249 `dvd_M_of_mem_S`; 257 `prime_not_dvd_of_lt`;
+266 `prime_not_dvd_of_ne`; 310 `isSquare_A_mul_ell_of_mem_S`;
+363 `hilbertSym_A_mul_ell_eq_one_of_mem_S` (S-place); 418 `hilbertSym_unit_eq_parity`;
+431 `hilbertSym_val_zero_eq_parity`; 442 `hilbertSym_A_mul_ell_eq_of_mem_T` (T-place);
+495 `hilbertSym_A_mul_ell_eq_one_of_notMem` (unit place); 561 `finprod_eq_one_of_eq_off`;
+592 `exists_disjoint`.
+Plus round-1/2 helpers (S,T,A,M, `not_realizable_of_single_neg`, etc.).
+
 ### Round 2 declaration lines
 233 `dvd_M_of_mem_S`, 241 `prime_not_dvd_of_lt`, 250 `isSquare_ratCast_of_isSquare_intCast`,
 259 `isSquare_odd_natCast_of_mod`, 265 `isSquare_two_natCast_of_mod8`,
