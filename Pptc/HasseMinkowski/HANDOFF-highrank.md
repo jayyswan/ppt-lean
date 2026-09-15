@@ -117,6 +117,17 @@ Not delivered: `diagonal_hm_five_le`, `isotropic_of_five_le_card`.
 4. **General index**: reindex by `Fintype.equivFin ι` (a linear isometry
    `(ι → ℚ) ≃ₗ (Fin n → ℚ)` sending `w` to `w ∘ e.symm`), then apply the `Fin n` version.
 
+## ROUND 4 — WP5.3 COMPLETE
+- `lake_check Pptc/HasseMinkowski/HighRank.lean`: **OK - no errors or warnings.**
+- Proved: `isSquare_div_of_close_padic'` (L567), `exists_rat_value_close` (L579),
+  `diagonal_hm_ge_four` (L776, rank >= 4 by strong induction, base 4 from `h4`),
+  `diagonal_hm_five_le` (L923), `rankFiveLeDiagonalHM` (L932).
+- Key fixes this round: `Nat.Primes` bundling `⟨p, hp.out⟩`; `Fin.castLE` embedding;
+  explicit `w := ...` for `isotropic_of_three_units`; `field_simp` -> explicit
+  `mul_div_assoc`/`div_self`; `Fin.cons_zero`/`cons_succ` + `ring` in the `W` value split.
+- Solution to the p=2 case: `isSquare_div_of_close_padic'` with threshold factor
+  `(if p = 2 then 2^(-2) else 1)`, so no dependent rewrite of the completion type is needed.
+
 ## ROUND 3 (resume)
 - `Padic.norm_eq_zpow_neg_valuation`, `Padic.valuation_ratCast`, `padicValRat_def`,
   `padicValNat.eq_zero_of_not_dvd` are the norm-1 API (pattern copied from
