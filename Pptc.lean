@@ -8,3 +8,4 @@ import Pptc.Gamma
 import Pptc.Level24Alg
 import Pptc.Level24
 import Pptc.Jacobi
+import Pptc.Nonic.Nonic

@@ -5,7 +5,7 @@ import Mathlib.Topology.Algebra.Order.Archimedean
 import Mathlib.Topology.NhdsWithin
 import Mathlib.Topology.Constructions.SumProd
 
-/-! # Pptc.NonicWitness — the real-collision witness for the nonic Tschirnhaus reduction
+/-! # Pptc.Nonic.NonicWitness — the real-collision witness for the nonic Tschirnhaus reduction
 
 This file proves WP2 and WP3 of `PLAN-nonic-tschirnhaus.md`:
 

@@ -1,8 +1,8 @@
-import Pptc.NonicPowerLaw
-import Pptc.NonicRecovery
+import Pptc.Nonic.NonicPowerLaw
+import Pptc.Nonic.NonicRecovery
 import Pptc.HasseMinkowski.Main
 
-/-! # Pptc.NonicMeyer — degree-9 trace form and the Tschirnhaus reduction
+/-! # Pptc.Nonic.NonicMeyer — degree-9 trace form and the Tschirnhaus reduction
 
 This file models, at degree `9`, the companion-matrix trace apparatus of
 `Pptc.DegreeSeven` (`companion9'` here plays the role of `companion7'`), and reduces the

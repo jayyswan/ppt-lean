@@ -1,6 +1,6 @@
-import Pptc.NonicPowerLaw
-import Pptc.NonicRecovery
-import Pptc.NonicTschirnhaus
+import Pptc.Nonic.NonicPowerLaw
+import Pptc.Nonic.NonicRecovery
+import Pptc.Nonic.NonicTschirnhaus
 
 /-! # The main nonic constructibility theorem
 
@@ -15,7 +15,7 @@ nonconstant rational polynomials recovers `β` from `y` (`nonic_recovery`).
 
 The only missing ingredient is Meyer's theorem (Hasse--Minkowski): the trace form
 `Q f = Tr (f ^ 2)` on `ℚ[x]/(q)` restricts to a 6-dimensional indefinite rational
-quadratic form with a rational isotropic vector. This is proved in `Pptc.NonicTschirnhaus`
+quadratic form with a rational isotropic vector. This is proved in `Pptc.Nonic.NonicTschirnhaus`
 (via `Pptc.HasseMinkowski.meyer`), and `exists_tschirnhaus9` below discharges it. -/
 
 open Polynomial Matrix
@@ -29,7 +29,7 @@ degree-`≤ 6` rational Tschirnhaus transformation `ψ`, the trace form `Tr(f(ψ
 space of degree-`≤ 6` polynomials becomes indefinite, so by Meyer's theorem
 (Hasse–Minkowski, `Pptc.HasseMinkowski.meyer`) it has a nonzero rational isotropic vector
 `f`; the pair `(ψ, f)` then kills the `X^8` and `X^7` coefficients of the resolvent
-(`Pptc.TschirnhausDatum`, proved in `Pptc.NonicTschirnhaus`). -/
+(`Pptc.TschirnhausDatum`, proved in `Pptc.Nonic.NonicTschirnhaus`). -/
 theorem exists_tschirnhaus9 {q : Polynomial ℚ} (hmon : q.Monic) (h9 : q.natDegree = 9)
     (hsep : q.Separable)
     (hrel : ∃ z : ℂ, (q.map (algebraMap ℚ ℂ)).eval z = 0 ∧ z.im ≠ 0) :

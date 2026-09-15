@@ -1,10 +1,10 @@
-import Pptc.NonicMeyer
-import Pptc.NonicWitness
+import Pptc.Nonic.NonicMeyer
+import Pptc.Nonic.NonicWitness
 
-/-! # Pptc.NonicTschirnhaus — WP4: `spread` is the Gram form, and the final datum
+/-! # Pptc.Nonic.NonicTschirnhaus — WP4: `spread` is the Gram form, and the final datum
 
-This file closes the link between the real quadratic form `spread` of `Pptc.NonicWitness`
-and the algebraic Gram form `gramOf` of `Pptc.NonicMeyer`.
+This file closes the link between the real quadratic form `spread` of `Pptc.Nonic.NonicWitness`
+and the algebraic Gram form `gramOf` of `Pptc.Nonic.NonicMeyer`.
 
 For rational `ψ : Fin 7 → ℚ` and `v : Fin 6 → ℚ` put `A = aeval (companion9' q) (polyOfVec9 ψ)`
 and `p = ∑_k v_k X^{k+1}`.  Evaluating the inner function underlying `spread` at a complex

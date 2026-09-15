@@ -1,6 +1,6 @@
 import Pptc.DegreeSeven
 
-/-! # Pptc.NonicResolvent — degree-9 companion-matrix / resolvent infrastructure
+/-! # Pptc.Nonic.NonicResolvent — degree-9 companion-matrix / resolvent infrastructure
 
 A mechanical generalisation of the degree-7 companion-matrix development in
 `Pptc.DegreeSeven` to degree `9`: the generic companion matrix `companion9'`, the real

@@ -1,6 +1,6 @@
-import Pptc.NonicResolvent
+import Pptc.Nonic.NonicResolvent
 
-/-! # Pptc.NonicPowerLaw — the rational resolvent step for the nonic
+/-! # Pptc.Nonic.NonicPowerLaw — the rational resolvent step for the nonic
 
 If `q` is a rational polynomial with real root `β`, and the resolvent `φ (companion9 q)` has
 a characteristic polynomial whose `X^8` and `X^7` coefficients vanish, then `y = φ β`
