@@ -211,4 +211,22 @@ theorem exists_rat_close_vec {S : Finset Nat.Primes}
       le_add_of_nonneg_left (norm_nonneg _)
     exact lt_of_le_of_lt hsingle (lt_of_le_of_lt hle hq₁)
 
+/-! ### The rank-four input of the high-rank induction
+
+The rank-`n ≥ 5` induction of Serre IV.2 bottoms out at rank 4, so `HighRank.lean` is stated
+relative to the following `Prop`, which is exactly the diagonal rank-four Hasse–Minkowski
+theorem that `RankFour.lean` (WP4.2) proves.  Keeping it as an explicit hypothesis lets the
+high-rank induction be developed and checked independently of the rank-four proof. -/
+
+/-- Diagonal rank-four Hasse–Minkowski over `ℚ`: a diagonal rank-four form with nonzero
+rational weights that is isotropic over every `p`-adic completion and over `ℝ` is isotropic
+over `ℚ`.  This is the WP4.2 statement, recorded as a `Prop` so that the rank-`≥ 5`
+induction can be stated against it. -/
+def RankFourDiagonalHM : Prop :=
+  ∀ w : Fin 4 → ℚ, (∀ i, w i ≠ 0) →
+    (∀ (p : ℕ) [Fact (Nat.Prime p)],
+      (weightedSumSquares ℚ_[p] (fun i => (w i : ℚ_[p]))).Isotropic) →
+    (weightedSumSquares ℝ (fun i => (w i : ℝ))).Isotropic →
+    (weightedSumSquares ℚ w).Isotropic
+
 end Pptc.HasseMinkowski
