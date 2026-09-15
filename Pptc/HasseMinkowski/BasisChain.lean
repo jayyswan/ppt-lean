@@ -11,6 +11,10 @@ import Mathlib.Tactic
 /-!
 # Chains of orthogonal bases (WiN7 `Chain.lean`: the definitions)
 
+> **FROZEN (Plan-v3 §0.2).** Off the v3 route: correct as far as it goes, but do not edit,
+> extend, import, or "fix" this file. The v3 development needs no Hasse-invariant
+> well-definedness (every form over `ℚ` and its completions diagonalizes).
+
 This file holds the sorry-free *definitions* ported from WiN7's `QuadraticForm/Chain.lean`:
 `Module.Basis.IsContiguous`, `Module.Basis.Chain`, and the named residual
 `Pptc.HasseMinkowski.ChainHypothesis` (WiN7's `chainOfNondegenerate`).  It sits *below*

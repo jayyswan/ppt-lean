@@ -34,17 +34,15 @@ which some `e_{i,p}` equals `-1`, the construction produces
 valuation `1` at every prime of `T` and valuation `0` at the remaining primes — exactly the
 three facts on which the place-by-place verification rests.
 
-## Status / remaining gap
+## Status
 
-The place-by-place verification itself (WiN7 `existence_disjoint` and the two `…_of_int`
-statements) is **not** reachable from the current library: it requires the general Serre
-formula `hilbertSym.padic_odd_eq` / `two_adic_eq` and the global product identity
-`hilbertSym.almost_all_one` / `prod_eq_one`, none of which are proved locally
-(`HilbertSymbol/Padic.lean` currently contains only the two-units case `00`; see
-`HANDOFF-hilbertpadic.md`).  Upstream those statements are themselves `sorry`.  Accordingly
-this file ports everything they *consume* — the Dirichlet/CRT construction, the squareness
-at `S`, and the valuation computations at `T` and its complement — and documents the
-missing ingredients rather than introducing `sorry`.
+This file currently provides the constructive core only: the Dirichlet/CRT construction of
+`S`, `T`, `A`, `M` and the squareness/valuation lemmas that the place-by-place verification
+consumes.  The verification itself is WP3 of `Plan-v3.md`; every ingredient it needs — the
+Serre formulas `hilbertSym_padic_odd_eq` / `hilbertSym_padic_two_eq`, the global product
+identity (`almost_all_one`, `hilbertReciprocity`) and the norm criterion
+(`HilbertSymbol/Norm.lean`) — now exists in the library, so only the assembly of WP3.1–3.2
+remains.  No `sorry` is introduced.
 -/
 
 set_option linter.style.openClassical false

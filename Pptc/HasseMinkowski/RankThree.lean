@@ -23,12 +23,12 @@ Hilbert-symbol arguments that the ternary criterion produces, the argument is:
    (the finite places `ℚ_[p]` and the archimedean place `ℝ`);
 4. the local–global statement `HilbertSymLocalGlobal` then yields `(σ, τ)_ℚ = 1`.
 
-The only gap to the unconditional statement `isotropic_of_rank_three` of
-`Pptc/HasseMinkowski/Targets.lean` is step 4: `HilbertSymLocalGlobal` is the Hasse norm
-theorem for quadratic extensions of `ℚ` (equivalently, Hasse–Minkowski for the conic
-`z² = σ x² + τ y²`), which is not available in this project.  It is recorded here as an
-explicit hypothesis, exactly as `RankCriteria.lean` records the well-definedness of
-`hasseMinkowskiInv`.  Every declaration below is sorry-free.
+Step 4, `HilbertSymLocalGlobal`, is the Hasse norm theorem for quadratic extensions of `ℚ`
+(equivalently, Hasse–Minkowski for the conic `z² = σ x² + τ y²`); it is the rank-three
+local–global principle and is **proved** by elementary Legendre descent in
+`Pptc/HasseMinkowski/Legendre.lean` (`hilbertSymLocalGlobal`), which also derives the
+unconditional `isotropic_of_rank_three'`.  It is kept here as an explicit hypothesis so the
+reduction below is independent of the descent proof.  Every declaration below is sorry-free.
 
 ## Main results
 
@@ -42,14 +42,14 @@ namespace Pptc.HasseMinkowski
 
 /-! ### The isolated local–global input for the Hilbert symbol -/
 
-/-- **The missing input.**  A global Hilbert symbol `(A, B)_ℚ` is trivial as soon as its
+/-- **Legendre's theorem.**  A global Hilbert symbol `(A, B)_ℚ` is trivial as soon as its
 base changes `(A, B)_v` are trivial at every place `v` of `ℚ` (every prime `p` and the
 archimedean place `ℝ`).
 
-This is the Hasse norm theorem for the quadratic extension `ℚ(√B)` (or `√A`); it is
-equivalent to Hasse–Minkowski for the plane conic `z² = A x² + B y²`, so it is *not*
-provable from the material in this project.  It is stated as a `def`/`Prop` so that the
-rank-three reduction below can be proved unconditionally and the gap is explicit. -/
+This is the Hasse norm theorem for the quadratic extension `ℚ(√B)` (or `√A`) and the
+rank-three local–global principle; it is proved by elementary descent (CRT plus the norm
+criterion) in `Pptc/HasseMinkowski/Legendre.lean` (`hilbertSymLocalGlobal`).  It is kept as a
+`def`/`Prop` here so that the rank-three reduction does not depend on that proof. -/
 def HilbertSymLocalGlobal : Prop :=
   ∀ A B : ℚ, A ≠ 0 → B ≠ 0 →
     (∀ (p : ℕ) [Fact (Nat.Prime p)], hilbertSym (A : ℚ_[p]) (B : ℚ_[p]) = 1) →
@@ -172,8 +172,8 @@ no information about the *global* symbol `(A,B)_ℚ` (see
 local–global principle for the diagonal ternary form `⟨-A,-B,1⟩`, i.e. Legendre's theorem /
 the Hasse norm theorem for quadratic extensions of `ℚ`; the equivalence
 `hilbertSymLocalGlobal_iff_rankThreeDiagonal` below pins this down precisely.  That principle
-is not available in this project (nor in the reference WiN7, where it is a `sorry`), so it is
-recorded here rather than proved. -/
+is now proved by Legendre descent in `Pptc/HasseMinkowski/Legendre.lean`; it is recorded here
+as a hypothesis so that this file does not depend on that proof. -/
 
 /-- The rank-three local–global principle for diagonal ternary forms of the shape
 `⟨-A,-B,1⟩` over `ℚ` (equivalently, solvability of the conic `z² = A x² + B y²`): local

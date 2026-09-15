@@ -8,6 +8,10 @@ import Pptc.HasseMinkowski.QuadraticForm.Restriction
 /-!
 # Orthogonal reflections and rank-one isometry transitivity
 
+> **FROZEN (Plan-v3 §0.2).** Off the v3 route: correct as far as it goes, but do not edit,
+> extend, import, or "fix" this file. Witt cancellation is not needed once every form over
+> `ℚ` and its completions is diagonalized.
+
 Mathlib 4.33 has no Witt extension/cancellation theorem, so the Witt-theoretic layer has to
 be built here.  This file supplies the base ingredient: for a quadratic form `Q` over a field
 `k` with `2` invertible, and a vector `a` with `Q a ≠ 0`, the *orthogonal reflection* in the

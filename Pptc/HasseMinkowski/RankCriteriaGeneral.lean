@@ -9,6 +9,10 @@ import Mathlib.LinearAlgebra.QuadraticForm.IsometryEquiv
 /-!
 # Rank criteria for the Hasse–Minkowski invariant, general (non-diagonal) forms
 
+> **FROZEN (Plan-v3 §0.2).** Off the v3 route: correct as far as it goes, but do not edit,
+> extend, import, or "fix" this file. The v3 development states every criterion for explicit
+> diagonal weights instead.
+
 `Pptc/HasseMinkowski/RankCriteria.lean` proves the rank criteria for a *diagonal* form
 `⟨w₀, w₁⟩` / `⟨w₀, w₁, w₂⟩`.  This file lifts them to an arbitrary nondegenerate quadratic form
 over a field `k`, stated in terms of a chosen `k`-basis `b`:

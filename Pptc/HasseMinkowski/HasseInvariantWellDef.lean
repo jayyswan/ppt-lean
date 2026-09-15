@@ -10,6 +10,11 @@ import Mathlib.LinearAlgebra.QuadraticForm.IsometryEquiv
 /-!
 # Well-definedness of the Hasse–Minkowski invariant
 
+> **FROZEN (Plan-v3 §0.2).** Off the v3 route: correct as far as it goes, but do not edit,
+> extend, import, or "fix" this file. The v3 development needs no Hasse-invariant
+> well-definedness (every form over `ℚ` and its completions diagonalizes), so the `hconn`
+> hypotheses below are irrelevant to it.
+
 WiN7's `QuadraticForm/HasseMinkowskiInvariant.lean` states that the Hasse–Minkowski invariant
 `ε(w) = ∏_{i<j} (wᵢ, wⱼ)_k` of a diagonal form depends only on the isometry class of the form
 (`hasseMinkowskiInvAux.eq_of_equivalent`), and deduces well-definedness of `hasseMinkowskiInv`

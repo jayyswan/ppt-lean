@@ -11,6 +11,10 @@ import Mathlib.LinearAlgebra.QuadraticForm.Radical
 /-!
 # Chains of orthogonal bases, and the failure of the diagonal connectivity hypothesis
 
+> **FROZEN (Plan-v3 §0.2).** Off the v3 route: correct as far as it goes, but do not edit,
+> extend, import, or "fix" this file. The v3 development needs no Hasse-invariant
+> well-definedness (every form over `ℚ` and its completions diagonalizes).
+
 `HasseInvariantWellDef.lean` reduces the well-definedness of the Hasse–Minkowski invariant to a
 single explicit hypothesis `hconn`:
 

@@ -11,6 +11,10 @@ import Mathlib.LinearAlgebra.Projection
 /-!
 # Orthogonal complements and restrictions of quadratic forms
 
+> **FROZEN (Plan-v3 §0.2).** Off the v3 route: correct as far as it goes, but do not edit,
+> extend, import, or "fix" this file. The v3 development needs neither orthogonal
+> complements nor restriction of quadratic forms.
+
 Mathlib 4.33 provides the orthogonal complement of a *bilinear* form
 (`LinearMap.BilinForm.orthogonal`) together with the whole dimension theory around it
 (`finrank_orthogonal`, `orthogonal_orthogonal`, `isCompl_orthogonal_*`).  It also has
