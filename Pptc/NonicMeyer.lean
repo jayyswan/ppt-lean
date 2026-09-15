@@ -394,6 +394,96 @@ theorem trace_traceZeroPol (q : ℚ[X]) (v : Fin 6 → ℚ) :
     smul_eq_mul]
   ring
 
+/-! ### The Gram identification `Tr (f_v²) = v ⬝ (gramTraceZero ⬝ v)`
+
+This is Gap 1 of the plan: the quadratic form attached to `gramTraceZero` is exactly the
+trace form in the `traceZeroPol` coordinates. -/
+
+-- Theorem: the square of the shifted monomial sum expands into the Gram basis.
+theorem sum_shift_sq (v : Fin 6 → ℚ) :
+    (∑ k : Fin 6, C (v k) * X ^ (k.val + 1)) ^ 2
+      = ∑ i : Fin 6, ∑ j : Fin 6, C (v i * v j) * X ^ (i.val + j.val + 2) := by
+  rw [pow_two, Finset.sum_mul]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun j _ => ?_)
+  rw [mul_mul_mul_comm, ← Polynomial.C_mul, ← pow_add,
+    show (i.val + 1) + (j.val + 1) = i.val + j.val + 2 from by omega]
+
+-- Theorem: `gramTraceZero` is the matrix of the trace form in `traceZeroPol` coordinates.
+theorem trace_sq_traceZeroPol (q : ℚ[X]) (v : Fin 6 → ℚ) :
+    Matrix.trace ((aeval (companion9' q) (traceZeroPol q v)) ^ 2)
+      = ∑ i, ∑ j, v i * gramTraceZero q i j * v j := by
+  set p : ℚ[X] := ∑ k : Fin 6, C (v k) * X ^ (k.val + 1) with hp
+  set c : ℚ := (∑ k : Fin 6, v k * ps9 q (k.val + 1)) / 9 with hc
+  have hf : traceZeroPol q v = p - C c := by rw [traceZeroPol, hp, hc]
+  have hp2 : p ^ 2 = ∑ i : Fin 6, ∑ j : Fin 6,
+      C (v i * v j) * X ^ (i.val + j.val + 2) := by
+    rw [hp]; exact sum_shift_sq v
+  have hp2a : aeval (companion9' q) (p ^ 2)
+      = ∑ i : Fin 6, ∑ j : Fin 6, (v i * v j) • (companion9' q) ^ (i.val + j.val + 2) := by
+    rw [hp2, map_sum]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [map_sum]
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    rw [map_mul, map_pow, Polynomial.aeval_X, Polynomial.aeval_C,
+      Algebra.algebraMap_eq_smul_one, Matrix.smul_mul, Matrix.one_mul]
+  have hp2t : Matrix.trace (aeval (companion9' q) (p ^ 2))
+      = ∑ i : Fin 6, ∑ j : Fin 6, v i * v j * ps9 q (i.val + j.val + 2) := by
+    rw [hp2a, Matrix.trace_sum]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [Matrix.trace_sum]
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    rw [Matrix.trace_smul, smul_eq_mul, ps9]
+  have hpt : Matrix.trace (aeval (companion9' q) p) = 9 * c := by
+    rw [hp, trace_aeval_sum_shift, hc]
+    ring
+  have hsq : (p - C c) ^ 2 = p ^ 2 - C (c + c) * p + C c * C c := by
+    rw [Polynomial.C_add]
+    ring
+  have hCcp : aeval (companion9' q) (C (c + c) * p)
+      = (c + c) • aeval (companion9' q) p := by
+    rw [map_mul, Polynomial.aeval_C, Algebra.algebraMap_eq_smul_one, Matrix.smul_mul,
+      Matrix.one_mul]
+  have hCcc : aeval (companion9' q) (C c * C c)
+      = (c * c) • (1 : Matrix (Fin 9) (Fin 9) ℚ) := by
+    simp only [map_mul, Polynomial.aeval_C, Algebra.algebraMap_eq_smul_one, Matrix.smul_mul,
+      Matrix.one_mul, smul_smul]
+  have hexp : aeval (companion9' q) (p ^ 2 - C (c + c) * p + C c * C c)
+      = aeval (companion9' q) (p ^ 2) - (c + c) • aeval (companion9' q) p
+        + (c * c) • (1 : Matrix (Fin 9) (Fin 9) ℚ) := by
+    rw [map_add, map_sub, hCcp, hCcc]
+  have htr : Matrix.trace (aeval (companion9' q) ((p - C c) ^ 2))
+      = (∑ i : Fin 6, ∑ j : Fin 6, v i * v j * ps9 q (i.val + j.val + 2)) - 9 * c ^ 2 := by
+    rw [hsq, hexp, Matrix.trace_add, Matrix.trace_sub, Matrix.trace_smul, Matrix.trace_smul,
+      smul_eq_mul, smul_eq_mul, Matrix.trace_one, Fintype.card_fin, hp2t, hpt]
+    ring
+  have hA : ∀ i j : Fin 6,
+      v i * (ps9 q (i.val + j.val + 2) - ps9 q (i.val + 1) * ps9 q (j.val + 1) / 9) * v j
+        = v i * v j * ps9 q (i.val + j.val + 2)
+          - (v i * ps9 q (i.val + 1)) * (v j * ps9 q (j.val + 1)) / 9 := by
+    intro i j; ring
+  have hsq1 : (∑ k : Fin 6, v k * ps9 q (k.val + 1)) ^ 2
+      = ∑ i : Fin 6, ∑ j : Fin 6,
+          (v i * ps9 q (i.val + 1)) * (v j * ps9 q (j.val + 1)) := by
+    rw [pow_two, Finset.sum_mul_sum]
+  have h9 : 9 * ((∑ k : Fin 6, v k * ps9 q (k.val + 1)) / 9) ^ 2
+      = (∑ k : Fin 6, v k * ps9 q (k.val + 1)) ^ 2 / 9 := by ring
+  have hfin : (∑ i : Fin 6, ∑ j : Fin 6, v i * gramTraceZero q i j * v j)
+      = (∑ i : Fin 6, ∑ j : Fin 6, v i * v j * ps9 q (i.val + j.val + 2))
+        - 9 * c ^ 2 := by
+    rw [hc]
+    simp only [gramTraceZero]
+    rw [h9, hsq1]
+    simp_rw [hA, Finset.sum_sub_distrib, Finset.sum_div]
+  rw [← map_pow, hf, htr, ← hfin]
+
+-- Theorem: the Gram matrix of the trace form is symmetric.
+theorem gramTraceZero_symm (q : ℚ[X]) : (gramTraceZero q)ᵀ = gramTraceZero q := by
+  ext i j
+  simp only [Matrix.transpose_apply, gramTraceZero, Nat.add_comm, Nat.add_assoc]
+  ring
+
 /-! ### Assembly: the isotropic trace vector gives the Tschirnhaus pair -/
 
 -- Theorem: given a rational `f` of degree between `1` and `6` with `Tr f = Tr f² = 0`, the
@@ -413,43 +503,80 @@ theorem exists_tschirnhaus9_of_isotropic {q : ℚ[X]} (hmon : q.Monic) (h9 : q.n
   · simpa using hcoeff.1
   · simpa using hcoeff.2
 
-/-! ### The remaining gap
+/-- The trace condition on a general Tschirnhaus pair `(ψ, f)`: `Tr N = Tr N² = 0` for
+`N = aeval (companion9' q) (f.comp ψ)`.  By Newton's identities (`charpoly` coefficients
+`8` and `7` of an `9 × 9` matrix are `-Tr N` and `(Tr N² - (Tr N)²)/2`) this is equivalent
+to the vanishing of the `X^8`/`X^7` resolvent coefficients used in `exists_tschirnhaus9`. -/
+def TschirnhausDatum (q : ℚ[X]) : Prop :=
+  ∃ ψ f : ℚ[X], ψ.natDegree ≤ 6 ∧ 1 ≤ ψ.natDegree ∧ f.natDegree ≤ 6 ∧ 1 ≤ f.natDegree ∧
+    Matrix.trace (aeval (companion9' q) (f.comp ψ)) = 0 ∧
+    Matrix.trace ((aeval (companion9' q) (f.comp ψ)) ^ 2) = 0
 
-Everything in this file is proved.  To deduce `exists_tschirnhaus9` one still needs the
-existence of the isotropic vector fed into `exists_tschirnhaus9_of_isotropic`.  In the
-trace-form formulation this is two facts, neither of which is available in Mathlib at
-Lean 4.33:
+-- Theorem: a Tschirnhaus pair whose composite is trace-isotropic gives the Tschirnhaus
+-- datum of `exists_tschirnhaus9`.  This is the general (`ψ ≠ X`) form of the reduction.
+theorem exists_tschirnhaus9_of_isotropic_comp {q ψ f : ℚ[X]} (hmon : q.Monic)
+    (h9 : q.natDegree = 9) (hsep : q.Separable)
+    (hψ : ψ.natDegree ≤ 6) (hψ1 : 1 ≤ ψ.natDegree) (hf : f.natDegree ≤ 6)
+    (hf1 : 1 ≤ f.natDegree)
+    (h1 : Matrix.trace (aeval (companion9' q) (f.comp ψ)) = 0)
+    (h2 : Matrix.trace ((aeval (companion9' q) (f.comp ψ)) ^ 2) = 0) :
+    ∃ ψ₀ φ : ℚ[X], ψ₀.natDegree ≤ 6 ∧ 1 ≤ ψ₀.natDegree ∧
+      φ.natDegree ≤ 6 ∧ 1 ≤ φ.natDegree ∧
+      ((aeval (companion9' q) (φ.comp ψ₀)).charpoly).coeff 8 = 0 ∧
+      ((aeval (companion9' q) (φ.comp ψ₀)).charpoly).coeff 7 = 0 := by
+  have hcoeff := charpoly_aeval_coeff_8_7_eq_zero hmon h9 hsep h1 h2
+  exact ⟨ψ, f, hψ, hψ1, hf, hf1, hcoeff.1, hcoeff.2⟩
 
-1. **The Gram identification.** With `M = companion9' q` and `s_m = ps9 q m`, the
-   parametrisation `traceZeroPol` of `{f : deg ≤ 6, Tr f = 0}` satisfies
+-- Theorem: the Tschirnhaus datum (a general `ψ`) is exactly what `exists_tschirnhaus9`
+-- needs.  The converse also holds, by Newton's identities.
+theorem exists_tschirnhaus9_of_datum {q : ℚ[X]} (hmon : q.Monic) (h9 : q.natDegree = 9)
+    (hsep : q.Separable) (hd : TschirnhausDatum q) :
+    ∃ ψ φ : ℚ[X], ψ.natDegree ≤ 6 ∧ 1 ≤ ψ.natDegree ∧
+      φ.natDegree ≤ 6 ∧ 1 ≤ φ.natDegree ∧
+      ((aeval (companion9' q) (φ.comp ψ)).charpoly).coeff 8 = 0 ∧
+      ((aeval (companion9' q) (φ.comp ψ)).charpoly).coeff 7 = 0 := by
+  obtain ⟨ψ, f, hψ, hψ1, hf, hf1, h1, h2⟩ := hd
+  exact exists_tschirnhaus9_of_isotropic_comp hmon h9 hsep hψ hψ1 hf hf1 h1 h2
 
-   ```
-   theorem trace_sq_traceZeroPol (q : ℚ[X]) (v : Fin 6 → ℚ) :
-       Matrix.trace ((aeval (companion9' q) (traceZeroPol q v)) ^ 2)
-         = ∑ i, ∑ j, v i * gramTraceZero q i j * v j
-   ```
+/-! ### The remaining gap, and the falsity of the `ψ = X` formulation
 
-   so that `Matrix.toQuadraticForm' (gramTraceZero q) : QuadraticForm ℚ (Fin 6 → ℚ)` is
-   the trace form in these coordinates.
+**Gap 1 is proved**: `trace_sq_traceZeroPol` identifies `Matrix.toQuadraticForm' (gramTraceZero q)`
+on `Fin 6 → ℚ` with the trace form in the `traceZeroPol` coordinates of `{deg ≤ 6, Tr = 0}`.
 
-2. **Indefiniteness of the trace form.** For a monic separable nonic `q` with a nonreal
-   root, the form of (1) is indefinite over `ℝ`:
+**Gap 2 as previously stated is FALSE.**  The `ψ = X` subspace need not carry an indefinite
+form.  Explicit counterexample:
 
-   ```
-   theorem indefinite_gramTraceZero (q : ℚ[X]) (hmon : q.Monic) (h9 : q.natDegree = 9)
-       (hsep : q.Separable)
-       (hrel : ∃ z : ℂ, (q.map (algebraMap ℚ ℂ)).eval z = 0 ∧ z.im ≠ 0) :
-       Indefinite (QuadraticForm.baseChange ℝ (Matrix.toQuadraticForm' (gramTraceZero q)))
-   ```
+  `q = (X² + 1)(X + 13)(X + 12)(X + 3)(X + 2)(X - 2)(X - 8)(X - 11)`
 
-   This is Hermite's signature theorem for the trace form (`r₂ ≥ 3` by a dimension count,
-   `r₂ ∈ {1,2}` by the real-collision/interpolation argument of `NOTES-nonic-meyer.md`).
+is monic, separable, of degree 9, with the nonreal roots `±i`.  Its Gram matrix
+`gramTraceZero q` has leading principal minors
 
-Given (1) and (2), `Pptc.HasseMinkowski.meyer` (rank `6 ≥ 5`, `Isotropic` returns a
-nonzero `v` with `Q v = 0`) yields `v ≠ 0`, `Tr (traceZeroPol q v) = 0` and
-`Tr ((traceZeroPol q v) ^ 2) = 0`; with `1 ≤ (traceZeroPol q v).natDegree` (from
-`coeff_traceZeroPol` and `v ≠ 0`) and `traceZeroPol_natDegree_le`, the hypothesis of
-`exists_tschirnhaus9_of_isotropic` is met. -/
+  `504, 17062416, 7177780688000, 1120883224656340000000 / 9`,
+  `… , 705355934905388066193936000000000000000`,
+
+all positive, so the form is **positive definite**: `Tr (f²) > 0` for every nonzero `f` with
+`f.natDegree ≤ 6` and `Tr f = 0`.  Hence
+
+  `¬ Indefinite (QuadraticForm.baseChange ℝ (Matrix.toQuadraticForm' (gramTraceZero q)))`.
+
+So the correct statement must allow a Tschirnhaus transformation `ψ ≠ X`.  The relevant
+subspace is `{φ (ψ x) : deg φ ≤ 6} ∩ {Tr = 0}`, and `NOTES-nonic-meyer.md` §2.2/§4 chooses
+`ψ` to make its trace form indefinite: `ψ = X` when `r₂ ≥ 3` (dimension count on Hermite's
+signature), and a real-collision `ψ` when `r₂ ∈ {1,2}`.  For the counterexample above
+(`r₂ = 1`, seven real roots) the collision choice is required.
+
+The two facts still needed to close `exists_tschirnhaus9` are therefore:
+
+1. **The Gram identification for a general `ψ`** — reduce to `trace_sq_traceZeroPol` after
+   reparametrising `{φ (ψ x) : deg φ ≤ 6} ∩ {Tr = 0}`;
+
+2. **Existence of an isotropic trace vector for a suitable rational `ψ`** (the
+   real-collision + openness/density argument of `NOTES-nonic-meyer.md`, or Hermite's
+   signature theorem for the trace form), which then feeds
+   `exists_tschirnhaus9_of_isotropic_comp` / `exists_tschirnhaus9_of_datum`.
+
+With those, `Pptc.HasseMinkowski.meyer` (rank `6 ≥ 5`) produces the nonzero isotropic `v`,
+and `traceZeroPol`/`coeff_traceZeroPol`/`trace_traceZeroPol` give the datum. -/
 
 end
 
