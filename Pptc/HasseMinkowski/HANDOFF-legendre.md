@@ -54,3 +54,19 @@ using hilbertSym_eq_one_iff_isNorm + QuadraticAlgebra.norm_mul + star.
 - [DONE] `lake_check Pptc/HasseMinkowski/Legendre.lean` => OK - no errors or warnings.
   `legendre_int` at line 385. No helpers added (only local `main` inside the induction step).
   Round 3 complete.
+
+## Round 4: WP1.6 hilbertSymLocalGlobal + isotropic_of_rank_three'
+
+- [start] Read RankThree.lean for HilbertSymLocalGlobal / isotropic_of_rank_three signatures.
+  Then append two theorems in Legendre.lean, import Pptc.HasseMinkowski.RankThree.
+- Added import RankThree (no cycle). hilbertSymLocalGlobal: square-class NF of A,B via 1.4,
+  legendre_int on (a,b), transfer local hyps by hilbertSym_mul_square_eq at each place.
+  isotropic_of_rank_three' := isotropic_of_rank_three hilbertSymLocalGlobal Q hr hQ hQ'.
+  Issues fixed: specialize hlocp p before rewriting; `open Module` for `finrank`.
+  lean_diagnostic_messages clean. Running final lake_check.
+- [DONE] `lake_check Pptc/HasseMinkowski/Legendre.lean` => OK - no errors or warnings.
+  hilbertSymLocalGlobal at line 610, isotropic_of_rank_three' at line 654. WP1.6 complete.
+  NOTE for later: RankThree.lean could import Legendre.lean and drop the `hloc` hypothesis
+  (isotropic_of_rank_three unconditional / its `HilbertSymLocalGlobal` def could be replaced),
+  but RankThree must then no longer be imported by Legendre to avoid a cycle — restructure by
+  moving isotropic_of_rank_three' (or Legendre) into the import order. Do not edit now.

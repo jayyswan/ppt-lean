@@ -1,6 +1,8 @@
 import Pptc.HasseMinkowski.HilbertSymbol.Norm
 import Pptc.HasseMinkowski.HilbertSymbol.Padic
 import Pptc.HasseMinkowski.HilbertSymbol.Real
+import Pptc.HasseMinkowski.RankThree
+import Mathlib.LinearAlgebra.Dimension.Constructions
 import Mathlib.Data.Nat.Squarefree
 import Mathlib.Data.Nat.PrimeFin
 import Mathlib.Data.Nat.ChineseRemainder
@@ -26,6 +28,7 @@ set_option linter.style.haveILetI false
 namespace Pptc.HasseMinkowski
 
 open Classical
+open Module
 
 /-- If `t ^ 2 - a = b * b'` with `b` and `b'` nonzero, then `(a, b)_k = (a, b')_k`: the two
 second arguments differ by the norm of `t + √a` in `k(√a)`, and being a norm from `k(√a)` is
@@ -593,5 +596,64 @@ theorem legendre_int (a b : ℤ) (ha : Squarefree a) (hb : Squarefree b)
             (by rw [hilbertSym_comm]; exact hr)
         rwa [hilbertSym_comm] at hmain
   exact H (a.natAbs + b.natAbs) a b rfl ha hb hp hr
+
+/-! ### WP1 1.6 — the rank-three local–global principle
+
+With `legendre_int` in hand we can discharge the hypothesis that `RankThree.lean` isolated:
+a global Hilbert symbol `(A, B)_ℚ` is `1` as soon as all its localizations are.  The reduction
+from arbitrary nonzero `A`, `B` to squarefree integers is the square-class normal form 1.4, and
+the local hypotheses are moved along the same square factors by `hilbertSym_mul_square_eq`. -/
+
+/-- **Legendre's theorem / Hasse norm theorem for `ℚ(√B)`.** If `(A, B)_v = 1` at every place
+`v` of `ℚ` (every prime `p` and `v = ∞`), then `(A, B)_ℚ = 1`. -/
+-- Theorem: the local–global principle for the Hilbert symbol over `ℚ`.
+theorem hilbertSymLocalGlobal : HilbertSymLocalGlobal := by
+  intro A B hA hB hlocp hlocR
+  obtain ⟨a, ha, s, hs, hAeq⟩ := exists_squarefree_mul_sq A hA
+  obtain ⟨b, hb, t, ht, hBeq⟩ := exists_squarefree_mul_sq B hB
+  have hmain : hilbertSym (a : ℚ) (b : ℚ) = 1 := by
+    refine legendre_int a b ha hb ?_ ?_
+    · intro p hpinst
+      haveI : Fact (Nat.Prime p) := hpinst
+      have hp' : hilbertSym (A : ℚ_[p]) (B : ℚ_[p]) = 1 := hlocp p
+      have hArep : (A : ℚ_[p]) = (a : ℚ_[p]) * (s : ℚ_[p]) ^ 2 := by
+        have h := congrArg (fun z : ℚ => (z : ℚ_[p])) hAeq
+        push_cast at h
+        exact h
+      have hBrep : (B : ℚ_[p]) = (b : ℚ_[p]) * (t : ℚ_[p]) ^ 2 := by
+        have h := congrArg (fun z : ℚ => (z : ℚ_[p])) hBeq
+        push_cast at h
+        exact h
+      rw [hArep, hBrep] at hp'
+      rw [hilbertSym_mul_square_eq (a := (a : ℚ_[p])) (a' := (s : ℚ_[p]))
+        (b := (b : ℚ_[p])) (b' := (t : ℚ_[p]))
+        (by exact_mod_cast hs) (by exact_mod_cast ht)] at hp'
+      exact hp'
+    · have hArep : (A : ℝ) = (a : ℝ) * (s : ℝ) ^ 2 := by
+        have h := congrArg (fun z : ℚ => (z : ℝ)) hAeq
+        push_cast at h
+        exact h
+      have hBrep : (B : ℝ) = (b : ℝ) * (t : ℝ) ^ 2 := by
+        have h := congrArg (fun z : ℚ => (z : ℝ)) hBeq
+        push_cast at h
+        exact h
+      rw [hArep, hBrep] at hlocR
+      rw [hilbertSym_mul_square_eq (a := (a : ℝ)) (a' := (s : ℝ))
+        (b := (b : ℝ)) (b' := (t : ℝ))
+        (by exact_mod_cast hs) (by exact_mod_cast ht)] at hlocR
+      exact hlocR
+  calc hilbertSym A B
+      = hilbertSym ((a : ℚ) * s ^ 2) ((b : ℚ) * t ^ 2) := by rw [hAeq, hBeq]
+    _ = hilbertSym (a : ℚ) (b : ℚ) :=
+        hilbertSym_mul_square_eq (a := (a : ℚ)) (a' := s) (b := (b : ℚ)) (b' := t) hs ht
+    _ = 1 := hmain
+
+/-- **Rank-three local–global principle (unconditional).** A nondegenerate quadratic form of
+rank three over `ℚ` that is isotropic over every completion is isotropic over `ℚ`. -/
+-- Theorem: unconditional rank-three Hasse–Minkowski over `ℚ`.
+theorem isotropic_of_rank_three' {V : Type*} [AddCommGroup V] [Module ℚ V]
+    [FiniteDimensional ℚ V] (Q : QuadraticForm ℚ V) (hr : finrank ℚ V = 3)
+    (hQ : Q.Nondegenerate) (hQ' : EverywhereLocallyIsotropic Q) : Isotropic Q :=
+  isotropic_of_rank_three hilbertSymLocalGlobal Q hr hQ hQ'
 
 end Pptc.HasseMinkowski

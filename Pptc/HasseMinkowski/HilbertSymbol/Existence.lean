@@ -6,6 +6,7 @@ Authors: Pptc contributors
 import Pptc.HasseMinkowski.HilbertSymbol.Defs
 import Pptc.HasseMinkowski.HilbertSymbol.Padic
 import Pptc.HasseMinkowski.HilbertSymbol.Real
+import Pptc.HasseMinkowski.HilbertSymbol.Reciprocity
 import Pptc.HasseMinkowski.Padics.Squares
 import Pptc.HasseMinkowski.RatSquares
 import Mathlib.NumberTheory.LSeries.PrimesInAP
@@ -159,6 +160,109 @@ theorem M_ne_zero (a : I → ℤ) : M a ≠ 0 := by
   rw [Finset.prod_ne_zero_iff]
   intro s _
   exact s.2.ne_zero
+
+/-! ### WP3.1 sub-lemmas: the auxiliary prime `ℓ`
+
+The construction `x = A · ℓ` needs `ℓ` to be a prime larger than every prime of `S ∪ T`
+and congruent to `A` modulo `M`.  These lemmas record the elementary consequences of those
+two hypotheses: `ℓ ∉ T` (hence `ε_{i,ℓ} = 1`), the congruence `M ∣ ℓ - A`, and the
+divisibility of `A` by exactly the primes of `T`. -/
+
+-- Theorem: a prime `ℓ` that exceeds every prime of `S ∪ T` is not in `T`.
+theorem prime_notMem_T_of_lt (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) {ℓ : ℕ} (hℓ : ℓ.Prime)
+    (hℓgt : ∀ s ∈ S a ∪ T hε h1, (s : ℕ) < ℓ) : (⟨ℓ, hℓ⟩ : Primes) ∉ T hε h1 := by
+  intro hmem
+  exact absurd (hℓgt _ (Finset.mem_union.mpr (Or.inr hmem))) (lt_irrefl ℓ)
+
+-- Theorem: a prime `ℓ` that exceeds every prime of `S ∪ T` satisfies `ε_{i,ℓ} = 1` for
+-- every `i`.
+theorem ep_eq_one_prime_of_lt (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) {ℓ : ℕ} (hℓ : ℓ.Prime)
+    (hℓgt : ∀ s ∈ S a ∪ T hε h1, (s : ℕ) < ℓ) (i : I) : ep i ⟨ℓ, hℓ⟩ = 1 :=
+  ep_eq_one_of_not_mem_T hε h1 (prime_notMem_T_of_lt hε h1 hℓ hℓgt) i
+
+-- Theorem: `M a` divides `ℓ - A` as integers; equivalently `(ℓ : ℤ) ≡ A [ZMOD M]`.
+theorem M_dvd_int (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) {ℓ : ℕ}
+    (hℓA : ℓ ≡ A hε h1 [MOD M a]) :
+    (M a : ℤ) ∣ (ℓ : ℤ) - (A hε h1 : ℤ) := by
+  have h : (M a : ℤ) ∣ (A hε h1 : ℤ) - (ℓ : ℤ) := hℓA.dvd
+  have h2 : (M a : ℤ) ∣ -((A hε h1 : ℤ) - (ℓ : ℤ)) := h.neg_right
+  rwa [neg_sub] at h2
+
+-- Theorem: every prime of `T` divides `A`.
+theorem dvd_A_of_mem_T (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) {p : Primes}
+    (hp : p ∈ T hε h1) : (p : ℕ) ∣ A hε h1 := by
+  rw [A]
+  exact Finset.dvd_prod_of_mem (fun t : Primes => (t : ℕ)) hp
+
+-- Theorem: a prime outside `T` does not divide `A`.
+theorem not_dvd_A_of_notMem_T (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1) {p : Primes}
+    (hp : p ∉ T hε h1) : ¬ (p : ℕ) ∣ A hε h1 := by
+  rw [A]
+  intro hdvd
+  obtain ⟨t, ht, hpt⟩ :=
+    (p.2.prime.dvd_finsetProd_iff (fun t : Primes => (t : ℕ))).mp hdvd
+  have hpt_eq : p = t := Subtype.ext ((Nat.prime_dvd_prime_iff_eq p.2 t.2).mp hpt)
+  exact hp (by simpa [hpt_eq] using ht)
+
+-- Theorem: disjointness of `S` and `T` puts `2` outside `T`.
+theorem two_notMem_T_of_disjoint (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
+    (hdisj : Disjoint (S a) (T hε h1)) : (⟨2, Nat.prime_two⟩ : Primes) ∉ T hε h1 :=
+  disjoint_left.mp hdisj (two_in_S a)
+
+-- Theorem: disjointness of `S` and `T` makes `A` odd.
+theorem not_two_dvd_A (hε : ∀ i : I, ∀ p : Primes, ep i p = 1 ∨ ep i p = -1)
+    (h1 : ∀ i : I, ∀ᶠ p : Primes in cofinite, ep i p = 1)
+    (hdisj : Disjoint (S a) (T hε h1)) : ¬ 2 ∣ A hε h1 :=
+  not_dvd_A_of_notMem_T hε h1 (two_notMem_T_of_disjoint hε h1 hdisj)
+
+-- Theorem: `M = 4 · ∏_{s ∈ S} s` is divisible by `8`, because `2 ∈ S`.
+theorem eight_dvd_M (a : I → ℤ) : 8 ∣ M a := by
+  rw [M]
+  have hdvd : 2 ∣ ∏ s ∈ S a, (s : ℕ) :=
+    Finset.dvd_prod_of_mem (fun s : Primes => (s : ℕ)) (two_in_S a)
+  obtain ⟨c, hc⟩ := hdvd
+  exact ⟨c, by rw [hc]; ring⟩
+
+/-! ### The product-formula obstruction
+
+The hypotheses of `exists_disjoint` force the construction `x = A · ℓ`, but they do not
+constrain the *product* of the prescribed values `ep i p`.  The lemma below shows this is a
+genuine obstruction: if `a > 0` and a nonzero rational `x` realises the sign pattern that is
+`-1` at a single prime `p₀` and `1` at every other finite place, then Hilbert reciprocity
+(whose archimedean factor is `1` because `a > 0`) is violated.  Thus no version of
+`exists_disjoint` without a hypothesis `∏ᶠ p, ep i p = 1` can be true. -/
+
+-- Theorem: for `a > 0` there is no `x ≠ 0` whose Hilbert symbols against `a` are `-1` at a
+-- single prime and `1` at every other prime.
+--
+-- Concretely, taking `I = Unit`, `a = 3`, `ep p = if p = 5 then -1 else 1` satisfies all
+-- the hypotheses of `exists_disjoint`: `S a = {2,3}`, `T = {5}` are disjoint, `h3` holds
+-- (`x = 5` at `p = 5`, `x = 1` elsewhere), and `ℓ = 29` is a prime `> max(S ∪ T)` with
+-- `29 ≡ 5 [MOD 24]`.  But the conclusion would give an `x` with `(3,x)_5 = -1` and
+-- `(3,x)_p = 1` for all `p ≠ 5`, which this theorem rules out.  Hence `exists_disjoint`
+-- cannot be proved as stated; a product-formula hypothesis is missing.
+theorem not_realizable_of_single_neg {a : ℚ} (ha : 0 < a) {p₀ : Primes} {x : ℚ}
+    (hx : x ≠ 0)
+    (hother : ∀ p : Primes, p ≠ p₀ → hilbertSym (a : ℚ_[p]) (x : ℚ_[p]) = 1)
+    (hp₀ : hilbertSym (a : ℚ_[p₀]) (x : ℚ_[p₀]) = -1) : False := by
+  have ha0 : a ≠ 0 := ne_of_gt ha
+  have hxR : (x : ℝ) ≠ 0 := Rat.cast_ne_zero.mpr hx
+  have haR : (a : ℝ) ≠ 0 := Rat.cast_ne_zero.mpr ha0
+  have hreal : hilbertSym (a : ℝ) (x : ℝ) = 1 := by
+    rw [hilbertSym_real_eq haR hxR]
+    exact if_pos (Or.inl (by exact_mod_cast ha))
+  have hprod : hilbertProd a x = 1 := hilbertReciprocity a x ha0 hx
+  have hfp : (∏ᶠ p : Primes, hilbertSym (a : ℚ_[p]) (x : ℚ_[p])) = -1 := by
+    rw [finprod_eq_single _ p₀ hother, hp₀]
+  unfold hilbertProd at hprod
+  rw [hfp, hreal] at hprod
+  norm_num at hprod
 
 end Existence
 
