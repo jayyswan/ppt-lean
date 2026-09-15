@@ -1,4 +1,44 @@
-# HANDOFF WP3.1 — disjoint case of Serre existence theorem
+# HANDOFF WP3 — Serre existence theorem
+
+## Round 4: WP3.2 (general existence theorem `exists_rat_hilbertSym`)
+Goal (namespace `Pptc.HasseMinkowski.Existence`):
+```lean
+theorem exists_rat_hilbertSym {I} [Finite I] (a : I → ℚ) (ha) (ε) (εR)
+    (h1 : ∀ i, {p | ε i p ≠ 1}.Finite)
+    (h2 : ∀ i, (∏ᶠ p, ε i p) * εR i = 1)
+    (h3 : ∀ p, ∃ x, x ≠ 0 ∧ ∀ i, hilbertSym (a i) x = ε i p)
+    (h3R : ∃ x : ℝ, x ≠ 0 ∧ ∀ i, hilbertSym (a i : ℝ) x = εR i) :
+    ∃ x : ℚ, x ≠ 0 ∧ (∀ i p, hilbertSym (a i) x = ε i p) ∧
+      ∀ i, hilbertSym (a i : ℝ) x = εR i
+```
+Plan: reduce to squarefree integers `α`; approximate local points `x_p` at `S α` by `x'`
+with `x'/x_p` square in `ℚ_[p]` and sign matching the real witness; set
+`η i p = ε i p * (α i, x')_p`; apply `exists_disjoint`; finish with `x = x' * y`.
+Log entries appended below (Round 4).
+- `hilbertSym_eq_one_or_neg_one`, `hilbertSym_mul_sq_left`: PROVED.
+- `exists_rat_local_squares` (weak approximation + local square classes + sign control):
+  PROVED.  Statement uses `x : (p : S) → ℚ_[p]` (S-indexed, avoids elaboration blowup).
+- `hilbertSym_cast_eq` (Int-cast vs rational-cast): PROVED.
+- **`exists_rat_hilbertSym` (WP3.2, general case): PROVED.**  Namespace
+  `Pptc.HasseMinkowski.Existence`.  Proof: reduce `a` to squarefree `α` (step 1);
+  local points `z p` and real point `xR` (step 2); `exists_rat_local_squares` produces `x'`
+  with sign matching `xR` and `x'/z p` a local square (step 3); define
+  `η i p = ε i p * (α i, x')_p` (step 4) with `hηε/hη1/hη2/hη3`, and `η i p = 1` on `S α`
+  (`hη_S_one`) which yields `Nat.Coprime (A hηε hη1) (M α)` for Dirichlet; apply
+  `exists_disjoint` (step 5); finish with `x = x' * y` (step 6), using
+  `hilbertReciprocity` for the real place and `(α i, y)_ℝ = 1`.
+- Note: the reduction to the correct real sign uses that `h3R`'s real witness and `x'`
+  have the same sign (via `rat` approximation with chosen sign `r = ±1`).
+- `lean_diagnostic_messages`: clean.
+
+## FINAL STATUS (WP3 complete: 3.1 + 3.2)
+Declaration lines in `Pptc/HasseMinkowski/HilbertSymbol/Existence.lean`:
+595 `exists_disjoint` (WP3.1, a : I → ℤ); 694 `hilbertSym_eq_one_or_neg_one`;
+703 `hilbertSym_mul_sq_left`; 711 `exists_rat_local_squares` (weak approximation + local
+square classes + sign control); 814 `hilbertSym_cast_eq`; 823 `exists_rat_hilbertSym`
+(WP3.2, general case, a : I → ℚ, with the real place).
+`lean_verify`: axioms = propext, Classical.choice, Quot.sound; `lake_check` OK (no errors
+or warnings).  No `sorry`/`axiom`; ≤100-char lines; targeted imports only.
 
 ## UPDATE (round 2): corrected theorem with `h2`
 Caller confirmed the missing hypothesis and re-issued the target WITH

@@ -7,6 +7,9 @@ import Pptc.HasseMinkowski.HilbertSymbol.Defs
 import Pptc.HasseMinkowski.HilbertSymbol.Padic
 import Pptc.HasseMinkowski.HilbertSymbol.Real
 import Pptc.HasseMinkowski.HilbertSymbol.Reciprocity
+import Pptc.HasseMinkowski.HilbertSymbol.Local
+import Pptc.HasseMinkowski.Legendre
+import Pptc.HasseMinkowski.RatApproximation
 import Pptc.HasseMinkowski.Padics.Squares
 import Pptc.HasseMinkowski.RatSquares
 import Mathlib.NumberTheory.LSeries.PrimesInAP
@@ -679,6 +682,381 @@ theorem exists_disjoint {I : Type*} [Finite I] (a : I → ℤ) (ha : ∀ i, a i 
           exact finprod_eq_one_of_eq_off hEsupp hFeq hEℓ (h2 i) hfpF
         · rw [hilbertSym_A_mul_ell_eq_one_of_notMem ha hε h1 hℓ hpS hpT hpe i,
             ep_eq_one_of_not_mem_T hε h1 hpT i]
+
+/-! ### WP3.2: the general existence theorem
+
+We now drop the disjointness assumption.  The proof reduces `a` to squarefree integers,
+approximates the local realisations by a rational `x'` whose quotients are local squares,
+shifts the prescription by `(α i, x')`, and applies the disjoint-case
+`exists_disjoint` to the shifted prescription. -/
+
+-- Theorem: a nonzero Hilbert symbol is `1` or `-1`.
+theorem hilbertSym_eq_one_or_neg_one {k : Type*} [Field k] {a b : k} (ha : a ≠ 0)
+    (hb : b ≠ 0) : hilbertSym a b = 1 ∨ hilbertSym a b = -1 := by
+  rcases hilbertSym_eq_one_or a b with h | h | h
+  · exact Or.inl h
+  · exact absurd ((hilbertSym_eq_zero_iff a b).mp h) (by rw [not_or]; exact ⟨ha, hb⟩)
+  · exact Or.inr h
+
+-- Theorem: multiplying the first argument of the Hilbert symbol by a nonzero square does not
+-- change it.
+theorem hilbertSym_mul_sq_left {k : Type*} [Field k] {a s b : k} (hs : s ≠ 0) :
+    hilbertSym (a * s ^ 2) b = hilbertSym a b := by
+  have h := hilbertSym_mul_square_eq (a := a) (a' := s) (b := b) (b' := 1) hs one_ne_zero
+  simpa using h
+
+-- Theorem: simultaneous weak approximation at the places of `S`, realising the local square
+-- classes.  Given nonzero `p`-adic targets `x p` and a nonzero real `r`, there is `x' : ℚ`
+-- with the sign of `r` and with `x' / x p` a square in `ℚ_[p]` for every `p ∈ S`.
+theorem exists_rat_local_squares (S : Finset Primes) (hS : S.Nonempty)
+    (x : (p : S) → ℚ_[p]) (hx : ∀ p, x p ≠ 0) {r : ℝ} (hr : r ≠ 0) :
+    ∃ x' : ℚ, x' ≠ 0 ∧ (0 < r ↔ 0 < (x' : ℝ)) ∧
+      ∀ p (hp : p ∈ S), IsSquare ((x' : ℚ_[p]) / x ⟨p, hp⟩) := by
+  let δ : S → ℝ := fun p => ‖x p‖ / 4
+  have hδpos : ∀ p, 0 < δ p := fun p => by
+    dsimp only [δ]
+    exact div_pos (norm_pos_iff.mpr (hx p)) (by norm_num)
+  let T : Finset ℝ := (S.attach.image δ) ∪ {1, |r| / 2}
+  have hTne : T.Nonempty := ⟨1, Finset.mem_union_right _ (Finset.mem_insert_self 1 _)⟩
+  set ε : ℝ := T.min' hTne with hεdef
+  have hεpos : 0 < ε := by
+    rw [hεdef]
+    have hmem := Finset.min'_mem T hTne
+    rcases Finset.mem_union.mp hmem with h | h
+    · obtain ⟨p, _, hp⟩ := Finset.mem_image.mp h
+      rw [← hp]
+      exact hδpos p
+    · rcases Finset.mem_insert.mp h with h1 | h1
+      · rw [h1]; norm_num
+      · rw [Finset.mem_singleton.mp h1]
+        exact div_pos (abs_pos.mpr hr) (by norm_num)
+  have hεδ : ∀ p (hp : p ∈ S), ε ≤ δ ⟨p, hp⟩ := fun p hp =>
+    Finset.min'_le T (δ ⟨p, hp⟩) (Finset.mem_union_left _
+      (Finset.mem_image.mpr ⟨⟨p, hp⟩, Finset.mem_attach S ⟨p, hp⟩, rfl⟩))
+  have hεr : ε ≤ |r| / 2 :=
+    Finset.min'_le T (|r| / 2)
+      (Finset.mem_union_right _ (Finset.mem_insert_of_mem (Finset.mem_singleton_self _)))
+  obtain ⟨x', hsum⟩ := Rat.approximation' hεpos (r, x)
+  have hclose : ∀ p (hp : p ∈ S), ‖x ⟨p, hp⟩ - (x' : ℚ_[p])‖ < δ ⟨p, hp⟩ := by
+    intro p hp
+    have hmem : (⟨p, hp⟩ : S) ∈ Finset.attach S := Finset.mem_attach S ⟨p, hp⟩
+    have h1 : ‖x ⟨p, hp⟩ - (x' : ℚ_[p])‖ ≤
+        Finset.sum (Finset.attach S) (fun n => ‖x n - (x' : ℚ_[n.1.1])‖) :=
+      Finset.single_le_sum (f := fun n : S => ‖x n - (x' : ℚ_[n.1.1])‖)
+        (fun i _ => norm_nonneg _) hmem
+    have h2 : Finset.sum (Finset.attach S) (fun n => ‖x n - (x' : ℚ_[n.1.1])‖) ≤
+        ‖r - (x' : ℝ)‖ + Finset.sum (Finset.attach S)
+          (fun n => ‖x n - (x' : ℚ_[n.1.1])‖) :=
+      le_add_of_nonneg_left (norm_nonneg _)
+    exact lt_of_lt_of_le (lt_of_le_of_lt (le_trans h1 h2) hsum) (hεδ p hp)
+  have hx'0 : x' ≠ 0 := by
+    intro h0
+    rcases hS with ⟨p, hp⟩
+    have hcl := hclose p hp
+    rw [h0] at hcl
+    dsimp only [δ] at hcl
+    simp only [Rat.cast_zero, sub_zero] at hcl
+    have := norm_pos_iff.mpr (hx ⟨p, hp⟩)
+    linarith
+  have hreal : ‖r - (x' : ℝ)‖ < |r| / 2 := by
+    have h1 : ‖r - (x' : ℝ)‖ ≤ ‖r - (x' : ℝ)‖ + Finset.sum (Finset.attach S)
+        (fun n => ‖x n - (x' : ℚ_[n.1.1])‖) :=
+      le_add_of_nonneg_right (Finset.sum_nonneg fun _ _ => norm_nonneg _)
+    rw [Real.norm_eq_abs]
+    exact lt_of_lt_of_le (lt_of_le_of_lt h1 hsum) hεr
+  have hsign1 : 0 < r → 0 < (x' : ℝ) := by
+    intro hr0
+    have hlt := hreal
+    rw [Real.norm_eq_abs, abs_lt] at hlt
+    rw [abs_of_pos hr0] at hlt
+    linarith [hlt.1]
+  have hsign2 : r < 0 → (x' : ℝ) < 0 := by
+    intro hr0
+    have hlt := hreal
+    rw [Real.norm_eq_abs, abs_lt] at hlt
+    rw [abs_of_neg hr0] at hlt
+    linarith [hlt.2]
+  have hsign : 0 < r ↔ 0 < (x' : ℝ) := by
+    refine ⟨hsign1, fun hx0 => ?_⟩
+    rcases lt_trichotomy r 0 with h | h | h
+    · exact absurd (hsign2 h) (not_lt.mpr hx0.le)
+    · exact absurd h hr
+    · exact h
+  refine ⟨x', hx'0, hsign, ?_⟩
+  intro p hp
+  have hd : dist ((x' : ℚ_[p]) / x ⟨p, hp⟩) 1 < 1 / 4 := by
+    have heq : (x' : ℚ_[p]) / x ⟨p, hp⟩ - 1
+        = ((x' : ℚ_[p]) - x ⟨p, hp⟩) / x ⟨p, hp⟩ := by
+      rw [div_sub_one]
+      exact hx ⟨p, hp⟩
+    calc dist ((x' : ℚ_[p]) / x ⟨p, hp⟩) 1
+        = ‖((x' : ℚ_[p]) - x ⟨p, hp⟩) / x ⟨p, hp⟩‖ := by rw [dist_eq_norm, heq]
+      _ = ‖(x' : ℚ_[p]) - x ⟨p, hp⟩‖ / ‖x ⟨p, hp⟩‖ := norm_div _ _
+      _ < (‖x ⟨p, hp⟩‖ / 4) / ‖x ⟨p, hp⟩‖ := by
+            refine div_lt_div_of_pos_right ?_ (norm_pos_iff.mpr (hx ⟨p, hp⟩))
+            rw [norm_sub_rev]
+            exact hclose p hp
+      _ = 1 / 4 := by
+            rw [div_div,
+              div_eq_iff (mul_ne_zero (by norm_num) (norm_ne_zero_iff.mpr (hx ⟨p, hp⟩)))]
+            ring
+  by_cases hp2 : (p : ℕ) = 2
+  · obtain rfl : p = ⟨2, Nat.prime_two⟩ := Subtype.ext hp2
+    have hd2 : dist ((x' : ℚ_[2]) / x ⟨⟨2, Nat.prime_two⟩, hp⟩) 1
+        < (2 : ℝ) ^ (-(2 : ℤ)) := by
+      have hpow : (2 : ℝ) ^ (-(2 : ℤ)) = 1 / 4 := by norm_num
+      rw [hpow]
+      exact hd
+    exact Padic.isSquare_of_dist_one_lt_pow hd2
+  · exact Padic.isSquare_of_dist_one_lt_one hp2 (by linarith [hd])
+
+-- Theorem: the integer cast and the rational cast of an integer give the same Hilbert symbol.
+theorem hilbertSym_cast_eq {k : Type*} [Field k] [CharZero k] (n : ℤ) (q : ℚ) :
+    hilbertSym (((n : ℚ) : k)) (((q : ℚ) : k)) = hilbertSym (n : k) (q : k) := by
+  have h1 : ((n : ℚ) : k) = (n : k) := by simp
+  have h2 : ((q : ℚ) : k) = (q : k) := by simp
+  rw [h1, h2]
+
+-- Theorem: Serre's existence theorem (Serre III Thm 4), general case.  Given prescribed
+-- local symbols `ε i p` (almost all `1`, product `εR i⁻¹`) and `εR i` at the real place,
+-- all locally realisable, there is a rational `x` realising all of them.
+theorem exists_rat_hilbertSym {I : Type*} [Finite I] (a : I → ℚ) (ha : ∀ i, a i ≠ 0)
+    (ε : I → Primes → ℤ) (εR : I → ℤ)
+    (h1 : ∀ i, {p | ε i p ≠ 1}.Finite)
+    (h2 : ∀ i, (∏ᶠ p : Primes, ε i p) * εR i = 1)
+    (h3 : ∀ p : Primes, ∃ x : ℚ_[p], x ≠ 0 ∧ ∀ i, hilbertSym (a i : ℚ_[p]) x = ε i p)
+    (h3R : ∃ x : ℝ, x ≠ 0 ∧ ∀ i, hilbertSym (a i : ℝ) x = εR i) :
+    ∃ x : ℚ, x ≠ 0 ∧ (∀ i (p : Primes), hilbertSym (a i : ℚ_[p]) x = ε i p) ∧
+      ∀ i, hilbertSym (a i : ℝ) x = εR i := by
+  classical
+  -- Step 1: reduce `a` to squarefree integers `α`.
+  have hred : ∀ i, ∃ (b : ℤ) (t : ℚ), Squarefree b ∧ t ≠ 0 ∧ a i = (b : ℚ) * t ^ 2 := by
+    intro i
+    obtain ⟨b, hb, t, ht, heq⟩ := exists_squarefree_mul_sq (a i) (ha i)
+    exact ⟨b, t, hb, ht, heq⟩
+  choose α s hp using hred
+  have hαsf : ∀ i, Squarefree (α i) := fun i => (hp i).1
+  have hsne : ∀ i, s i ≠ 0 := fun i => (hp i).2.1
+  have hαeq : ∀ i, a i = (α i : ℚ) * (s i) ^ 2 := fun i => (hp i).2.2
+  have hαne : ∀ i, α i ≠ 0 := by
+    intro i h
+    exact ha i (by rw [hαeq i, h]; simp)
+  have hredp : ∀ i (p : Primes) (y : ℚ_[p]),
+      hilbertSym (a i : ℚ_[p]) y = hilbertSym (α i : ℚ_[p]) y := by
+    intro i p y
+    have hs : (s i : ℚ_[p]) ≠ 0 := by exact_mod_cast hsne i
+    have hcast : (a i : ℚ_[p]) = (α i : ℚ_[p]) * (s i : ℚ_[p]) ^ 2 := by
+      rw [hαeq i]; push_cast; ring
+    rw [hcast, hilbertSym_mul_sq_left hs]
+  have hredR : ∀ i (y : ℝ),
+      hilbertSym (a i : ℝ) y = hilbertSym (α i : ℝ) y := by
+    intro i y
+    have hs : (s i : ℝ) ≠ 0 := by exact_mod_cast hsne i
+    have hcast : (a i : ℝ) = (α i : ℝ) * (s i : ℝ) ^ 2 := by
+      rw [hαeq i]; push_cast; ring
+    rw [hcast, hilbertSym_mul_sq_left hs]
+  -- Step 2: local points and the real point.
+  choose z hzall using h3
+  have hz0 : ∀ p, z p ≠ 0 := fun p => (hzall p).1
+  have hz : ∀ (p : Primes) (i : I), hilbertSym (a i : ℚ_[p]) (z p) = ε i p :=
+    fun p i => (hzall p).2 i
+  have hzα : ∀ (p : Primes) (i : I), hilbertSym (α i : ℚ_[p]) (z p) = ε i p :=
+    fun p i => by rw [← hredp i p (z p)]; exact hz p i
+  have hε : ∀ i p, ε i p = 1 ∨ ε i p = -1 := by
+    intro i p
+    rw [← hz p i]
+    exact hilbertSym_eq_one_or_neg_one (show (a i : ℚ_[p]) ≠ 0 from by exact_mod_cast ha i)
+      (hz0 p)
+  obtain ⟨xR, hxR0, hxR⟩ := h3R
+  have hxRα : ∀ i, hilbertSym (α i : ℝ) xR = εR i :=
+    fun i => by rw [← hredR i xR]; exact hxR i
+  have hεR : ∀ i, εR i = 1 ∨ εR i = -1 := by
+    intro i
+    rw [← hxRα i, hilbertSym_real_eq (by exact_mod_cast hαne i) hxR0]
+    by_cases h : 0 < (α i : ℝ) ∨ 0 < xR
+    · rw [if_pos h]; exact Or.inl rfl
+    · rw [if_neg h]; exact Or.inr rfl
+  have hsqR : ∀ i, εR i * εR i = 1 := by
+    intro i
+    rcases hεR i with h | h <;> rw [h] <;> norm_num
+  -- The real sign to be matched by the rational approximation.
+  let r : ℝ := if 0 < xR then 1 else -1
+  have hr : r ≠ 0 := by
+    dsimp only [r]
+    by_cases h : 0 < xR <;> simp [h]
+  -- Step 3: approximate at `S α` with local square classes.
+  obtain ⟨x', hx'0, hsign, hsq⟩ :=
+    exists_rat_local_squares (S α) ⟨⟨2, Nat.prime_two⟩, two_in_S α⟩
+      (fun p : S α => z p.1) (fun p => hz0 p.1) hr
+  have hreal_eq : ∀ i, hilbertSym (α i : ℝ) (x' : ℝ) = εR i := by
+    intro i
+    have hαR : (α i : ℝ) ≠ 0 := by exact_mod_cast hαne i
+    have hx'R : (x' : ℝ) ≠ 0 := by exact_mod_cast hx'0
+    have hsame : (0 < (x' : ℝ)) ↔ 0 < xR := by
+      rw [← hsign]
+      dsimp only [r]
+      by_cases h : 0 < xR <;> simp [h]
+    rw [← hxRα i, hilbertSym_real_eq hαR hx'R, hilbertSym_real_eq hαR hxR0]
+    rcases lt_or_gt_of_ne hαR with hαneg | hαpos
+    · by_cases hx : 0 < (x' : ℝ)
+      · rw [if_pos (Or.inr hx), if_pos (Or.inr (hsame.mp hx))]
+      · have h1 : ¬ (0 < (α i : ℝ) ∨ 0 < (x' : ℝ)) := by
+          rintro (h | h)
+          · exact absurd h (not_lt.mpr hαneg.le)
+          · exact hx h
+        have h2 : ¬ (0 < (α i : ℝ) ∨ 0 < xR) := by
+          rintro (h | h)
+          · exact absurd h (not_lt.mpr hαneg.le)
+          · exact hx (hsame.mpr h)
+        rw [if_neg h1, if_neg h2]
+    · rw [if_pos (Or.inl hαpos), if_pos (Or.inl hαpos)]
+  -- Step 4: the shifted prescription `η`.
+  set η : I → Primes → ℤ :=
+    fun i p => ε i p * hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]) with hηdef
+  have hsym_fin : ∀ i, {p : Primes | hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]) ≠ 1}.Finite := by
+    intro i
+    refine (finite_nontrivial_hilbertSym (a := (α i : ℚ)) (b := x')
+      (by exact_mod_cast hαne i) hx'0).subset ?_
+    intro p hp
+    rw [Set.mem_ofPred_eq] at hp
+    rw [Set.mem_ofPred_eq, hilbertSym_cast_eq (α i) x']
+    exact hp
+  have hηε : ∀ i p, η i p = 1 ∨ η i p = -1 := by
+    intro i p
+    dsimp only [η]
+    rcases hε i p with h | h <;>
+      rcases hilbertSym_eq_one_or_neg_one
+        (show (α i : ℚ_[p]) ≠ 0 from by exact_mod_cast hαne i)
+        (show (x' : ℚ_[p]) ≠ 0 from by exact_mod_cast hx'0) with h' | h' <;>
+      simp [h, h']
+  have hη1 : ∀ i, ∀ᶠ p : Primes in cofinite, η i p = 1 := by
+    intro i
+    rw [Filter.eventually_cofinite]
+    refine (Set.Finite.union (h1 i) (hsym_fin i)).subset ?_
+    intro p hp
+    simp only [Set.mem_ofPred_eq] at hp ⊢
+    by_cases he : ε i p = 1
+    · by_cases hx : hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]) = 1
+      · exact absurd (by dsimp only [η]; simp [he, hx]) hp
+      · exact Or.inr hx
+    · exact Or.inl he
+  have hprodε : ∀ i, (∏ᶠ p : Primes, ε i p) = εR i := by
+    intro i
+    have h := h2 i
+    calc (∏ᶠ p : Primes, ε i p) = (∏ᶠ p : Primes, ε i p) * 1 := (mul_one _).symm
+      _ = (∏ᶠ p : Primes, ε i p) * (εR i * εR i) := by rw [hsqR i]
+      _ = ((∏ᶠ p : Primes, ε i p) * εR i) * εR i := by ring
+      _ = εR i := by rw [h, one_mul]
+  have hprodα : ∀ i, (∏ᶠ p : Primes, hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])) = εR i := by
+    intro i
+    have hrec := hilbertReciprocity (α i : ℚ) x' (by exact_mod_cast hαne i) hx'0
+    have hfin : (∏ᶠ p : Primes, hilbertSym (((α i : ℚ) : ℚ_[p])) (((x' : ℚ) : ℚ_[p])))
+        = ∏ᶠ p : Primes, hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]) :=
+      finprod_congr (fun p => hilbertSym_cast_eq (α i) x')
+    rw [hfin] at hrec
+    have hrealR : hilbertSym (((α i : ℚ) : ℝ)) (((x' : ℚ) : ℝ)) = εR i :=
+      (hilbertSym_cast_eq (α i) x').trans (hreal_eq i)
+    rw [hrealR] at hrec
+    calc (∏ᶠ p : Primes, hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]))
+        = (∏ᶠ p : Primes, hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])) * 1 := (mul_one _).symm
+      _ = (∏ᶠ p : Primes, hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])) * (εR i * εR i) := by
+            rw [hsqR i]
+      _ = ((∏ᶠ p : Primes, hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])) * εR i) * εR i := by ring
+      _ = εR i := by rw [hrec, one_mul]
+  have hη2 : ∀ i, (∏ᶠ p : Primes, η i p) = 1 := by
+    intro i
+    have hsplit : (∏ᶠ p : Primes, η i p)
+        = (∏ᶠ p : Primes, ε i p)
+          * (∏ᶠ p : Primes, hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])) := by
+      rw [show (∏ᶠ p : Primes, η i p)
+          = ∏ᶠ p : Primes, ε i p * hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]) from
+        finprod_congr (fun p => by dsimp only [η])]
+      exact finprod_mul_distrib (h1 i) (hsym_fin i)
+    rw [hsplit, hprodε i, hprodα i, hsqR i]
+  have hη3 : ∀ p : Primes, ∃ x : ℚ_[p], x ≠ 0 ∧ ∀ i, hilbertSym (α i : ℚ_[p]) x = η i p := by
+    intro p
+    refine ⟨z p * (x' : ℚ_[p]), mul_ne_zero (hz0 p) (by exact_mod_cast hx'0), fun i => ?_⟩
+    rw [HasBilinHilbertSym.mul_right_eq, hzα p i]
+  -- `η` is trivial on `S α`.
+  have hη_S_one : ∀ i {p : Primes}, p ∈ S α → η i p = 1 := by
+    intro i p hpS
+    obtain ⟨c, hc⟩ := hsq p hpS
+    have hc0 : c ≠ 0 := by
+      rintro rfl
+      have h : (x' : ℚ_[p]) = 0 := by
+        have hh := hc
+        rw [mul_zero] at hh
+        exact (div_eq_zero_iff.mp hh).resolve_right (hz0 p)
+      exact hx'0 (by exact_mod_cast h)
+    have hx'eq : (x' : ℚ_[p]) = c * c * z p := by
+      have hh := congrArg (fun t : ℚ_[p] => t * z p) hc
+      rwa [div_mul_cancel₀ _ (hz0 p)] at hh
+    have hsym : hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]) = ε i p := by
+      rw [hx'eq, ← pow_two, HasBilinHilbertSym.mul_right_eq,
+        hilbertSym_sq_right (by exact_mod_cast hαne i) hc0, one_mul, hzα p i]
+    dsimp only [η]
+    rw [hsym]
+    rcases hε i p with h | h <;> rw [h] <;> norm_num
+  -- `A` is coprime to `M`, so Dirichlet supplies the auxiliary prime `ℓ`.
+  have hcop : Nat.Coprime (A hηε hη1) (M α) := by
+    have hAnot : ∀ {p : Primes}, p ∈ S α → ¬ (p : ℕ) ∣ A hηε hη1 := by
+      intro p hpS
+      exact not_dvd_A_of_notMem_T hηε hη1
+        ((ep_eq_one_iff_not_mem_T hηε hη1 p).mpr (fun i => hη_S_one i hpS))
+    have hc4 : Nat.Coprime (A hηε hη1) 4 := by
+      have h2' : ¬ 2 ∣ A hηε hη1 := by
+        have := hAnot (two_in_S α)
+        simpa using this
+      have hc2 : Nat.Coprime (A hηε hη1) 2 :=
+        ((Nat.prime_two.coprime_iff_not_dvd).mpr h2').symm
+      simpa using hc2.pow_right 2
+    have hcS : Nat.Coprime (A hηε hη1) (∏ q ∈ S α, (q : ℕ)) :=
+      Nat.Coprime.prod_right fun q hq =>
+        ((q.2.coprime_iff_not_dvd).mpr (hAnot hq)).symm
+    rw [M]
+    exact hc4.mul_right hcS
+  obtain ⟨ℓ, hℓn, hℓ, hℓA⟩ :=
+    Nat.forall_exists_prime_gt_and_modEq
+      ((S α ∪ T hηε hη1).sup (fun q => (q : ℕ))) (M_ne_zero α) hcop
+  have hℓgt : ∀ q ∈ S α ∪ T hηε hη1, (q : ℕ) < ℓ := fun q hq =>
+    lt_of_le_of_lt (Finset.le_sup (f := fun q : Primes => (q : ℕ)) hq) hℓn
+  -- Step 5: apply the disjoint case.
+  obtain ⟨y, hy0, hy⟩ := exists_disjoint α hαne hαsf η hηε hη1 hη2 hη3 hℓ hℓA hℓgt
+  refine ⟨x' * y, mul_ne_zero hx'0 hy0, ?_, ?_⟩
+  · intro i p
+    have hsym_sq : hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])
+        * hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]) = 1 := by
+      rcases hilbertSym_eq_one_or_neg_one
+        (show (α i : ℚ_[p]) ≠ 0 from by exact_mod_cast hαne i)
+        (show (x' : ℚ_[p]) ≠ 0 from by exact_mod_cast hx'0) with h | h <;>
+        rw [h] <;> norm_num
+    have hα_i : hilbertSym (α i : ℚ_[p]) ((x' * y : ℚ) : ℚ_[p]) = ε i p := by
+      rw [show ((x' * y : ℚ) : ℚ_[p]) = (x' : ℚ_[p]) * (y : ℚ_[p]) by push_cast; ring,
+        HasBilinHilbertSym.mul_right_eq, hy i p]
+      dsimp only [η]
+      rw [show hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])
+            * (ε i p * hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p]))
+          = ε i p * (hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])
+            * hilbertSym (α i : ℚ_[p]) (x' : ℚ_[p])) by ring,
+        hsym_sq, mul_one]
+    rw [hredp i p (((x' * y : ℚ) : ℚ_[p]))]
+    exact hα_i
+  · intro i
+    have hfin : (∏ᶠ p : Primes, hilbertSym (((α i : ℚ) : ℚ_[p])) (((y : ℚ) : ℚ_[p]))) = 1 := by
+      rw [finprod_congr (fun p : Primes => hilbertSym_cast_eq (α i) y),
+        finprod_congr (fun p : Primes => hy i p)]
+      exact hη2 i
+    have hyR : hilbertSym (α i : ℝ) (y : ℝ) = 1 := by
+      have hrec := hilbertReciprocity (α i : ℚ) y (by exact_mod_cast hαne i) hy0
+      rw [hfin, one_mul] at hrec
+      rw [hilbertSym_cast_eq (α i) y] at hrec
+      exact hrec
+    have hα_R : hilbertSym (α i : ℝ) (((x' * y : ℚ) : ℝ)) = εR i := by
+      rw [show ((x' * y : ℚ) : ℝ) = (x' : ℝ) * (y : ℝ) by push_cast; ring,
+        HasBilinHilbertSym.mul_right_eq, hyR, mul_one]
+      exact hreal_eq i
+    rw [hredR i (((x' * y : ℚ) : ℝ))]
+    exact hα_R
 
 end Existence
 
