@@ -229,4 +229,171 @@ def RankFourDiagonalHM : Prop :=
     (weightedSumSquares ℝ (fun i => (w i : ℝ))).Isotropic →
     (weightedSumSquares ℚ w).Isotropic
 
+/-! ### WP5.3 — algebraic splitting of a weighted sum of squares
+
+The induction writes `⟨w₀, …, w_{n-1}⟩` as `⟨w₀, w₁⟩ ⊥ (w₂, …, w_{n-1})`.  These lemmas
+realise that split on the level of vectors, so that local isotropy of the big form can be
+read off by `prod_isotropic_iff`. -/
+
+section SplitWSS
+
+-- Theorem: the sum over `Fin (m+2)` splits off its first two terms.
+theorem sum_fin_add_two {α : Type*} [AddCommMonoid α] (m : ℕ) (f : Fin (m + 2) → α) :
+    (∑ i : Fin (m + 2), f i) = f 0 + f 1 + ∑ j : Fin m, f j.succ.succ := by
+  rw [Fin.sum_univ_succ, Fin.sum_univ_succ]
+  simp only [Fin.succ_zero_eq_one]
+  ac_rfl
+
+-- Theorem: the value of `weightedSumSquares K w` splits as the sum of the values of the
+-- first two weights and of the remaining `m` weights.
+theorem wss_add_two_val {K : Type*} [CommSemiring K] (m : ℕ) (w : Fin (m + 2) → K)
+    (v : Fin (m + 2) → K) :
+    (weightedSumSquares K w) v =
+      (weightedSumSquares K ![w 0, w 1]) ![v 0, v 1] +
+      (weightedSumSquares K (fun j : Fin m => w j.succ.succ)) (fun j => v j.succ.succ) := by
+  simp only [weightedSumSquares_apply, smul_eq_mul]
+  rw [sum_fin_add_two m, Fin.sum_univ_two]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
+
+-- Theorem: isotropy of `⟨w₀, …, w_{m+1}⟩` gives isotropy of the orthogonal sum
+-- `⟨w₀, w₁⟩ ⊥ ⟨w₂, …, w_{m+1}⟩`.
+theorem prod_isotropic_of_wss {K : Type*} [CommSemiring K] (m : ℕ) (w : Fin (m + 2) → K)
+    (hiso : (weightedSumSquares K w).Isotropic) :
+    ((weightedSumSquares K ![w 0, w 1]).prod
+      (weightedSumSquares K (fun j : Fin m => w j.succ.succ))).Isotropic := by
+  obtain ⟨v, hv, hv0⟩ := hiso
+  refine ⟨(![v 0, v 1], fun j => v j.succ.succ), ?_, ?_⟩
+  · intro h
+    apply hv
+    funext i
+    induction i using Fin.cases with
+    | zero => simpa using congrArg (fun t : (Fin 2 → K) × (Fin m → K) => t.1 0) h
+    | succ j =>
+        induction j using Fin.cases with
+        | zero => simpa using congrArg (fun t : (Fin 2 → K) × (Fin m → K) => t.1 1) h
+        | succ k => simpa using congrArg (fun t : (Fin 2 → K) × (Fin m → K) => t.2 k) h
+  · rw [QuadraticMap.prod_apply, ← wss_add_two_val m w v, hv0]
+
+-- Theorem: isotropy of the tail `⟨w₂, …, w_{m+1}⟩` gives isotropy of `⟨w₀, …, w_{m+1}⟩`.
+theorem wss_tail_isotropic {K : Type*} [CommSemiring K] (m : ℕ) (w : Fin (m + 2) → K)
+    (hiso : (weightedSumSquares K (fun j : Fin m => w j.succ.succ)).Isotropic) :
+    (weightedSumSquares K w).Isotropic := by
+  obtain ⟨y, hy, hy0⟩ := hiso
+  refine ⟨Fin.cons 0 (Fin.cons 0 y), ?_, ?_⟩
+  · intro h
+    apply hy
+    funext j
+    simpa using congrArg (fun t : Fin (m + 2) → K => t j.succ.succ) h
+  · rw [wss_add_two_val m w (Fin.cons 0 (Fin.cons 0 y))]
+    simp [hy0]
+
+-- Theorem: a weighted sum of squares with nonzero weights is nondegenerate.
+theorem nondegenerate_wss_of_ne {K : Type*} [Field K] [Invertible (2 : K)] {ι : Type*}
+    [Fintype ι] {w : ι → K} (hw : ∀ i, w i ≠ 0) :
+    (weightedSumSquares K w).Nondegenerate := by
+  let u : ι → Kˣ := fun i => Units.mk0 (w i) (hw i)
+  have hu : (fun i => (u i : K)) = w := by funext i; simp [u]
+  rw [← hu]
+  exact nondegenerate_weightedSumSquares u
+
+-- Theorem: local isotropy of `⟨w₀, …, w_{m+1}⟩` yields a nonzero value `a` represented by
+-- `⟨w₀, w₁⟩` and by `-⟨w₂, …, w_{m+1}⟩`.
+--
+-- This is the "common value" step of the rank-lowering induction: since
+-- `⟨w₀, …, w_{m+1}⟩ ≅ ⟨w₀, w₁⟩ ⊥ ⟨w₂, …, w_{m+1}⟩`, `prod_isotropic_iff` exhibits such a
+-- value unless one of the two summands is itself isotropic, in which case nondegeneracy
+-- makes it represent every value.
+theorem exists_local_common_value {K : Type*} [Field K] [Invertible (2 : K)] {m : ℕ}
+    [NeZero m] {w : Fin (m + 2) → K} (hw : ∀ i, w i ≠ 0)
+    (hiso : (weightedSumSquares K w).Isotropic) :
+    ∃ a : K, a ≠ 0 ∧
+      (weightedSumSquares K ![w 0, w 1]).represents a ∧
+      (weightedSumSquares K (fun j : Fin m => w j.succ.succ)).represents (-a) := by
+  have hsplit := prod_isotropic_of_wss m w hiso
+  have hndh : (weightedSumSquares K ![w 0, w 1]).Nondegenerate := by
+    refine nondegenerate_wss_of_ne ?_
+    intro i
+    fin_cases i
+    · simpa using hw 0
+    · simpa using hw 1
+  have hndg : (weightedSumSquares K (fun j : Fin m => w j.succ.succ)).Nondegenerate :=
+    nondegenerate_wss_of_ne (fun j => hw _)
+  rcases (prod_isotropic_iff _ _).mp hsplit with hI | hI | ⟨a, ha, hha, hga⟩
+  · obtain ⟨b, hb, hgb⟩ := exists_ne_zero_represents_of_nondegenerate hndg
+    exact ⟨-b, neg_ne_zero.mpr hb,
+      represents_of_isotropic_nondegenerate hndh hI (-b), by rwa [neg_neg]⟩
+  · obtain ⟨b, hb, hhb⟩ := exists_ne_zero_represents_of_nondegenerate hndh
+    exact ⟨b, hb, hhb, represents_of_isotropic_nondegenerate hndg hI (-b)⟩
+  · exact ⟨a, ha, hha, hga⟩
+
+-- Theorem (vector form of weak approximation, with the archimedean place): a rational
+-- vector can be found `ε`-close to prescribed local vectors at the real place and at every
+-- prime of a finite set.
+theorem exists_rat_close_vec' {S : Finset Nat.Primes} {ε : ℝ} (hε : 0 < ε)
+    (xr : Fin 2 → ℝ) (x : Π p : S, Fin 2 → ℚ_[p]) :
+    ∃ q : Fin 2 → ℚ, (∀ i, ‖xr i - (q i : ℝ)‖ < ε) ∧
+      ∀ p : S, ∀ i, ‖(x p) i - (q i : ℚ_[p])‖ < ε := by
+  classical
+  have h2 : ∀ i : Fin 2, ∃ q : ℚ,
+      ‖xr i - (q : ℝ)‖ < ε ∧ ∀ p : S, ‖(x p) i - (q : ℚ_[p])‖ < ε := by
+    intro i
+    obtain ⟨q, hq⟩ := Rat.approximation' (S := S) (ε := ε) hε (xr i, fun p : S => (x p) i)
+    refine ⟨q, ?_, ?_⟩
+    · exact lt_of_le_of_lt (le_add_of_nonneg_right (Finset.sum_nonneg fun n _ => norm_nonneg _)) hq
+    · intro p
+      have hle : ‖(x p) i - (q : ℚ_[p])‖ ≤
+          Finset.sum (Finset.attach S) (fun n => ‖(x n) i - (q : ℚ_[n])‖) :=
+        Finset.single_le_sum (f := fun n : S => ‖(x n) i - (q : ℚ_[n])‖)
+          (fun n _ => norm_nonneg _) (Finset.mem_attach S p)
+      exact lt_of_le_of_lt hle (lt_of_le_of_lt (le_add_of_nonneg_left (norm_nonneg _)) hq)
+  choose q hq using h2
+  exact ⟨q, fun i => (hq i).1, fun p i => (hq i).2 p⟩
+
+-- Theorem: a `p`-adic number of norm one is the underlying element of an integral unit.
+theorem exists_padicUnit_of_norm_eq_one {p : ℕ} [Fact p.Prime] {x : ℚ_[p]}
+    (h : ‖x‖ = 1) : ∃ u : ℤ_[p]ˣ, (u : ℚ_[p]) = x :=
+  ⟨PadicInt.mkUnits h, PadicInt.mkUnits_eq h⟩
+
+end SplitWSS
+
+/-! ### WP5.3 — the quantitative closeness bound -/
+
+section CloseBound
+
+-- Theorem (per-place estimate): if `q` is `ε`-close to `x` and `x` is bounded by `B`, then
+-- the values of `⟨w₀, w₁⟩` differ by at most `(‖w₀‖ + ‖w₁‖) · ε · (ε + 2B)`.
+theorem wss_pair_close {K : Type*} [NormedField K] {w x q : Fin 2 → K} {ε B : ℝ}
+    (h2 : ‖(2 : K)‖ ≤ 2) (hq : ∀ i, ‖q i - x i‖ ≤ ε) (hx : ∀ i, ‖x i‖ ≤ B) :
+    ‖(weightedSumSquares K w) q - (weightedSumSquares K w) x‖ ≤
+      (‖w 0‖ + ‖w 1‖) * (ε * (ε + 2 * B)) := by
+  have hB : 0 ≤ B := le_trans (norm_nonneg _) (hx 0)
+  have hε : 0 ≤ ε := le_trans (norm_nonneg _) (hq 0)
+  have hval : ∀ z : Fin 2 → K, (weightedSumSquares K w) z = w 0 * z 0 ^ 2 + w 1 * z 1 ^ 2 := by
+    intro z
+    simp [weightedSumSquares_apply, Fin.sum_univ_two, smul_eq_mul, pow_two]
+  have hplus : ∀ i : Fin 2, ‖q i + x i‖ ≤ ε + 2 * B := by
+    intro i
+    have hsplit : q i + x i = (q i - x i) + 2 * x i := by ring
+    rw [hsplit]
+    refine (norm_add_le _ _).trans ?_
+    rw [norm_mul]
+    have hstep : ‖(2 : K)‖ * ‖x i‖ ≤ 2 * B :=
+      mul_le_mul h2 (hx i) (norm_nonneg _) (by norm_num)
+    linarith [hq i]
+  rw [hval q, hval x]
+  have hdiff : w 0 * q 0 ^ 2 + w 1 * q 1 ^ 2 - (w 0 * x 0 ^ 2 + w 1 * x 1 ^ 2) =
+      w 0 * (q 0 - x 0) * (q 0 + x 0) + w 1 * (q 1 - x 1) * (q 1 + x 1) := by ring
+  rw [hdiff]
+  refine (norm_add_le _ _).trans ?_
+  rw [norm_mul, norm_mul, norm_mul, norm_mul]
+  have h0 : ‖w 0‖ * ‖q 0 - x 0‖ * ‖q 0 + x 0‖ ≤ ‖w 0‖ * ε * (ε + 2 * B) :=
+    mul_le_mul (mul_le_mul_of_nonneg_left (hq 0) (norm_nonneg _)) (hplus 0)
+      (norm_nonneg _) (by positivity)
+  have h1 : ‖w 1‖ * ‖q 1 - x 1‖ * ‖q 1 + x 1‖ ≤ ‖w 1‖ * ε * (ε + 2 * B) :=
+    mul_le_mul (mul_le_mul_of_nonneg_left (hq 1) (norm_nonneg _)) (hplus 1)
+      (norm_nonneg _) (by positivity)
+  linarith [h0, h1]
+
+end CloseBound
+
 end Pptc.HasseMinkowski
