@@ -185,4 +185,20 @@ theorem meyer_of (h4 : RankFourDiagonalHM) (h5 : RankFiveLeDiagonalHM)
     exact (hasseMinkowski_of h4 h5 Q).mpr hQ'
   · exact isotropic_of_radical_ne_bot Q hrad
 
+/-! ### The unconditional theorems
+
+With `RankFourDiagonalHM` proved in `RankFour.lean` and its rank-`≥ 5` counterpart in
+`HighRank.lean`, the conditional theorems above specialise to the targets: -/
+
+-- Theorem: Hasse–Minkowski over `ℚ` (isotropy form).
+theorem hasseMinkowski {V : Type*} [AddCommGroup V] [Module ℚ V] [FiniteDimensional ℚ V]
+    (Q : QuadraticForm ℚ V) : Isotropic Q ↔ EverywhereLocallyIsotropic Q :=
+  hasseMinkowski_of rankFourDiagonalHM (rankFiveLeDiagonalHM rankFourDiagonalHM) Q
+
+-- Theorem (Meyer): an indefinite form over `ℚ` in at least five variables is isotropic.
+theorem meyer {V : Type*} [AddCommGroup V] [Module ℚ V] [FiniteDimensional ℚ V]
+    (Q : QuadraticForm ℚ V) (h : 5 ≤ finrank ℚ V)
+    (hind : Indefinite (QuadraticForm.baseChange ℝ Q)) : Isotropic Q :=
+  meyer_of rankFourDiagonalHM (rankFiveLeDiagonalHM rankFourDiagonalHM) Q h hind
+
 end Pptc.HasseMinkowski
