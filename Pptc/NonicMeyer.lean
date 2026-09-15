@@ -1,5 +1,6 @@
 import Pptc.NonicPowerLaw
 import Pptc.NonicRecovery
+import Pptc.HasseMinkowski.Main
 
 /-! # Pptc.NonicMeyer — degree-9 trace form and the Tschirnhaus reduction
 
@@ -484,6 +485,278 @@ theorem gramTraceZero_symm (q : ℚ[X]) : (gramTraceZero q)ᵀ = gramTraceZero q
   simp only [Matrix.transpose_apply, gramTraceZero, Nat.add_comm, Nat.add_assoc]
   ring
 
+/-! ### General matrices: the trace form `Tr (f²)` for an arbitrary `A : Mat₉(ℚ)`
+
+The trace-form apparatus of `{deg ≤ 6, Tr = 0}` was stated for the companion matrix
+`companion9' q`, but the proofs use nothing about that matrix beyond traces of powers.
+We isolate the general statement here, for an arbitrary `A : Matrix (Fin 9) (Fin 9) ℚ`;
+the companion specialisations `ps9`, `gramTraceZero`, `traceZeroPol` are related to it by
+the `rfl`-bridges below.
+
+Writing `s_m = psOf A m = Tr (A^m)`, the trace-zero polynomial with coordinate `v` is
+`tzPolOf A v = ∑_k v_k X^{k+1} - C((∑_k v_k s_{k+1})/9)`, and its Gram matrix is
+`gramOf A`.  These are the general forms used by `tschirnhausDatum_of_signs` below, where
+`A = aeval (companion9' q) ψ` for a Tschirnhaus transformation `ψ`. -/
+
+/-- The trace condition on a general Tschirnhaus pair `(ψ, f)`: `Tr N = Tr N² = 0` for
+`N = aeval (companion9' q) (f.comp ψ)`.  By Newton's identities (`charpoly` coefficients
+`8` and `7` of an `9 × 9` matrix are `-Tr N` and `(Tr N² - (Tr N)²)/2`) this is equivalent
+to the vanishing of the `X^8`/`X^7` resolvent coefficients used in `exists_tschirnhaus9`. -/
+def TschirnhausDatum (q : ℚ[X]) : Prop :=
+  ∃ ψ f : ℚ[X], ψ.natDegree ≤ 6 ∧ 1 ≤ ψ.natDegree ∧ f.natDegree ≤ 6 ∧ 1 ≤ f.natDegree ∧
+    Matrix.trace (aeval (companion9' q) (f.comp ψ)) = 0 ∧
+    Matrix.trace ((aeval (companion9' q) (f.comp ψ)) ^ 2) = 0
+
+/-- `psOf A m = Tr (A^m)`, the `m`-th power sum of the matrix `A`. -/
+def psOf (A : Matrix (Fin 9) (Fin 9) ℚ) (m : ℕ) : ℚ := Matrix.trace (A ^ m)
+
+/-- The Gram matrix of the trace form on `{deg ≤ 6, Tr = 0}` for an arbitrary matrix `A`. -/
+def gramOf (A : Matrix (Fin 9) (Fin 9) ℚ) : Matrix (Fin 6) (Fin 6) ℚ :=
+  fun i j => psOf A (i.val + j.val + 2) - psOf A (i.val + 1) * psOf A (j.val + 1) / 9
+
+/-- The trace-zero polynomial with coordinate vector `v`, for an arbitrary matrix `A`. -/
+noncomputable def tzPolOf (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) : ℚ[X] :=
+  (∑ k : Fin 6, C (v k) * X ^ (k.val + 1))
+    - C ((∑ k : Fin 6, v k * psOf A (k.val + 1)) / 9)
+
+-- Theorem: the Gram matrix of the trace form is symmetric.
+theorem gramOf_symm (A : Matrix (Fin 9) (Fin 9) ℚ) : (gramOf A)ᵀ = gramOf A := by
+  ext i j
+  simp only [Matrix.transpose_apply, gramOf, Nat.add_comm, Nat.add_assoc]
+  ring
+
+-- Theorem: `aeval` of the monomial sum `∑_k v_k X^{k+1}` is the matrix sum.
+theorem aeval_sum_shiftOf (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    aeval A (∑ k : Fin 6, C (v k) * X ^ (k.val + 1))
+      = ∑ k : Fin 6, v k • A ^ (k.val + 1) := by
+  rw [map_sum]
+  refine Finset.sum_congr rfl (fun k _ => ?_)
+  rw [map_mul, map_pow, Polynomial.aeval_X, Polynomial.aeval_C,
+    Algebra.algebraMap_eq_smul_one, Matrix.smul_mul, Matrix.one_mul]
+
+-- Theorem: the trace of the monomial sum is `∑_k v_k s_{k+1}`.
+theorem trace_aeval_sum_shiftOf (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    Matrix.trace (aeval A (∑ k : Fin 6, C (v k) * X ^ (k.val + 1)))
+      = ∑ k : Fin 6, v k * psOf A (k.val + 1) := by
+  rw [aeval_sum_shiftOf, Matrix.trace_sum]
+  refine Finset.sum_congr rfl (fun k _ => ?_)
+  rw [Matrix.trace_smul, smul_eq_mul, psOf]
+
+-- Theorem: the trace of the square of the monomial sum expands in the Gram basis.
+theorem trace_aeval_shift_sqOf (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    Matrix.trace ((aeval A (∑ k : Fin 6, C (v k) * X ^ (k.val + 1))) ^ 2)
+      = ∑ i, ∑ j, v i * v j * psOf A (i.val + j.val + 2) := by
+  have hp2 : (∑ k : Fin 6, C (v k) * X ^ (k.val + 1)) ^ 2
+      = ∑ i : Fin 6, ∑ j : Fin 6, C (v i * v j) * X ^ (i.val + j.val + 2) :=
+    sum_shift_sq v
+  rw [← map_pow, hp2, map_sum, Matrix.trace_sum]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [map_sum, Matrix.trace_sum]
+  refine Finset.sum_congr rfl (fun j _ => ?_)
+  rw [map_mul, map_pow, Polynomial.aeval_X, Polynomial.aeval_C,
+    Algebra.algebraMap_eq_smul_one, Matrix.smul_mul, Matrix.one_mul, Matrix.trace_smul,
+    smul_eq_mul, psOf]
+
+-- Theorem: `tzPolOf A v` really lies in the trace-zero hyperplane.
+theorem trace_tzPolOf (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    Matrix.trace (aeval A (tzPolOf A v)) = 0 := by
+  rw [tzPolOf, map_sub, Matrix.trace_sub, trace_aeval_sum_shiftOf, Polynomial.aeval_C,
+    Algebra.algebraMap_eq_smul_one, Matrix.trace_smul, Matrix.trace_one, Fintype.card_fin,
+    smul_eq_mul]
+  ring
+
+-- Theorem: the Gram quadratic form equals `Tr (p²) - (Tr p)²/9` for `p = ∑_k v_k X^{k+1}`.
+theorem sum_gramOf_eq (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    (∑ i, ∑ j, v i * gramOf A i j * v j)
+      = (∑ i, ∑ j, v i * v j * psOf A (i.val + j.val + 2))
+        - (∑ k, v k * psOf A (k.val + 1)) ^ 2 / 9 := by
+  have hA : ∀ i j : Fin 6,
+      v i * (psOf A (i.val + j.val + 2)
+          - psOf A (i.val + 1) * psOf A (j.val + 1) / 9) * v j
+        = v i * v j * psOf A (i.val + j.val + 2)
+          - (v i * psOf A (i.val + 1)) * (v j * psOf A (j.val + 1)) / 9 := by
+    intro i j; ring
+  have hsq1 : (∑ k : Fin 6, v k * psOf A (k.val + 1)) ^ 2
+      = ∑ i : Fin 6, ∑ j : Fin 6,
+          (v i * psOf A (i.val + 1)) * (v j * psOf A (j.val + 1)) := by
+    rw [pow_two, Finset.sum_mul_sum]
+  simp only [gramOf]
+  rw [hsq1]
+  simp_rw [hA, Finset.sum_sub_distrib, Finset.sum_div]
+
+-- Theorem: the trace of the square of `tzPolOf A v` is the Gram quadratic form.
+theorem trace_sq_tzPolOf (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    Matrix.trace ((aeval A (tzPolOf A v)) ^ 2)
+      = ∑ i, ∑ j, v i * gramOf A i j * v j := by
+  set p : ℚ[X] := ∑ k : Fin 6, C (v k) * X ^ (k.val + 1) with hp
+  set c : ℚ := (∑ k : Fin 6, v k * psOf A (k.val + 1)) / 9 with hc
+  have hf : tzPolOf A v = p - C c := by rw [tzPolOf, hp, hc]
+  have hpt : Matrix.trace (aeval A p) = 9 * c := by
+    rw [hp, trace_aeval_sum_shiftOf, hc]
+    ring
+  have hSt : Matrix.trace (aeval A (p ^ 2))
+      = ∑ i : Fin 6, ∑ j : Fin 6, v i * v j * psOf A (i.val + j.val + 2) := by
+    rw [hp, map_pow]
+    exact trace_aeval_shift_sqOf A v
+  have hsq : (p - C c) ^ 2 = p ^ 2 - C (c + c) * p + C c * C c := by
+    rw [Polynomial.C_add]
+    ring
+  have hCcp : aeval A (C (c + c) * p) = (c + c) • aeval A p := by
+    rw [map_mul, Polynomial.aeval_C, Algebra.algebraMap_eq_smul_one, Matrix.smul_mul,
+      Matrix.one_mul]
+  have hCcc : aeval A (C c * C c) = (c * c) • (1 : Matrix (Fin 9) (Fin 9) ℚ) := by
+    simp only [map_mul, Polynomial.aeval_C, Algebra.algebraMap_eq_smul_one, Matrix.smul_mul,
+      Matrix.one_mul, smul_smul]
+  have hexp : aeval A (p ^ 2 - C (c + c) * p + C c * C c)
+      = aeval A (p ^ 2) - (c + c) • aeval A p
+        + (c * c) • (1 : Matrix (Fin 9) (Fin 9) ℚ) := by
+    rw [map_add, map_sub, hCcp, hCcc]
+  have htr : Matrix.trace (aeval A ((p - C c) ^ 2))
+      = (∑ i : Fin 6, ∑ j : Fin 6, v i * v j * psOf A (i.val + j.val + 2)) - 9 * c ^ 2 := by
+    rw [hsq, hexp, Matrix.trace_add, Matrix.trace_sub, Matrix.trace_smul, Matrix.trace_smul,
+      smul_eq_mul, smul_eq_mul, Matrix.trace_one, Fintype.card_fin, hSt, hpt]
+    ring
+  have hfin : (∑ i : Fin 6, ∑ j : Fin 6, v i * gramOf A i j * v j)
+      = (∑ i : Fin 6, ∑ j : Fin 6, v i * v j * psOf A (i.val + j.val + 2))
+        - 9 * c ^ 2 := by
+    rw [sum_gramOf_eq, hc]
+    ring
+  rw [← map_pow, hf, htr, ← hfin]
+
+-- Theorem: the coefficient of `X^{k+1}` in `tzPolOf A v` is `v k`.
+theorem coeff_tzPolOf (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) (k : Fin 6) :
+    (tzPolOf A v).coeff (k.val + 1) = v k := by
+  rw [tzPolOf, Polynomial.coeff_sub, Polynomial.coeff_C, if_neg (by omega), sub_zero,
+    Polynomial.finsetSum_coeff]
+  rw [Finset.sum_eq_single k]
+  · rw [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow, if_pos rfl, mul_one]
+  · intro j _ hj
+    rw [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow,
+      if_neg (by rintro h; exact hj (Fin.ext (by omega))), mul_zero]
+  · intro hk; exact absurd (Finset.mem_univ k) hk
+
+-- Theorem: `tzPolOf A v` has degree at most six.
+theorem tzPolOf_natDegree_le (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    (tzPolOf A v).natDegree ≤ 6 := by
+  rw [tzPolOf]
+  refine le_trans (Polynomial.natDegree_sub_le _ _) (max_le (natDegree_sum_shift_le v) ?_)
+  rw [Polynomial.natDegree_C]
+  omega
+
+-- Theorem: the Gram quadratic form is the shifted trace form `Tr (p²) - (Tr p)²/9`.
+theorem gram_eq_trace_shift (A : Matrix (Fin 9) (Fin 9) ℚ) (v : Fin 6 → ℚ) :
+    (∑ i, ∑ j, v i * gramOf A i j * v j)
+      = Matrix.trace ((aeval A (∑ k : Fin 6, C (v k) * X ^ (k.val + 1))) ^ 2)
+        - (Matrix.trace (aeval A (∑ k : Fin 6, C (v k) * X ^ (k.val + 1)))) ^ 2 / 9 := by
+  have hT : Matrix.trace (aeval A (∑ k : Fin 6, C (v k) * X ^ (k.val + 1)))
+      = ∑ k : Fin 6, v k * psOf A (k.val + 1) := trace_aeval_sum_shiftOf A v
+  have hS := trace_aeval_shift_sqOf A v
+  rw [hT, hS, sum_gramOf_eq]
+
+-- Theorem: `ps9` is `psOf` of the degree-9 companion matrix.
+theorem ps9_eq_psOf (q : ℚ[X]) (m : ℕ) : ps9 q m = psOf (companion9' q) m := rfl
+
+-- Theorem: `gramTraceZero` is `gramOf` of the degree-9 companion matrix.
+theorem gramTraceZero_eq_gramOf (q : ℚ[X]) : gramTraceZero q = gramOf (companion9' q) := rfl
+
+-- Theorem: `traceZeroPol` is `tzPolOf` of the degree-9 companion matrix.
+theorem traceZeroPol_eq_tzPolOf (q : ℚ[X]) (v : Fin 6 → ℚ) :
+    traceZeroPol q v = tzPolOf (companion9' q) v := rfl
+
+-- Theorem: `gramOf` vanishes on scalar matrices; used to rule out a constant `ψ`.
+theorem gramOf_algebraMap_eq_zero (c : ℚ) :
+    gramOf (algebraMap ℚ (Matrix (Fin 9) (Fin 9) ℚ) c) = 0 := by
+  have hps : ∀ m : ℕ,
+      psOf (algebraMap ℚ (Matrix (Fin 9) (Fin 9) ℚ) c) m = 9 * c ^ m := by
+    intro m
+    rw [psOf, ← map_pow (algebraMap ℚ (Matrix (Fin 9) (Fin 9) ℚ)),
+      Matrix.algebraMap_eq_diagonal, Matrix.trace_diagonal]
+    simp [Finset.sum_const, Fintype.card_fin]
+  ext i j
+  simp only [gramOf, Matrix.zero_apply]
+  rw [hps, hps, hps]
+  have hpow : c ^ (i.val + j.val + 2) = c ^ (i.val + 1) * c ^ (j.val + 1) := by
+    rw [← pow_add]; congr 1; omega
+  rw [hpow]
+  ring
+
+-- Theorem: the two signs of the general Gram form give the Tschirnhaus datum for `q`.
+-- This is the corrected ("ψ ≠ X") form of the degree-9 reduction: an arbitrary rational
+-- `ψ` of degree `≤ 6` whose Gram matrix `gramOf (aeval (companion9' q) ψ)` is indefinite
+-- yields a Tschirnhaus pair, via Meyer's theorem applied to `.baseChange ℝ`.
+theorem tschirnhausDatum_of_signs {q ψ : ℚ[X]} (hψ : ψ.natDegree ≤ 6)
+    (hneg : ∃ v : Fin 6 → ℚ,
+      ∑ i, ∑ j, v i * gramOf (aeval (companion9' q) ψ) i j * v j < 0)
+    (hpos : ∃ v : Fin 6 → ℚ,
+      0 < ∑ i, ∑ j, v i * gramOf (aeval (companion9' q) ψ) i j * v j) :
+    TschirnhausDatum q := by
+  classical
+  set A : Matrix (Fin 9) (Fin 9) ℚ := aeval (companion9' q) ψ with hA
+  have hψ1 : 1 ≤ ψ.natDegree := by
+    by_contra h
+    have h0 : ψ.natDegree = 0 := Nat.lt_one_iff.mp (not_le.mp h)
+    have hψC : ψ = C (ψ.coeff 0) := Polynomial.eq_C_of_natDegree_le_zero (le_of_eq h0)
+    have hA0 : A = algebraMap ℚ (Matrix (Fin 9) (Fin 9) ℚ) (ψ.coeff 0) := by
+      rw [hA]
+      conv_lhs => rw [hψC]
+      rw [Polynomial.aeval_C]
+    have hgram0 : gramOf (aeval (companion9' q) ψ) = 0 := by
+      rw [← hA, hA0]
+      exact gramOf_algebraMap_eq_zero (ψ.coeff 0)
+    obtain ⟨v, hv⟩ := hneg
+    have h0sum : (∑ i : Fin 6, ∑ j : Fin 6, v i * (0 : Matrix (Fin 6) (Fin 6) ℚ) i j * v j)
+        = 0 := by simp
+    rw [hgram0, h0sum] at hv
+    exact lt_irrefl (0 : ℚ) hv
+  set G : Matrix (Fin 6) (Fin 6) ℚ := gramOf A with hG
+  set Q : QuadraticForm ℚ (Fin 6 → ℚ) := Matrix.toQuadraticForm' G with hQ
+  have hQapply : ∀ v : Fin 6 → ℚ, Q v = ∑ i, ∑ j, v i * G i j * v j := by
+    intro v
+    rw [hQ]
+    simp only [Matrix.toQuadraticForm', LinearMap.BilinMap.toQuadraticMap_apply,
+      Matrix.toLinearMap₂'_apply, smul_eq_mul]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    ring
+  have hbase : ∀ v : Fin 6 → ℚ, Q.baseChange ℝ ((1 : ℝ) ⊗ₜ[ℚ] v) = (Q v : ℝ) := by
+    intro v
+    rw [QuadraticForm.baseChange_tmul]
+    simp [Rat.smul_def]
+  obtain ⟨vneg, hvneg⟩ := hneg
+  obtain ⟨vpos, hvpos⟩ := hpos
+  have hQvneg : Q vneg < 0 := by
+    rw [hQapply vneg, hG, hA]
+    exact hvneg
+  have hQvpos : 0 < Q vpos := by
+    rw [hQapply vpos, hG, hA]
+    exact hvpos
+  have hind : Pptc.HasseMinkowski.Indefinite (Q.baseChange ℝ) := by
+    refine ⟨⟨(1 : ℝ) ⊗ₜ[ℚ] vneg, ?_⟩, ⟨(1 : ℝ) ⊗ₜ[ℚ] vpos, ?_⟩⟩
+    · rw [hbase vneg]; exact_mod_cast hQvneg
+    · rw [hbase vpos]; exact_mod_cast hQvpos
+  have hrank : 5 ≤ Module.finrank ℚ (Fin 6 → ℚ) := by simp
+  obtain ⟨v, hvne, hvQ⟩ := Pptc.HasseMinkowski.meyer Q hrank hind
+  have hvgram : (∑ i, ∑ j, v i * gramOf A i j * v j) = 0 := by
+    rw [← hG, ← hQapply v]
+    exact hvQ
+  set f : ℚ[X] := tzPolOf A v with hf
+  have hfdeg : f.natDegree ≤ 6 := by rw [hf]; exact tzPolOf_natDegree_le A v
+  have hf1 : 1 ≤ f.natDegree := by
+    obtain ⟨k, hk⟩ := Function.ne_iff.mp hvne
+    have hk' : v k ≠ 0 := by simpa using hk
+    have hcoeff : f.coeff (k.val + 1) ≠ 0 := by
+      rw [hf, coeff_tzPolOf A v k]
+      exact hk'
+    have := Polynomial.le_natDegree_of_ne_zero hcoeff
+    omega
+  have htr1 : Matrix.trace (aeval (companion9' q) (f.comp ψ)) = 0 := by
+    rw [Polynomial.aeval_comp, ← hA, hf]
+    exact trace_tzPolOf A v
+  have htr2 : Matrix.trace ((aeval (companion9' q) (f.comp ψ)) ^ 2) = 0 := by
+    rw [Polynomial.aeval_comp, ← hA, hf, trace_sq_tzPolOf A v]
+    exact hvgram
+  exact ⟨ψ, f, hψ, hψ1, hfdeg, hf1, htr1, htr2⟩
+
 /-! ### Assembly: the isotropic trace vector gives the Tschirnhaus pair -/
 
 -- Theorem: given a rational `f` of degree between `1` and `6` with `Tr f = Tr f² = 0`, the
@@ -502,15 +775,6 @@ theorem exists_tschirnhaus9_of_isotropic {q : ℚ[X]} (hmon : q.Monic) (h9 : q.n
   refine ⟨X, f, by simp, by simp, hfdeg, hf1, ?_, ?_⟩
   · simpa using hcoeff.1
   · simpa using hcoeff.2
-
-/-- The trace condition on a general Tschirnhaus pair `(ψ, f)`: `Tr N = Tr N² = 0` for
-`N = aeval (companion9' q) (f.comp ψ)`.  By Newton's identities (`charpoly` coefficients
-`8` and `7` of an `9 × 9` matrix are `-Tr N` and `(Tr N² - (Tr N)²)/2`) this is equivalent
-to the vanishing of the `X^8`/`X^7` resolvent coefficients used in `exists_tschirnhaus9`. -/
-def TschirnhausDatum (q : ℚ[X]) : Prop :=
-  ∃ ψ f : ℚ[X], ψ.natDegree ≤ 6 ∧ 1 ≤ ψ.natDegree ∧ f.natDegree ≤ 6 ∧ 1 ≤ f.natDegree ∧
-    Matrix.trace (aeval (companion9' q) (f.comp ψ)) = 0 ∧
-    Matrix.trace ((aeval (companion9' q) (f.comp ψ)) ^ 2) = 0
 
 -- Theorem: a Tschirnhaus pair whose composite is trace-isotropic gives the Tschirnhaus
 -- datum of `exists_tschirnhaus9`.  This is the general (`ψ ≠ X`) form of the reduction.
