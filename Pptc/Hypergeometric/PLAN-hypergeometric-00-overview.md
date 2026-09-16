@@ -284,6 +284,12 @@ Each item is labelled **new** (a number or family not currently known P-construc
 **unifies** (re-derives existing results through one mechanism, which is a cross-check and a
 simplification), or **speculative**.
 
+**Everything in this section is outbound, and outbound is scheduled second** (§6). These are
+the payoffs of the inbound map, not a parallel track: every family added inbound widens what
+each mechanism below delivers, so proving them early means proving them twice. Read this
+section as the specification of what the programme collects at the end, and as the argument
+for which inbound families are worth the most.
+
 **B1: summation theorems turn ₂F₁ values into `Γ` quotients (unifies, and maps the frontier).**
 Gauss's second theorem (V5) reads `P_{−a}(0) = ₂F₁(a,1−a;1;½) = √π/(Γ((1+a)/2) Γ(1−a/2))`.
 Run backwards, any route making `₂F₁(a,1−a;1;½)` P-constructible makes that `Γ` product
@@ -338,12 +344,29 @@ are new.
   P-constructible `x ∈ (−1, 3)` (V8). The `ν = −½` case is H2 directly.
 - Incomplete Beta `B(x; p, q) = (xᵖ/p) ₂F₁(p, 1−q; p+1; x)` on the H6 classes.
 - AGM: `agm(a, b)` is P-constructible for P-constructible `a, b > 0`, since
-  `agm(1, √(1−k²)) = π/(2K(k))` and `agm` is homogeneous. Mathlib has no AGM, so this needs a
+  `agm(1, √(1−k²)) = π/(2K(k))` and `agm` is homogeneous. **Why this is not trivial:** every
+  AGM iterate is P-constructible (arithmetic and `sqrt_Pconstructible`), but `agm` is their
+  *limit*, and the class has no limit constructor — nor could it, since every real is a limit
+  of rationals. Gauss's formula is exactly what turns the limit into a finite expression. The
+  same applies to B3's `tsum`: an infinite object enters only through a closed form or through
+  `arc_length`. Mathlib has no AGM, so this needs a
   definition (the limit of the iteration) plus Gauss's theorem. **This does not depend on
   B7.** The classical proof is Landen's substitution inside the integral: show
   `I(a,b) = ∫₀^{π/2} dθ/√(a²cos²θ + b²sin²θ)` is unchanged by one AGM step, then
   `I(a,a) = π/(2a)`. No quadratic transformation of ₂F₁ appears, so L6c can proceed while L6a
-  is blocked. Worth doing: `agm` is a well-known constant generator (Gauss's constant, and `π`
+  is blocked. The target identity, in this repo's convention `c = k²` (Wikipedia states `K` in
+  the modulus, so the arguments differ by a square), is
+
+  ```
+  agm x y = π / 4 * (x + y) / ellipticF (((x - y) / (x + y)) ^ 2) (π / 2),
+  ```
+
+  with the equivalent forms `agm x y = (π/2)·I(x,y)⁻¹` and
+  `agm x y = π (∫₀^∞ dt/√(t(t+x²)(t+y²)))⁻¹`; all three checked to 30+ digits against
+  `ArithmeticGeometricMean[1, 3/10]`. For `x, y > 0` the parameter `((x−y)/(x+y))² < 1` is
+  automatic, so the P-constructibility corollary is about five lines once the identity is in
+  place. Since no ₂F₁ occurs anywhere in it, `Pptc/AGM.lean` is arguably a better home for
+  this than the `Hypergeometric/` directory. Worth doing: `agm` is a well-known constant generator (Gauss's constant, and `π`
   via Brent–Salamin).
 
 **B5: lattice Green's functions and Pólya's constant (new as a statement; the identity is
@@ -404,26 +427,44 @@ P-constructible, so state positive families only.
 
 Waves 0 and 1 are done (§Status). What is left, in order:
 
-**Wave 2, as re-scoped after the research (four agents, all startable now):**
+**Inbound before outbound.** A task is **inbound** if it puts new ₂F₁ values into
+`PConstructible`, and **outbound** if it spends ₂F₁ values on something else. The programme
+runs every inbound task first, and parks the outbound ones until the inbound map is as
+complete as it can be made. The reason is that the outbound theorems are corollaries of
+whatever the inbound map turns out to be: each new family reached inbound multiplies what the
+outbound mechanisms of §5 deliver, whereas an outbound theorem proved early has to be revisited
+every time the map grows. So `agm` — a well-formed result, and nearly free once its identity is
+in place — waits, because it yields no ₂F₁ value.
+
+**Wave 2, inbound only (four agents; L3b, L9 and L6a start now, L5b after L3b):**
 
 - **L3b `EllipticClass.lean` — highest value, and unblocked.** With L2 and L3 both landed,
   show by induction on the shifts that every `hyp (½+i) (½+j) (1+k)` is a rational-function
-  combination of `hyp ½ ½ 1` and `hyp (−½) ½ 1`, hence P-constructible. This is what unlocks
-  L5b and L7b, and it is the ₂F₁ analogue of `Gamma_add_intCast_Pconstructible`.
-- **L6c `AGM.lean` — now independent of L6a.** Take the Landen-substitution route in B4, not
-  the quadratic transformation.
+  combination of `hyp ½ ½ 1` and `hyp (−½) ½ 1`, hence P-constructible. It is the ₂F₁ analogue
+  of `Gamma_add_intCast_Pconstructible`, and it multiplies every inbound family that follows.
 - **L9 `Signatures.lean` (extend) — switch to R2's parametric forms** for the cubic and sextic
-  signatures (H5). Leave `V7` conditional; the quartic is the hard one.
-- **L5b `GraphsClass.lean`** — the contiguous classes of the H6 families, after L3b.
+  signatures (H5). Two new families, `₂F₁(⅓,⅔;1;·)` and `₂F₁(⅙,⅚;1;·)`, by a route that is
+  already verified to 79 digits. Leave `V7` conditional; the quartic is the hard one.
+- **L6a `Quadratic.lean` retry, through the Euler integral (B7).** Promoted from "lower
+  priority": it is inbound, since it is what reaches `₂F₁(¼,¼;1;·)`, the fourth signature.
+- **L5b `GraphsClass.lean`** — the contiguous classes of the H6 graph families, after L3b.
+- **Follow-up, inbound:** lift `0 < a`, `0 < b`, `b < c` in `hyp_one_eq_Gamma` using L3's
+  contiguous relations, widening the denominator-24 family at `z = 1` (L4).
 
-**Wave 2 retries, lower priority:** L6a through the Euler integral (B7), and then L6b
-(Clausen), which is the only remaining consumer of the quadratic transformation.
-
-**Wave 3** (L7b, L10). The trigonometric moments, and B1's rows as consistency theorems
-against `Gamma.lean` — `a = ½, ¼` from L2 and the conditional `V7`, and `a = ⅓, ⅙` once L9's
-parametric extension lands.
+**Parked, outbound.** L6b (Clausen `₃F₂`), L6c (`agm`), L7b (moment integrals), L10 (the B1
+`Γ` consistency rows), and any further Legendre-function or incomplete-Beta corollaries from
+B4. None of these is blocked; they are simply scheduled after the inbound map. L8 (Pólya) is
+already landed and needs nothing more.
 
 **Wave 4** (L11). The umbrella module, plus a final `lake build Pptc.Hypergeometric`.
+
+**Worth adding: an inbound survey (R4).** The inbound sources exploited so far are the ellipse
+(L2), monomial graphs (L5a) and the `z = 1` Γ route (L4). Nobody has systematically asked what
+₂F₁ family, if any, each *other* drawable arc length gives: the general cubic Bézier of
+`ThirdKind.lean`, offset curves (`Offset.lean`), restricted arcs of `sine` and `exp_two`, and
+affine images of all of them. R1 did this for graphs and power laws only. A research task in
+R1's style — one note, every identity checked to ≥ 15 digits — is the cheapest way to find out
+whether the inbound map has anything left in it that the elliptic class does not already cover.
 
 **A follow-up worth scheduling:** lift the `0 < a`, `0 < b`, `b < c` hypotheses of
 `hyp_one_eq_Gamma` by shifting parameters with L3's contiguous relations, which would widen
