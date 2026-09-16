@@ -18,30 +18,76 @@ they describe (Lake ignores non-`.lean` files). Numeric scripts stay in
 `archived files/hypergeometric-scripts/` at the repo root, which is outside the git root, and
 the notes cite them by that path.
 
-## Status — 2026-09-15
+## Status — 2026-09-16
 
-**Waves 0 and 1 are done.** Nine files compile, no `sorry`, no axioms beyond `propext`,
-`Classical.choice`, `Quot.sound`: `Basic` (L1, including the `arcsin` case, which needed an
-arcsine power series built from scratch — Mathlib has none), `Elliptic` (L2), `Contiguous`
-(L3: the derivative plus five contiguous relations), `Gauss` (L4), `Graphs` (L5a, extended to
-affine images of `y = xⁿ`), `Euler` (L7a), `Polya` (L8). Two are incomplete:
+**Waves 0 and 1 are done and wave 2 inbound is complete.** Every file compiles, no
+`sorry`, no axioms beyond `propext`, `Classical.choice`, `Quot.sound`: `Basic` (L1, including the
+`arcsin` case, which needed an arcsine power series built from scratch — Mathlib has none),
+`Elliptic` (L2), `Contiguous` (L3: the derivative plus five contiguous relations), `Gauss` (L4,
+extended), `Graphs` (L5a, extended to affine images of `y = xⁿ`), `Euler` (L7a), `Polya` (L8),
+and the wave-2 files `Quadratic` (L6a), `EllipticClass` (L3b), `Signatures` (L9), `Clausen`
+(L6b) and `GraphsClass` (L5b, both the level-`c₀` class and the `c`-advance).
 
-- **L6a `Quadratic.lean`: blocked.** Only the formal power-series identity landed. The blocker
-  is the missing `PowerSeries` evaluation API (no `PowerSeries.sum`, no `IsLinearTopology ℝ ℝ`),
-  which forces a Fubini argument valid only on `|z| < (√2−1)/2` plus analytic continuation.
-  **Retry through the Euler integral instead** (see B7): L7a landed `hyp_eq_integral`, and the
-  classical proof of the quadratic transformation is a change of variable inside that integral.
-- **L9 `Signatures.lean`: conditional.** `V7` is an explicit hypothesis; the reduction to
-  `hyp_half_half_one_Pconstructible` is unconditional. R2 confirms `V7` is not an instance of
-  any standard transformation, so it needs a fresh coefficient or ODE argument. The theorem is
-  deliberately **not** tagged `@[pconstructible_cond]`, since `hV7` is an unproved identity
-  rather than a side condition and `sideTac` could never discharge it.
+- **L6a `Quadratic.lean`: DONE.** `hyp_quadratic` now proves `V6`,
+  `₂F₁(½,½;1;z) = ₂F₁(¼,¼;1;4z(1−z))`, unconditionally on `0 ≤ z < ½`. The blocker (no
+  `PowerSeries.sum`, no `IsLinearTopology ℝ ℝ`) was routed around: the formal power-series
+  identity is transferred to `HasSum` level on the small disc `4|z|(1+|z|) < 1` by a Fubini
+  re-summation, then continued analytically along the Cassini interval
+  `((1−√2)/2, ½)`. The Euler-integral change of variable was tried first and dropped (Landen
+  weights are incompatible).
+- **L6b `Clausen.lean`: DONE — flagship outbound.** `clausen_tsum_Pconstructible` is
+  unconditional: `Σₙ C(2n,n)³ (x/64)ⁿ` is P-constructible for P-constructible `x ∈ [0,1)`.
+  The proof reads the recurrence `8(n+1)³ g_{n+1} = (2n+1)³ g_n` off the formal third-order ODE
+  satisfied by `hypSeries (1/4) (1/4) 1 ^ 2`, matches it against `dₙ = C(2n,n)³/64ⁿ`, and
+  transfers to reals through the (absolutely convergent) Cauchy product of two `hasSum_hyp`
+  series. As a by-product, `hyp_one_fourth_one_Pconstructible` makes the **fourth Ramanujan
+  signature** `₂F₁(¼,¼;1;·)` P-constructible for `0 ≤ x < 1` — the last piece of H5 that does
+  not need `V7`.
+- **L9 `Signatures.lean`: conditional, extended.** The quartic `V7` remains an explicit
+  hypothesis (not `@[pconstructible_cond]`, since it is an unproved identity, not a side
+  condition). R2's **cubic** `(⅓,⅔;1;·)` and **sextic** `(⅙,⅚;1;·)` reductions are now landed
+  parametrically in `p` (the classical transformation is the explicit hypothesis; the
+  PConstructible reduction is unconditional), together with the `z = ½` special values `(★)`,
+  `(★★)`, the domain/positivity lemmas `α,β,γ,x,ξ`, and their PConstructible closure lemmas.
+- **L3b `EllipticClass.lean`: DONE.** The two Legendre relations for `deriv hyp(±½,½;1)` are
+  proved and made `PConstructible`, the general shifts `hyp_shift_a`, `hyp_shift_b`,
+  `hyp_shift_c_up`, `hyp_shift_a_down` (DLMF 15.5.14, 15.5.21 solved for `c+1`, 15.5.20a) are in,
+  and `hyp_three_term_a`/`hyp_three_term_b` eliminate `₂F₁′` between the up- and down-shifts to
+  give a derivative-free second-order recurrence in each numerator parameter. The class theorem
+  `hyp_elliptic_class_Pconstructible` proves the whole `(½+ℤ, ½+ℤ, 1+ℕ)` class P-constructible
+  for P-constructible `z ∉ {0,1}`, `|z| < 1`: level `c = 1` by strong induction on
+  `|i| + |j|` with nine explicit corner seeds, then `c ↦ c+1` by `hyp_shift_c_up` with `₂F₁′`
+  rewritten at the same level via 15.5.20a. It is the ₂F₁ analogue of
+  `Gamma_add_intCast_Pconstructible`.
+- **L4 `Gauss.lean`: DONE.** `hyp_one_eq_Gamma'` now proves Gauss's summation
+  `₂F₁(a,b;c;1) = Γ(c)Γ(c−a−b)/(Γ(c−a)Γ(c−b))` with only `c − a − b > 0` and the three
+  non-pole conditions `c, c−a, c−b ∉ −ℕ` — the positivity hypotheses `0<a`, `0<b`, `b<c` of the
+  original integral proof are gone. The machinery: `summable_hypCoeff_one`,
+  `tendsto_hyp_nhdsWithin_one`, `tendsto_nat_mul_hypCoeff_one`, `tendsto_one_sub_mul_deriv_hyp`,
+  the **recurrence at `z = 1`** `hyp_one_recurrence`
+  (`₂F₁(a,b;c+1;1) = c(c−a−b)/((c−a)(c−b)) · ₂F₁(a,b;c;1)`), the diagonal recurrences
+  `hyp_one_diag_a`/`hyp_one_diag_b` (`₂F₁(a+1,b;c+1;1) = c/(c−b)·₂F₁(a,b;c;1)`, and `a↔b`),
+  the invariance `hypD_shift_a`/`hypD_shift_b` of `D = ₂F₁(a,b;c;1)/G(c)`, and the induction
+  `hypD_shift_a_nat`/`hypD_shift_b_nat` that moves `(a,b,c)` to `(a+N,b+N,c+2N)` (preserving
+  `c−a−b`) into the range of the original theorem.
+- **L5b `GraphsClass.lean`: DONE.** The missing second seed is by differentiating the V4
+  arc-length identity at its upper limit: `deriv_graphFamily_Pconstructible`
+  (`deriv_graphFamily_H6_Pconstructible` for `n ∈ {2..6}`) makes `₂F₁′(−½,1/m;1+1/m;w)`
+  P-constructible whenever the base value is (via `differentiableAt_hyp`). `hyp_shift_b_down`
+  (the missing `b`-down shift), `hyp_contiguous_neighbours_Pconstructible` /
+  `hyp_graphFamily_neighbours_Pconstructible` give the immediate contiguous neighbours, and
+  `hyp_graphFamily_level_zero_Pconstructible` proves the whole `(i,j)` class at
+  `c = c₀ = 1+1/m` (`n ≥ 3`; `n = 2` degenerates). The `c`-advance
+  `hyp_graphFamily_class_Pconstructible` then inducts on `k`: for `j ≠ k+1` by `hyp_shift_c_up`
+  with `₂F₁′` rewritten at the same level by `hyp_shift_a_down`, and for the degenerate
+  `j = k+1` (where `c₀ − b₀ = 1`, so `hyp_shift_c_up` fails) by the `b`-recurrence
+  `hyp_three_term_b`, non-degenerate there (`c − b + 1 = 2`) and consuming the level-`k+1`
+  values `j = k`, `k−1`. The whole class `₂F₁(−½+i, 1/m+j; 1+1/m+k; −b²Xᵐ)` is P-constructible
+  for `n ∈ {3,…,6}`.
 
-**Deviations worth knowing.** `hyp_one_eq_Gamma` (L4) also assumes `0 < a`, `0 < b`, `b < c`:
-the non-negative dominated-convergence route at `z = 1` needs them. Now that L3 has landed,
-shifting the parameters into range with the contiguous relations should lift that restriction.
-`hyp_neg_half_arcLength_Pconstructible` (L5a) also needs `n ≤ 6` (inherited from `poly_graph`)
-and, for the affine version, an explicit injectivity hypothesis.
+**Deviations worth knowing.** `hyp_neg_half_arcLength_Pconstructible` (L5a) still needs `n ≤ 6`
+(inherited from `poly_graph`) and, for the affine version, an explicit injectivity hypothesis.
+The L5b class theorem is now landed (`hyp_graphFamily_class_Pconstructible`).
 
 **What the research changed.** See §5; in short, R1 closed B6 negatively and R2 found a better
 route for H5 than the one this plan assumed.
@@ -453,20 +499,29 @@ outbound mechanisms of §5 deliver, whereas an outbound theorem proved early has
 every time the map grows. So `agm` — a well-formed result, and nearly free once its identity is
 in place — waits, because it yields no ₂F₁ value.
 
-**Wave 2, inbound only (four agents; L3b, L9 and L6a start now, L5b after L3b):**
+**Wave 2, inbound only — DONE (L3b, L9, L6a and L5b all landed; the L4b follow-up too):**
 
-- **L3b `EllipticClass.lean` — highest value, and unblocked.** With L2 and L3 both landed,
-  show by induction on the shifts that every `hyp (½+i) (½+j) (1+k)` is a rational-function
-  combination of `hyp ½ ½ 1` and `hyp (−½) ½ 1`, hence P-constructible. It is the ₂F₁ analogue
-  of `Gamma_add_intCast_Pconstructible`, and it multiplies every inbound family that follows.
-- **L9 `Signatures.lean` (extend) — switch to R2's parametric forms** for the cubic and sextic
-  signatures (H5). Two new families, `₂F₁(⅓,⅔;1;·)` and `₂F₁(⅙,⅚;1;·)`, by a route that is
-  already verified to 79 digits. Leave `V7` conditional; the quartic is the hard one.
-- **L6a `Quadratic.lean` retry, through the Euler integral (B7).** Promoted from "lower
-  priority": it is inbound, since it is what reaches `₂F₁(¼,¼;1;·)`, the fourth signature.
-- **L5b `GraphsClass.lean`** — the contiguous classes of the H6 graph families, after L3b.
-- **Follow-up, inbound:** lift `0 < a`, `0 < b`, `b < c` in `hyp_one_eq_Gamma` using L3's
-  contiguous relations, widening the denominator-24 family at `z = 1` (L4).
+- **L3b `EllipticClass.lean` — highest value, DONE.** With L2 and L3 both landed, show by induction
+  on the shifts that every `hyp (½+i) (½+j) (1+k)` is a rational-function combination of
+  `hyp ½ ½ 1` and `hyp (−½) ½ 1`, hence P-constructible. It is the ₂F₁ analogue of
+  `Gamma_add_intCast_Pconstructible`, and it multiplies every inbound family that follows.
+  *Progress:* the Legendre relations and the general shifts `hyp_shift_a`, `hyp_shift_b`,
+  `hyp_shift_c_up`, `hyp_shift_a_down` are landed in `EllipticClass.lean`, as are
+  `deriv_half_half_one_Pconstructible` / `deriv_neg_half_half_one_Pconstructible`; the class
+  theorem `hyp_elliptic_class_Pconstructible` is landed. Route taken: for fixed `(j,k)` the sequence
+  `i ↦ ₂F₁(½+i, ½+j; 1+k; z)` satisfies a second-order linear recurrence over `ℚ(z)` (from
+  `hyp_shift_a` / `hyp_shift_a_down`, with `₂F₁′` eliminated via 15.5.20a), so the level
+  `c = 1+k` is generated by two consecutive `i`-seeds; then advance `k` with `hyp_shift_c_up`,
+  whose `₂F₁′` is itself expressible at the *same* level by 15.5.20a. `hyp_shift_b` and its
+  `b`-down analogue give the `j`-direction.
+- **L9 `Signatures.lean` (extend) — DONE (conditional).** R2's parametric cubic and sextic
+  reductions are landed, with the `z = ½` special values; `V7` (quartic) stays conditional.
+- **L6a `Quadratic.lean` retry — DONE.** `hyp_quadratic` proves `V6` unconditionally on
+  `0 ≤ z < ½`; it is what reaches `₂F₁(¼,¼;1;·)`, the fourth signature.
+- **L5b `GraphsClass.lean` — DONE.** The whole class `₂F₁(−½+i, 1/m+j; 1+1/m+k; −b²Xᵐ)`
+  (`hyp_graphFamily_class_Pconstructible`), both the level-`c₀` class and the `c`-advance.
+- **Follow-up, inbound — DONE (L4b).** `hyp_one_eq_Gamma'` lifts `0 < a`, `0 < b`, `b < c` in
+  `hyp_one_eq_Gamma` using contiguous relations, widening the denominator-24 family at `z = 1`.
 
 **Parked, outbound**, in the order the membership test of §5 ranks them:
 

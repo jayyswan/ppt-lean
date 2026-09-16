@@ -18,6 +18,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 -- Targeted imports rather than `import Mathlib`; see the note in `Pptc.Defs`.
 -- `Basic` supplies the `hyp`/`hypCoeff` API; `Pochhammer` the lemma `(1)ₙ = n!`.
 import Pptc.Hypergeometric.Basic
+import Pptc.Hypergeometric.Contiguous
 import Mathlib.RingTheory.Polynomial.Pochhammer
 import Mathlib.RingTheory.PowerSeries.Derivative
 import Mathlib.RingTheory.PowerSeries.Substitution
@@ -29,32 +30,30 @@ The quadratic transformation of the Gauss hypergeometric function (V6 of
 
 `₂F₁(1/2, 1/2; 1; z) = ₂F₁(1/4, 1/4; 1; 4 z (1 - z))` for `0 ≤ z < 1/2`.
 
-This is the specialisation to `a = b = 1/2` of the symmetric quadratic transformation
-`₂F₁(a, b; (a+b+1)/2; 4z(1-z)) = ₂F₁(2a, 2b; (a+b+1)/2; z)`, and it is the gateway to the
+This is the `a = b = 1/4` case of Goursat's symmetric quadratic transformation
+`₂F₁(2a, 2b; a+b+1/2; z) = ₂F₁(a, b; a+b+1/2; 4z(1-z))`, and it is the gateway to the
 Clausen identity (L6b) and to the arithmetic-geometric mean (L6c).
 
-## Status: the formal coefficient identity is proved; the analytic transfer remains
+## Status: proved
 
-Both sides live on a disc of convergence, so the natural formalisation route is
-`hyp_eq_of_hasSum`: exhibit the power series of `z ↦ hyp (1/4) (1/4) 1 (4 z (1 - z))` and
-match it term by term against `hypCoeff (1/2) (1/2) 1`. Writing `w = 4 z (1 - z)`, the
-binomial theorem gives `w^m = ∑_{j ≤ m} 4^m C(m,j) (-1)^j z^{m+j}`, so the `n`-th Taylor
-coefficient of the right-hand side is
+The proof has two parts.
 
-`b n = ∑_{k = ⌈n/2⌉}^{n} hypCoeff (1/4) (1/4) 1 k * 4^k * (-1)^{n-k} * C(k, n-k)`,
+* **Formal coefficient identity.** `hypSeriesQuad_eq_hypSeries_half` shows
+  `(hypSeries (1/4) (1/4) 1).subst (4 * X * (1 - X)) = hypSeries (1/2) (1/2) 1` in `ℝ⟦X⟧`:
+  the hypergeometric equation of `(1/4, 1/4; 1)` pulls back along `w = 4X(1-X)` to that of
+  `(1/2, 1/2; 1)`, and the first-order coefficient recurrence identifies the two series.
 
-and the transformation is exactly the identity `b n = hypCoeff (1/2) (1/2) 1 n`, i.e.
-
-`∑_k ((1/4)_k / k!)² 4^k (-1)^{n-k} C(k, n-k) = ((1/2)_n / n!)²`.
-
-This is a holonomic (Zeilberger) identity, and it is **not** vindicated by Gosper's
-algorithm in closed hypergeometric form; it needs either a second-order telescoping
-certificate or the ODE argument below. The identity is now proved in this file in the formal
-power series ring: `hypSeriesQuad_eq_hypSeries_half` shows
-`(hypSeries (1/4) (1/4) 1).subst (4 * X * (1 - X)) = hypSeries (1/2) (1/2) 1`. What remains
-for the full `hyp_quadratic` is only the analytic transfer from that power series identity
-to `ordinaryHypergeometric`; the precise remaining steps are recorded in
-`HANDOFF-hypergeometric-L6a.md`.
+* **Analytic transfer.** This is done at the level of `HasSum`, because this Mathlib has no
+  `PowerSeries` evaluation API (`PowerSeries.sum` does not exist and `ℝ` carries no
+  `IsLinearTopology` instance). Expanding `(4z(1-z))^m` binomially turns the re-expansion of
+  `₂F₁(1/4,1/4;1;4z(1-z))` into the double series `quadFamily z`; the coefficient bound
+  `|[Xⁿ]((4X(1-X))^m)| ≤ 4^m C(m, n-m)` gives the geometric majorant `(4|z|(1+|z|))^m`, so
+  `quadFamily z` is summable on `4|z|(1+|z|) < 1`. `HasSum.tsum_fiberwise` re-sums by fibres,
+  and the coefficient identity identifies the fibre sums with `hypCoeff (1/2) (1/2) 1`, giving
+  V6 on that disc (`hyp_quadratic_small`). Both sides are analytic on the Cassini interval
+  `((1-√2)/2, 1/2)` (where `|z| < 1` and `|4z(1-z)| < 1`), so
+  `AnalyticOnNhd.eqOn_of_preconnected_of_eventuallyEq` extends V6 to all of `0 ≤ z < 1/2`,
+  which is `hyp_quadratic`.
 
 ## The ODE route (verified algebraically)
 
@@ -69,7 +68,7 @@ recurrence of that equation, `(n+1)² b_{n+1} = (n + 1/2)² b_n`, is the uniquen
 statement that would finish the proof once `g` is known to be analytic with `b` as its
 Taylor coefficients. -/
 
-open scoped Topology
+open scoped Topology ENNReal
 
 namespace Pconstructible
 
@@ -652,6 +651,352 @@ theorem coeff_quadSubst_pow_eq_zero_of_lt {m n : ℕ} (h : n < m) :
   have hle : m ≤ (quadSubst ^ m).order :=
     PowerSeries.le_order_pow_of_constantCoeff_eq_zero m hconst
   exact lt_of_lt_of_le (by exact_mod_cast h) hle
+
+/-! ### The coefficient formula for `quadSubst^m`
+
+The re-expansion of `(4z(1-z))^m` has the explicit coefficients
+`[X^(m+j)]((4X(1-X))^m) = 4^m (-1)^j C(m,j)`, so the power `quadSubst^m` is dominated at
+`|z| ≤ 1` by the geometric quantity `(4|z|(1+|z|))^m`. This is the majorant that makes the
+double sum `c_m · [Xⁿ](quadSubst^m) · zⁿ` summable on a disc around the origin, which is what
+the analytic transfer of V6 needs. -/
+
+/-- The polynomial `4X(1-X)` behind the quadratic substitution. -/
+def quadPoly : Polynomial ℝ := Polynomial.C 4 * Polynomial.X * (1 - Polynomial.X)
+
+/-- `quadSubst` is the power-series coercion of `quadPoly`. -/
+-- Theorem: quadSubst is the power-series coercion of quadPoly.
+theorem quadSubst_eq_quadPoly : quadSubst = (quadPoly : PowerSeries ℝ) := by
+  rw [quadPoly, quadSubst]
+  push_cast
+  rfl
+
+/-- The power-series power `quadSubst^m` is the coercion of the polynomial power. -/
+-- Theorem: quadSubst^m = ((quadPoly^m : Polynomial ℝ) : PowerSeries ℝ).
+theorem quadSubst_pow_eq_quadPoly (m : ℕ) :
+    quadSubst ^ m = ((quadPoly ^ m : Polynomial ℝ) : PowerSeries ℝ) := by
+  rw [quadSubst_eq_quadPoly]
+  exact (map_pow (Polynomial.coeToPowerSeries.ringHom) quadPoly m).symm
+
+/-- The binomial expansion of `(4X(1-X))^m` as a polynomial. -/
+-- Theorem: quadPoly^m = ∑_{j ≤ m} C(4^m C(m,j) (-1)^j) X^(m+j).
+theorem quadPoly_pow_eq (m : ℕ) :
+    quadPoly ^ m = ∑ j ∈ Finset.range (m + 1),
+      Polynomial.C (4 ^ m * (Nat.choose m j : ℝ) * (-1) ^ j) * Polynomial.X ^ (m + j) := by
+  apply Polynomial.funext
+  intro z
+  simp only [quadPoly, Polynomial.eval_pow, Polynomial.eval_mul, Polynomial.eval_C,
+    Polynomial.eval_X, Polynomial.eval_sub, Polynomial.eval_one, Polynomial.eval_finsetSum]
+  exact pow_four_mul_one_sub_pow m z
+
+/-- The coefficients of `quadSubst^m`: `[Xⁿ]((4X(1-X))^m) = 4^m (-1)^(n-m) C(m, n-m)` for
+`m ≤ n` (the binomial coefficient vanishing covers `n > 2m`). -/
+-- Theorem: for m ≤ n, coeff n (quadSubst^m) = 4^m (-1)^(n-m) C(m, n-m).
+theorem coeff_quadSubst_pow_eq {m n : ℕ} (hmn : m ≤ n) :
+    PowerSeries.coeff n (quadSubst ^ m) =
+      4 ^ m * (-1 : ℝ) ^ (n - m) * (m.choose (n - m) : ℝ) := by
+  rw [quadSubst_pow_eq_quadPoly, Polynomial.coeff_coe, quadPoly_pow_eq,
+    Polynomial.finsetSum_coeff]
+  rw [Finset.sum_eq_single (n - m)]
+  · rw [Polynomial.coeff_C_mul_X_pow, if_pos (show n = m + (n - m) by omega)]
+    ring
+  · intro b hb hne
+    rw [Polynomial.coeff_C_mul_X_pow, if_neg (by
+      intro hcon
+      exact hne (by omega))]
+  · intro hmem
+    rw [Polynomial.coeff_C_mul_X_pow, if_pos (show n = m + (n - m) by omega)]
+    have hlt : m < n - m := by
+      rw [Finset.mem_range, not_lt] at hmem
+      omega
+    rw [Nat.choose_eq_zero_of_lt hlt]
+    simp
+
+/-- The geometric majorant: `∑ₙ |[Xⁿ](quadSubst^m)| |z|ⁿ = (4|z|(1+|z|))^m`. -/
+-- Theorem: ∑' n, ‖coeff n (quadSubst^m)‖ |z|^n = (4|z|(1+|z|))^m.
+theorem tsum_abs_coeff_quadSubst_pow (m : ℕ) (z : ℝ) :
+    (∑' n : ℕ, ‖PowerSeries.coeff n (quadSubst ^ m)‖ * |z| ^ n) =
+      (4 * |z| * (1 + |z|)) ^ m := by
+  have hterm : ∀ n : ℕ, ‖PowerSeries.coeff n (quadSubst ^ m)‖ * |z| ^ n
+      = (-1 : ℝ) ^ m * (PowerSeries.coeff n (quadSubst ^ m) * (-|z|) ^ n) := by
+    intro n
+    rcases lt_or_ge n m with hlt | hmn
+    · rw [coeff_quadSubst_pow_eq_zero_of_lt hlt]
+      simp
+    · rw [coeff_quadSubst_pow_eq hmn]
+      have habs : ‖4 ^ m * (-1 : ℝ) ^ (n - m) * (m.choose (n - m) : ℝ)‖
+          = 4 ^ m * (m.choose (n - m) : ℝ) := by
+        rw [Real.norm_eq_abs, abs_mul, abs_mul]
+        rw [abs_of_nonneg (by positivity : (0 : ℝ) ≤ 4 ^ m)]
+        rw [abs_pow, abs_neg, abs_one]
+        rw [abs_of_nonneg (Nat.cast_nonneg (m.choose (n - m)))]
+        simp
+      rw [habs, show (-|z|) = (-1) * |z| by ring, mul_pow]
+      have hsign : (-1 : ℝ) ^ m * (-1) ^ (n - m) * (-1) ^ n = 1 := by
+        rw [← pow_add, ← pow_add, show m + (n - m) + n = 2 * n by omega]
+        exact Even.neg_one_pow (even_two_mul n)
+      calc 4 ^ m * (m.choose (n - m) : ℝ) * |z| ^ n
+          = 4 ^ m * (m.choose (n - m) : ℝ) * |z| ^ n
+              * ((-1) ^ m * (-1) ^ (n - m) * (-1) ^ n) := by rw [hsign, mul_one]
+        _ = (-1) ^ m * ((4 ^ m * (-1) ^ (n - m) * (m.choose (n - m) : ℝ))
+              * ((-1) ^ n * |z| ^ n)) := by ring
+  rw [tsum_congr hterm, tsum_mul_left, tsum_coeff_quadSubst_pow m (-|z|)]
+  rw [show (4 : ℝ) * (-|z|) * (1 - (-|z|)) = (-1) * (4 * |z| * (1 + |z|)) by ring, mul_pow]
+  have hsq : (-1 : ℝ) ^ m * (-1) ^ m = 1 := by
+    rw [← pow_add, show m + m = 2 * m by ring]
+    exact Even.neg_one_pow (even_two_mul m)
+  rw [← mul_assoc, hsq, one_mul]
+
+/-- `quadSubst^m` has degree at most `2m`, so its coefficients vanish beyond `2m`. -/
+-- Theorem: 2m < n → coeff n (quadSubst^m) = 0.
+theorem coeff_quadSubst_pow_eq_zero_of_gt {m n : ℕ} (h : 2 * m < n) :
+    PowerSeries.coeff n (quadSubst ^ m) = 0 := by
+  rw [coeff_quadSubst_pow_eq (m := m) (n := n) (by omega),
+    Nat.choose_eq_zero_of_lt (by omega), Nat.cast_zero, mul_zero]
+
+/-- The double family `c_m · [Xⁿ](quadSubst^m) · zⁿ` of the re-expansion is summable on the
+disc `4|z|(1+|z|) < 1`. Its rows are finite sums (`[Xⁿ](quadSubst^m) = 0` for `n > 2m`) and
+its iterated sum is `∑_m ‖c_m‖ (4|z|(1+|z|))ᵐ`, summable by `hasSum_hyp`. -/
+-- Theorem: the double family of the re-expansion is summable on 4|z|(1+|z|) < 1.
+theorem summable_quadFamily {z : ℝ} (hz : 4 * |z| * (1 + |z|) < 1) :
+    Summable (fun p : ℕ × ℕ =>
+      hypCoeff (1 / 4) (1 / 4) 1 p.1 * PowerSeries.coeff p.2 (quadSubst ^ p.1) * z ^ p.2) := by
+  have hc : ∀ n : ℕ, (1 : ℝ) ≠ -(n : ℝ) := by
+    intro n h
+    have hn : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+    linarith
+  have hBnn : 0 ≤ 4 * |z| * (1 + |z|) :=
+    mul_nonneg (mul_nonneg (by norm_num) (abs_nonneg z)) (by linarith [abs_nonneg z])
+  have hB : |4 * |z| * (1 + |z|)| < 1 := by rwa [abs_of_nonneg hBnn]
+  apply Summable.of_norm
+  rw [summable_prod_of_nonneg (f := fun p : ℕ × ℕ =>
+    ‖hypCoeff (1 / 4) (1 / 4) 1 p.1 * PowerSeries.coeff p.2 (quadSubst ^ p.1) * z ^ p.2‖)
+    (fun p => norm_nonneg _)]
+  constructor
+  · intro m
+    apply summable_of_ne_finset_zero (s := Finset.range (2 * m + 1))
+    intro n hn
+    rw [Finset.mem_range, not_lt] at hn
+    have h0 : PowerSeries.coeff n (quadSubst ^ m) = 0 :=
+      coeff_quadSubst_pow_eq_zero_of_gt (m := m) (n := n) (by omega)
+    rw [h0]
+    simp
+  · have hsum : ∀ m : ℕ, (∑' n : ℕ,
+        ‖hypCoeff (1 / 4) (1 / 4) 1 m * PowerSeries.coeff n (quadSubst ^ m) * z ^ n‖)
+        = ‖hypCoeff (1 / 4) (1 / 4) 1 m‖ * (4 * |z| * (1 + |z|)) ^ m := by
+      intro m
+      rw [show (fun n : ℕ => ‖hypCoeff (1 / 4) (1 / 4) 1 m
+            * PowerSeries.coeff n (quadSubst ^ m) * z ^ n‖)
+          = fun n : ℕ => ‖hypCoeff (1 / 4) (1 / 4) 1 m‖
+            * (‖PowerSeries.coeff n (quadSubst ^ m)‖ * |z| ^ n) by
+        funext n
+        simp only [norm_mul, norm_pow, Real.norm_eq_abs]
+        ring]
+      rw [tsum_mul_left, tsum_abs_coeff_quadSubst_pow]
+    simp_rw [hsum]
+    refine ((hasSum_hyp (a := (1 : ℝ) / 4) (b := (1 : ℝ) / 4) (c := (1 : ℝ))
+      (z := 4 * |z| * (1 + |z|)) hB hc).summable.abs).congr fun m => ?_
+    calc ‖hypCoeff (1 / 4) (1 / 4) 1 m * (4 * |z| * (1 + |z|)) ^ m‖
+        = ‖hypCoeff (1 / 4) (1 / 4) 1 m‖ * ‖(4 * |z| * (1 + |z|)) ^ m‖ := norm_mul _ _
+      _ = ‖hypCoeff (1 / 4) (1 / 4) 1 m‖ * ‖4 * |z| * (1 + |z|)‖ ^ m := by rw [norm_pow]
+      _ = ‖hypCoeff (1 / 4) (1 / 4) 1 m‖ * (4 * |z| * (1 + |z|)) ^ m := by
+            rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg hBnn]
+
+/-- The double family whose summation is the re-expansion of `₂F₁(1/4,1/4;1;4z(1-z))` in
+powers of `z`: the `(m,n)` term is `c_m · [Xⁿ]((4X(1-X))^m) · zⁿ`. -/
+def quadFamily (z : ℝ) : ℕ × ℕ → ℝ := fun p =>
+  hypCoeff (1 / 4) (1 / 4) 1 p.1 * PowerSeries.coeff p.2 (quadSubst ^ p.1) * z ^ p.2
+
+/-- The `n`-th coefficient of the re-expanded series, read off the formal identity
+`H(4X(1-X)) = ₂F₁(1/2,1/2;1;X)`: `∑_d [Xᵈ]H · [Xⁿ]((4X(1-X))ᵈ) = hypCoeff (1/2)(1/2)1 n`.
+The `d`-sum is finite because `[Xⁿ]((4X(1-X))ᵈ) = 0` for `d > n`. -/
+-- Theorem: ∑' d, c_d [Xⁿ]((4X(1-X))^d) = hypCoeff (1/2) (1/2) 1 n.
+theorem tsum_hypCoeff_mul_coeff_quadSubst (n : ℕ) :
+    (∑' d : ℕ, hypCoeff (1 / 4) (1 / 4) 1 d * PowerSeries.coeff n (quadSubst ^ d))
+      = hypCoeff (1 / 2) (1 / 2) 1 n := by
+  have hsupp : ∀ d ∉ Finset.range (n + 1),
+      hypCoeff (1 / 4) (1 / 4) 1 d * PowerSeries.coeff n (quadSubst ^ d) = 0 := by
+    intro d hd
+    rw [Finset.mem_range, not_lt] at hd
+    rw [coeff_quadSubst_pow_eq_zero_of_lt (by omega), mul_zero]
+  have hsupp' : Function.support (fun d : ℕ =>
+      hypCoeff (1 / 4) (1 / 4) 1 d • PowerSeries.coeff n (quadSubst ^ d))
+      ⊆ ↑(Finset.range (n + 1)) := by
+    intro d hd
+    rw [Function.mem_support] at hd
+    by_contra hcon
+    exact hd (by rw [smul_eq_mul]; exact hsupp d hcon)
+  have hsub := PowerSeries.coeff_subst' hasSubst_quadSubst (hypSeries (1 / 4) (1 / 4) 1) n
+  rw [show PowerSeries.subst quadSubst (hypSeries (1 / 4) (1 / 4) 1)
+      = hypSeries (1 / 2) (1 / 2) 1 from hypSeriesQuad_eq_hypSeries_half] at hsub
+  simp only [coeff_hypSeries] at hsub
+  rw [hsub, tsum_eq_sum hsupp, finsum_eq_sum_of_support_subset _ hsupp']
+  simp only [smul_eq_mul]
+
+/-- The re-expansion of `₂F₁(1/4,1/4;1;4z(1-z))` as a power series in `z` converges to it on
+the disc `4|z|(1+|z|) < 1`: the double family `quadFamily z` is summable, its iterated sum is
+`₂F₁(1/4,1/4;1;4z(1-z))`, and its fibre sums are the coefficients of `₂F₁(1/2,1/2;1;·)`. -/
+-- Theorem: the re-expansion converges to `hyp (1/4)(1/4)1 (4z(1-z))` on 4|z|(1+|z|) < 1.
+theorem hasSum_quadFamily {z : ℝ} (hz : 4 * |z| * (1 + |z|) < 1) :
+    HasSum (fun n : ℕ => hypCoeff (1 / 2) (1 / 2) 1 n * z ^ n)
+      (hyp (1 / 4) (1 / 4) 1 (4 * z * (1 - z))) := by
+  have hc : ∀ n : ℕ, (1 : ℝ) ≠ -(n : ℝ) := by
+    intro n h
+    have hn : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+    linarith
+  have hzB : |4 * z * (1 - z)| < 1 := by
+    have h1z : |1 - z| ≤ 1 + |z| := by
+      rw [abs_sub_le_iff]
+      constructor <;> linarith [neg_abs_le z, le_abs_self z]
+    calc |4 * z * (1 - z)| = 4 * |z| * |1 - z| := by
+          rw [abs_mul, abs_mul, abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 4)]
+      _ ≤ 4 * |z| * (1 + |z|) :=
+          mul_le_mul_of_nonneg_left h1z (mul_nonneg (by norm_num) (abs_nonneg z))
+      _ < 1 := hz
+  have hg : Summable (quadFamily z) := summable_quadFamily hz
+  have hrow : ∀ m : ℕ, (∑' n : ℕ, quadFamily z (m, n))
+      = hypCoeff (1 / 4) (1 / 4) 1 m * (4 * z * (1 - z)) ^ m := by
+    intro m
+    change (∑' n : ℕ, hypCoeff (1 / 4) (1 / 4) 1 m * PowerSeries.coeff n (quadSubst ^ m)
+        * z ^ n) = hypCoeff (1 / 4) (1 / 4) 1 m * (4 * z * (1 - z)) ^ m
+    rw [show (fun n : ℕ => hypCoeff (1 / 4) (1 / 4) 1 m * PowerSeries.coeff n (quadSubst ^ m)
+          * z ^ n) = fun n : ℕ => hypCoeff (1 / 4) (1 / 4) 1 m
+          * (PowerSeries.coeff n (quadSubst ^ m) * z ^ n) by
+      funext n; ring]
+    rw [tsum_mul_left, tsum_coeff_quadSubst_pow]
+  have hcol : ∀ n : ℕ, (∑' m : ℕ, quadFamily z (m, n))
+      = hypCoeff (1 / 2) (1 / 2) 1 n * z ^ n := by
+    intro n
+    change (∑' m : ℕ, hypCoeff (1 / 4) (1 / 4) 1 m * PowerSeries.coeff n (quadSubst ^ m)
+        * z ^ n) = hypCoeff (1 / 2) (1 / 2) 1 n * z ^ n
+    rw [show (fun m : ℕ => hypCoeff (1 / 4) (1 / 4) 1 m * PowerSeries.coeff n (quadSubst ^ m)
+          * z ^ n) = fun m : ℕ => (hypCoeff (1 / 4) (1 / 4) 1 m
+          * PowerSeries.coeff n (quadSubst ^ m)) * z ^ n by
+      funext m; ring]
+    rw [tsum_mul_right, tsum_hypCoeff_mul_coeff_quadSubst]
+  have hfiber : ∀ n : ℕ, (∑' p : {p : ℕ × ℕ // p.2 = n}, quadFamily z p.val)
+      = ∑' m : ℕ, quadFamily z (m, n) := by
+    intro n
+    let e : ℕ ≃ {p : ℕ × ℕ // p.2 = n} :=
+      { toFun := fun m => ⟨(m, n), rfl⟩
+        invFun := fun p => p.val.1
+        left_inv := fun m => rfl
+        right_inv := fun p => by
+          obtain ⟨⟨a, b⟩, hb⟩ := p
+          change b = n at hb
+          subst hb
+          rfl }
+    rw [← Equiv.tsum_eq e (fun p : {p : ℕ × ℕ // p.2 = n} => quadFamily z p.val)]
+    exact tsum_congr fun m => rfl
+  have ha : (∑' p : ℕ × ℕ, quadFamily z p) = hyp (1 / 4) (1 / 4) 1 (4 * z * (1 - z)) := by
+    rw [hg.tsum_prod]
+    rw [show (fun m : ℕ => ∑' n : ℕ, quadFamily z (m, n))
+        = fun m : ℕ => hypCoeff (1 / 4) (1 / 4) 1 m * (4 * z * (1 - z)) ^ m by
+      funext m; exact hrow m]
+    exact (hasSum_hyp hzB hc).tsum_eq
+  have hfib := hg.hasSum.tsum_fiberwise (Prod.snd : ℕ × ℕ → ℕ)
+  rw [ha] at hfib
+  exact hfib.congr_fun fun n => by
+    change hypCoeff (1 / 2) (1 / 2) 1 n * z ^ n
+      = ∑' (p : {p : ℕ × ℕ // p.2 = n}), quadFamily z p.val
+    rw [hfiber n, hcol n]
+
+/-- V6 on the small disc `4|z|(1+|z|) < 1` (which contains `|z| < (√2-1)/2 ≈ 0.207`): the
+quadratic transformation follows from the two `HasSum`s and uniqueness of sums. -/
+-- Theorem: V6 on the disc 4|z|(1+|z|) < 1.
+theorem hyp_quadratic_small {z : ℝ} (hz : 4 * |z| * (1 + |z|) < 1) :
+    hyp (1 / 2) (1 / 2) 1 z = hyp (1 / 4) (1 / 4) 1 (4 * z * (1 - z)) := by
+  have hz1 : |z| < 1 := by
+    have h4 : 4 * |z| ≤ 4 * |z| * (1 + |z|) := by nlinarith [abs_nonneg z]
+    linarith
+  have hc : ∀ n : ℕ, (1 : ℝ) ≠ -(n : ℝ) := by
+    intro n h
+    have hn : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+    linarith
+  exact (hasSum_hyp hz1 hc).unique (hasSum_quadFamily hz)
+
+/-- V6, the symmetric quadratic transformation of the Gauss hypergeometric function:
+`₂F₁(1/2,1/2;1;z) = ₂F₁(1/4,1/4;1;4z(1-z))` for `0 ≤ z < 1/2`.
+
+The small-disc identity `hyp_quadratic_small` is extended to `[0, 1/2)` by analytic
+continuation on the Cassini interval `((1-√2)/2, 1/2)`, where `|z| < 1` and `|4z(1-z)| < 1`
+so both sides are analytic (`hyp` is the sum of its power series on the unit disc) and they
+agree near the origin. -/
+-- Theorem: V6, `hyp (1/2)(1/2)1 z = hyp (1/4)(1/4)1 (4z(1-z))` for `0 ≤ z < 1/2`.
+theorem hyp_quadratic {z : ℝ} (hz0 : 0 ≤ z) (hz : z < 1 / 2) :
+    hyp (1 / 2) (1 / 2) 1 z = hyp (1 / 4) (1 / 4) 1 (4 * z * (1 - z)) := by
+  have hc : ∀ n : ℕ, (1 : ℝ) ≠ -(n : ℝ) := by
+    intro n h
+    have hn : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+    linarith
+  have hr : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  have hrnn : (0 : ℝ) ≤ Real.sqrt 2 := Real.sqrt_nonneg 2
+  have hzlt : ∀ w ∈ Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2), |w| < 1 := by
+    intro w hw
+    rw [Set.mem_Ioo] at hw
+    obtain ⟨hwl, hwr⟩ := hw
+    rw [abs_lt]
+    constructor <;> nlinarith [hr, hrnn]
+  have hwlt : ∀ w ∈ Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2), |4 * w * (1 - w)| < 1 := by
+    intro w hw
+    rw [Set.mem_Ioo] at hw
+    obtain ⟨hwl, hwr⟩ := hw
+    rw [abs_lt]
+    constructor
+    · have hneg : (w - (1 - Real.sqrt 2) / 2) * (w - (1 + Real.sqrt 2) / 2) < 0 :=
+        mul_neg_of_pos_of_neg (by linarith) (by linarith)
+      nlinarith [hneg, hr]
+    · nlinarith [sq_pos_of_ne_zero (show 2 * w - 1 ≠ 0 by linarith)]
+  have hF : AnalyticOnNhd ℝ (fun w : ℝ => hyp (1 / 2) (1 / 2) 1 w)
+      (Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2)) := by
+    let S : FormalMultilinearSeries ℝ ℝ ℝ :=
+      ordinaryHypergeometricSeries ℝ ((1 : ℝ) / 2) ((1 : ℝ) / 2) (1 : ℝ)
+    have hrad : (1 : ℝ≥0∞) ≤ S.radius :=
+      one_le_hypergeometric_radius (a := (1 : ℝ) / 2) (b := (1 : ℝ) / 2) (c := (1 : ℝ)) hc
+    have hpos : 0 < S.radius := lt_of_lt_of_le (by norm_num) hrad
+    refine ((S.hasFPowerSeriesOnBall hpos).analyticOnNhd).mono fun w hw => ?_
+    have hw1 : (‖w‖ₑ : ℝ≥0∞) < 1 := by
+      rw [enorm_eq_nnnorm]
+      simp only [← ENNReal.coe_one, ENNReal.coe_lt_coe]
+      exact hzlt w hw
+    rw [mem_eball_zero_iff]
+    exact lt_of_lt_of_le hw1 hrad
+  have hG : AnalyticOnNhd ℝ (fun w : ℝ => hyp (1 / 4) (1 / 4) 1 (4 * w * (1 - w)))
+      (Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2)) := by
+    let S : FormalMultilinearSeries ℝ ℝ ℝ :=
+      ordinaryHypergeometricSeries ℝ ((1 : ℝ) / 4) ((1 : ℝ) / 4) (1 : ℝ)
+    have hrad : (1 : ℝ≥0∞) ≤ S.radius :=
+      one_le_hypergeometric_radius (a := (1 : ℝ) / 4) (b := (1 : ℝ) / 4) (c := (1 : ℝ)) hc
+    have hpos : 0 < S.radius := lt_of_lt_of_le (by norm_num) hrad
+    have houter : AnalyticOnNhd ℝ (fun w : ℝ => hyp (1 / 4) (1 / 4) 1 w)
+        (Metric.eball 0 (1 : ℝ≥0∞)) :=
+      ((S.hasFPowerSeriesOnBall hpos).analyticOnNhd).mono (Metric.eball_subset_eball hrad)
+    have hinner : AnalyticOnNhd ℝ (fun w : ℝ => 4 * w * (1 - w))
+        (Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2)) :=
+      ((analyticOnNhd_const (v := (4 : ℝ))).mul analyticOnNhd_id).mul
+        ((analyticOnNhd_const (v := (1 : ℝ))).sub analyticOnNhd_id)
+    have hmaps : Set.MapsTo (fun w : ℝ => 4 * w * (1 - w))
+        (Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2)) (Metric.eball 0 (1 : ℝ≥0∞)) := by
+      intro w hw
+      have hw1 : (‖4 * w * (1 - w)‖ₑ : ℝ≥0∞) < 1 := by
+        rw [enorm_eq_nnnorm]
+        simp only [← ENNReal.coe_one, ENNReal.coe_lt_coe]
+        exact hwlt w hw
+      rw [mem_eball_zero_iff]
+      exact hw1
+    exact houter.comp hinner hmaps
+  have hev : (fun w : ℝ => hyp (1 / 2) (1 / 2) 1 w) =ᶠ[𝓝 0]
+      fun w : ℝ => hyp (1 / 4) (1 / 4) 1 (4 * w * (1 - w)) := by
+    refine Filter.eventually_of_mem (Metric.ball_mem_nhds 0 (by norm_num : (0 : ℝ) < 1 / 8))
+      fun w hw => ?_
+    rw [Metric.mem_ball, dist_zero_right, Real.norm_eq_abs] at hw
+    exact hyp_quadratic_small (by nlinarith [abs_nonneg w, hw])
+  have h0 : (0 : ℝ) ∈ Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2) := by
+    rw [Set.mem_Ioo]
+    exact ⟨by nlinarith [hr, hrnn], by norm_num⟩
+  have hzmem : z ∈ Set.Ioo ((1 - Real.sqrt 2) / 2) (1 / 2) := by
+    rw [Set.mem_Ioo]
+    exact ⟨by nlinarith [hr, hrnn, hz0], hz⟩
+  exact AnalyticOnNhd.eqOn_of_preconnected_of_eventuallyEq hF hG isPreconnected_Ioo h0 hev hzmem
 
 end
 

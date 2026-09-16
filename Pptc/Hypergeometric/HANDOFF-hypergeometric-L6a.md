@@ -237,3 +237,31 @@ Plan:
 - [STOP] `hyp_quadratic` NOT landed. The blocker is the missing evaluation API described
   above (no `PowerSeries.sum`, no `IsLinearTopology ℝ ℝ`), forcing a Fubini + analytic
   continuation proof; two of its ingredients are landed clean.
+
+- [L6a-cont6 start] New run. TARGET: `theorem hyp_quadratic {z} (hz0:0<=z) (hz:z<1/2) : hyp (1/2)(1/2)1 z = hyp (1/4)(1/4)1 (4*z*(1-z))`. Edit only `Pptc/Hypergeometric/Quadratic.lean` + this handoff.
+  Plan A = Euler-integral change of variable (DLMF 15.8.27 form: hyp(1/4)(1/4)1 w = hyp(1/2)(1/2)1 ((1-sqrt(1-w))/2)); Plan B = finish scaffolded small-disc Fubini + AnalyticOnNhd continuation.
+  Noted: quadSubst^m absolute re-summation gives 4z(1+z)<1 bound (double family NOT abs-summable on [0,1/2)); Plan B genuinely needs continuation.
+- [L6a-cont6 progress] Plan B (analytic transfer) underway in Quadratic.lean, all LSP-clean so far.
+  Landed: `quadPoly`, `quadSubst_eq_quadPoly`, `quadSubst_pow_eq_quadPoly`, `quadPoly_pow_eq`,
+  `coeff_quadSubst_pow_eq {m n} (hmn : m<=n) : coeff n (quadSubst^m) = 4^m*(-1)^(n-m)*C(m,n-m)`,
+  `tsum_abs_coeff_quadSubst_pow : sum_n ||coeff n (quadSubst^m)||*|z|^n = (4|z|(1+|z|))^m`.
+  Next: Summable of the double family on 4|z|(1+|z|)<1, then HasSum reindexing, then AnalyticOnNhd continuation.
+- [L6a-cont6 progress] Landed `coeff_quadSubst_pow_eq_zero_of_gt` (degree bound) and
+  `summable_quadFamily {z} (hz : 4*|z|*(1+|z|) < 1)` (via summable_prod_of_nonneg: rows finite
+  support + iterated sum ||c_m||*B^m summable by hasSum_hyp). LSP clean.
+  Next: HasSum.tsum_fiberwise reindexing to get small-disc identity, then AnalyticOnNhd continuation.
+- [L6a-cont6 progress] Landed in Quadratic.lean (LSP clean): `quadFamily`, `tsum_hypCoeff_mul_coeff_quadSubst`
+  (coefficient of re-expansion via coeff_subst' + formal identity), `hasSum_quadFamily` (HasSum.tsum_fiberwise
+  + Summable.tsum_prod + HasSum.unique), and `hyp_quadratic_small : 4|z|(1+|z|)<1 -> V6`.
+  REMAINING: analytic continuation from the small disc to 0<=z<1/2 (AnalyticOnNhd on Ioo ((1-sqrt2)/2) (1/2)).
+- [L6a-cont6 DONE] `hyp_quadratic` LANDED in Pptc/Hypergeometric/Quadratic.lean.
+  theorem hyp_quadratic {z} (hz0 : 0 <= z) (hz : z < 1/2) :
+      hyp (1/2)(1/2)1 z = hyp (1/4)(1/4)1 (4*z*(1-z))`
+  Proof chain: formal identity hypSeriesQuad_eq_hypSeries_half (already there) -> coeff formula
+  coeff_quadSubst_pow_eq -> geometric majorant tsum_abs_coeff_quadSubst_pow -> summable_quadFamily
+  (summable_prod_of_nonneg) -> tsum_hypCoeff_mul_coeff_quadSubst (coeff_subst' + finsum/tsum) ->
+  hasSum_quadFamily (HasSum.tsum_fiberwise + Summable.tsum_prod + HasSum.unique) -> hyp_quadratic_small
+  -> hyp_quadratic (AnalyticOnNhd.eqOn_of_preconnected_of_eventuallyEq on Ioo ((1-sqrt2)/2) (1/2)).
+  Added import Pptc.Hypergeometric.Contiguous (for one_le_hypergeometric_radius) and open scoped ENNReal.
+  VERIFIED: lean_verify Pconstructible.hyp_quadratic -> axioms propext, Classical.choice, Quot.sound.
+  lake_check Pptc/Hypergeometric/Quadratic.lean -> OK, no errors or warnings. No sorry/axiom.
