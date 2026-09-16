@@ -160,6 +160,54 @@ inductive PConstructible : ℝ → Prop
       (hx₁ : PConstructible (γ b).1) (hy₁ : PConstructible (γ b).2) :
       PConstructible (arcLengthOf γ a b)
 
+  -- The right and top edges of the bounding box of a drawn curve. Modelling: selecting a
+  -- stroke and reading the size the program reports for it — the one measurement a
+  -- drawing program makes without being given a second shape to intersect against.
+  --
+  -- This is the third way to get a number *out of* a curve, after `inter_x`/`inter_y`
+  -- (a coordinate of a unique crossing) and `arc_length` (the length of an arc with known
+  -- endpoints). Unlike those two it needs neither a second curve nor prior knowledge of
+  -- the point being read, which is what makes it able to name the far end of an
+  -- `arc_of_length` stroke: on an arc that is monotone in a coordinate, that endpoint is
+  -- the extreme in that coordinate, so the box returns it and `arc_of_length` becomes
+  -- invertible. See `Pptc/Hypergeometric/NOTES-defs-arc-endpoint-extraction.md`.
+  --
+  -- The hypothesis is `PConstructibleCurve A` for the curve *being measured*, not
+  -- `γ '' Set.Icc a b ⊆ S` for an arc lying inside some constructible `S`. That
+  -- distinction is the whole soundness of the rule and it is not cosmetic. "Is a subset
+  -- of a constructible curve" holds of *every* subset of the parabola, so a rule stated
+  -- with `⊆` would let `S = {y = x²}`, `γ t = (t, t²)`, `a = 0`, `b = r` return
+  -- `sSup = r` for an unconstrained real `r`, collapsing `PConstructible` to all of `ℝ` —
+  -- the same collapse the comment on `arc_length` above describes, reached the same way.
+  -- `arc_length` blocks it by pinning the arc's plane endpoints and `arc_of_length` by
+  -- pinning its start and length; here the arc is pinned by being a member of the class
+  -- in its own right. Arcs that are (`arc_of_length` and `offset` produce exactly such
+  -- arcs, as does `restrict`) can be boxed; arcs that nobody drew cannot.
+  --
+  -- `IsCompact` is what makes the supremum a *measurement* rather than a limit: on a
+  -- compact set it is attained (`IsCompact.sSup_mem`), so some point of the curve really
+  -- sits at the reported edge and the program has something to put a handle on. Both
+  -- failure modes are live here. Unboundedness is loud — `poly_graph` is the whole,
+  -- endless graph, whose `sSup` is not a real number at all. Non-closedness is quiet and
+  -- is the dangerous one: `power_law` omits `x = 0`, so the restricted arc
+  -- `{(x, √x) : 0 < x ≤ 1}` has `sInf` of its abscissae equal to `0`, a perfectly good
+  -- real that no point of the curve attains. Concluding it were P-constructible would
+  -- assert that an infinite limiting process is a finite construction, which is precisely
+  -- what this class is built to exclude. Compactness rules out both at once. In practice
+  -- it is discharged from a tracing by `IsCompact.image_of_continuousOn` on
+  -- `isCompact_Icc`, which the `hdiff` of `arc_of_length` and `offset` already supplies.
+  --
+  -- Only the two maxima are taken as axioms. The left and bottom edges follow from them
+  -- by reflection — `scale_x` and `scale_y` carry no positivity hypothesis, so scaling by
+  -- `-1` is legal and turns an infimum into a supremum — and are derived in `Pptc.Basic`
+  -- rather than assumed here.
+  | box_xmax {A : Set (ℝ × ℝ)} (hA : PConstructibleCurve A)
+      (hcomp : IsCompact A) (hne : A.Nonempty) :
+      PConstructible (sSup (Prod.fst '' A))
+  | box_ymax {A : Set (ℝ × ℝ)} (hA : PConstructibleCurve A)
+      (hcomp : IsCompact A) (hne : A.Nonempty) :
+      PConstructible (sSup (Prod.snd '' A))
+
 /-- `PConstructibleCurve S` holds if the point-set `S ⊆ ℝ × ℝ` can be reached by a
 finite sequence of legal curve constructions and geometric operations. -/
 inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
