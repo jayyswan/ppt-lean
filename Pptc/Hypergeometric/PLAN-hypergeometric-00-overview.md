@@ -66,7 +66,7 @@ corollaries, so most tasks depend only on `Basic`, and the work fans out as earl
 | L3b | 2 | `Hypergeometric/EllipticClass.lean` | contiguous class of `(½,½;1)` is PConstructible | L2, L3 |
 | L5b | 2 | `Hypergeometric/GraphsClass.lean` | contiguous classes of the H6 families | L3, L5a |
 | L6b | 2 | `Hypergeometric/Clausen.lean` | `Σ C(2n,n)³(x/64)ⁿ` PConstructible (B3) | L2, L6a |
-| L6c | 2 | `Hypergeometric/AGM.lean` | `agm` definition + PConstructible (B4) | L2, L6a |
+| ~~L6c~~ | — | moved out: `Pptc/AGM.lean` | `agm` needs no ₂F₁ at all (B4); not this programme | — |
 | L9 | 2 | `Hypergeometric/Signatures.lean` | quartic signature V7; cubic/sextic after R2 (H5) | L2 (R2 for cubic/sextic) |
 | L7b | 3 | `Hypergeometric/Moments.lean` | trigonometric moment integrals (B2) | L3b, L7a |
 | L10 | 3 | `Hypergeometric/GammaBridge.lean` | Gauss's second theorem; B1 rows as consistency theorems | L4, L6a, L9 |
@@ -284,11 +284,28 @@ Each item is labelled **new** (a number or family not currently known P-construc
 **unifies** (re-derives existing results through one mechanism, which is a cross-check and a
 simplification), or **speculative**.
 
-**Everything in this section is outbound, and outbound is scheduled second** (§6). These are
-the payoffs of the inbound map, not a parallel track: every family added inbound widens what
-each mechanism below delivers, so proving them early means proving them twice. Read this
-section as the specification of what the programme collects at the end, and as the argument
-for which inbound families are worth the most.
+**Most of this section is outbound, and outbound is scheduled second** (§6). These are the
+payoffs of the inbound map, not a parallel track: every family added inbound widens what each
+mechanism below delivers, so proving them early means proving them twice. Read this section as
+the specification of what the programme collects at the end, and as the argument for which
+inbound families are worth the most.
+
+**The test for membership.** An outbound item belongs to this programme only if ₂F₁ is *the*
+route to it — that is, if there is no obvious path to the same result from the machinery the
+repo already has. "A ₂F₁ proof exists" is not enough; `agm` (B4) and Pólya (B5) both have one
+and are still not this programme's business, because `Basic.lean` and `Gamma.lean` reach them
+directly. §6 moves those two out. Applying the test to the rest:
+
+| item | is ₂F₁ the route? | verdict |
+|---|---|---|
+| B3 Clausen `₃F₂` | yes — Clausen's formula is irreducibly hypergeometric | **keep: flagship outbound** |
+| B4 Legendre `P_ν`, `ν ∈ {−⅓,−¼,−⅙}+ℤ` | yes — needs the signature reductions | **keep** |
+| B4 incomplete Beta on the H6 classes | yes — the graph families arrive as ₂F₁ | **keep** |
+| B4 Legendre `P_{−½}` | no — it is `(2/π)K` directly | drop to a remark |
+| B2 moment integrals | no — integration by parts reaches them from `ellipticE`/`ellipticF` | low value; state only if free |
+| B1 `Γ` rows for `a ∈ {½,⅓,¼,⅙}` | no — `Gamma.lean` already has every value | cross-check only, not a result |
+| B1 frontier analysis (`which a is new`) | yes — the question only exists in ₂F₁ terms | **keep as analysis** |
+| B4 `agm`, B5 Pólya | no | out of the programme (§6) |
 
 **B1: summation theorems turn ₂F₁ values into `Γ` quotients (unifies, and maps the frontier).**
 Gauss's second theorem (V5) reads `P_{−a}(0) = ₂F₁(a,1−a;1;½) = √π/(Γ((1+a)/2) Γ(1−a/2))`.
@@ -365,12 +382,12 @@ are new.
   `agm x y = π (∫₀^∞ dt/√(t(t+x²)(t+y²)))⁻¹`; all three checked to 30+ digits against
   `ArithmeticGeometricMean[1, 3/10]`. For `x, y > 0` the parameter `((x−y)/(x+y))² < 1` is
   automatic, so the P-constructibility corollary is about five lines once the identity is in
-  place. Since no ₂F₁ occurs anywhere in it, `Pptc/AGM.lean` is arguably a better home for
-  this than the `Hypergeometric/` directory. Worth doing: `agm` is a well-known constant generator (Gauss's constant, and `π`
+  place. **No ₂F₁ occurs anywhere in this**, so it is not a result of this programme: §6 moves
+  it out to `Pptc/AGM.lean`, to be judged on its own merits. Worth doing: `agm` is a well-known constant generator (Gauss's constant, and `π`
   via Brent–Salamin).
 
 **B5: lattice Green's functions and Pólya's constant (new as a statement; the identity is
-speculative to formalize).** V11 writes Pólya's `u(3)` through `Γ(n/24)`, and independently
+speculative to formalize; uses no ₂F₁, so not a result of this programme — see §6).** V11 writes Pólya's `u(3)` through `Γ(n/24)`, and independently
 through `K(k₆)` with `k₆` a degree-4 algebraic number. *Either* form is already P-constructible
 with no new work (`Gamma_intCast_div_twentyfour_Pconstructible`; or
 `ellipticF_Pconstructible` at the P-constructible parameter `k₆²`). So, **conditional on the
@@ -451,10 +468,29 @@ in place — waits, because it yields no ₂F₁ value.
 - **Follow-up, inbound:** lift `0 < a`, `0 < b`, `b < c` in `hyp_one_eq_Gamma` using L3's
   contiguous relations, widening the denominator-24 family at `z = 1` (L4).
 
-**Parked, outbound.** L6b (Clausen `₃F₂`), L6c (`agm`), L7b (moment integrals), L10 (the B1
-`Γ` consistency rows), and any further Legendre-function or incomplete-Beta corollaries from
-B4. None of these is blocked; they are simply scheduled after the inbound map. L8 (Pólya) is
-already landed and needs nothing more.
+**Parked, outbound**, in the order the membership test of §5 ranks them:
+
+1. **L6b (Clausen `₃F₂`)** — the flagship. `Σ C(2n,n)³(x/64)ⁿ` has no route from the repo's
+   existing machinery; Clausen's formula is irreducibly hypergeometric.
+2. **B4's Legendre functions at `ν ∈ {−⅓,−¼,−⅙}+ℤ`, and incomplete Beta on the H6 classes** —
+   likewise only reachable once the corresponding inbound families exist.
+3. **L7b (moment integrals)** — low value: integration by parts reaches the same integrals
+   from `ellipticE`/`ellipticF`. State them only if L3b makes them nearly free.
+4. **L10 (B1's `Γ` rows)** — not a result but a cross-check, since `Gamma.lean` already has
+   every value involved. What is worth keeping from B1 is the frontier analysis, which is a
+   question that only exists in ₂F₁ terms.
+
+None is blocked; they are scheduled after the inbound map, and each grows as it grows.
+
+**Not part of this programme at all.** `agm` (B4) and Pólya (B5) use **no ₂F₁**: `agm` needs
+`agm = π/4 · (x+y)/K(...)` with `K` P-constructible since `Basic.lean`, and Pólya needs only
+`Gamma.lean` plus `ellipticF_pi_div_two_Pconstructible`. They were swept in here because the
+first route this plan imagined for `agm` went through the quadratic transformation; the Landen
+route removed the last ₂F₁ from it. So `agm` leaves the plan — if it is wanted, it is a small
+standalone task in `Pptc/AGM.lean`, judged on its own merits — and `Polya.lean`, already
+landed, belongs beside `Gamma.lean` rather than in this directory. Keep the test in mind when
+adding items: *if a result needs no ₂F₁ lemma, it does not belong in this plan, however
+attractive it is.*
 
 **Wave 4** (L11). The umbrella module, plus a final `lake build Pptc.Hypergeometric`.
 
