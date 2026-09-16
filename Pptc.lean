@@ -1,5 +1,6 @@
 import Pptc.Defs
 import Pptc.Tactic
+import Pptc.Box
 import Pptc.Basic
 import Pptc.Offset
 import Pptc.ThirdKind
@@ -9,3 +10,6 @@ import Pptc.Level24Alg
 import Pptc.Level24
 import Pptc.Jacobi
 import Pptc.Nonic.Nonic
+import Pptc.BoxSine
+import Pptc.BoxGraph
+import Pptc.BoxOffset

@@ -1,10 +1,62 @@
 # PLAN: the bounding-box constructor
 
-Status: `PConstructible.box_xmax` / `box_ymax` are **landed in `Pptc/Defs.lean`** (after
-`arc_length`). `Defs.lean` compiles clean. Nothing else in the project uses them yet.
+Status: **landed — the N-series now produces numbers.** `PConstructible.box_xmax` /
+`box_ymax` are in `Pptc/Defs.lean`; wave 1 (B1–B7) wired the box in and rewrote the proofs
+that no longer needed the abutting-arc trick; wave 2 (B8–B12) is the N-series proper. State
+of §3:
 
-This plan says how to wire them in, which existing proofs they shorten, and what new numbers
-they are expected to yield. Labels follow the house convention: `[SY]` syntactic/from source,
+- **N1 — landed** as W4 `arcLength_inverse_Pconstructible` in `Pptc/Box.lean`. There is no
+  separate N1 statement; it is W4 read with the length as the independent variable.
+- **N2 — landed** (B8+B9): the parabola's half-length abscissa
+  `parabolaHalfArcAbscissa` (`Pptc/BoxGraph.lean:207`), value `0.4463338855…`, is
+  `PConstructible`. This is the first box-produced number the project did not already have.
+- **N3 — landed but vacuous** (`Pptc/BoxSine.lean`): `ellipticEAm_Pconstructible_via_sine`
+  is a strict special case of `ellipticEAm_Pconstructible` (`Jacobi.lean:602`) with an extra
+  hypothesis. It was commissioned as a consistency check and passed; it yields **zero new
+  numbers**.
+- **N4 — landed** (B9): `cubicUnitArcAbscissa` (`BoxGraph.lean:224`) and
+  `quarticUnitArcAbscissa` (`:241`), values `0.7907068936…` and `0.8104516200…`, both
+  `PConstructible`. The quartic inverse is genus-2 / hyperelliptic, outside the elliptic
+  machinery — the most exotic value the box reaches.
+- **N5 — closed, negative.** `e`, `ln 2` (and `log₂(e·ln 2)`) are already reachable; nothing
+  to do.
+- **N6 — reachability landed, identification open.** `Pptc/BoxOffset.lean` gives
+  `offsetCuspAbscissa_Pconstructible`: the box reads the maximum abscissa of the offset of
+  the cubic pair `(0,0),(0,2),(2,0),(3,0)` at `d = 1` **with no root isolation** (B12). What
+  is *not* formalized is that this sup equals the degree-12 cusp abscissa `3.0151518126…`;
+  that identification is the large task (see `Pptc/NOTES-offset-cusps-lean.md`).
+- **N7 — resolved, negative** (`Pptc/NOTES-box-composability.md`, B11). Strokes do chain, but
+  composability adds no number: W4/B8 already accept an arbitrary P-constructible start, so a
+  second stroke is one application with a derived start, and the class is already closed under
+  finite construction trees. Same-curve composition is literally one stroke at `L₁+L₂`.
+
+Wave 2 also added `Pptc/Box.lean` §W2b (compactness of `restrict` outputs: a closed base
+curve ∩ a closed window is compact), which is what lets a cropped curve be boxed without a
+hand proof.
+
+What wave 1 produced (the prerequisite):
+
+- **B1–B3 — `Pptc/Box.lean`** (new): W1 four-edge API (`box_xmin_Pconstructible`,
+  `box_ymin_Pconstructible`, `box_width_Pconstructible`, `box_height_Pconstructible`), W2
+  compactness toolkit (`isCompact_traced_arc`, `nonempty_traced_arc`), W3 monotone endpoint
+  extraction (`arc_xendpoint_Pconstructible`, `arc_yendpoint_Pconstructible`, and the
+  antitone twins), W4 `arcLength_inverse_Pconstructible` plus the single-coordinate forms.
+  All tagged `@[pconstructible_cond]`.
+- **B4 — `Pptc/Jacobi.lean`**: `ellipticEAm_Pconstructible_of_mem_Icc` rewritten onto the box
+  (statement unchanged), `ellipseCoArc_PConstructibleCurve` deleted, the §4.1 prose updated.
+  The `ellipseCoParam` cluster is now dead code, left in place.
+- **B5 — `Pptc/Basic.lean`**: `cos_sin_Pconstructible_of_mem_Icc` rewritten onto the box
+  (statement unchanged); the two-abutting-arc/`inter_x` argument removed.
+- **B6 — `Pptc/BoxSine.lean`** (new): the N3 cross-check (see above).
+- **B7 — `Pptc/NOTES-offset-cusps.md`** (new): N6 investigation; **corrects this plan** as
+  recorded under N6 below.
+
+Architecture note (differs from W1's original text): `Pptc/Box.lean` imports `Pptc.Defs` and
+`Pptc.Tactic` only, and `Pptc.Basic` now imports `Pptc.Box`. The plan's `Box → Basic` would
+have been an import cycle once B5 rewrote `Basic.lean`.
+
+This plan says how the box is wired in, which existing proofs it shortens, and what new
+numbers it yields. Labels follow the house convention: `[SY]` syntactic/from source,
 `[NC n]` numeric to `n` digits, `[SP]` speculative.
 
 Background and the original proposal: `Pptc/Hypergeometric/NOTES-defs-arc-endpoint-extraction.md`.
@@ -174,6 +226,11 @@ reproduces a known result by a new route rather than producing something inconsi
 disagrees, the API in W1–W4 is wrong. `[SY]` for the identity, `[SP]` that the proof goes
 through smoothly.
 
+**Landed (B6), in `Pptc/BoxSine.lean`.** `speed_sineArc` and `arcLengthOf_sineArc` give the
+identity, and `ellipticEAm_Pconstructible_via_sine` boxes the sine-graph stroke to reach
+`ellipticEAm (1/2) (L / √2)` for P-constructible `L` — agreeing with the ellipse route
+`ellipticEAm_Pconstructible`. The cross-check passes: the two routes are the same function.
+
 ### N4. Higher graphs — elliptic, then genuinely beyond
 Unit-length strokes from the origin. **Recomputed — the note's §4 table is wrong in both
 entries.** It labels them `[NC 35]` but they are correct only to ~15 digits, the signature of a
@@ -214,20 +271,26 @@ worried about, and also settles §5.3 negatively for every base curve: `poly_gra
 solve `p'(x) = 0` with `p'` itself a drawable `poly_graph` (intersect it with `y = 0`);
 rotated-`sine` extrema need only `arccos`, which exists.
 
-The cusps are the exception. For a cubic pair, `x'y'' − y'x''` is a cubic and `x'² + y'²` a
-quartic, so cusp parameters solve
-```
-(x'² + y'²)³ = d² · (x'y'' − y'x'')²
-```
-a degree-**12** equation in `t`. Given that `Offset.lean:398` already grinds a degree-10
-rationalized crossing equation to reach all real quintic roots, and `DegreeSeven.lean` /
-`Nonic/` are hunting specific degrees, it is worth checking whether cusp parameters land outside
-what crossings reach.
+The cusps are the exception. For a cubic pair, `x'y'' − y'x''` is at most **quadratic** (the
+`t³` terms cancel identically) and `x'² + y'²` a quartic, so cusp parameters solve the honest
+cubic-in-`t` equation `(x'² + y'²)³ = d² · (x'y'' − y'x'')²`, whose rational form squares the
+real condition `w³ = d·w'` and so is a degree-**12** polynomial in `t`. Given that
+`Offset.lean:398` already grinds a degree-10 rationalized crossing equation to reach all real
+quintic roots, and `DegreeSeven.lean` / `Nonic/` are hunting specific degrees, it is worth
+checking whether cusp parameters land outside what crossings reach.
 
-Caveat, and it is a real one: a cusp is a local extremum only along the `γ'(t*)` direction, so
-making it the *global* box extremum needs a window isolating it — and the note's §3b
-counterexample shows the isolating bound can be the unknown itself. Investigate, but expect the
-window argument to be the hard part, not the algebra. `[SP]`
+**Corrected by B7 (`Pptc/NOTES-offset-cusps.md`).** The three claims above are not all right,
+and the note supersedes this section: (i) `x'y'' − y'x''` is quadratic, not cubic, and the
+degree-12 equation is the *square* of the real condition, so it carries spurious `κ = −1/d`
+roots; (ii) a cusp parameter is **not automatically new** — for the symmetric pair `(t, t³)`
+with `d = 1` the genuine cusp has `t*²` a root of an irreducible sextic, hence `t*` is reached
+by `root_Pconstructible_le_six_coeffs` plus `sqrt`, whereas e.g. the Bézier
+`(0,0),(0,2),(2,0),(3,0)` gives an irreducible degree-12 minimal polynomial not obviously
+reachable; (iii) the §3b "bound is the unknown" failure does **not** literally apply to cusps:
+a cusp is a critical point, hence a local extremum, so an `offset` *parameter* window isolates
+it without comparing to the unknown, and in the examples tried the `[0,1]` stroke already has
+the cusp as its global abscissa extreme. The remaining hard part is root-isolating the
+degree-12 cusp equation and proving the single sign change, not the window. `[SP]`
 
 ### N7. `arc_of_length` becomes composable — the structural gain
 Today, on an open curve, laying a string is a **dead end**: `Defs.lean:306-312` is explicit that
@@ -294,23 +357,38 @@ P-constructible lengths. It is simply not `am`. `[SY]`
 
 ---
 
-## 6. Suggested task split
+## 6. Task split
 
 One deliverable per subagent, per `CLAUDE.md` § Subagents, each with a
-`HANDOFF-box-<topic>.md` log:
+`HANDOFF-box-<topic>.md` log.
 
-| task | file | depends on |
-|---|---|---|
-| B1 | `Pptc/Box.lean` — W1 four-edge API + W2 compactness toolkit | — |
-| B2 | `Pptc/Box.lean` — W3 monotone endpoint extraction | B1 |
-| B3 | `Pptc/Box.lean` — W4 `arcLength_inverse_Pconstructible` + N1 uniform statement | B2 |
-| B4 | `Pptc/Jacobi.lean` — rewrite `ellipticEAm_Pconstructible_of_mem_Icc`, delete `ellipseCoArc_PConstructibleCurve` | B3 |
-| B5 | `Pptc/Basic.lean` — rewrite `cos_sin_Pconstructible` (**do last**; most of `Basic.lean` sits on it) | B4 green |
-| B6 | N3 sine cross-check | B3 |
-| B7 | N6 offset-cusp investigation (research note first, no Lean) | B3 |
+**Wave 1 (B1–B7) — §1 wiring and §2 rewrites only.** None of these tasks works on N2, N4 or
+N7; the "landed" rows below mean only that the task as scoped was completed.
 
-B1–B3 are one file and could be a single agent; B5 should not start until B4 has validated the
-API on a smaller target.
+| task | file | depends on | status |
+|---|---|---|---|
+| B1 | `Pptc/Box.lean` — W1 four-edge API + W2 compactness toolkit | — | landed |
+| B2 | `Pptc/Box.lean` — W3 monotone endpoint extraction | B1 | landed |
+| B3 | `Pptc/Box.lean` — W4 `arcLength_inverse_Pconstructible` + N1 | B2 | landed (N1 = W4) |
+| B4 | `Pptc/Jacobi.lean` — rewrite `ellipticEAm_Pconstructible_of_mem_Icc`, delete `ellipseCoArc_PConstructibleCurve` | B3 | landed |
+| B5 | `Pptc/Basic.lean` — rewrite `cos_sin_Pconstructible` | B4 green | landed |
+| B6 | N3 sine cross-check | B3 | landed (no new numbers) |
+| B7 | N6 offset-cusp investigation (research note, no Lean) | B3 | paper only |
+
+**Wave 2 (B8–B12) — the N-series proper; this is where §3 numbers are produced.**
+
+| task | file | depends on | status |
+|---|---|---|---|
+| B8 | `Pptc/BoxGraph.lean` — general graph inverse-arc-length theorem; move `strictMono_of_hasDerivAt_pos`, `mul_le_of_hasDerivAt_ge`, `surjective_of_hasDerivAt_ge` out of `Jacobi.lean` | wave 1 | landed |
+| B9 | `Pptc/BoxGraph.lean` — instantiate B8 at `y = x²` (N2), `y = x³`, `y = x⁴` (N4) | B8 | landed (3 numbers, 9 lines each) |
+| B10 | `Pptc/Box.lean` — compactness of `restrict` outputs (closed base curve ∩ closed window) | — | landed → §W2b |
+| B11 | `Pptc/NOTES-box-composability.md` — N7 composability (research note, no Lean) | B8 | landed — negative (N7 adds no numbers) |
+| B12 | N6 offset cusps in Lean — is the Bézier `(0,0),(0,2),(2,0),(3,0)`, `d=1` cusp reachable? | B8–B11 | landed — reachability yes (`Pptc/BoxOffset.lean`), identification open |
+
+B8 is the keystone: because a graph tracing's abscissa is the identity, the `MonotoneOn` side
+condition of `arcLength_xendpoint_Pconstructible` is free, so B9 should be a few lines per
+witness. If B9 comes out long, B8 is stated too narrowly and should be reopened before
+B10–B12 build on it.
 
 ## 7. Ledger
 
@@ -319,6 +397,10 @@ API on a smaller target.
 | `⊆`-form of the box collapses `PConstructible` to `ℝ` | `[SY]` — witness in §0 |
 | `Defs.lean` compiles with `box_xmax`/`box_ymax`; `lake build Pptc.Defs` green | `[SY]` |
 | `Basic.lean` still compiles against the new `Defs` (`lake env lean`, exit 0, no output); no `cases`/`induction` on either inductive anywhere | `[SY]` — build + grep |
+| `Pptc/Box.lean` W1–W4 landed; `lake build Pptc.Box` green; axioms clean | `[SY]` |
+| `ellipticEAm_Pconstructible_of_mem_Icc` statement unchanged, proof rewritten onto the box; `ellipseCoArc_PConstructibleCurve` deleted | `[SY]` B4 |
+| `cos_sin_Pconstructible_of_mem_Icc` statement unchanged, proof rewritten onto the box | `[SY]` B5 |
+| sine cross-check: `ellipticEAm_Pconstructible_via_sine` reproduces the ellipse route | `[SY]` B6 |
 | note's `y=x³`, `y=x⁴` witnesses wrong past ~15 digits; corrected in N4 | `[NC 45]` Wolfram |
 | arc length of `y = sin x` identity checked at `X = 7/10` | `[NC 57]` Wolfram |
 | `scale_x`/`scale_y` carry no positivity hypothesis, so `-1` reflection is legal | `[SY]` `Defs.lean:267-272` |
@@ -327,7 +409,9 @@ API on a smaller target.
 | arc length of `y = sin x` is `√2·E(X\|1/2)` | `[SY]` |
 | `e`, `ln 2`, `log₂(e·ln 2)` already reachable — no new constants there | `[SY]` `Basic.lean:1899, 1926` |
 | offset velocity `∥` base velocity, so extrema = base extrema ∪ cusps | `[SY]` Frenet |
-| cusp parameters solve a degree-12 equation | `[SY]` degree count |
-| cusps give algebraic values outside crossing reach | `[SP]` |
+| `x'y'' − y'x''` is quadratic for a cubic pair, not cubic; degree-12 is its square | `[SY]` B7 — corrects N6 |
+| cusps give algebraic values outside crossing reach | `[SP]` B7 — e.g. Bézier `(0,0),(0,2),(2,0),(3,0)` has irreducible degree-12 cusp minpoly |
+| a cusp is not automatically new: the symmetric `(t,t³)`, `d=1` cusp is reached via sextic + `sqrt` | `[NC 50]` B7 — corrects N6 |
+| the §3b "bound is the unknown" failure does not literally apply to cusps (a cusp is a critical point) | `[SP]` B7 |
 | `y = x⁴` inversion is genus-2 / beyond the elliptic machinery | `[SP]` |
 | box does **not** reach `am`/`sn`/`cn`/`dn` | `[SY]` `Basic.lean:3540`, `Jacobi.lean:711` |

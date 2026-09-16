@@ -30,14 +30,17 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 Core definitions for the Pptc (PowerPoint Constructibility) project:
 `PConstructible : ℝ → Prop` for real numbers reachable by a finite sequence of
 arithmetic operations (`+ - * /`) from `1`, together with intersecting a point out
-of two constructible curves, and `PConstructibleCurve : Set (ℝ × ℝ) → Prop` for
+of two constructible curves or reading off a coordinate extreme of a compact curve,
+and `PConstructibleCurve : Set (ℝ × ℝ) → Prop` for
 point-sets reachable from a finite sequence of curve constructions (axis-aligned
 ellipses, axis-aligned rectangles, degree-≤6 polynomial graphs with rational
 coefficients, power laws, the exponential `y = 2 ^ x`, the sine curve `y = sin x`,
 cubic Bézier curves with P-constructible control points) and the geometric operations of
 translating along either axis, scaling either axis, rotating by whole-degree increments,
 cropping to a rectangular window, marking off an arc of prescribed length, and offsetting
-an arc sideways by a fixed normal distance.
+an arc sideways by a fixed normal distance. The `box_xmax`/`box_ymax` constructors are
+the coordinate-extreme step above; only the two maxima are axioms, the minima following
+by reflection.
 
 The two are mutually inductive: a `PConstructibleCurve` may need `PConstructible`
 parameters (e.g. an ellipse's center and dimensions), and `PConstructible` may need
@@ -199,7 +202,7 @@ inductive PConstructible : ℝ → Prop
   --
   -- Only the two maxima are taken as axioms. The left and bottom edges follow from them
   -- by reflection — `scale_x` and `scale_y` carry no positivity hypothesis, so scaling by
-  -- `-1` is legal and turns an infimum into a supremum — and are derived in `Pptc.Basic`
+  -- `-1` is legal and turns an infimum into a supremum — and are derived in `Pptc.Box`
   -- rather than assumed here.
   | box_xmax {A : Set (ℝ × ℝ)} (hA : PConstructibleCurve A)
       (hcomp : IsCompact A) (hne : A.Nonempty) :

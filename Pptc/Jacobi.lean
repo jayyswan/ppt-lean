@@ -16,6 +16,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 -/
 
 import Pptc.Basic
+import Pptc.Box
 
 /-! # Pptc.Jacobi
 
@@ -25,65 +26,10 @@ arc-length parametrization of the ellipse.
 
 namespace Pconstructible
 
-section Inversion
-
 /-! ### Inverting an increasing antiderivative
 
-Both Legendre integrals are `∫₀^φ` of a continuous integrand bounded away from `0` and
-`∞`, so both are strictly increasing bijections of the line onto itself. Proved once here
-in terms of the derivative and used twice below. -/
-
--- Theorem: a function whose derivative is everywhere positive is strictly monotone.
-theorem strictMono_of_hasDerivAt_pos {f g : ℝ → ℝ}
-    (hf : ∀ φ, HasDerivAt f (g φ) φ) (hpos : ∀ θ, 0 < g θ) : StrictMono f :=
-  strictMono_of_deriv_pos fun x => by rw [(hf x).deriv]; exact hpos x
-
--- Theorem: a derivative bounded below by `d` forces the function away from `0` at least
--- as fast as the line of slope `d` does, on both sides of the origin.
-theorem mul_le_of_hasDerivAt_ge {f g : ℝ → ℝ} {d : ℝ}
-    (hf : ∀ φ, HasDerivAt f (g φ) φ) (hg : ∀ θ, d ≤ g θ) (hf0 : f 0 = 0) (φ : ℝ) :
-    (0 ≤ φ → d * φ ≤ f φ) ∧ (φ ≤ 0 → f φ ≤ d * φ) := by
-  have hd : ∀ x : ℝ, HasDerivAt (fun φ => f φ - d * φ) (g x - d) x := fun x =>
-    (hf x).sub (by simpa using (hasDerivAt_id x).const_mul d)
-  have hmono : Monotone fun φ => f φ - d * φ := by
-    refine monotone_of_deriv_nonneg (fun x => (hd x).differentiableAt) fun x => ?_
-    rw [(hd x).deriv]
-    linarith [hg x]
-  refine ⟨fun h => ?_, fun h => ?_⟩
-  · have := hmono h
-    simp only [hf0, mul_zero, sub_zero] at this
-    linarith
-  · have := hmono h
-    simp only [hf0, mul_zero, sub_zero] at this
-    linarith
-
--- Theorem: such a function is onto, by the intermediate value theorem between the two
--- points where the line of slope `d` has already passed the target.
-theorem surjective_of_hasDerivAt_ge {f g : ℝ → ℝ} {d : ℝ} (hd : 0 < d)
-    (hf : ∀ φ, HasDerivAt f (g φ) φ) (hg : ∀ θ, d ≤ g θ) (hf0 : f 0 = 0) :
-    Function.Surjective f := by
-  have hcont : Continuous f := by
-    have : Differentiable ℝ f := fun x => (hf x).differentiableAt
-    exact this.continuous
-  intro u
-  have key := mul_le_of_hasDerivAt_ge hf hg hf0
-  rcases le_total 0 u with hu | hu
-  · have hb : 0 ≤ u / d := by positivity
-    have h₁ : u ≤ f (u / d) := by
-      have := (key (u / d)).1 hb
-      rwa [mul_div_cancel₀ _ hd.ne'] at this
-    have := intermediate_value_Icc hb (hcont.continuousOn)
-    obtain ⟨φ, -, hφ⟩ := this (Set.mem_Icc.mpr ⟨by rw [hf0]; exact hu, h₁⟩)
-    exact ⟨φ, hφ⟩
-  · have hb : u / d ≤ 0 := div_nonpos_of_nonpos_of_nonneg hu hd.le
-    have h₁ : f (u / d) ≤ u := by
-      have := (key (u / d)).2 hb
-      rwa [mul_div_cancel₀ _ hd.ne'] at this
-    have := intermediate_value_Icc hb (hcont.continuousOn)
-    obtain ⟨φ, -, hφ⟩ := this (Set.mem_Icc.mpr ⟨h₁, by rw [hf0]; exact hu⟩)
-    exact ⟨φ, hφ⟩
-
-end Inversion
+The generic lemmas `strictMono_of_hasDerivAt_pos`, `mul_le_of_hasDerivAt_ge` and
+`surjective_of_hasDerivAt_ge` now live in `Pptc.Box`, having no elliptic content. -/
 
 section Amplitude
 
@@ -378,12 +324,12 @@ inverts `E` directly, exactly as it inverted the arc length of the circle to giv
 and `sin`.
 
 The construction is `cos_sin_Pconstructible_of_mem_Icc` with the circle replaced by the
-ellipse. Laying out an arc of length `L` from the top gives a curve but not yet a point;
-what pins down its far end is a second arc abutting it, the one that runs backwards from
-`(1, 0)` — the end of the horizontal semi-axis, at angle `π/2` — for the complementary
-length `E(π/2) - L`. The two together cover the quarter of the ellipse in the first
-quadrant and meet only where the first stops, so `inter_x` and `inter_y` read off the
-coordinates `(sin φ, b cos φ)` of that point, and `arccos` recovers the angle `φ` itself.
+ellipse, and the `inter_x`/`inter_y` abutting-arc argument of that lemma replaced by the
+box. Laying out an arc of length `L` from the top gives a curve whose far end is not yet
+a point; on `[0, φ] ⊆ [0, π/2]` its abscissa `sin` is increasing, so `box_xmax` reads
+`sin φ` off as the maximum abscissa of the arc — the `arc_of_length` stroke is itself a
+`PConstructibleCurve`, which is what lets the box measure it. Then `arcsin` recovers the
+angle `φ` itself from `sin φ`.
 
 Reduction to the quarter turn is by the two symmetries of `E`: reflection,
 `E(π - φ) = E(π) - E(φ)`, folds the second quarter onto the first, and periodicity,
@@ -490,36 +436,15 @@ theorem ellipseArc_PConstructibleCurve {c b φ : ℝ} (hb : b ^ 2 = 1 - c) (hbpo
   · simpa [ellipseParam] using zero_Pconstructible
   · simpa [ellipseParam] using hbP
 
--- Theorem: the same for the arc swept backwards from `(1, 0)`.
-theorem ellipseCoArc_PConstructibleCurve {c b M : ℝ} (hb : b ^ 2 = 1 - c) (hbpos : 0 < b)
-    (hbP : PConstructible b) (h0 : 0 ≤ M) (hpi : M ≤ Real.pi)
-    (hLP : PConstructible (ellipticE c (Real.pi / 2) - ellipticE c (Real.pi / 2 - M))) :
-    PConstructibleCurve (ellipseCoParam b '' Set.Icc 0 M) := by
-  refine PConstructibleCurve.arc_of_length (ellipse_PConstructibleCurve hbP hbpos)
-    (ellipseCoParam b) h0 ?_ ?_ ?_ ?_ ?_ ?_ hLP (arcLengthOf_ellipseCoParam hb M)
-  · rintro p ⟨t, _, rfl⟩
-    simp only [Set.mem_ofPred_eq, ellipseCoParam, sub_zero]
-    field_simp
-    linear_combination Real.sin_sq_add_cos_sq t
-  · intro t₁ ht₁ t₂ ht₂ h
-    exact Real.injOn_cos (Set.Icc_subset_Icc le_rfl hpi ht₁)
-      (Set.Icc_subset_Icc le_rfl hpi ht₂) (congrArg Prod.fst h)
-  · intro t _
-    exact ⟨(Real.hasDerivAt_cos t).differentiableAt,
-      ((Real.hasDerivAt_sin t).const_mul b).differentiableAt⟩
-  · rw [show speed (ellipseCoParam b)
-        = fun t => ellipticEIntegrand c (Real.pi / 2 - t) from
-      funext (speed_ellipseCoParam hb)]
-    exact ((continuous_ellipticEIntegrand c).comp (by fun_prop)).intervalIntegrable 0 M
-  · simpa [ellipseCoParam] using PConstructible.base_one
-  · simpa [ellipseCoParam] using zero_Pconstructible
-
 -- Theorem: for `0 ≤ L ≤ E(π/2)` the angle at which the ellipse has been swept through arc
 -- length `L` is P-constructible.
 --
--- The two arcs meet only at that angle: a common point is `(sin θ₁, b cos θ₁)` for some
--- `θ₁ ≤ φ` on the first arc and `(sin θ₂, b cos θ₂)` for some `θ₂ ≥ φ` on the second, and
--- since `cos` is injective on `[0, π]` the two angles agree, which forces both to be `φ`.
+-- The arc `ellipseParam b '' [0, φ]` laid by `arc_of_length` ends at the top of the
+-- ellipse, `(sin φ, b cos φ)`. On `[0, φ] ⊆ [0, π/2]` the abscissa `sin` is increasing, so
+-- `sin φ` is the arc's largest abscissa, and `arc_xendpoint_Pconstructible` (the box in
+-- `Pptc.Box`) reads it off. Then `φ = arcsin (sin φ)` because `0 ≤ φ ≤ π/2`, and
+-- `arcsin_Pconstructible` finishes. The former proof laid a complementary arc from `(1, 0)`
+-- and intersected the two, which cost a uniqueness argument; the box removes it.
 theorem ellipticEAm_Pconstructible_of_mem_Icc {c L : ℝ} (hcP : PConstructible c)
     (hLP : PConstructible L) (hc : c < 1) (h0 : 0 ≤ L)
     (hK : L ≤ ellipticE c (Real.pi / 2)) : PConstructible (ellipticEAm c L) := by
@@ -542,36 +467,23 @@ theorem ellipticEAm_Pconstructible_of_mem_Icc {c L : ℝ} (hcP : PConstructible 
     exact hK
   have hA : PConstructibleCurve (ellipseParam b '' Set.Icc 0 φ) :=
     ellipseArc_PConstructibleCurve hb hbpos hbP hφ0 (by linarith) (by rw [hEφ]; exact hLP)
-  have hKP : PConstructible (ellipticE c (Real.pi / 2)) :=
-    ellipticE_Pconstructible hcP pi_div_two_Pconstructible hc
-  have hB : PConstructibleCurve (ellipseCoParam b '' Set.Icc 0 (Real.pi / 2 - φ)) := by
-    refine ellipseCoArc_PConstructibleCurve hb hbpos hbP (by linarith) (by linarith) ?_
-    rw [show Real.pi / 2 - (Real.pi / 2 - φ) = φ from by ring, hEφ]
-    exact PConstructible.sub hKP hLP
-  have hinter : ellipseParam b '' Set.Icc 0 φ ∩
-      ellipseCoParam b '' Set.Icc 0 (Real.pi / 2 - φ) = {(Real.sin φ, b * Real.cos φ)} := by
-    ext p
-    simp only [Set.mem_inter_iff, Set.mem_image, Set.mem_Icc, Set.mem_singleton_iff]
-    constructor
-    · rintro ⟨⟨θ₁, ⟨hθ₁0, hθ₁φ⟩, rfl⟩, t, ⟨ht0, htM⟩, heq⟩
-      rw [ellipseCoParam_eq] at heq
-      have hcos : Real.cos (Real.pi / 2 - t) = Real.cos θ₁ :=
-        mul_left_cancel₀ hbpos.ne' (congrArg Prod.snd heq)
-      have hang : Real.pi / 2 - t = θ₁ :=
-        Real.injOn_cos (Set.mem_Icc.mpr ⟨by linarith, by linarith⟩)
-          (Set.mem_Icc.mpr ⟨by linarith, by linarith⟩) hcos
-      rw [show θ₁ = φ from by linarith]
-      simp [ellipseParam]
-    · rintro rfl
-      refine ⟨⟨φ, ⟨hφ0, le_rfl⟩, rfl⟩, Real.pi / 2 - φ, ⟨by linarith, le_rfl⟩, ?_⟩
-      simp [ellipseCoParam, Real.cos_pi_div_two_sub, Real.sin_pi_div_two_sub]
-  have hy := PConstructible.inter_y hA hB hinter
-  have hcos : PConstructible (Real.cos φ) := by
-    rw [show Real.cos φ = b * Real.cos φ / b from by field_simp]
-    exact PConstructible.div hy hbP
-  have harc := arccos_Pconstructible_of_mem_Icc hcos (Real.neg_one_le_cos φ)
-    (Real.cos_le_one φ)
-  rwa [Real.arccos_cos hφ0 (by linarith)] at harc
+  -- The far end of the arc is the top of the ellipse, and on `[0, φ] ⊆ [0, π/2]` its
+  -- abscissa `sin` is increasing, so `sin φ` is the largest abscissa on the arc — exactly
+  -- the coordinate extreme the box reads off.
+  have hsin : PConstructible (Real.sin φ) := by
+    have hcont : ContinuousOn (ellipseParam b) (Set.Icc 0 φ) :=
+      (Real.continuous_sin.continuousOn).prodMk
+        ((Real.continuous_cos.continuousOn).const_mul b)
+    have hsub : Set.Icc 0 φ ⊆ Set.Icc (-(Real.pi / 2)) (Real.pi / 2) := fun t ht =>
+      ⟨by linarith [ht.1], by linarith [ht.2, hφ2]⟩
+    have hmono : MonotoneOn (fun t => (ellipseParam b t).1) (Set.Icc 0 φ) := by
+      intro x hx y hy hxy
+      exact (Real.strictMonoOn_sin.mono hsub).monotoneOn hx hy hxy
+    simpa [ellipseParam] using
+      arc_xendpoint_Pconstructible (γ := ellipseParam b) hA hφ0 hcont hmono
+  -- Since `0 ≤ φ ≤ π/2`, `φ = arcsin (sin φ)`, and `arcsin` is P-constructible.
+  rw [← Real.arcsin_sin (by linarith) hφ2]
+  exact arcsin_Pconstructible hsin
 
 -- Theorem: every real number sits a whole number of periods `p` away from one in `[0, p]`.
 -- This is `exists_int_half_turns` with `π` replaced by an arbitrary positive period; here
@@ -689,13 +601,21 @@ theorem jacobiAm_Pconstructible_iff_dn {c u : ℝ} (hcP : PConstructible c)
 The gap between `ellipticEAm_Pconstructible` and the missing `jacobiAm_Pconstructible` is
 not a gap in the bookkeeping, and it is worth writing down what it is.
 
-Everything the drawing program can do to produce a number is one of four things:
+Everything the drawing program can do to produce a number is one of five things:
 arithmetic; reading a coordinate off a crossing of two drawn curves; measuring the length
-of a drawn arc; and — the converse of measuring — laying out an arc of prescribed length
-along a drawn curve and finding where it ends. The first two are algebraic in what they
-consume, `crossing_Pconstructible` being exactly the statement that a crossing solves a
-polynomial. So a transcendental function can be *inverted* only by the fourth, and the
-fourth inverts one thing: the arc length function of a drawable curve.
+of a drawn arc; laying out an arc of prescribed length along a drawn curve and finding
+where it ends; and reading a coordinate extreme off a compact drawable curve — the box,
+`box_xmax` / `box_ymax` of `Pptc.Box`. The first two are algebraic in what they consume,
+`crossing_Pconstructible` being exactly the statement that a crossing solves a polynomial.
+The box does not add a new kind of inversion: it strengthens the arc-length route, turning
+the endpoint of a laid arc into a recoverable point whenever the arc is monotone. Where the
+fourth primitive alone recovered an endpoint only on a *closed* curve — laying the
+complementary arc and intersecting the two in exactly one point — the box recovers it on an
+open one, with no intersection argument. The claim that carries the verdict, that `F` is
+not the arc length of any drawable curve, is untouched by this, so what follows is
+unchanged. A transcendental function can still be *inverted* only by the fourth and fifth
+primitives, and between them they invert one thing: the arc length function of a drawable
+curve.
 
 That is why `arccos` and the amplitude of `E` are reachable. Arc length along the unit
 circle is the angle, so laying out a length recovers an angle, which is

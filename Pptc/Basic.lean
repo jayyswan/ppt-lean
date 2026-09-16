@@ -19,6 +19,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 -- Most of the mathematical content arrives transitively through `Pptc.Defs`.
 import Pptc.Defs
 import Pptc.Tactic
+import Pptc.Box
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
@@ -2473,11 +2474,14 @@ endpoints are already known, lay out an arc of known *length* and ask where it e
 the unit circle that question is radian measure: the arc that starts at `(1, 0)` and runs
 for length `x` ends at `(cos x, sin x)`.
 
-Reaching that far endpoint takes a second curve, cutting the first there and nowhere else,
-and the complementary arc supplies one — the arc that starts at `(-1, 0)` and runs
-backwards for length `π - x` covers the remainder of the upper half circle, so the two
-abut at the single point `(cos x, sin x)`. Both start at P-constructible points and have
-P-constructible lengths, `x` and `π - x`, the latter because `π` is P-constructible.
+`arc_of_length` produces the arc as a constructible curve but not its far endpoint. On
+`0 ≤ x ≤ π` that endpoint is a *box edge*: the abscissa of the unit circle is strictly
+decreasing across the upper half turn, so the left edge that `box_xmin` reports for the arc
+`t ↦ (cos t, sin t)`, `0 ≤ t ≤ x`, is exactly `cos x`. Extracting it needs no second curve
+and no uniqueness-of-intersection argument. The ordinate then comes from the circle
+identity `sin x = √(1 - cos²x)`, the square root being the nonnegative one on this range —
+no monotonicity of `sin` is needed, which is fortunate, since `sin` is not monotone on
+`[0, π]`.
 
 That settles `0 ≤ x ≤ π`, and reduction mod `2π` removes the restriction. This is what
 `arc_of_length` buys: every earlier constructor locates a point of a curve by cutting it
@@ -2512,8 +2516,8 @@ theorem arcLengthOf_circleArcParam {s : ℝ} (hs : s ^ 2 = 1) (u L : ℝ) :
   simp
 
 -- Theorem: two angles landing on the same point of the unit circle and differing by less
--- than a full turn are equal. This is the injectivity behind both the side condition of
--- `arc_of_length` and the "meet in exactly one point" hypothesis of `inter_x`/`inter_y`.
+-- than a full turn are equal. This is the injectivity behind the side condition of
+-- `arc_of_length` when the traced curve is an arc of the unit circle.
 theorem angle_eq_of_cos_eq_of_sin_eq {θ₁ θ₂ : ℝ} (hlt : |θ₁ - θ₂| < 2 * Real.pi)
     (hc : Real.cos θ₁ = Real.cos θ₂) (hs : Real.sin θ₁ = Real.sin θ₂) : θ₁ = θ₂ := by
   have hone : Real.cos (θ₁ - θ₂) = 1 := by
@@ -2572,39 +2576,40 @@ theorem circleArc_PConstructibleCurve {u s L : ℝ} (hs : s ^ 2 = 1)
 
 -- Theorem: `cos x` and `sin x` are P-constructible for P-constructible `x` in `[0, π]`.
 --
--- The two arcs meet only at angle `x`: a point common to both is `(cos θ₁, sin θ₁)` for
--- some `θ₁ ≤ x` and `(cos θ₂, sin θ₂)` for some `θ₂ ≥ x`, and since the two angles differ
--- by less than a full turn they must be equal, which forces both to be `x`.
+-- On `[0, x] ⊆ [0, π]` the abscissa `t ↦ cos t` is antitone, so the left box edge of the
+-- arc `t ↦ (cos t, sin t)` is the right endpoint's abscissa `cos x`. The sine then comes
+-- from the circle identity `sin x = √(1 - cos²x)`; no monotonicity of `sin` is available
+-- on `[0, π]`, but none is needed.
 theorem cos_sin_Pconstructible_of_mem_Icc {x : ℝ} (hx : PConstructible x)
     (h0 : 0 ≤ x) (hpi : x ≤ Real.pi) :
     PConstructible (Real.cos x) ∧ PConstructible (Real.sin x) := by
-  have hpipos := Real.pi_pos
   -- The arc from `(1, 0)` of length `x`, sweeping angles `[0, x]`.
   have hA : PConstructibleCurve (circleArcParam 0 1 '' Set.Icc 0 x) :=
     circleArc_PConstructibleCurve (by norm_num) h0 hpi hx
       (by simpa using PConstructible.base_one) (by simpa using zero_Pconstructible)
-  -- The arc from `(-1, 0)` of length `π - x`, sweeping angles `[x, π]` backwards.
-  have hB : PConstructibleCurve (circleArcParam Real.pi (-1) '' Set.Icc 0 (Real.pi - x)) :=
-    circleArc_PConstructibleCurve (by norm_num) (by linarith) (by linarith)
-      (PConstructible.sub pi_Pconstructible hx)
-      (by simpa using neg_one_Pconstructible) (by simpa using zero_Pconstructible)
-  have hinter : circleArcParam 0 1 '' Set.Icc 0 x ∩
-      circleArcParam Real.pi (-1) '' Set.Icc 0 (Real.pi - x) = {(Real.cos x, Real.sin x)} := by
-    ext p
-    simp only [Set.mem_inter_iff, Set.mem_image, Set.mem_Icc, Set.mem_singleton_iff]
-    constructor
-    · rintro ⟨⟨t₁, ⟨ht₁0, ht₁x⟩, rfl⟩, t₂, ⟨ht₂0, ht₂x⟩, heq⟩
-      have hc : Real.cos (Real.pi + -1 * t₂) = Real.cos (0 + 1 * t₁) := congrArg Prod.fst heq
-      have hsn : Real.sin (Real.pi + -1 * t₂) = Real.sin (0 + 1 * t₁) := congrArg Prod.snd heq
-      have hang : Real.pi + -1 * t₂ = 0 + 1 * t₁ :=
-        angle_eq_of_cos_eq_of_sin_eq (by rw [abs_lt]; constructor <;> linarith) hc hsn
-      have ht₁ : t₁ = x := by linarith
-      subst ht₁
-      simp [circleArcParam, circleParam]
-    · rintro rfl
-      exact ⟨⟨x, ⟨h0, le_rfl⟩, by simp [circleArcParam, circleParam]⟩,
-        Real.pi - x, ⟨by linarith, le_rfl⟩, by simp [circleArcParam, circleParam]⟩
-  exact ⟨PConstructible.inter_x hA hB hinter, PConstructible.inter_y hA hB hinter⟩
+  -- `cos` is antitone on `[0, x]`, so the arc's left edge is the abscissa `cos x`.
+  have hsub : Set.Icc (0 : ℝ) x ⊆ Set.Icc (0 : ℝ) Real.pi :=
+    fun _ ht => ⟨ht.1, le_trans ht.2 hpi⟩
+  have hanti : AntitoneOn (fun t => (circleArcParam 0 1 t).1) (Set.Icc 0 x) := by
+    simpa only [circleArcParam, circleParam, zero_add, one_mul] using
+      (Real.strictAntiOn_cos.antitoneOn).mono hsub
+  have hcos : PConstructible (Real.cos x) := by
+    have hcont : ContinuousOn (circleArcParam 0 1) (Set.Icc 0 x) := by
+      change ContinuousOn (fun t : ℝ => (Real.cos (0 + 1 * t), Real.sin (0 + 1 * t)))
+        (Set.Icc 0 x)
+      fun_prop
+    simpa [circleArcParam, circleParam] using
+      arc_xendpoint_antitone_Pconstructible (γ := circleArcParam 0 1) hA h0 hcont hanti
+  -- `sin x = √(1 - cos²x)` because `sin` is nonnegative on `[0, π]`.
+  have hsin : PConstructible (Real.sin x) := by
+    have hsnonneg : 0 ≤ Real.sin x := Real.sin_nonneg_of_mem_Icc ⟨h0, hpi⟩
+    have hsq : Real.sin x ^ 2 = 1 - Real.cos x ^ 2 := by
+      linarith [Real.sin_sq_add_cos_sq x]
+    rw [show Real.sin x = Real.sqrt (1 - Real.cos x ^ 2) by
+      rw [← hsq, Real.sqrt_sq hsnonneg]]
+    exact sqrt_Pconstructible (PConstructible.sub PConstructible.base_one
+      (sq_Pconstructible hcos))
+  exact ⟨hcos, hsin⟩
 
 -- Theorem: every real number sits a whole number of turns away from one in `[0, 2π)`.
 theorem exists_int_turns (x : ℝ) :
