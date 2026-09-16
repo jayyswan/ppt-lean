@@ -292,6 +292,16 @@ it without comparing to the unknown, and in the examples tried the `[0,1]` strok
 the cusp as its global abscissa extreme. The remaining hard part is root-isolating the
 degree-12 cusp equation and proving the single sign change, not the window. `[SP]`
 
+**Resolved by B12 (`Pptc/NOTES-offset-cusps-lean.md`, `Pptc/BoxOffset.lean`).** The cusp
+abscissa is reachable **without** any root isolation: `offsetArc_box_xmax_Pconstructible` (and
+its three twins) box the `offset` arc, and `offsetCuspAbscissa_Pconstructible` reads the
+maximum abscissa of the offset of `(0,0),(0,2),(2,0),(3,0)` at `d = 1` off it as a
+P-constructible number. Crossing cannot reach it (`inter_x`/`inter_y` are geometric, not
+degree-bounded, and no constructible curve through the cusp is in the library); its minpoly is
+irreducible degree 12, so it is new in the sense "no landed construction other than the box
+reaches it". What is *not* formalized is the identification of that sup with the degree-12
+value `3.0151518126…` — the large task. `[SY]` for the Lean, `[NC 50]` for the value.
+
 ### N7. `arc_of_length` becomes composable — the structural gain
 Today, on an open curve, laying a string is a **dead end**: `Defs.lean:306-312` is explicit that
 the far endpoint is not produced, so no second construction can start from it. With the box the
@@ -304,6 +314,14 @@ language rather than adding to it, and it is the part the note never mentions. C
 for numbers from **alternating** constructions the language could not express before — lay a
 length on curve `C₁`, read the endpoint, draw `C₂` through it, lay a length on `C₂`, and so on.
 Nothing of this form has ever been reachable on an open curve. `[SP]`
+
+**Resolved by B11 (`Pptc/NOTES-box-composability.md`) — negative on numbers, positive on
+expression.** Strokes do chain, and the `arc_of_length` "dead end" above is superseded. But
+composability yields **no new number**: W4/B8 are theorems taking an arbitrary P-constructible
+start, so a second stroke is one application with a derived start, and `PConstructible` is
+already closed under finite construction trees. Same-curve composition is literally one stroke
+at `L₁ + L₂` (`arcLengthOf` additivity), confirmed numerically to 59 digits. The expressive gain
+is real; the arithmetic gain is not. `[NC 59]` / `[SY]`
 
 ---
 
