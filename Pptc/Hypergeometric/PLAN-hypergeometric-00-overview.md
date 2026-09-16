@@ -103,6 +103,9 @@ corollaries, so most tasks depend only on `Basic`, and the work fans out as earl
 | R1 | 0 | `NOTES-hypergeometric-R1.md` | origin problem for `power_law`; hyperelliptic route to new `Γ` (B1, B6) | none |
 | R2 | 0 | `NOTES-hypergeometric-R2.md` | explicit cubic/sextic signature reductions (H5) | none |
 | R3 | 0 | `NOTES-hypergeometric-R3.md` | Watson/Pólya reduction; check bcc/fcc formulas (B5) | none |
+| R4a | 2 | `NOTES-hypergeometric-R4a-bezier.md` | inbound survey: cubic Bézier arc length as ₂F₁? (R4) | none |
+| R4b | 2 | `NOTES-hypergeometric-R4b-offset.md` | inbound survey: offset-curve arc length as ₂F₁? (R4) | none |
+| R4c | 2 | `NOTES-hypergeometric-R4c-sine-exp.md` | inbound survey: `sine`/`exp_two`/`rectangle` arcs as ₂F₁? (R4) | none |
 | L2 | 1 | `Hypergeometric/Elliptic.lean` | `K`, `E` as ₂F₁ (H2) | L1 |
 | L3 | 1 | `Hypergeometric/Contiguous.lean` | derivative + three-term relations, generic (H3) | L1 |
 | L4 | 1 | `Hypergeometric/Gauss.lean` | Gauss summation + denominator-24 family (H4) | L1 (`Pptc.Gamma`) |
@@ -549,17 +552,29 @@ attractive it is.*
 
 **Wave 4** (L11). The umbrella module, plus a final `lake build Pptc.Hypergeometric`.
 
-**Worth adding: an inbound survey (R4).** The inbound sources exploited so far are the ellipse
-(L2), monomial graphs (L5a) and the `z = 1` Γ route (L4). Nobody has systematically asked what
-₂F₁ family, if any, each *other* drawable arc length gives: the general cubic Bézier of
-`ThirdKind.lean`, offset curves (`Offset.lean`), restricted arcs of `sine` and `exp_two`, and
-affine images of all of them. R1 did this for graphs and power laws only. A research task in
-R1's style — one note, every identity checked to ≥ 15 digits — is the cheapest way to find out
-whether the inbound map has anything left in it that the elliptic class does not already cover.
+**R4: the inbound survey — DONE, and it closes the map.** The inbound sources exploited are
+the ellipse (L2), monomial graphs (L5a) and the `z = 1` Γ route (L4); R4 asked what ₂F₁ family,
+if any, each *other* drawable arc length gives. Run in three parts (`NOTES-hypergeometric-R4a/
+-b/-c`), every identity checked with the Wolfram kernel:
 
-**A follow-up worth scheduling:** lift the `0 < a`, `0 < b`, `b < c` hypotheses of
-`hyp_one_eq_Gamma` by shifting parameters with L3's contiguous relations, which would widen
-the denominator-24 family (L4) to the negative-parameter cases.
+| curve family | arc length | ₂F₁? |
+|---|---|---|
+| general cubic Bézier (`ThirdKind.lean`) | genus-1, **incomplete** `F`/`E`/`Π` (Appell `F₁`) | no |
+| `offset` of any base curve | `arcLength γ − d·Δφ` (elementary turning excess) | no |
+| `sine` restricted arc | incomplete `E` `= sinφ·F₁(½;½,−½;3/2;·)` (Appell `F₁`) | no |
+| `exp_two`, `rectangle`, all affine images | elementary (Chebyshev) | no |
+
+The general Bézier reduces to incomplete `F`/`E`/`Π`, and a real Bézier has no simple real root
+of `speed²` (a sum of two squares), so it never completes to a `K`/`E`/`Π` ₂F₁; its only ₂F₁
+degenerations are `y=Cx³` (the `m=4` graph family) and the `h=0` ellipse limit, both already
+landed. An offset's arc length is the base length plus `d` times the (elementary) turning
+angle, so `offset` adds no hypergeometric family. The sine's only ₂F₁ values are its complete
+sub-arcs `√2·E(½) = (π/√2)₂F₁(−½,½;1;½)`, already in the elliptic class. **The elliptic class,
+the graph family and the `z=1` Γ route are the whole inbound map.**
+
+**Follow-up (L4b) — DONE.** `hyp_one_eq_Gamma'` lifts the `0 < a`, `0 < b`, `b < c` hypotheses
+of `hyp_one_eq_Gamma` using contiguous relations, widening the denominator-24 family (L4) to
+the negative-parameter cases.
 
 On concurrency: `CLAUDE.md` caps concurrent LSP elaborations at 2, so four simultaneous Lean
 agents will queue. The layout still pays off, because agents think and search in parallel
@@ -567,10 +582,11 @@ while they wait.
 
 ## 7. What counts as success
 
-- **Programme success:** H2 + H3 + H4 in `main`, sorry-free — **met**, pending a commit — plus
-  at least two bridge-back theorems from §5 that state a number or family not previously
-  P-constructible. L5a's arc-length family is one; B4-AGM is the nearest second, with B3
-  behind L6a.
+- **Programme success:** H2 + H3 + H4 in `main`, sorry-free — **met** — plus at least two
+  bridge-back theorems from §5 that state a number or family not previously P-constructible.
+  L5a's arc-length family (now the full `hyp_graphFamily_class_Pconstructible`) is one; B3
+  (Clausen, `clausen_tsum_Pconstructible`) is landed, and B4's Legendre functions are the next
+  candidate (`agm` left the programme, §6).
 - **Breakthrough (restated after R1).** The `₂F₁(a, 1−a; 1; ½)` route for a new `a` is closed
   to every mechanism in this plan, so the breakthrough is now the *first-kind differential
   gap* of B6: a drawable curve, in the constructor language of `Defs.lean`, whose arc length
@@ -579,4 +595,8 @@ while they wait.
   evidence and the exact shape of what is missing.
 - **Useful negative:** a clean statement of which ₂F₁ families *cannot* come from the six base
   curves' arc lengths by the mechanisms here, with its assumptions and loopholes listed. As in
-  the Jacobi programme, do not claim non-P-constructibility outright.
+  the Jacobi programme, do not claim non-P-constructibility outright. **R4 (§6) delivers this
+  for the whole curve language:** every base curve except the ellipse and the monomial graphs
+  has an arc length that is either elementary or an *incomplete* Appell integral, and `offset`
+  reduces to the base length plus an elementary turning angle. The only caveat is that a
+  coincidence at a special algebraic endpoint is not excluded by these arguments.
