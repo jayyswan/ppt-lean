@@ -44,14 +44,23 @@ then makes the constant term `1` determine the series, giving the coefficient id
 free. The general `hypSeries_ode` (the previously missing infrastructure) is what made the
 two pullbacks mechanical.
 
-## Open thread 1 (remaining) — the cubic and sextic signatures
+## Open thread 1 (started) — the cubic and sextic signatures
 
 `Signatures.lean` still carries the cubic (RBBG) and sextic (Shen/Robinson) transformations as
 explicit hypotheses, and those two conditional theorems are deliberately **not**
-`@[pconstructible_cond]`. To finish H5 they need the same treatment as V7. Note the cubic and
-sextic are *parametric* (in `p`), not a fixed algebraic substitution, and the prefactors are
-`√(1+2p)`-type and fourth roots; they are harder than V7 and are the natural next targets.
-The `hypSeries_ode` + Heun-framework now in place is the tool to attack them.
+`@[pconstructible_cond]`. To finish H5 they need the same treatment as V7. A cubic/sextic thread
+is now under way; read `HANDOFF-hypergeometric-cubic.md` first. Status:
+
+- `SubstODE.lean` (general pullback `hypSeries_subst_ode`), `CubicSetup.lean` (the parametric
+  series `α, β, γ` and their identities), `Cubic.lean` (`cubicOp`, `cubicOp_lhs`) and
+  `CubicUnique.lean` (`cubicOp_unique`) are **landed and sorry-free**.
+- The one remaining formal gap is `cubicOp_rhs` (the right-hand side satisfies the shared ODE),
+  blocked on the two proportionality identities `aC*eT = dT*bC`, `aC*fT = dT*cC`, whose
+  infrastructure is in the compiling-but-incomplete `CubicRHS.lean`. The handoff records the
+  exact state and two candidate routes (a `FractionRing`/`field_simp` route that nearly closes,
+  and a polynomial-clearing route that avoids it).
+- After that: real transfer for the cubic, then the sextic by the same template, then re-tag
+  the two theorems in `Signatures.lean`.
 
 ## Open thread 2 — B6 breakthrough (unchanged)
 
