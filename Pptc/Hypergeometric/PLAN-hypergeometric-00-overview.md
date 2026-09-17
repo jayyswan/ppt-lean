@@ -28,6 +28,10 @@ extended), `Graphs` (L5a, extended to affine images of `y = xⁿ`), `Euler` (L7a
 and the wave-2 files `Quadratic` (L6a), `EllipticClass` (L3b), `Signatures` (L9), `Clausen`
 (L6b) and `GraphsClass` (L5b, both the level-`c₀` class and the `c`-advance).
 
+- **V7 (the quartic Goursat transformation): DONE (new).** The formerly-assumed quartic
+  transformation is proved, so the L9 quartic signature is unconditional. New files:
+  `Goursat.lean`, `SqrtSeries.lean`, `Heun.lean`, `HeunMobius.lean`, `V7.lean`, `V7Eval.lean`,
+  `V7MobiusEval.lean`, `V7Real.lean`. Detail in the L9 bullet below.
 - **L6a `Quadratic.lean`: DONE.** `hyp_quadratic` now proves `V6`,
   `₂F₁(½,½;1;z) = ₂F₁(¼,¼;1;4z(1−z))`, unconditionally on `0 ≤ z < ½`. The blocker (no
   `PowerSeries.sum`, no `IsLinearTopology ℝ ℝ`) was routed around: the formal power-series
@@ -43,12 +47,23 @@ and the wave-2 files `Quadratic` (L6a), `EllipticClass` (L3b), `Signatures` (L9)
   series. As a by-product, `hyp_one_fourth_one_Pconstructible` makes the **fourth Ramanujan
   signature** `₂F₁(¼,¼;1;·)` P-constructible for `0 ≤ x < 1` — the last piece of H5 that does
   not need `V7`.
-- **L9 `Signatures.lean`: conditional, extended.** The quartic `V7` remains an explicit
-  hypothesis (not `@[pconstructible_cond]`, since it is an unproved identity, not a side
-  condition). R2's **cubic** `(⅓,⅔;1;·)` and **sextic** `(⅙,⅚;1;·)` reductions are now landed
-  parametrically in `p` (the classical transformation is the explicit hypothesis; the
-  PConstructible reduction is unconditional), together with the `z = ½` special values `(★)`,
-  `(★★)`, the domain/positivity lemmas `α,β,γ,x,ξ`, and their PConstructible closure lemmas.
+- **L9 `Signatures.lean`: quartic DONE, cubic/sextic conditional.** The quartic `V7` is now
+  **proved** (see below) and `hyp_quarter_three_quarter_Pconstructible` is unconditional and
+  `@[pconstructible_cond]`. R2's **cubic** `(⅓,⅔;1;·)` and **sextic** `(⅙,⅚;1;·)` reductions
+  are still landed parametrically in `p` (the classical transformation is the explicit
+  hypothesis; the PConstructible reduction is unconditional — those two theorems are
+  deliberately not tagged), together with the `z = ½` special values `(★)`, `(★★)`, the
+  domain/positivity lemmas `α,β,γ,x,ξ`, and their PConstructible closure lemmas.
+- **V7 `₂F₁(¼,¾;1;z) = (1+√z)^(−½)₂F₁(½,½;1;2√z/(1+√z))`: DONE.** Proved in
+  `V7Real.lean` (headline `hyp_quarter_three_quarter`), on the framework
+  `Goursat.lean` (general formal hypergeometric equation `hypSeries_ode`),
+  `SqrtSeries.lean` (the formal `(1+X)^(−½)`), `Heun.lean`, `HeunMobius.lean`, `V7.lean`
+  (formal identity `phiSeries_eq_rSeries`), `V7Eval.lean`, `V7MobiusEval.lean` (real
+  evaluations). Route: `w = √z` turns both hypergeometric equations into one Heun equation
+  `X(1−X²)F''+(1−3X²)F'−(3/4)XF=0`, whose constant term fixes the solution; a Cauchy product
+  plus analytic continuation on `(0,1)` transfers the coefficient identity to `ℝ`. This is
+  the ₂F₁ analogue of the L6a quadratic transformation, and it also supplies the previously
+  missing general hypergeometric ODE, which the cubic/sextic work can reuse.
 - **L3b `EllipticClass.lean`: DONE.** The two Legendre relations for `deriv hyp(±½,½;1)` are
   proved and made `PConstructible`, the general shifts `hyp_shift_a`, `hyp_shift_b`,
   `hyp_shift_c_up`, `hyp_shift_a_down` (DLMF 15.5.14, 15.5.21 solved for `c+1`, 15.5.20a) are in,

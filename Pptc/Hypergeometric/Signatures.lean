@@ -21,6 +21,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 -- `hyp_half_half_one_Pconstructible`. `Mathlib.Analysis.Real.Sqrt` gives `Real.sqrt_lt'`.
 import Pptc.Basic
 import Pptc.Hypergeometric.Elliptic
+import Pptc.Hypergeometric.V7Real
 import Mathlib.Analysis.Real.Sqrt
 
 /-! # Pptc.Hypergeometric.Signatures
@@ -36,34 +37,26 @@ P-constructible argument of modulus below one (`hyp_half_half_one_Pconstructible
 the real power `(1 + √z)^(−½)`, which is P-constructible by `rpow_Pconstructible`. So `V7`
 is exactly what makes the quartic signature P-constructible.
 
-## Why the identity is assumed, not proved
+## The identity, now proved
 
 `V7` is a quadratic transformation of the Gauss function. Mathlib has no quadratic
-transformations, and this one is *not* a consequence of the one that is available: the
-symmetric transform of `Pptc.Hypergeometric.Quadratic` (`V6`) relates
-`₂F₁(½,½;1;·)` to `₂F₁(¼,¼;1;·)`, whereas `V7` relates `₂F₁(½,½;1;·)` to `₂F₁(¼,¾;1;·)`.
-Combining `V6` with Pfaff/Euler moves the argument and changes the prefactor to
-`(1 − z)^{−1/4}` (or `(1 − z)^{−3/4}`), never `(1 + √z)^{−1/2}`, and the numerical check in
-`HANDOFF-hypergeometric-L9.md` confirms that the two are different functions. A proof of
-`V7` therefore has to be a fresh coefficient identity.
-
-The natural route is a `HasSum`-level coefficient computation, as the task describes:
-substitute `z = w²` with `w ≥ 0`, so that
-`₂F₁(¼,¾;1;w²) = ∑ₙ hypCoeff (¼)(¾)1 n · w^(2n)`, while
-`(1+w)^(−½)·₂F₁(½,½;1;2w/(1+w)) = ∑ₙ hypCoeff (½)(½)1 n · 2^n w^n (1+w)^(−n−½)`,
-and match coefficients using the binomial expansion of `(1+w)^(−n−½)`. Equivalently one
-shows `(1+w)^(½)·₂F₁(¼,¾;1;w²)` and `₂F₁(½,½;1;2w/(1+w))` satisfy the same second-order ODE
-in `w` with the same initial terms. Both are genuine holonomic identities (a
-Vandermonde-type finite sum for the coefficient form, a Heun-type equation for the ODE
-form) and neither is discharged by `hypCoeff_succ` alone, so `V7` is left as the explicit
-hypothesis of the theorem below; the reduction itself is unconditional.
+transformations, and this one is *not* a consequence of the one that is available
+(`Pptc.Hypergeometric.Quadratic`'s `V6` relates `₂F₁(½,½;1;·)` to `₂F₁(¼,¼;1;·)`, whereas
+`V7` relates `₂F₁(½,½;1;·)` to `₂F₁(¼,¾;1;·)`), so it was originally carried as an explicit
+hypothesis below. It is now **proved**, in `Pptc.Hypergeometric.V7Real` as
+`hyp_quarter_three_quarter`: the substitution `w = √z` turns `V7` into an identity between
+two formal power series in `w`, whose shared Heun-type equation
+`X(1 − X²)F'' + (1 − 3X²)F' − (3/4)XF = 0` and common constant term identify them
+(`Pptc.Hypergeometric.Heun`, `.HeunMobius`, `.V7`), and the coefficient identity is
+transferred to the reals by a Cauchy-product evaluation plus analytic continuation. The
+corollary below is therefore unconditional.
 
 ## What is landed
 
-`hyp_quarter_three_quarter_Pconstructible` is the plan's L9 statement *with* `V7` as an
-explicit hypothesis. Its proof only uses the closure of `PConstructible` under `+ - * /`,
-`Real.sqrt`, real powers and the elliptic corollary, so it closes the moment `V7` is proved
-in the form `hyp (1/4) (3/4) 1 z = (1 + √z)^(−½) · hyp (1/2) (1/2) 1 (2√z/(1+√z))`.
+`hyp_quarter_three_quarter_Pconstructible` is the plan's L9 statement, now with no
+hypotheses beyond P-constructibility of `z` and `0 ≤ z < 1`. Its proof only uses the closure
+of `PConstructible` under `+ - * /`, `Real.sqrt`, real powers and the elliptic corollary,
+together with the transformation `hyp_quarter_three_quarter` itself.
 -/
 
 open scoped Topology
@@ -90,24 +83,17 @@ theorem abs_two_mul_div_one_add_lt_one {w : ℝ} (hw0 : 0 ≤ w) (hw1 : w < 1) :
   rw [abs_of_nonneg (div_nonneg (by linarith) (by linarith))]
   exact two_mul_div_one_add_lt_one hw0 hw1
 
-/-! ### The quartic signature, conditional on `V7`
+/-! ### The quartic signature
 
-The hypothesis `hV7` is exactly Goursat's quadratic transformation stated for the given `z`
-(see the module docstring). Everything else is unconditional. -/
+Unconditional: the transformation `hyp_quarter_three_quarter` supplies the identity, and
+everything else is the closure of `PConstructible` under `Real.sqrt`, real powers, and the
+already-P-constructible `(1/2, 1/2; 1)` family. The side conditions `0 ≤ z` and `z < 1` are
+ordinary, dischargeable conditions, so the theorem is tagged `@[pconstructible_cond]`. -/
 
--- Theorem (L9, conditional on Goursat's V7): if
--- `₂F₁(1/4,3/4;1;z) = (1+√z)^(-1/2) * ₂F₁(1/2,1/2;1; 2√z/(1+√z))`, then the quartic
--- signature is P-constructible for P-constructible `0 ≤ z < 1`.
--- Deliberately *not* tagged `@[pconstructible_cond]`: `hV7` is an unproved transcendental
--- identity, not a side condition. Tagged, it would register an Aesop rule whose side goal
--- goes to `Pconstructible.sideTac` (`norm_num`/`positivity`), which cannot ever discharge
--- it, so every `pconstructible` call would explore a branch that must fail. Tag it once
--- `V7` is proved and the hypothesis disappears.
-theorem hyp_quarter_three_quarter_Pconstructible {z : ℝ} (hz : PConstructible z)
-    (hz0 : 0 ≤ z) (hz1 : z < 1)
-    (hV7 : hyp (1 / 4) (3 / 4) 1 z
-      = (1 + Real.sqrt z) ^ (-(1 / 2 : ℝ))
-        * hyp (1 / 2) (1 / 2) 1 (2 * Real.sqrt z / (1 + Real.sqrt z))) :
+-- Theorem (L9): the quartic signature `₂F₁(1/4,3/4;1;z)` is P-constructible for
+-- P-constructible `0 ≤ z < 1`.
+@[pconstructible_cond] theorem hyp_quarter_three_quarter_Pconstructible {z : ℝ}
+    (hz : PConstructible z) (hz0 : 0 ≤ z) (hz1 : z < 1) :
     PConstructible (hyp (1 / 4) (3 / 4) 1 z) := by
   have hw0 : 0 ≤ Real.sqrt z := Real.sqrt_nonneg z
   have hw1 : Real.sqrt z < 1 := by
@@ -120,7 +106,7 @@ theorem hyp_quarter_three_quarter_Pconstructible {z : ℝ} (hz : PConstructible 
   have hexp : PConstructible (-(1 / 2 : ℝ)) := by pconstructible
   have hpowP : PConstructible ((1 + Real.sqrt z) ^ (-(1 / 2 : ℝ))) :=
     rpow_Pconstructible hbase hexp (by positivity)
-  rw [hV7]
+  rw [hyp_quarter_three_quarter hz0 hz1]
   exact PConstructible.mul hpowP (hyp_half_half_one_Pconstructible hargP hargabs)
 
 /-! ### The cubic and sextic Ramanujan signature reductions (H5)
