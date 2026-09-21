@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 Pptc contributors. All rights reserved.
+Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Pptc contributors
+Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Pptc contributors
 -/
 import Pptc.HasseMinkowski.HasseInvariant
 import Pptc.HasseMinkowski.Prod
@@ -11,7 +11,7 @@ import Mathlib.LinearAlgebra.QuadraticForm.IsometryEquiv
 /-!
 # Rank criteria for the Hasse–Minkowski invariant
 
-This file ports the local representability criteria of WiN7's
+This file ports the local representability criteria of HassePrinciple's
 `QuadraticForm/HasseMinkowskiInvariant.lean`, connecting the discriminant of a quadratic form
 with the Hasse–Minkowski invariant:
 
@@ -26,9 +26,20 @@ computation `hilbertSym_mul_mul`, both of which are proved unconditionally here.
 
 The well-definedness of `hasseMinkowskiInv` (that equivalent diagonal forms have the same
 invariant) is *not* available in this project; every theorem at the level of `hasseMinkowskiInv`
-is therefore stated under the explicit hypothesis `hwell`, which is exactly WiN7's
+is therefore stated under the explicit hypothesis `hwell`, which is exactly HassePrinciple's
 `hasseMinkowskiInvAux.eq_of_equivalent`.  The invariant-free (diagonal) forms of the criteria
 are stated and proved with `hasseMinkowskiInvAux` and need no such hypothesis.
+
+## Provenance
+
+This file is a derived work.  It is based on `QuadraticForm/HasseMinkowskiInvariant.lean` of the
+HassePrinciple project (<https://github.com/mariainesdff/HassePrinciple>,
+Apache-2.0, Copyright (c) 2026 Nirvana Coppola,
+María Inés de Frutos-Fernández), a Women in Numbers 7 collaboration.
+It has been modified: the statements and proofs were rewritten for Lean 4.33 /
+Mathlib without upstream's module system, and the development is extended beyond
+what upstream proves.  Upstream declaration names are kept so that the two
+developments can be compared side by side.  See the repository NOTICE file.
 -/
 
 open Module QuadraticMap

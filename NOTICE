@@ -1,0 +1,49 @@
+Pptc — PowerPoint Constructibility, and a formalization of the Hasse–Minkowski theorem
+Copyright (c) 2026 Pptc contributors
+
+This product includes software developed as part of the Pptc project.
+Licensed under the Apache License, Version 2.0 (see the file LICENSE).
+
+================================================================================
+Third-party material
+================================================================================
+
+Portions of `Pptc/HasseMinkowski/` are derived from the "HassePrinciple" project:
+
+    https://github.com/mariainesdff/HassePrinciple
+    Copyright (c) 2026 Nirvana Coppola, Maria Ines de Frutos-Fernandez.
+    All rights reserved.
+    Licensed under the Apache License, Version 2.0.
+
+HassePrinciple is a collaborative formalization from the Women in Numbers 7
+workshop, led by Nirvana Coppola and Maria Ines de Frutos-Fernandez, with
+project members Mallory Dolorfino, Kate Finnerty, Cathy Hsu and Chi-Yun Hsu.
+
+The following files of this project are derived works.  Each one carries the
+upstream authors in its own file header, and each has been modified: the
+statements and proofs were rewritten against Lean 4.33 / Mathlib without the
+upstream module system, and the material was extended beyond what upstream
+proves.
+
+    Pptc/HasseMinkowski/HilbertSymbol/Existence.lean
+        derived from HassePrinciple/HilbertSymbol/ExistenceTheorem.lean
+        (the S / T / A / M construction and the lemmas named after it)
+
+    Pptc/HasseMinkowski/Padics/Squares.lean
+        derived from HassePrinciple/Padics/Squares.lean and
+        HassePrinciple/Padics/Lemmas.lean
+        (PadicInt.isSquare_of_zmod, PadicInt.isSquare_of_zmodPow, and the
+        open-subgroup argument for p-adic unit squares)
+
+    Pptc/HasseMinkowski/RankCriteria.lean
+        derived from HassePrinciple/QuadraticForm/HasseMinkowskiInvariant.lean
+        (the rank-two and rank-three local representability criteria)
+
+The remaining files of `Pptc/HasseMinkowski/` are original to this project.  In
+particular, the results that upstream leaves as `sorry` -- the rank-three
+local-global step, the rank-four case, the rank >= 5 induction (Meyer), the
+2-adic Hilbert symbol formula, Hilbert reciprocity, and the assembled
+`hasseMinkowski` and `meyer` theorems -- are proved here independently.
+
+Upstream naming conventions are followed throughout so that the two
+developments can be compared declaration by declaration.

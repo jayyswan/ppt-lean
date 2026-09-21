@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 Pptc contributors. All rights reserved.
+Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Pptc contributors
+Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Pptc contributors
 -/
 import Mathlib.NumberTheory.Padics.PadicVal.Basic
 import Mathlib.NumberTheory.Padics.PadicNumbers
@@ -13,7 +13,7 @@ import Mathlib.Topology.Algebra.IsOpenUnits
 /-!
 # Padic unit squares form an open subgroup
 
-Port of WiN7 `Padics/Squares.lean`.  The squares among the `p`-adic units form an open
+Port of upstream `Padics/Squares.lean`.  The squares among the `p`-adic units form an open
 subgroup of `ℚ_[p]ˣ`: every element close enough to `1` is a square, so the square locus is
 a neighbourhood of `1`, and translation by an already-known square exhibits it as a
 neighbourhood of every one of its points.
@@ -22,6 +22,17 @@ The two lifting lemmas (`PadicInt.isSquare_of_zmod`, `PadicInt.isSquare_of_zmodP
 Hensel-style: a `p`-adic integer unit is a square as soon as its reduction modulo `p`
 (odd `p`) resp. modulo `8` (`p = 2`) is one.  They are ported here because the upstream
 `Padics/Squares.lean` obtains them from `Padics/Lemmas.lean`.
+
+## Provenance
+
+This file is a derived work.  It is based on `Padics/Squares.lean` and `Padics/Lemmas.lean` of the
+HassePrinciple project (<https://github.com/mariainesdff/HassePrinciple>,
+Apache-2.0, Copyright (c) 2026 Nirvana Coppola,
+María Inés de Frutos-Fernández), a Women in Numbers 7 collaboration.
+It has been modified: the statements and proofs were rewritten for Lean 4.33 /
+Mathlib without upstream's module system, and the development is extended beyond
+what upstream proves.  Upstream declaration names are kept so that the two
+developments can be compared side by side.  See the repository NOTICE file.
 -/
 
 open Polynomial

@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 Pptc contributors. All rights reserved.
+Copyright (c) 2026 Nirvana Coppola, María Inés de Frutos-Fernández. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Pptc contributors
+Authors: Nirvana Coppola, María Inés de Frutos-Fernández, Pptc contributors
 -/
 import Pptc.HasseMinkowski.HilbertSymbol.Defs
 import Pptc.HasseMinkowski.HilbertSymbol.Padic
@@ -20,7 +20,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Tactic
 
 /-!
-# Hilbert-symbol existence theorem (port of WiN7 `HilbertSymbol/ExistenceTheorem.lean`)
+# Hilbert-symbol existence theorem
 
 Given prescribed local Hilbert-symbol values `(x, aᵢ)_v = e_{i,v}` at all places `v` of `ℚ`,
 one asks whether there is a single rational `x` realising all of them.  The answer is given
@@ -30,7 +30,8 @@ by the classical necessary-and-sufficient conditions (Serre, *Cours d'arithméti
 2. for each `i`, the product of the `e_{i,v}` is `1` (the product formula);
 3. the prescription is locally realisable at every place.
 
-This file ports the **constructive core** of WiN7's proof.  Writing `S` for the finite set of
+This file ports the **constructive core** of the HassePrinciple proof.  Writing `S` for the
+finite set of
 prime numbers dividing some `aᵢ` (together with `2`) and `T` for the finite set of primes at
 which some `e_{i,p}` equals `-1`, the construction produces
 `x = A · q` with `A = ∏_{t ∈ T} t` and `q` a prime chosen by Dirichlet's theorem so that
@@ -44,6 +45,17 @@ This file provides the Dirichlet/CRT construction of `S`, `T`, `A`, `M`, the
 squareness/valuation lemmas at each place, and the **disjoint case** of the existence
 theorem, `exists_disjoint` (WP3.1 of `Plan-v3.md`).  The general case WP3.2 is not treated
 here.  No `sorry` is introduced.
+
+## Provenance
+
+This file is a derived work.  It is based on `HilbertSymbol/ExistenceTheorem.lean` of the
+HassePrinciple project (<https://github.com/mariainesdff/HassePrinciple>,
+Apache-2.0, Copyright (c) 2026 Nirvana Coppola,
+María Inés de Frutos-Fernández), a Women in Numbers 7 collaboration.
+It has been modified: the statements and proofs were rewritten for Lean 4.33 /
+Mathlib without upstream's module system, and the development is extended beyond
+what upstream proves.  Upstream declaration names are kept so that the two
+developments can be compared side by side.  See the repository NOTICE file.
 -/
 
 set_option linter.style.openClassical false
