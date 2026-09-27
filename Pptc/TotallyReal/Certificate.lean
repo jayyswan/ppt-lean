@@ -342,7 +342,7 @@ theorem chainConicPt_on_conic {P q₀ d : Fin n → ℝ} (hden : yBdotY P d d �
     (hq₀ : yConicY P q₀ = 0) : yConicY P (chainConicPt P q₀ d) = 0 := by
   simp only [chainConicPt]
   rw [yConicY_sub_smul, hq₀]
-  field_simp [hden] <;> ring
+  field_simp [hden]; ring
 
 /-- `yNBY` is additive/scalable in its *second* argument only — it squares the first. -/
 theorem yNBY_add_right (P u v : Fin n → ℝ) : yNBY P (u + v) = yNBY P u + yNBY P v := by
@@ -1268,7 +1268,6 @@ argument can then reach with a P-constructible `b`. -/
 /-- The `n = 7` centre: `β* = (1, −1, 2, −2, 3, −3, 0)`,
 
 `v* = (−6, −5, 3, 2, 3, −4, 7)`, `P = β* + v* = (−5, −6, 5, 0, 6, −7, 7)`. -/
-
 def centre7a : Fin 7 → ℝ := ![(-5 : ℝ), -6, 5, 0, 6, -7, 7]
 
 def centre7b : Fin 7 → ℝ := ![6, -1, 1, 0, 3, 0, -9]
@@ -1276,15 +1275,12 @@ def centre7b : Fin 7 → ℝ := ![6, -1, 1, 0, 3, 0, -9]
 def centre7g : Fin 7 → ℝ := ![2, 1, -1, -6, 1, -2 / 3, 11 / 3]
 
 def centre7w1 : Fin 7 → ℝ :=
-
   ![(-495 : ℝ) / 74, -379 / 74, 1489 / 444, 293 / 148, 565 / 148, -397 / 148, 593 / 111]
 
 def centre7w2 : Fin 7 → ℝ :=
-
   ![51 / 37, 9 / 37, -157 / 222, 3 / 74, -121 / 74, -195 / 74, 368 / 111]
 
 def centre7w3 : Fin 7 → ℝ :=
-
   ![239 / 148, -535 / 74, 425 / 148, 463 / 148, -1901 / 148, -8071 / 444, 13603 / 444]
 
 
@@ -1296,9 +1292,7 @@ def centre7 : ChainYInputs 7 :=
 /-- The certified roots for `n = 7`: `λ₀ = 0`, `x₂ = 1/2`, `μ₀ = 8064/617`,
 
 `κ₀ = −9136536/1150016105`. -/
-
 def centre7roots : ℝ × ℝ × ℝ × ℝ :=
-
   (0, 1 / 2, 8064 / 617, -1)
 
 
@@ -1336,21 +1330,13 @@ The root of step 4 against `chainV` is `κ₀ = -1`, and there
 the `centre7` docstring says. `centre7roots` uses `-1`; with it all four clauses are exact
 
 rational identities. `centre7_signs` needed a further correction — see its own doc comment. -/
-
 theorem centre7_solves :
-
     chainStep1' centre7 (centre7roots.1) = 0 ∧
-
       chainStep2' centre7 centre7roots.1 centre7roots.2.1 = 0 ∧
-
       chainStep3' centre7 centre7roots.1 centre7roots.2.1 centre7roots.2.2.1 = 0 ∧
-
       chainStep4' centre7 centre7roots.1 centre7roots.2.1 centre7roots.2.2.1
-
         centre7roots.2.2.2 = 0 := by
-
   refine ⟨?_, ?_, ?_, ?_⟩ <;>
-
     norm_num [chainStep1', chainStep1, chainStep2', chainStep2, chainStep3', chainStep3,
       chainStep4', chainStep4, psumY, psumFinY, yConicY, yNBY, yBdotY, ymoment2Y, ymoment3Y,
       chainProjN, chainConicPt, chainP, chainQ0, chainD, chainV, chainY, chainW1, chainW2,
@@ -1362,20 +1348,15 @@ theorem centre7_solves :
 
 
 /-- `⟨P², g⟩ = 244 ≠ 0` at the `n = 7` centre, so the projection is defined. -/
-
 theorem centre7_denom1 : yNBY (chainP centre7 centre7roots.1) centre7g ≠ 0 := by
-
   norm_num [yNBY, ymoment2Y, psumY, psumFinY, chainP, ChainYInputs.a, ChainYInputs.b,
     centre7, centre7roots, centre7a, centre7b, centre7g, Fin.sum_univ_succ]
 
 
 
 theorem centre7_denom2 :
-
     yBdotY (chainP centre7 centre7roots.1) (chainD centre7 centre7roots.1 centre7roots.2.2.1)
-
       (chainD centre7 centre7roots.1 centre7roots.2.2.1) ≠ 0 := by
-
   norm_num [yBdotY, ymoment3Y, yNBY, ymoment2Y, psumY, psumFinY, chainProjN, chainD, chainW1,
     chainW3, chainWt, chainP, ChainYInputs.a, ChainYInputs.g, ChainYInputs.w1, ChainYInputs.w3,
     centre7, centre7roots, centre7a, centre7b, centre7g, centre7w1, centre7w3,
@@ -1400,11 +1381,8 @@ plus `norm_num`, because a `![...]` literal is only something `norm_num` can eva
 a concrete `Fin 7 → ℝ` list is then just pairwise distinctness of its entries — `fin_cases` on
 
 the two witnesses and `norm_num` on the resulting equality of two distinct integers. -/
-
 theorem centre7_inj : Function.Injective (chainY centre7 centre7roots.1 centre7roots.2.1
-
     centre7roots.2.2.1 centre7roots.2.2.2) := by
-
   have key : chainY centre7 centre7roots.1 centre7roots.2.1 centre7roots.2.2.1
       centre7roots.2.2.2 = (![(1 : ℝ), -1, 2, -2, 3, -3, 0] : Fin 7 → ℝ) := by
     funext i
@@ -1479,9 +1457,7 @@ chainStep4' centre7 0 (1/2) (8064/617) (-2/3) = -331.85185…
 all strictly signed as claimed below. (Computed with `wolfram_WolframLanguageEvaluator` in exact
 
 `Rational` arithmetic and re-checked here by `norm_num`.) -/
-
 theorem centre7_signs :
-
     0 < chainStep1' centre7 (centre7roots.1 - 1 / 3) ∧
       chainStep1' centre7 (centre7roots.1 + 1 / 3) < 0 ∧
       chainStep2' centre7 centre7roots.1 (centre7roots.2.1 - 1 / 3) < 0 ∧
@@ -1492,7 +1468,6 @@ theorem centre7_signs :
           (centre7roots.2.2.2 - 1 / 3) ∧
       chainStep4' centre7 centre7roots.1 centre7roots.2.1 centre7roots.2.2.1
           (centre7roots.2.2.2 + 1 / 3) < 0 := by
-
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
     norm_num [chainStep1', chainStep1, chainStep2', chainStep2, chainStep3', chainStep3,
       chainStep4', chainStep4, psumY, psumFinY, yConicY, yNBY, yBdotY, ymoment2Y, ymoment3Y,
@@ -1507,7 +1482,6 @@ theorem centre7_signs :
 /-- The `n = 8` centre: `β* = (1, 2, 3, 4, −1, −2, −3, −4)`,
 
 `v* = (−5, −4, −1, −5, 2, 6, 4, 3)`, `P = (−4, −2, 2, −1, 1, 4, 1, −1)`. -/
-
 def centre8a : Fin 8 → ℝ := ![(-4 : ℝ), -2, 2, -1, 1, 4, 1, -1]
 
 def centre8b : Fin 8 → ℝ := ![0, 3, 0, 2, 1, -1, -6, 1]
@@ -1515,15 +1489,12 @@ def centre8b : Fin 8 → ℝ := ![0, 3, 0, 2, 1, -1, -6, 1]
 def centre8g : Fin 8 → ℝ := ![1, -2 / 3, 0, -1, 1, 3 / 2, 2 / 3, -5 / 2]
 
 def centre8w1 : Fin 8 → ℝ :=
-
   ![(-143 : ℝ) / 21, -113 / 21, -22 / 21, -452 / 63, -18 / 7, 170 / 21, -24 / 7, 1154 / 63]
 
 def centre8w2 : Fin 8 → ℝ :=
-
   ![38 / 35, 29 / 35, 1 / 35, 137 / 105, 96 / 35, -44 / 35, 156 / 35, -193 / 21]
 
 def centre8w3 : Fin 8 → ℝ :=
-
   ![167 / 35, -89 / 35, 184 / 35, -272 / 105, -501 / 35, -186 / 35, -101 / 35, 370 / 21]
 
 
@@ -1540,7 +1511,6 @@ def centre8 : ChainYInputs 8 :=
 against `chainV`. Against `chainV` the root is `κ₀ = −1`, and there
 `chainY = β* = (1, 2, 3, 4, −1, −2, −3, −4)` exactly. -/
 def centre8roots : ℝ × ℝ × ℝ × ℝ :=
-
   (0, 5 / 3, -5322 / 2915, -1)
 
 
@@ -1561,21 +1531,13 @@ chainStep4' centre8 0 5/3 (-5322/2915) (-160325/27427952)
 
 Against `chainV` the root is `κ₀ = -1`, where
 `chainY centre8 0 5/3 (-5322/2915) (-1) = ![(1 : ℝ), 2, 3, 4, -1, -2, -3, -4] = β*`. -/
-
 theorem centre8_solves :
-
     chainStep1' centre8 (centre8roots.1) = 0 ∧
-
       chainStep2' centre8 centre8roots.1 centre8roots.2.1 = 0 ∧
-
       chainStep3' centre8 centre8roots.1 centre8roots.2.1 centre8roots.2.2.1 = 0 ∧
-
       chainStep4' centre8 centre8roots.1 centre8roots.2.1 centre8roots.2.2.1
-
         centre8roots.2.2.2 = 0 := by
-
   refine ⟨?_, ?_, ?_, ?_⟩ <;>
-
     norm_num [chainStep1', chainStep1, chainStep2', chainStep2, chainStep3', chainStep3,
       chainStep4', chainStep4, psumY, psumFinY, yConicY, yNBY, yBdotY, ymoment2Y, ymoment3Y,
       chainProjN, chainConicPt, chainP, chainQ0, chainD, chainV, chainY, chainW1, chainW2,
@@ -1587,18 +1549,14 @@ theorem centre8_solves :
 
 
 theorem centre8_denom1 : yNBY (chainP centre8 centre8roots.1) centre8g ≠ 0 := by
-
   norm_num [yNBY, ymoment2Y, psumY, psumFinY, chainP, ChainYInputs.a, ChainYInputs.b,
     centre8, centre8roots, centre8a, centre8b, centre8g, Fin.sum_univ_succ]
 
 
 
 theorem centre8_denom2 :
-
     yBdotY (chainP centre8 centre8roots.1) (chainD centre8 centre8roots.1 centre8roots.2.2.1)
-
       (chainD centre8 centre8roots.1 centre8roots.2.2.1) ≠ 0 := by
-
   norm_num [yBdotY, ymoment3Y, yNBY, ymoment2Y, psumY, psumFinY, chainProjN, chainD, chainW1,
     chainW3, chainWt, chainP, ChainYInputs.a, ChainYInputs.g, ChainYInputs.w1, ChainYInputs.w3,
     centre8, centre8roots, centre8a, centre8b, centre8g, centre8w1, centre8w3,
@@ -1613,11 +1571,8 @@ theorem centre8_denom2 :
 two-step proof as `centre7_inj`: evaluate the chain output at each of the eight `Fin` indices,
 
 then check pairwise distinctness. -/
-
 theorem centre8_inj : Function.Injective (chainY centre8 centre8roots.1 centre8roots.2.1
-
     centre8roots.2.2.1 centre8roots.2.2.2) := by
-
   have key : chainY centre8 centre8roots.1 centre8roots.2.1 centre8roots.2.2.1
       centre8roots.2.2.2 = (![(1 : ℝ), 2, 3, 4, -1, -2, -3, -4] : Fin 8 → ℝ) := by
     funext i
@@ -1678,9 +1633,7 @@ chainStep4' centre8 0 (5/3) (-5322/2915) (-2/3) = -51.851852…
 (Computed with `wolfram_WolframLanguageEvaluator` in exact `Rational` arithmetic and re-checked
 
 here by `norm_num`.) -/
-
 theorem centre8_signs :
-
     0 < chainStep1' centre8 (centre8roots.1 - 1 / 3) ∧
       chainStep1' centre8 (centre8roots.1 + 1 / 3) < 0 ∧
       chainStep2' centre8 centre8roots.1 (centre8roots.2.1 - 1 / 3) < 0 ∧
@@ -1691,7 +1644,6 @@ theorem centre8_signs :
           (centre8roots.2.2.2 - 1 / 3) ∧
       chainStep4' centre8 centre8roots.1 centre8roots.2.1 centre8roots.2.2.1
           (centre8roots.2.2.2 + 1 / 3) < 0 := by
-
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
     norm_num [chainStep1', chainStep1, chainStep2', chainStep2, chainStep3', chainStep3,
       chainStep4', chainStep4, psumY, psumFinY, yConicY, yNBY, yBdotY, ymoment2Y, ymoment3Y,
@@ -2362,39 +2314,25 @@ which it does vanish. -/
 /-- Step 4 *is* the vanishing of the fifth power sum of the output: `chainStep4'` unfolds to
 `psumY (chainP I lam + kappa • chainV I lam x mu) 5`, which is
 `psumY (chainY I lam x mu kappa) 5`. -/
-
 theorem chainStep4'_psumY_eq (I : ChainYInputs n) (lam x mu kappa : ℝ) :
-
     chainStep4' I lam x mu kappa = psumY (chainY I lam x mu kappa) 5 := rfl
 
 /-- The first power sum of the output, as a linear functional of the two vectors entering
 the last step. This identity is what shows the `psumY … 1 = 0` conclusion of
 `exists_open_good7` is an *extra* equation, not a consequence of `ChainGood`. -/
-
 theorem chainY_psumY_one_eq' (I : ChainYInputs n) (lam x mu kappa : ℝ) :
-
     psumY (chainY I lam x mu kappa) 1
-
       = psumY (chainP I lam) 1 + kappa * psumY (chainV I lam x mu) 1 := by
-
   have h := psumY_one_eq (chainP I lam) (chainV I lam x mu) kappa
-
   simpa only [chainY] using h
 
 /-- `psumY (P − s • v) 1 = S₁ P − s · S₁ v`, the `sub` counterpart of `psumY_one_eq`. -/
-
 theorem psumY_sub_smul_eq (P v : Fin n → ℝ) (s : ℝ) :
-
     psumY (P - s • v) 1 = psumY P 1 - s * psumY v 1 := by
-
   have h := psumY_one_eq P v (-s)
-
   have key : P - s • v = P + (-s) • v := by
-
     rw [sub_eq_add_neg, neg_smul]
-
   rw [key, psumY_one_eq]
-
   ring
 
 /-- **`S₁` is preserved by the whole chain** when it vanishes on all six inputs.
@@ -2402,111 +2340,60 @@ theorem psumY_sub_smul_eq (P v : Fin n → ℝ) (s : ℝ) :
 This is the missing hypothesis of `exists_open_good7`; see the `WARNING` there. It holds at
 both centres, and it is what turns `S₁ y = 0` into an identity of the chain rather than a
 fifth equation in the four unknowns `lam`, `x`, `mu`, `kappa`. -/
-
 theorem chainY_psumY_one_eq {I : ChainYInputs n} {lam x mu kappa : ℝ}
-
     (ha : psumY I.a 1 = 0) (hb : psumY I.b 1 = 0) (hg : psumY I.g 1 = 0)
-
     (hw1 : psumY I.w1 1 = 0) (hw2 : psumY I.w2 1 = 0) (hw3 : psumY I.w3 1 = 0) :
-
     psumY (chainY I lam x mu kappa) 1 = 0 := by
-
   have hP : psumY (chainP I lam) 1 = 0 := by
-
     have key : chainP I lam = I.a + lam • I.b := rfl
-
     rw [key, psumY_one_eq, ha, hb]
-
     ring
-
   -- every `N_P`-projection of an input direction still has vanishing first power sum
-
   have hproj : ∀ w : Fin n → ℝ, psumY w 1 = 0 →
-
       psumY (chainProjN (chainP I lam) I.g w) 1 = 0 := by
-
     intro w hw
-
     have key : chainProjN (chainP I lam) I.g w
-
         = w - (yNBY (chainP I lam) w / yNBY (chainP I lam) I.g) • I.g := rfl
-
     rw [key, psumY_sub_smul_eq, hw, hg]
-
     ring
-
   have hW1 : psumY (chainW1 I lam) 1 = 0 := by
-
     have key : chainW1 I lam = chainProjN (chainP I lam) I.g I.w1 := rfl
-
     rw [key]
-
     exact hproj I.w1 hw1
-
   have hW2 : psumY (chainW2 I lam) 1 = 0 := by
-
     have key : chainW2 I lam = chainProjN (chainP I lam) I.g I.w2 := rfl
-
     rw [key]
-
     exact hproj I.w2 hw2
-
   have hW3 : psumY (chainW3 I lam) 1 = 0 := by
-
     have key : chainW3 I lam = chainProjN (chainP I lam) I.g I.w3 := rfl
-
     rw [key]
-
     exact hproj I.w3 hw3
-
   have hq0 : psumY (chainQ0 I lam x) 1 = 0 := by
-
     have key : chainQ0 I lam x = chainW1 I lam + x • chainW2 I lam := rfl
-
     rw [key, psumY_one_eq, hW1, hW2]
-
     ring
-
   have hd : psumY (chainD I lam mu) 1 = 0 := by
-
     have key : chainD I lam mu = mu • chainW1 I lam + chainW3 I lam := rfl
-
     rw [key, add_comm, psumY_one_eq, hW1, hW3]
-
     ring
-
   have hv : psumY (chainV I lam x mu) 1 = 0 := by
-
     have key : chainV I lam x mu = chainQ0 I lam x
-
         - (2 * yBdotY (chainP I lam) (chainQ0 I lam x) (chainD I lam mu)
-
           / yBdotY (chainP I lam) (chainD I lam mu) (chainD I lam mu)) • chainD I lam mu := rfl
-
     rw [key, psumY_sub_smul_eq, hq0, hd]
-
     ring
-
   have h := chainY_psumY_one_eq' I lam x mu kappa
-
   rw [h, hP, hv]
-
   ring
 
 /-- `chainProjN` is idempotent on the hyperplane `N_P`: a point of `N_P` is its own
 projection. This is what reconciles `chainStep2'`, which projects `chainW1`/`chainW2` a
 *second* time, with `chainQ0`, which uses the projected directions directly. -/
-
 theorem chainProjN_of_mem_N {P g w : Fin n → ℝ} (hw : yNBY P w = 0) :
-
     chainProjN P g w = w := by
-
   have key : chainProjN P g w = w - (yNBY P w / yNBY P g) • g := rfl
-
   rw [key]
-
   ext i
-
   simp [hw]
 
 /-- **The third power sum of the output is a consequence of the chain's data.**
@@ -2514,121 +2401,63 @@ theorem chainProjN_of_mem_N {P g w : Fin n → ℝ} (hw : yNBY P w = 0) :
 `h1` is step 1, `h3` is step 3, `h2` read as "the conic point is on the conic", and
 `hNv`/`hQv` are the two facts about the direction `v` that `psumY_cube_eq` needs. So this is
 `psumY_13_line` with its two `psumY … 1` hypotheses dropped. -/
-
 theorem chainY_psumY_cube_eq {I : ChainYInputs n} {lam x mu kappa : ℝ}
-
     (h1 : chainStep1' I lam = 0) (h2 : chainStep2' I lam x = 0)
-
     (h3 : chainStep3' I lam x mu = 0) (hden1 : yNBY (chainP I lam) I.g ≠ 0)
-
     (hden2 : yBdotY (chainP I lam) (chainD I lam mu) (chainD I lam mu) ≠ 0) :
-
     psumY (chainY I lam x mu kappa) 3 = 0 := by
-
   have hP3 : psumY (chainP I lam) 3 = 0 := h1
-
   have hN1 : yNBY (chainP I lam) (chainW1 I lam) = 0 := chainProjN_mem_N hden1
-
   have hN2 : yNBY (chainP I lam) (chainW2 I lam) = 0 := chainProjN_mem_N hden1
-
   have hN3 : yNBY (chainP I lam) (chainW3 I lam) = 0 := chainProjN_mem_N hden1
-
   have hNq0 : yNBY (chainP I lam) (chainQ0 I lam x) = 0 := by
-
     have h := yNBY_add_right (chainP I lam) (chainW1 I lam) (x • chainW2 I lam)
-
     have h' := yNBY_smul_right (chainP I lam) (chainW2 I lam) x
-
     have key : chainQ0 I lam x = chainW1 I lam + x • chainW2 I lam := rfl
-
     rw [key, h, hN1, h', hN2]
-
     ring
-
   have hNd : yNBY (chainP I lam) (chainD I lam mu) = 0 := by
-
     have h := yNBY_add_right (chainP I lam) (mu • chainW1 I lam) (chainW3 I lam)
-
     have h' := yNBY_smul_right (chainP I lam) (chainW1 I lam) mu
-
     have key : chainD I lam mu = mu • chainW1 I lam + chainW3 I lam := rfl
-
     rw [key, h, h', hN1, hN3]
-
     ring
-
   have hQ0 : yConicY (chainP I lam) (chainQ0 I lam x) = 0 := by
-
     have key0 : chainQ0 I lam x = chainW1 I lam + x • chainW2 I lam := rfl
-
     have key1 : chainProjN (chainP I lam) I.g (chainW1 I lam) = chainW1 I lam :=
-
       chainProjN_of_mem_N hN1
-
     have key2 : chainProjN (chainP I lam) I.g (chainW2 I lam) = chainW2 I lam :=
-
       chainProjN_of_mem_N hN2
-
     have key3 : chainStep2' I lam x = yConicY (chainP I lam)
-
         (chainProjN (chainP I lam) I.g (chainW1 I lam)
-
           + x • chainProjN (chainP I lam) I.g (chainW2 I lam)) := rfl
-
     rw [key3, key1, key2] at h2
-
     rw [key0]
-
     exact h2
-
   have hNv : yNBY (chainP I lam) (chainV I lam x mu) = 0 := by
-
     have key : chainV I lam x mu = chainQ0 I lam x
-
         - (2 * yBdotY (chainP I lam) (chainQ0 I lam x) (chainD I lam mu)
-
           / yBdotY (chainP I lam) (chainD I lam mu) (chainD I lam mu)) • chainD I lam mu := rfl
-
     have h := yNBY_sub_right (chainP I lam) (chainQ0 I lam x)
-
       ((2 * yBdotY (chainP I lam) (chainQ0 I lam x) (chainD I lam mu)
-
         / yBdotY (chainP I lam) (chainD I lam mu) (chainD I lam mu)) • chainD I lam mu)
-
     have h' := yNBY_smul_right (chainP I lam) (chainD I lam mu)
-
       (2 * yBdotY (chainP I lam) (chainQ0 I lam x) (chainD I lam mu)
-
         / yBdotY (chainP I lam) (chainD I lam mu) (chainD I lam mu))
-
     rw [key, h, hNq0, h', hNd]
-
     ring
-
   have hQv : yConicY (chainP I lam) (chainV I lam x mu) = 0 := by
-
     have key : chainV I lam x mu = chainConicPt (chainP I lam) (chainQ0 I lam x)
-
         (chainD I lam mu) := rfl
-
     rw [key]
-
     exact chainConicPt_on_conic hden2 hQ0
-
   have hv3 : psumY (chainV I lam x mu) 3 = 0 := by
-
     have key : chainStep3' I lam x mu = psumY (chainV I lam x mu) 3 := rfl
-
     rw [key] at h3
-
     exact h3
-
   have hlin : psumY (chainP I lam + kappa • chainV I lam x mu) 3 = 0 := by
-
     rw [psumY_cube_eq, hP3, hNv, hQv, hv3]
-
     ring
-
   simpa only [chainY] using hlin
 
 /-- **The exact statement of `exists_open_good7`/`exists_open_good8` that is true.** Its two
@@ -2643,43 +2472,24 @@ hypotheses isolate precisely what those two theorems are missing:
 
 Given those two, all three power-sum conclusions follow from `chainY_psumY_one_eq`,
 `chainY_psumY_cube_eq` and `chainStep4'_psumY_eq` — three lines, no further mathematics. -/
-
 theorem exists_open_good_of_s1 {n : ℕ} {I₀ : ChainYInputs n}
-
     (hs1 : ∀ (I : ChainYInputs n), psumY I.a 1 = 0 ∧ psumY I.b 1 = 0 ∧ psumY I.g 1 = 0 ∧
-
       psumY I.w1 1 = 0 ∧ psumY I.w2 1 = 0 ∧ psumY I.w3 1 = 0)
-
     (hgood : ∃ U : Set (ChainYInputs n), IsOpen U ∧ I₀ ∈ U ∧
-
       ∀ I ∈ U, ∃ lam x mu kappa : ℝ, ChainGood I lam x mu kappa) :
-
     ∃ U : Set (ChainYInputs n), IsOpen U ∧ I₀ ∈ U ∧
-
       ∀ I ∈ U, ∃ lam x mu kappa : ℝ, ChainGood I lam x mu kappa ∧
-
         psumY (chainY I lam x mu kappa) 1 = 0 ∧ psumY (chainY I lam x mu kappa) 3 = 0 ∧
-
         psumY (chainY I lam x mu kappa) 5 = 0 := by
-
   obtain ⟨U, hUopen, hU₀, hU⟩ := hgood
-
   refine ⟨U, hUopen, hU₀, ?_⟩
-
   intro I hI
-
   obtain ⟨lam, x, mu, kappa, hchain⟩ := hU I hI
-
   have h := hs1 I
-
   refine ⟨lam, x, mu, kappa, hchain, ?_, ?_, ?_⟩
-
   · exact chainY_psumY_one_eq h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2.1 h.2.2.2.2.2
-
   · exact chainY_psumY_cube_eq hchain.1 hchain.2.1 hchain.2.2.1 hchain.2.2.2.2.1 hchain.2.2.2.2.2.1
-
   · rw [← chainStep4'_psumY_eq]
-
     exact hchain.2.2.2.1
 
 /-! #### The `S₁` input conditions
@@ -2726,47 +2536,31 @@ arithmetic): `Σᵢ (centre7aᵢ + lam·centre7bᵢ)² · centre7gᵢ = 244 − 
 
 (That `yNBY YP Yv = Σᵢ YPᵢ²·Yvᵢ` — a *quadratic* moment, the `N_P` pairing — is why the
 denominator is quadratic in `lam` and not linear: `P = a + lam • b` is linear in `lam`.) -/
-
 theorem centre7_hpole1 (lam : ℝ) : 0 < yNBY (chainP centre7 lam) centre7g := by
-
   have key : yNBY (chainP centre7 lam) centre7g
       = 378 * lam ^ 2 - 544 * lam + 244 := by
-
     norm_num [yNBY, ymoment2Y, chainP, ChainYInputs.a, ChainYInputs.b, centre7, centre7a,
       centre7b, centre7g, Fin.sum_univ_succ, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
-    <;> ring
-
+    ; ring
   rw [key]
-
   -- `4A(A·lam² + B·lam + C) = (2A·lam + B)² + (4AC − B²)`, and `4AC − B² = 72992 > 0`
   have hid : 4 * 378 * (378 * lam ^ 2 - 544 * lam + 244)
       = (756 * lam - 544) ^ 2 + 72992 := by ring
-
   have hsq : 0 ≤ (756 * lam - 544) ^ 2 := sq_nonneg _
-
   nlinarith
 
 /-- **`hpole1` for `n = 8`, at every radius.** The quadratic is
 `14·lam² − lam + 71/2`, with discriminant `1 − 4·14·71/2 = −1987 < 0`. -/
-
 theorem centre8_hpole1 (lam : ℝ) : 0 < yNBY (chainP centre8 lam) centre8g := by
-
   have key : yNBY (chainP centre8 lam) centre8g
       = 14 * lam ^ 2 - lam + 71 / 2 := by
-
     norm_num [yNBY, ymoment2Y, chainP, ChainYInputs.a, ChainYInputs.b, centre8, centre8a,
       centre8b, centre8g, Fin.sum_univ_succ, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
-    <;> ring
-
+    ; ring
   rw [key]
-
   have hid : 4 * 14 * (14 * lam ^ 2 - lam + 71 / 2)
       = (28 * lam - 1) ^ 2 + 1987 := by ring
-
   have hsq : 0 ≤ (28 * lam - 1) ^ 2 := sq_nonneg _
-
   nlinarith
 
 /-- The Vandermonde product `∏_{i < j} (vᵢ - vⱼ)²`, which is nonzero exactly when `v` is
@@ -2996,7 +2790,6 @@ theorem exists_open_good7 :
         (∃ t : ℝ, chainStep3Cleared (chainP I lam) (chainQ0 I lam x)
             (t • chainW1 I lam + chainW3 I lam) ≠ 0) ∧
         (∃ t : ℝ, chainStep4' I lam x mu t ≠ 0) := by
-
   exact exists_open_good_of_centre centre7 centre7roots.1 centre7roots.2.1
     centre7roots.2.2.1 centre7roots.2.2.2 centre7_chain_signs centre7_denom1 centre7_denom2
     centre7_inj
@@ -3013,7 +2806,6 @@ theorem exists_open_good8 :
         (∃ t : ℝ, chainStep3Cleared (chainP I lam) (chainQ0 I lam x)
             (t • chainW1 I lam + chainW3 I lam) ≠ 0) ∧
         (∃ t : ℝ, chainStep4' I lam x mu t ≠ 0) := by
-
   exact exists_open_good_of_centre centre8 centre8roots.1 centre8roots.2.1
     centre8roots.2.2.1 centre8roots.2.2.2 centre8_chain_signs centre8_denom1 centre8_denom2
     centre8_inj
@@ -3059,81 +2851,59 @@ variable {m : ℕ}
 
 
 /-- `P = a + λ b`. -/
-
 def P (I : ChainBInputs m) (lam : ℝ) : Fin m → ℝ := I.a + lam • I.b
 
 
 
 /-- The projection of `w` into `N_P` along `g`, in `b`-coordinates. -/
-
 def projN (αs : Fin m → ℝ) (P g w : Fin m → ℝ) : Fin m → ℝ :=
-
   w - (yNB αs P w / yNB αs P g) • g
 
 
 
 /-- `w̃ⱼ`, in `b`-coordinates. -/
-
 def Wt (αs : Fin m → ℝ) (I : ChainBInputs m) (lam : ℝ) (j : Fin 3) : Fin m → ℝ :=
-
   match j with
-
   | 0 => projN αs (P I lam) I.g I.w1
-
   | 1 => projN αs (P I lam) I.g I.w2
-
   | 2 => projN αs (P I lam) I.g I.w3
 
 
 
 /-- `q₀ = w̃₁ + x w̃₂`, in `b`-coordinates. -/
-
 def Q0 (αs : Fin m → ℝ) (I : ChainBInputs m) (lam x : ℝ) : Fin m → ℝ :=
-
   Wt αs I lam 0 + x • Wt αs I lam 1
 
 
 
 /-- `d(μ) = μ w̃₁ + w̃₃`, in `b`-coordinates. -/
-
 def D (αs : Fin m → ℝ) (I : ChainBInputs m) (lam mu : ℝ) : Fin m → ℝ :=
-
   mu • Wt αs I lam 0 + Wt αs I lam 2
 
 
 
 /-- The second intersection of the conic, in `b`-coordinates. -/
-
 def conicPt (αs : Fin m → ℝ) (P q₀ d : Fin m → ℝ) : Fin m → ℝ :=
-
   q₀ - (2 * yBdot αs P q₀ d / yBdot αs P d d) • d
 
 
 
 /-- `v = pt(μ)`, in `b`-coordinates. -/
-
 def V (αs : Fin m → ℝ) (I : ChainBInputs m) (lam x mu : ℝ) : Fin m → ℝ :=
-
   conicPt αs (P I lam) (Q0 αs I lam x) (D αs I lam mu)
 
 
 
 /-- The output `b`-vector `b* = P + κ v`. -/
-
 def out (αs : Fin m → ℝ) (I : ChainBInputs m) (lam x mu kappa : ℝ) : Fin m → ℝ :=
-
   P I lam + kappa • V αs I lam x mu
 
 
 
 /-- `yvec` of a difference is the difference of the `yvec`s. -/
-
 theorem yvec_sub (αs : Fin n → ℝ) (b c : Fin n → ℝ) :
-
     yvec αs (b - c) = yvec αs b - yvec αs c := by
-
   funext i
-
   simp only [yvec, Pi.sub_apply, sub_mul, Finset.sum_sub_distrib]
 
 
@@ -3141,133 +2911,81 @@ theorem yvec_sub (αs : Fin n → ℝ) (b c : Fin n → ℝ) :
 /-- The `N_P`-projection of a `b`-vector maps to the y-space `chainProjN` of its
 y-vector: the two constructions are the same, because the dividing coefficient
 `yNB αs P w` is literally `yNBY (yvec αs P) (yvec αs w)` (`YSpace.yNB_eq_yNBY`). -/
-
 theorem chainProjN_B {m : ℕ} (αs : Fin m → ℝ) (P g w : Fin m → ℝ)
-
-    (hden : yNB αs P g ≠ 0) :
-
+    (_hden : yNB αs P g ≠ 0) :
     yvec αs (w - (yNB αs P w / yNB αs P g) • g)
-
       = chainProjN (yvec αs P) (yvec αs g) (yvec αs w) := by
-
   rw [yvec_sub, yvec_smul, chainProjN]
-
-  simp only [smul_eq_mul, ← yNB_eq_yNBY]
+  simp only [← yNB_eq_yNBY]
 
 
 
 theorem yvec_P (αs : Fin m → ℝ) (I : ChainBInputs m) (lam : ℝ) :
-
     yvec αs (P I lam) = chainP (n := m) (chainBtoY αs I) lam := by
-
   unfold P chainP chainBtoY ChainYInputs.a ChainYInputs.b
-
   rw [yvec_add, yvec_smul]
 
 
 
 theorem yvec_Wt (αs : Fin m → ℝ) (I : ChainBInputs m) (lam : ℝ) (j : Fin 3)
-
     (hden : yNB αs (P I lam) I.g ≠ 0) :
-
     yvec αs (Wt αs I lam j) = chainWt (n := m) (chainBtoY αs I) lam j := by
-
   have key1 : yvec αs (projN αs (P I lam) I.g I.w1)
-
       = chainWt (n := m) (chainBtoY αs I) lam 0 := by
-
     have h := chainProjN_B αs (P I lam) I.g I.w1 hden
-
     rw [yvec_P] at h
-
     simpa [projN, chainWt, chainBtoY, ChainYInputs.g, ChainYInputs.w1] using h
-
   have key2 : yvec αs (projN αs (P I lam) I.g I.w2)
-
       = chainWt (n := m) (chainBtoY αs I) lam 1 := by
-
     have h := chainProjN_B αs (P I lam) I.g I.w2 hden
-
     rw [yvec_P] at h
-
     simpa [projN, chainWt, chainBtoY, ChainYInputs.g, ChainYInputs.w2] using h
-
   have key3 : yvec αs (projN αs (P I lam) I.g I.w3)
-
       = chainWt (n := m) (chainBtoY αs I) lam 2 := by
-
     have h := chainProjN_B αs (P I lam) I.g I.w3 hden
-
     rw [yvec_P] at h
-
     simpa [projN, chainWt, chainBtoY, ChainYInputs.g, ChainYInputs.w3] using h
-
   fin_cases j
-
   · exact key1
-
   · exact key2
-
   · exact key3
 
 
 
 theorem yvec_Q0 (αs : Fin m → ℝ) (I : ChainBInputs m) (lam x : ℝ)
-
     (hden : yNB αs (P I lam) I.g ≠ 0) :
-
     yvec αs (Q0 αs I lam x) = chainQ0 (n := m) (chainBtoY αs I) lam x := by
-
   unfold Q0 chainQ0 chainW1 chainW2
-
   simp only [yvec_add, yvec_smul, yvec_Wt αs I lam 0 hden, yvec_Wt αs I lam 1 hden]
 
 
 
 theorem yvec_D (αs : Fin m → ℝ) (I : ChainBInputs m) (lam mu : ℝ)
-
     (hden : yNB αs (P I lam) I.g ≠ 0) :
-
     yvec αs (D αs I lam mu) = chainD (n := m) (chainBtoY αs I) lam mu := by
-
   unfold D chainD
-
   simp only [yvec_add, yvec_smul, yvec_Wt αs I lam 0 hden, yvec_Wt αs I lam 2 hden]
-
   simp only [chainW1, chainW3, chainWt]
 
 
-theorem yvec_conicPt (αs : Fin m → ℝ) (P q₀ d : Fin m → ℝ) (hden : yBdot αs P d d ≠ 0) :
-
+theorem yvec_conicPt (αs : Fin m → ℝ) (P q₀ d : Fin m → ℝ) (_hden : yBdot αs P d d ≠ 0) :
     yvec αs (conicPt αs P q₀ d)
-
       = chainConicPt (n := m) (yvec αs P) (yvec αs q₀) (yvec αs d) := by
-
   rw [conicPt, yvec_sub, yvec_smul, chainConicPt]
-
-  simp only [smul_eq_mul, ← yBdot_eq_yBdotY]
+  simp only [← yBdot_eq_yBdotY]
 
 
 
 
 theorem yvec_V (αs : Fin m → ℝ) (I : ChainBInputs m) (lam x mu : ℝ)
-
     (h1 : yNB αs (P I lam) I.g ≠ 0)
-
     (h2 : yBdot αs (P I lam) (D αs I lam mu) (D αs I lam mu) ≠ 0) :
-
     yvec αs (V αs I lam x mu) = chainV (n := m) (chainBtoY αs I) lam x mu := by
-
   have h2' : yBdotY (yvec αs (P I lam)) (yvec αs (D αs I lam mu))
-
       (yvec αs (D αs I lam mu)) ≠ 0 := by
-
     rw [← yBdot_eq_yBdotY]
-
     exact h2
-
   unfold V chainV
-
   rw [yvec_conicPt αs _ _ _ h2', yvec_P, yvec_Q0 αs I lam x h1, yvec_D αs I lam mu h1]
 
 
@@ -3279,19 +2997,12 @@ end ChainB
 /-- **The two versions agree.** Every `b`-coordinate the chain produces has the y-vector
 
 the y-space chain assigns it. -/
-
 theorem chainBLift_yvec (αs : Fin n → ℝ) (I : ChainBInputs n)
-
     (lam x mu kappa : ℝ)
-
     (h1 : yNB αs (ChainB.P I lam) I.g ≠ 0)
-
     (h2 : yBdot αs (ChainB.P I lam) (ChainB.D αs I lam mu) (ChainB.D αs I lam mu) ≠ 0) :
-
     yvec αs (ChainB.out αs I lam x mu kappa) = chainY (chainBtoY αs I) lam x mu kappa := by
-
   unfold ChainB.out chainY
-
   rw [yvec_add, yvec_smul, ChainB.yvec_V αs I lam x mu h1 h2, ChainB.yvec_P]
 
 
@@ -3345,53 +3056,31 @@ hypothesis binders to each and applying the helper. -/
 
 
 /-- **Step 1** as a degree-`≤ 3` polynomial with P-constructible coefficients. -/
-
 theorem exists_step1_poly_of_roots {q : ℝ[X]} {αs : Fin n → ℝ} (a b : Fin n → ℝ)
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (ha : ∀ k, PConstructible (a k)) (hb : ∀ k, PConstructible (b k)) :
-
     ∃ g : ℝ[X], g.natDegree ≤ 3 ∧ (∀ k, PConstructible (g.coeff k)) ∧
-
       ∀ lam : ℝ, g.eval lam = chainStep1 (yvec αs a) (yvec αs b) lam := by
-
   obtain ⟨g, hdeg, hcoeff, heval⟩ :=
-
     psumY_line_poly (αs := αs) (u := a) (v := b) hmon hn hnat hsep hcoef hαs hnd ha hb 3
-
   refine ⟨g, hdeg, hcoeff, fun lam => ?_⟩
-
   rw [heval, chainStep1, yvec_add, yvec_smul]
 
 
 
 /-- **Step 4** as a degree-`≤ 5` polynomial with P-constructible coefficients. -/
-
 theorem exists_step4_poly_of_roots {q : ℝ[X]} {αs : Fin n → ℝ} (P v : Fin n → ℝ)
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hP : ∀ k, PConstructible (P k)) (hv : ∀ k, PConstructible (v k)) :
-
     ∃ f : ℝ[X], f.natDegree ≤ 5 ∧ (∀ k, PConstructible (f.coeff k)) ∧
-
       ∀ kappa : ℝ, f.eval kappa = chainStep4 (yvec αs P) (yvec αs v) kappa := by
-
   obtain ⟨f, hdeg, hcoeff, heval⟩ :=
-
     psumY_line_poly (αs := αs) (u := P) (v := v) hmon hn hnat hsep hcoef hαs hnd hP hv 5
-
   refine ⟨f, hdeg, hcoeff, fun kappa => ?_⟩
-
   rw [heval, chainStep4, yvec_add, yvec_smul]
 
 
@@ -3400,21 +3089,13 @@ theorem exists_step4_poly_of_roots {q : ℝ[X]} {αs : Fin n → ℝ} (P v : Fin
 
 **WARNING: false as stated** — see the section note above. With the root hypotheses
 added, this is `exists_step1_poly_of_roots`. -/
-
 theorem exists_step1_poly {q : ℝ[X]} {αs : Fin n → ℝ} (a b : Fin n → ℝ)
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (ha : ∀ k, PConstructible (a k)) (hb : ∀ k, PConstructible (b k)) :
-
     ∃ g : ℝ[X], g.natDegree ≤ 3 ∧ (∀ k, PConstructible (g.coeff k)) ∧
-
       ∀ lam : ℝ, g.eval lam = chainStep1 (yvec αs a) (yvec αs b) lam := by
-
   exact exists_step1_poly_of_roots a b hmon hn hnat hsep hcoef hαs hnd ha hb
 
 
@@ -3425,52 +3106,30 @@ functional: `yConicY P (u + v) ≠ yConicY P u + yConicY P v` in general (the cr
 `2∑ᵢ YPᵢ·Yuᵢ·Yvᵢ` survives). So the right tool is the full expansion along an affine
 line, `u + s·w`, whose middle coefficient is the *mixed* pairing `yBdotY P u w`. That is
 what makes step 2 a genuine quadratic in `x`, of degree `2`. -/
-
 theorem yConicY_add_smul_right (P u w : Fin n → ℝ) (s : ℝ) :
-
     yConicY P (u + s • w)
-
       = yConicY P u + 2 * s * yBdotY P u w + s ^ 2 * yConicY P w := by
-
   have key : ∀ i : Fin n, P i ^ 1 * (u + s • w) i ^ 2
-
       = P i ^ 1 * u i ^ 2
-
         + P i ^ 1 * u i ^ 1 * w i ^ 1 * (2 * s)
-
         + P i ^ 1 * w i ^ 2 * (s ^ 2) := by
-
     intro i
-
     simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
     ring
-
   have hsum : ∑ i : Fin n, P i ^ 1 * (u + s • w) i ^ 2
-
       = (∑ i : Fin n, P i ^ 1 * u i ^ 2)
-
         + (∑ i : Fin n, P i ^ 1 * u i ^ 1 * w i ^ 1) * (2 * s)
-
         + (∑ i : Fin n, P i ^ 1 * w i ^ 2) * (s ^ 2) := by
-
     rw [Finset.sum_congr rfl (fun i _ => key i), Finset.sum_add_distrib,
-
       Finset.sum_add_distrib, Finset.sum_mul, Finset.sum_mul]
-
   simp only [yConicY, ymoment2Y, yBdotY, ymoment3Y]
-
-  rw [hsum] <;> ring_nf
+  rw [hsum]; ring_nf
 
 /-- The same, in `b`-coordinates. -/
 theorem yConicB_add_smul_right {n : ℕ} (αs : Fin n → ℝ) (P u w : Fin n → ℝ) (s : ℝ) :
-
     yConicB αs P (u + s • w)
-
       = yConicB αs P u + 2 * s * yBdot αs P u w + s ^ 2 * yConicB αs P w := by
-
   rw [yConicB_eq_yConicY, yvec_add, yvec_smul, yConicY_add_smul_right, ← yBdot_eq_yBdotY,
-
     ← yConicB_eq_yConicY, ← yConicB_eq_yConicY]
 
 /-- **Step 2** as a degree-`≤ 2` polynomial with P-constructible coefficients. The two
@@ -3478,178 +3137,94 @@ theorem yConicB_add_smul_right {n : ℕ} (αs : Fin n → ℝ) (P u w : Fin n �
 coefficients are `yConicB αs P w̃₁` and `yConicB αs P w̃₂`, the second pairing of the
 `N_P`-projections; those are P-constructible because the projections are
 `w - (⟨P,w⟩/⟨P,g⟩)·g` and both pairings are. -/
-
 theorem exists_step2_poly_of_roots {q : ℝ[X]} {αs : Fin n → ℝ} (P g w₁ w₂ : Fin n → ℝ)
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hP : ∀ k, PConstructible (P k)) (hg : ∀ k, PConstructible (g k))
-
     (hw1 : ∀ k, PConstructible (w₁ k)) (hw2 : ∀ k, PConstructible (w₂ k)) :
-
     ∃ f : ℝ[X], f.natDegree ≤ 2 ∧ (∀ k, PConstructible (f.coeff k)) ∧
-
       ∀ x : ℝ, f.eval x
-
         = chainStep2 (yvec αs P) (yvec αs g) (yvec αs w₁) (yvec αs w₂) x := by
-
   have hprojPC (w : Fin n → ℝ) (hw : ∀ k, PConstructible (w k)) :
-
       ∀ k, PConstructible (ChainB.projN αs P g w k) := by
-
     intro k
-
     rw [ChainB.projN, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.sub (hw k)
-
       (PConstructible.mul
-
         (PConstructible.div
-
           (yNB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hw)
-
           (yNB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hg))
-
         (hg k))
-
   have hproj (w : Fin n → ℝ) :
-
       chainProjN (yvec αs P) (yvec αs g) (yvec αs w)
-
         = yvec αs (ChainB.projN αs P g w) := by
-
     unfold chainProjN ChainB.projN
-
     rw [← yvec_smul, ← ChainB.yvec_sub]
-
     simp only [← yNB_eq_yNBY]
-
   set a : ℝ := yConicB αs P (ChainB.projN αs P g w₁) with ha_def
-
   set b : ℝ := 2 * yBdot αs P (ChainB.projN αs P g w₁) (ChainB.projN αs P g w₂) with hb_def
-
   set c : ℝ := yConicB αs P (ChainB.projN αs P g w₂) with hc_def
-
   have haPC : PConstructible a := by
-
     rw [ha_def]
-
     exact yConicB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP (hprojPC w₁ hw1)
-
   have hbPC : PConstructible b := by
-
     rw [hb_def]
-
     exact PConstructible.mul (nat_Pconstructible 2)
-
       (yBdot_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP (hprojPC w₁ hw1)
-
         (hprojPC w₂ hw2))
-
   have hcPC : PConstructible c := by
-
     rw [hc_def]
-
     exact yConicB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP (hprojPC w₂ hw2)
-
   have hXcoeff : ∀ k : ℕ, PConstructible (Polynomial.X.coeff k) := by
-
     intro k
-
     rw [Polynomial.coeff_X]
-
     split_ifs
-
     · exact PConstructible.base_one
-
     · exact zero_Pconstructible
-
   have hlincoeff : ∀ k : ℕ,
-
       PConstructible ((Polynomial.C b + Polynomial.C c * Polynomial.X).coeff k) := by
-
     intro k
-
     rw [Polynomial.coeff_add]
-
     exact PConstructible.add (coeff_C_Pconstructible hbPC k)
-
       (coeff_mul_Pconstructible (fun i => coeff_C_Pconstructible hcPC i) hXcoeff k)
-
   have hXsqcoeff : ∀ k : ℕ, PConstructible ((Polynomial.X ^ 2).coeff k) := by
-
     intro k
-
     simpa [pow_two] using (coeff_mul_Pconstructible hXcoeff hXcoeff k)
-
   refine ⟨Polynomial.C a + Polynomial.C b * Polynomial.X
-
     + Polynomial.C c * Polynomial.X ^ 2, ?_, ?_, ?_⟩
-
   · have h1 : (Polynomial.C a + Polynomial.C b * Polynomial.X).natDegree ≤ 1 :=
-
       Polynomial.natDegree_add_le_of_degree_le (by simp)
-
         (by simpa using Polynomial.natDegree_C_mul_X_pow_le b 1)
-
     refine le_trans
-
       (Polynomial.natDegree_add_le_of_degree_le (by omega)
-
         (Polynomial.natDegree_C_mul_X_pow_le c 2)) (by omega)
-
   · intro k
-
     rw [Polynomial.coeff_add, Polynomial.coeff_add]
-
     exact PConstructible.add
-
       (PConstructible.add (coeff_C_Pconstructible haPC k)
-
         (C_mul_coeff_Pconstructible hbPC hXcoeff k))
-
       (C_mul_coeff_Pconstructible hcPC hXsqcoeff k)
-
   · intro x
-
     simp only [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_pow,
-
       Polynomial.eval_X]
-
     rw [chainStep2, hproj w₁, hproj w₂, yConicY_add_smul_right, ← yConicB_eq_yConicY,
-
       ← yBdot_eq_yBdotY, ← yConicB_eq_yConicY, ← ha_def, ← hc_def, hb_def]
-
     ring
 
 /-- Step 2 as a degree-`≤ 2` polynomial with P-constructible coefficients.
 
 **WARNING: false as stated** — see the section note above. With the root hypotheses
 added, this is `exists_step2_poly_of_roots`. -/
-
 theorem exists_step2_poly {q : ℝ[X]} {αs : Fin n → ℝ} (P g w₁ w₂ : Fin n → ℝ)
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hP : ∀ k, PConstructible (P k)) (hg : ∀ k, PConstructible (g k))
-
     (hw₁ : ∀ k, PConstructible (w₁ k)) (hw₂ : ∀ k, PConstructible (w₂ k)) :
-
     ∃ f : ℝ[X], f.natDegree ≤ 2 ∧ (∀ k, PConstructible (f.coeff k)) ∧
-
       ∀ x : ℝ, f.eval x
-
         = chainStep2 (yvec αs P) (yvec αs g) (yvec αs w₁) (yvec αs w₂) x := by
-
   exact exists_step2_poly_of_roots P g w₁ w₂ hmon hn hnat hsep hcoef hαs hnd hP hg hw₁ hw₂
 
 /-! ### Step 3: the cleared cubic is a polynomial of degree `≤ 6`
@@ -3808,21 +3383,13 @@ denominator pairings written as polynomials in `mu`; the section note above give
 degree count and explains why the coefficients come from the `Lagrange` engine copied in
 above. -/
 theorem exists_step3_poly {q : ℝ[X]} {αs : Fin n → ℝ} (P q₀ w₁ w₃ : Fin n → ℝ)
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hP : ∀ k, PConstructible (P k)) (hq₀ : ∀ k, PConstructible (q₀ k))
-
     (hw₁ : ∀ k, PConstructible (w₁ k)) (hw₃ : ∀ k, PConstructible (w₃ k)) :
-
     ∃ f : ℝ[X], f.natDegree ≤ 6 ∧ (∀ k, PConstructible (f.coeff k)) ∧
-
       ∀ mu : ℝ, f.eval mu
-
         = chainStep3Cleared (yvec αs P) (yvec αs q₀) (mu • yvec αs w₁ + yvec αs w₃) := by
   classical
   -- HALF (a). The two pairings `B = ⟨P,d,d⟩` and `C = ⟨P,q₀,d⟩`, as polynomials in `mu`.
@@ -3930,8 +3497,8 @@ theorem exists_step3_poly {q : ℝ[X]} {αs : Fin n → ℝ} (P q₀ w₁ w₃ :
         hmon hn hnat hsep hcoef hαs hnd ?_ 3
       intro k
       convert PConstructible.sub (PConstructible.mul hBPC (hq₀ k))
-        (PConstructible.mul (PConstructible.mul (nat_Pconstructible 2) hCPC) (hbrPC k)) using 1 <;>
-        simp <;> ring
+        (PConstructible.mul (PConstructible.mul (nat_Pconstructible 2) hCPC) (hbrPC k)) using 1;
+        simp; ring
     rw [hg, Lagrange.interpolate_apply, Polynomial.finsetSum_coeff]
     refine Finset.sum_induction _ PConstructible (fun _ _ ha hb => PConstructible.add ha hb)
       zero_Pconstructible fun i _ => ?_
@@ -3943,21 +3510,13 @@ theorem exists_step3_poly {q : ℝ[X]} {αs : Fin n → ℝ} (P q₀ w₁ w₃ :
 
 
 /-- Step 4 as a degree-`≤ 5` polynomial with P-constructible coefficients. -/
-
 theorem exists_step4_poly {q : ℝ[X]} {αs : Fin n → ℝ} (P v : Fin n → ℝ)
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hP : ∀ k, PConstructible (P k)) (hv : ∀ k, PConstructible (v k)) :
-
     ∃ f : ℝ[X], f.natDegree ≤ 5 ∧ (∀ k, PConstructible (f.coeff k)) ∧
-
       ∀ kappa : ℝ, f.eval kappa = chainStep4 (yvec αs P) (yvec αs v) kappa := by
-
   exact exists_step4_poly_of_roots P v hmon hn hnat hsep hcoef hαs hnd hP hv
 
 
@@ -4005,334 +3564,173 @@ fixed here, and the proof is real.**
 
    `hchain` is used only for the four step equations and the two denominators; its
    `Function.Injective (chainY …)` conjunct is not needed. -/
-
 theorem stepRoots_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {I : ChainBInputs n}
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hI : ∀ k, PConstructible (I.a k) ∧ PConstructible (I.b k) ∧ PConstructible (I.g k) ∧
-
       PConstructible (I.w1 k) ∧ PConstructible (I.w2 k) ∧ PConstructible (I.w3 k))
-
     (lam x mu kappa : ℝ) (hchain : ChainGood (chainBtoY αs I) lam x mu kappa)
-
     (hne1 : ∃ t : ℝ, chainStep1' (chainBtoY αs I) t ≠ 0)
-
     (hne2 : ∃ t : ℝ, chainStep2' (chainBtoY αs I) lam t ≠ 0)
-
     (hne3 : ∃ t : ℝ, chainStep3Cleared (chainP (chainBtoY αs I) lam)
-
       (chainQ0 (chainBtoY αs I) lam x)
-
       (t • chainW1 (chainBtoY αs I) lam + chainW3 (chainBtoY αs I) lam) ≠ 0)
-
     (hne4 : ∃ t : ℝ, chainStep4' (chainBtoY αs I) lam x mu t ≠ 0) :
-
     PConstructible lam ∧ PConstructible x ∧ PConstructible mu ∧ PConstructible kappa := by
-
   have ha : ∀ k, PConstructible (I.a k) := fun k => (hI k).1
-
   have hb : ∀ k, PConstructible (I.b k) := fun k => (hI k).2.1
-
   have hg : ∀ k, PConstructible (I.g k) := fun k => (hI k).2.2.1
-
   have hw1 : ∀ k, PConstructible (I.w1 k) := fun k => (hI k).2.2.2.1
-
   have hw2 : ∀ k, PConstructible (I.w2 k) := fun k => (hI k).2.2.2.2.1
-
   have hw3 : ∀ k, PConstructible (I.w3 k) := fun k => (hI k).2.2.2.2.2
   -- the `chainProjN` denominator, in `b`-coordinates: `ChainGood`'s first nonzero
-
   have hden1Y : yNBY (yvec αs (ChainB.P I lam)) (yvec αs I.g) ≠ 0 := by
-
     rw [ChainB.yvec_P]
-
     simpa only [chainBtoY, ChainYInputs.g] using hchain.2.2.2.2.1
-
   have hden1 : yNB αs (ChainB.P I lam) I.g ≠ 0 := hden1Y
-
   -- the `g` slot of the y-space chain, spelled both ways
-
   have hgdef : (chainBtoY αs I).g = yvec αs I.g := by
-
     simp only [chainBtoY, ChainYInputs.g]
-
   -- step 1: a cubic, from `psumY_line_poly`
-
   have hstep1 (t : ℝ) : chainStep1' (chainBtoY αs I) t
-
       = chainStep1 (yvec αs I.a) (yvec αs I.b) t := rfl
-
   obtain ⟨g1, hdeg1, hcoeff1, heval1⟩ :=
-
     exists_step1_poly I.a I.b hmon hn hnat hsep hcoef hαs hnd ha hb
-
   have hg1ne : g1 ≠ 0 := by
-
     rintro rfl
-
     obtain ⟨t, ht⟩ := hne1
-
     rw [hstep1 t] at ht
-
     exact ht (by simpa using (heval1 t).symm)
-
   have hstep1lam : chainStep1 (yvec αs I.a) (yvec αs I.b) lam = 0 := by
-
     rw [← hstep1 lam]
-
     simpa only [chainStep1'] using hchain.1
-
   have hlam : PConstructible lam :=
-
     root_Pconstructible_le_six_coeffs hg1ne (by omega) hcoeff1
-
       (by rw [heval1 lam, hstep1lam])
   -- the `b`-vector `P = a + lam b`, and the three `N_P`-projections
   have hP : ∀ k, PConstructible (ChainB.P I lam k) := by
-
     intro k
-
     rw [ChainB.P, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.add (ha k) (PConstructible.mul hlam (hb k))
-
   have hproj (w : Fin n → ℝ) (hw : ∀ k, PConstructible (w k)) :
-
       ∀ k, PConstructible (ChainB.projN αs (ChainB.P I lam) I.g w k) := by
-
     intro k
-
     rw [ChainB.projN, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.sub (hw k)
-
       (PConstructible.mul
-
         (PConstructible.div
-
           (yNB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hw)
-
           (yNB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hg))
-
         (hg k))
-
   have hW1 : ∀ k, PConstructible (ChainB.Wt αs I lam 0 k) := by
-
     simpa only [ChainB.Wt] using (hproj I.w1 hw1)
-
   have hW2 : ∀ k, PConstructible (ChainB.Wt αs I lam 1 k) := by
-
     simpa only [ChainB.Wt] using (hproj I.w2 hw2)
-
   -- step 2: a quadratic in `x`, from the line expansion of the conic form
   have hstep2 (t : ℝ) : chainStep2' (chainBtoY αs I) lam t
-
       = chainStep2 (yvec αs (ChainB.P I lam)) (yvec αs I.g)
-
         (yvec αs (ChainB.Wt αs I lam 0)) (yvec αs (ChainB.Wt αs I lam 1)) t := by
-
     simp only [chainStep2', chainW1, chainW2]
-
     rw [← ChainB.yvec_P αs I lam, ← ChainB.yvec_Wt αs I lam 0 hden1,
-
       ← ChainB.yvec_Wt αs I lam 1 hden1, hgdef]
-
   obtain ⟨g2, hdeg2, hcoeff2, heval2⟩ := exists_step2_poly (P := ChainB.P I lam)
-
     I.g (ChainB.Wt αs I lam 0) (ChainB.Wt αs I lam 1)
-
     hmon hn hnat hsep hcoef hαs hnd hP hg hW1 hW2
-
   have hg2ne : g2 ≠ 0 := by
-
     rintro rfl
-
     obtain ⟨t, ht⟩ := hne2
-
     rw [hstep2 t] at ht
-
     exact ht (by simpa using (heval2 t).symm)
-
   have hstep2x : chainStep2 (yvec αs (ChainB.P I lam)) (yvec αs I.g)
-
     (yvec αs (ChainB.Wt αs I lam 0)) (yvec αs (ChainB.Wt αs I lam 1)) x = 0 := by
-
     rw [← hstep2 x]
-
     simpa only [chainStep2'] using hchain.2.1
-
   have hx : PConstructible x :=
-
     root_Pconstructible_le_six_coeffs hg2ne (by omega) hcoeff2
-
       (by rw [heval2 x, hstep2x])
-
   -- `q₀` and the third projection, needed by steps 3 and 4
   have hW3 : ∀ k, PConstructible (ChainB.Wt αs I lam 2 k) := by
-
     simpa only [ChainB.Wt] using (hproj I.w3 hw3)
-
   have hQ0 : ∀ k, PConstructible (ChainB.Q0 αs I lam x k) := by
-
     intro k
-
     rw [ChainB.Q0, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.add (hW1 k) (PConstructible.mul hx (hW2 k))
-
   -- step 3: the denominator-cleared sextic
   have hlin (t : ℝ) : t • yvec αs (ChainB.Wt αs I lam 0)
-
       + yvec αs (ChainB.Wt αs I lam 2) = chainD (chainBtoY αs I) lam t := by
-
     have h := ChainB.yvec_D αs I lam t hden1
-
     rw [ChainB.D, yvec_add, yvec_smul] at h
-
     exact h
-
   have hcl (t : ℝ) : chainStep3Cleared (yvec αs (ChainB.P I lam))
-
       (yvec αs (ChainB.Q0 αs I lam x))
-
       (t • yvec αs (ChainB.Wt αs I lam 0) + yvec αs (ChainB.Wt αs I lam 2))
-
       = chainStep3Cleared (chainP (chainBtoY αs I) lam) (chainQ0 (chainBtoY αs I) lam x)
-
         (t • chainW1 (chainBtoY αs I) lam + chainW3 (chainBtoY αs I) lam) := by
-
     rw [ChainB.yvec_P, ChainB.yvec_Q0 αs I lam x hden1, chainW1, chainW3,
-
       ChainB.yvec_Wt αs I lam 0 hden1, ChainB.yvec_Wt αs I lam 2 hden1]
-
   obtain ⟨g3, hdeg3, hcoeff3, heval3⟩ := exists_step3_poly (P := ChainB.P I lam)
-
     (ChainB.Q0 αs I lam x) (ChainB.Wt αs I lam 0) (ChainB.Wt αs I lam 2)
-
     hmon hn hnat hsep hcoef hαs hnd hP hQ0 hW1 hW3
-
   have hg3ne : g3 ≠ 0 := by
-
     rintro rfl
-
     obtain ⟨t, ht⟩ := hne3
-
     rw [← hcl t] at ht
-
     exact ht (by simpa using (heval3 t).symm)
-
   have hden2' : yBdotY (chainP (chainBtoY αs I) lam)
-
       (mu • chainW1 (chainBtoY αs I) lam + chainW3 (chainBtoY αs I) lam)
-
       (mu • chainW1 (chainBtoY αs I) lam + chainW3 (chainBtoY αs I) lam) ≠ 0 := by
-
     simpa only [chainD, chainW1, chainW3, chainWt] using hchain.2.2.2.2.2.1
-
   have h3zero : chainStep3 (chainP (chainBtoY αs I) lam) (chainQ0 (chainBtoY αs I) lam x)
-
       (chainW1 (chainBtoY αs I) lam) (chainW3 (chainBtoY αs I) lam) mu = 0 := by
-
     simpa only [chainStep3'] using hchain.2.2.1
-
   have hclmu : chainStep3Cleared (chainP (chainBtoY αs I) lam)
-
       (chainQ0 (chainBtoY αs I) lam x)
-
       (mu • chainW1 (chainBtoY αs I) lam + chainW3 (chainBtoY αs I) lam) = 0 := by
-
     rw [chainStep3Cleared_eq' hden2', h3zero, mul_zero]
-
   have hmu : PConstructible mu :=
-
     root_Pconstructible_le_six_coeffs hg3ne hdeg3 hcoeff3
-
       (by rw [heval3 mu, hcl mu, hclmu])
-
   -- step 4: the quintic
   have hD : ∀ k, PConstructible (ChainB.D αs I lam mu k) := by
-
     intro k
-
     rw [ChainB.D, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.add (PConstructible.mul hmu (hW1 k)) (hW3 k)
-
   have hBdotDD : PConstructible (yBdot αs (ChainB.P I lam) (ChainB.D αs I lam mu)
-
       (ChainB.D αs I lam mu)) :=
-
     yBdot_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hD hD
-
   have hBdotQD : PConstructible (yBdot αs (ChainB.P I lam) (ChainB.Q0 αs I lam x)
-
       (ChainB.D αs I lam mu)) :=
-
     yBdot_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hQ0 hD
-
   have hV : ∀ k, PConstructible (ChainB.V αs I lam x mu k) := by
-
     intro k
-
     rw [ChainB.V, ChainB.conicPt, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.sub (hQ0 k)
-
       (PConstructible.mul
-
         (PConstructible.div (PConstructible.mul (nat_Pconstructible 2) hBdotQD) hBdotDD)
-
         (hD k))
-
   have hden2b : yBdot αs (ChainB.P I lam) (ChainB.D αs I lam mu)
-
       (ChainB.D αs I lam mu) ≠ 0 := by
-
     rw [yBdot_eq_yBdotY, ChainB.yvec_P, ChainB.yvec_D αs I lam mu hden1]
-
     simpa only [chainD, chainW1, chainW3, chainWt] using hden2'
-
   have hstep4 (t : ℝ) : chainStep4 (yvec αs (ChainB.P I lam))
-
       (yvec αs (ChainB.V αs I lam x mu)) t = chainStep4' (chainBtoY αs I) lam x mu t := by
-
     simp only [chainStep4', chainStep4]
-
     rw [ChainB.yvec_P, ChainB.yvec_V αs I lam x mu hden1 hden2b]
-
   obtain ⟨g4, hdeg4, hcoeff4, heval4⟩ := exists_step4_poly (P := ChainB.P I lam)
-
     (ChainB.V αs I lam x mu) hmon hn hnat hsep hcoef hαs hnd hP hV
-
   have hg4ne : g4 ≠ 0 := by
-
     rintro rfl
-
     obtain ⟨t, ht⟩ := hne4
-
     rw [← hstep4 t] at ht
-
     exact ht (by simpa using (heval4 t).symm)
-
   have hstep4kappa : chainStep4 (yvec αs (ChainB.P I lam))
-
       (yvec αs (ChainB.V αs I lam x mu)) kappa = 0 := by
-
     rw [hstep4 kappa]
-
     simpa only [chainStep4'] using hchain.2.2.2.1
-
   have hkappa : PConstructible kappa :=
-
     root_Pconstructible_le_six_coeffs hg4ne (by omega) hcoeff4
-
       (by rw [heval4 kappa, hstep4kappa])
-
   exact ⟨hlam, hx, hmu, hkappa⟩
 
 
@@ -4345,156 +3743,83 @@ the four step roots). Every entry of the chain is a `b`-linear combination of th
 
 a symmetric-functional coefficient, so the arithmetic closes with `PConstructible.add`,
 `.mul`, `.div` and the three pairing lemmas. -/
-
 theorem chainBLift_Pconstructible_of_roots {q : ℝ[X]} {αs : Fin n → ℝ}
-
     {I : ChainBInputs n}
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hI : ∀ k, PConstructible (I.a k) ∧ PConstructible (I.b k) ∧ PConstructible (I.g k) ∧
-
       PConstructible (I.w1 k) ∧ PConstructible (I.w2 k) ∧ PConstructible (I.w3 k))
-
     (lam x mu kappa : ℝ)
-
     (hroots : PConstructible lam ∧ PConstructible x ∧ PConstructible mu ∧
-
       PConstructible kappa) :
-
     ∀ k, PConstructible (ChainB.out αs I lam x mu kappa k) := by
-
   have ha : ∀ k, PConstructible (I.a k) := fun k => (hI k).1
-
   have hb : ∀ k, PConstructible (I.b k) := fun k => (hI k).2.1
-
   have hg : ∀ k, PConstructible (I.g k) := fun k => (hI k).2.2.1
-
   have hw1 : ∀ k, PConstructible (I.w1 k) := fun k => (hI k).2.2.2.1
-
   have hw2 : ∀ k, PConstructible (I.w2 k) := fun k => (hI k).2.2.2.2.1
-
   have hw3 : ∀ k, PConstructible (I.w3 k) := fun k => (hI k).2.2.2.2.2
-
   have hP : ∀ k, PConstructible (ChainB.P I lam k) := by
-
     intro k
-
     rw [ChainB.P, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.add (ha k) (PConstructible.mul hroots.1 (hb k))
-
   have hproj (w : Fin n → ℝ) (hw : ∀ k, PConstructible (w k)) :
-
       ∀ k, PConstructible (ChainB.projN αs (ChainB.P I lam) I.g w k) := by
-
     intro k
-
     rw [ChainB.projN, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.sub (hw k)
-
       (PConstructible.mul
-
         (PConstructible.div
-
           (yNB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hw)
-
           (yNB_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hg))
-
         (hg k))
-
   have hW1 : ∀ k, PConstructible (ChainB.Wt αs I lam 0 k) := by
-
     simpa only [ChainB.Wt] using (hproj I.w1 hw1)
-
   have hW2 : ∀ k, PConstructible (ChainB.Wt αs I lam 1 k) := by
-
     simpa only [ChainB.Wt] using (hproj I.w2 hw2)
-
   have hW3 : ∀ k, PConstructible (ChainB.Wt αs I lam 2 k) := by
-
     simpa only [ChainB.Wt] using (hproj I.w3 hw3)
-
   have hQ0 : ∀ k, PConstructible (ChainB.Q0 αs I lam x k) := by
-
     intro k
-
     rw [ChainB.Q0, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.add (hW1 k) (PConstructible.mul hroots.2.1 (hW2 k))
-
   have hD : ∀ k, PConstructible (ChainB.D αs I lam mu k) := by
-
     intro k
-
     rw [ChainB.D, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.add (PConstructible.mul hroots.2.2.1 (hW1 k)) (hW3 k)
-
   have hBdotDD : PConstructible (yBdot αs (ChainB.P I lam) (ChainB.D αs I lam mu)
-
       (ChainB.D αs I lam mu)) :=
-
     yBdot_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hD hD
-
   have hBdotQD : PConstructible (yBdot αs (ChainB.P I lam) (ChainB.Q0 αs I lam x)
-
       (ChainB.D αs I lam mu)) :=
-
     yBdot_Pconstructible hmon hn hnat hsep hcoef hαs hnd hP hQ0 hD
-
   have hV : ∀ k, PConstructible (ChainB.V αs I lam x mu k) := by
-
     intro k
-
     rw [ChainB.V, ChainB.conicPt, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
-
     exact PConstructible.sub (hQ0 k)
-
       (PConstructible.mul
-
         (PConstructible.div (PConstructible.mul (nat_Pconstructible 2) hBdotQD) hBdotDD)
-
         (hD k))
-
   intro k
-
   rw [ChainB.out, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-
   exact PConstructible.add (hP k) (PConstructible.mul hroots.2.2.2 (hV k))
 
 /-- The output `b`-vector is P-constructible.
 
 **WARNING: false as stated** — see the section note above. With the root hypotheses added
 this is `chainBLift_Pconstructible_of_roots`, which does not need `hchain` at all. -/
-
 theorem chainBLift_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {I : ChainBInputs n}
-
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-
     (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-
     (hnd : Function.Injective αs)
-
     (hI : ∀ k, PConstructible (I.a k) ∧ PConstructible (I.b k) ∧ PConstructible (I.g k) ∧
-
       PConstructible (I.w1 k) ∧ PConstructible (I.w2 k) ∧ PConstructible (I.w3 k))
-
     (lam x mu kappa : ℝ)
-
-    (hchain : ChainGood (chainBtoY αs I) lam x mu kappa)
-
+    (_hchain : ChainGood (chainBtoY αs I) lam x mu kappa)
     (hroots : PConstructible lam ∧ PConstructible x ∧ PConstructible mu ∧
-
       PConstructible kappa) :
-
     ∀ k, PConstructible (ChainB.out αs I lam x mu kappa k) := by
-
   exact chainBLift_Pconstructible_of_roots hmon hn hnat hsep hcoef hαs hnd hI lam x mu kappa
     hroots
 
@@ -4505,43 +3830,26 @@ theorem chainBLift_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {I : ChainB
 y-space input is the image of a `b`-input. This is the one place surjectivity is used: it is
 
 what makes the open set `(chainBtoY αs) ⁻¹' U` of `b`-inputs nonempty. -/
-
 private theorem chainBtoY_surjective {m : ℕ} {αs : Fin m → ℝ} (hnd : Function.Injective αs)
-
     (Y : ChainYInputs m) : ∃ I : ChainBInputs m, chainBtoY αs I = Y := by
-
   obtain ⟨A, B, C, D, E, F⟩ := Y
-
   obtain ⟨b₁, h₁⟩ : ∃ b : Fin m → ℝ, yvec αs b = A := yvecL_surjective hnd A
-
   obtain ⟨b₂, h₂⟩ : ∃ b : Fin m → ℝ, yvec αs b = B := yvecL_surjective hnd B
-
   obtain ⟨b₃, h₃⟩ : ∃ b : Fin m → ℝ, yvec αs b = C := yvecL_surjective hnd C
-
   obtain ⟨b₄, h₄⟩ : ∃ b : Fin m → ℝ, yvec αs b = D := yvecL_surjective hnd D
-
   obtain ⟨b₅, h₅⟩ : ∃ b : Fin m → ℝ, yvec αs b = E := yvecL_surjective hnd E
-
   obtain ⟨b₆, h₆⟩ : ∃ b : Fin m → ℝ, yvec αs b = F := yvecL_surjective hnd F
-
   refine ⟨(b₁, (b₂, (b₃, (b₄, (b₅, b₆))))), ?_⟩
-
   unfold chainBtoY
-
   simp only [Prod.mk.injEq]
-
   simp [h₁, h₂, h₃, h₄, h₅, h₆]
 
 /-- `b ↦ yvec αs b` is continuous: each entry is a finite sum of products of continuous functions,
 and a map into a `Pi` type is continuous when all of its entries are. -/
-
 private theorem continuous_yvec {m : ℕ} (αs : Fin m → ℝ) :
     Continuous fun b : Fin m → ℝ => yvec αs b := by
-
   refine continuous_pi fun i => ?_
-
   simp only [yvec]
-
   exact continuous_finsetSum _ fun k _ => (continuous_apply k).mul continuous_const
 
 /-- `I ↦ chainBtoY αs I` is continuous: it is the six-fold product of the continuous map
@@ -4788,133 +4096,71 @@ slice of `U` in that coordinate is open, and it is nonempty because the point re
 in `U`.  Rational vectors are dense in `Fin n → ℝ`, so each slice contains a `b`-vector whose
 entries are all P-constructible; the six steps in turn leave a `b`-input whose six entries are
 P-constructible and whose y-image is in `U`.  This is the whole use of density in the file. -/
-
 private theorem exists_Pconstructible_lift {m : ℕ} {αs : Fin m → ℝ} {U : Set (ChainYInputs m)}
-
     (hU : IsOpen U) (hne : U.Nonempty) (hnd : Function.Injective αs) :
     ∃ I : ChainBInputs m, (∀ k, PConstructible (I.a k)) ∧ (∀ k, PConstructible (I.b k)) ∧
       (∀ k, PConstructible (I.g k)) ∧ (∀ k, PConstructible (I.w1 k)) ∧
       (∀ k, PConstructible (I.w2 k)) ∧ (∀ k, PConstructible (I.w3 k)) ∧
       chainBtoY αs I ∈ U := by
-
   obtain ⟨Y₀, hY₀⟩ := hne
-
   obtain ⟨I₀, hI₀⟩ := chainBtoY_surjective hnd Y₀
-
   obtain ⟨B₁, B₂, B₃, B₄, B₅, B₆⟩ := I₀
-
   have hmem : chainBtoY αs (B₁, (B₂, (B₃, (B₄, (B₅, B₆))))) ∈ U := by
-
     rw [hI₀]
-
     exact hY₀
-
   have hyv : Continuous fun b : Fin m → ℝ => yvec αs b := continuous_yvec αs
-
   have c₂ : Continuous fun _ : Fin m → ℝ => yvec αs B₂ := continuous_const
-
   have c₃ : Continuous fun _ : Fin m → ℝ => yvec αs B₃ := continuous_const
-
   have c₄ : Continuous fun _ : Fin m → ℝ => yvec αs B₄ := continuous_const
-
   have c₅ : Continuous fun _ : Fin m → ℝ => yvec αs B₅ := continuous_const
-
   have c₆ : Continuous fun _ : Fin m → ℝ => yvec αs B₆ := continuous_const
-
   have g₁ : Continuous fun v : Fin m → ℝ => chainBtoY αs (v, (B₂, (B₃, (B₄, (B₅, B₆))))) := by
-
     unfold chainBtoY
-
     exact hyv.prodMk (c₂.prodMk (c₃.prodMk (c₄.prodMk (c₅.prodMk c₆))))
-
   obtain ⟨b₁, hb₁, hd₁⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₁)
-
     ⟨B₁, Set.mem_preimage.mpr hmem⟩
-
   have h₁ : chainBtoY αs (b₁, (B₂, (B₃, (B₄, (B₅, B₆))))) ∈ U :=
-
     Set.mem_preimage.mp hd₁
-
   have d₁ : Continuous fun _ : Fin m → ℝ => yvec αs b₁ := continuous_const
-
   have g₂ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (v, (B₃, (B₄, (B₅, B₆))))) := by
-
     unfold chainBtoY
-
     exact d₁.prodMk (hyv.prodMk (c₃.prodMk (c₄.prodMk (c₅.prodMk c₆))))
-
   obtain ⟨b₂, hb₂, hd₂⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₂)
-
     ⟨B₂, Set.mem_preimage.mpr h₁⟩
-
   have h₂ : chainBtoY αs (b₁, (b₂, (B₃, (B₄, (B₅, B₆))))) ∈ U :=
-
     Set.mem_preimage.mp hd₂
-
   have d₂ : Continuous fun _ : Fin m → ℝ => yvec αs b₂ := continuous_const
-
   have g₃ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (v, (B₄, (B₅, B₆))))) := by
-
     unfold chainBtoY
-
     exact d₁.prodMk (d₂.prodMk (hyv.prodMk (c₄.prodMk (c₅.prodMk c₆))))
-
   obtain ⟨b₃, hb₃, hd₃⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₃)
-
     ⟨B₃, Set.mem_preimage.mpr h₂⟩
-
   have h₃ : chainBtoY αs (b₁, (b₂, (b₃, (B₄, (B₅, B₆))))) ∈ U :=
-
     Set.mem_preimage.mp hd₃
-
   have d₃ : Continuous fun _ : Fin m → ℝ => yvec αs b₃ := continuous_const
-
   have g₄ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (b₃, (v, (B₅, B₆))))) := by
-
     unfold chainBtoY
-
     exact d₁.prodMk (d₂.prodMk (d₃.prodMk (hyv.prodMk (c₅.prodMk c₆))))
-
   obtain ⟨b₄, hb₄, hd₄⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₄)
-
     ⟨B₄, Set.mem_preimage.mpr h₃⟩
-
   have h₄ : chainBtoY αs (b₁, (b₂, (b₃, (b₄, (B₅, B₆))))) ∈ U :=
-
     Set.mem_preimage.mp hd₄
-
   have d₄ : Continuous fun _ : Fin m → ℝ => yvec αs b₄ := continuous_const
-
   have g₅ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (b₃, (b₄, (v, B₆))))) := by
-
     unfold chainBtoY
-
     exact d₁.prodMk (d₂.prodMk (d₃.prodMk (d₄.prodMk (hyv.prodMk c₆))))
-
   obtain ⟨b₅, hb₅, hd₅⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₅)
-
     ⟨B₅, Set.mem_preimage.mpr h₄⟩
-
   have h₅ : chainBtoY αs (b₁, (b₂, (b₃, (b₄, (b₅, B₆))))) ∈ U :=
-
     Set.mem_preimage.mp hd₅
-
   have d₅ : Continuous fun _ : Fin m → ℝ => yvec αs b₅ := continuous_const
-
   have g₆ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (b₃, (b₄, (b₅, v))))) := by
-
     unfold chainBtoY
-
     exact d₁.prodMk (d₂.prodMk (d₃.prodMk (d₄.prodMk (d₅.prodMk hyv))))
-
   obtain ⟨b₆, hb₆, hd₆⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₆)
-
     ⟨B₆, Set.mem_preimage.mpr h₅⟩
-
   refine ⟨(b₁, (b₂, (b₃, (b₄, (b₅, b₆))))), fun k => hb₁ k, fun k => hb₂ k, fun k => hb₃ k,
-
     fun k => hb₄ k, fun k => hb₅ k, fun k => hb₆ k, ?_⟩
-
   exact Set.mem_preimage.mp hd₆
 
 /-- **The assembly, given an open set of good y-space inputs carrying the four nonzero-step
@@ -4926,68 +4172,50 @@ identifies that output's y-vector with the chain output, so `ChainGood` together
 `S₁ = 0` transfers `Function.Injective` and `S₁ = S₃ = S₅ = 0` to it.
 
 `hgood` is exactly the conclusion of `exists_open_good7`/`exists_open_good8`. -/
-
 private theorem exists_b_good_of_PC_roots {q : ℝ[X]} {αs : Fin n → ℝ} {U : Set (ChainYInputs n)}
-
     (hU : IsOpen U)
-
     (hneU : (U ∩ {Y : ChainYInputs n | psumY Y.a 1 = 0 ∧ psumY Y.b 1 = 0 ∧
       psumY Y.g 1 = 0 ∧ psumY Y.w1 1 = 0 ∧ psumY Y.w2 1 = 0 ∧ psumY Y.w3 1 = 0}).Nonempty)
-
     (hgood : ∀ Y ∈ U, ∃ lam x mu kappa : ℝ, ChainGood Y lam x mu kappa ∧
       (∃ t : ℝ, chainStep1' Y t ≠ 0) ∧
       (∃ t : ℝ, chainStep2' Y lam t ≠ 0) ∧
       (∃ t : ℝ, chainStep3Cleared (chainP Y lam) (chainQ0 Y lam x)
           (t • chainW1 Y lam + chainW3 Y lam) ≠ 0) ∧
       (∃ t : ℝ, chainStep4' Y lam x mu t ≠ 0))
-
     (hmon : q.Monic) (hpos : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
     (hcoeff : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
     (hnd : Function.Injective αs) :
     ∃ b : Fin n → ℝ, (∀ k, PConstructible (b k)) ∧ Function.Injective (yvec αs b) ∧
       psumY (yvec αs b) 1 = 0 ∧ psumY (yvec αs b) 3 = 0 ∧ psumY (yvec αs b) 5 = 0 := by
-
   obtain ⟨I, hIa, hIb, hIg, hIw1, hIw2, hIw3, hIU, hVa, hVb, hVg, hVw1, hVw2, hVw3⟩ :=
     exists_PC_inputs_s1 hpos hU hneU hmon hnat hsep hcoeff hαs hnd
-
   obtain ⟨lam, x, mu, kappa, hchain, hne1, hne2, hne3, hne4⟩ := hgood (chainBtoY αs I) hIU
-
   have hI6 : ∀ k, PConstructible (I.a k) ∧ PConstructible (I.b k) ∧ PConstructible (I.g k) ∧
       PConstructible (I.w1 k) ∧ PConstructible (I.w2 k) ∧ PConstructible (I.w3 k) :=
     fun k => ⟨hIa k, hIb k, hIg k, hIw1 k, hIw2 k, hIw3 k⟩
-
   have hroots : PConstructible lam ∧ PConstructible x ∧ PConstructible mu ∧
       PConstructible kappa :=
     stepRoots_Pconstructible hmon hpos hnat hsep hcoeff hαs hnd hI6 lam x mu kappa hchain
       hne1 hne2 hne3 hne4
-
   have hpcout : ∀ k, PConstructible (ChainB.out αs I lam x mu kappa k) :=
     chainBLift_Pconstructible_of_roots hmon hpos hnat hsep hcoeff hαs hnd hI6 lam x mu kappa
       hroots
-
   have hden1 : yNB αs (ChainB.P I lam) I.g ≠ 0 := by
     rw [yNB_eq_yNBY, ChainB.yvec_P αs I lam]
     exact hchain.2.2.2.2.1
-
   have hden2 : yBdot αs (ChainB.P I lam) (ChainB.D αs I lam mu) (ChainB.D αs I lam mu) ≠ 0 := by
     rw [yBdot_eq_yBdotY, ChainB.yvec_P αs I lam, ChainB.yvec_D αs I lam mu hden1]
     exact hchain.2.2.2.2.2.1
-
   have key : yvec αs (ChainB.out αs I lam x mu kappa) = chainY (chainBtoY αs I) lam x mu kappa :=
     chainBLift_yvec αs I lam x mu kappa hden1 hden2
-
   refine ⟨ChainB.out αs I lam x mu kappa, hpcout, ?_, ?_, ?_, ?_⟩
-
   · rw [key]
     exact hchain.2.2.2.2.2.2
-
   · rw [key]
     exact chainY_psumY_one_eq (I := chainBtoY αs I) hVa hVb hVg hVw1 hVw2 hVw3
-
   · rw [key]
     exact chainY_psumY_cube_eq hchain.1 hchain.2.1 hchain.2.2.1 hchain.2.2.2.2.1
       hchain.2.2.2.2.2.1
-
   · rw [key, ← chainStep4'_psumY_eq]
     exact hchain.2.2.2.1
 

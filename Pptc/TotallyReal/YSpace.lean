@@ -201,7 +201,7 @@ theorem companionN'_trace_pow (n : ℕ) {K : Type*} [Field K] [IsAlgClosed K]
       = (q.roots.map (fun z : K => z ^ j)).sum := by
     intro j
     set M : Matrix (Fin n) (Fin n) K := companionN' (n := n) q with hM
-    haveI : Nonempty q.roots.toFinset := by
+    have : Nonempty q.roots.toFinset := by
       obtain ⟨x, hx⟩ := Finset.card_pos.mp (by
         rw [Multiset.toFinset_card_of_nodup hnodup, hcard]; exact hn)
       exact ⟨⟨x, hx⟩⟩
@@ -269,7 +269,7 @@ theorem companionN'_charpoly_aeval_eq_prod (n : ℕ) {K : Type*} [Field K] [IsAl
   have hnodup : q.roots.Nodup := Polynomial.nodup_roots hsep
   have hcard : q.roots.card = n := by
     rw [← hnat]; exact (IsAlgClosed.splits q).natDegree_eq_card_roots.symm
-  haveI : Nonempty q.roots.toFinset := by
+  have : Nonempty q.roots.toFinset := by
     obtain ⟨x, hx⟩ := Finset.card_pos.mp (by
       rw [Multiset.toFinset_card_of_nodup hnodup, hcard]; exact hn)
     exact ⟨⟨x, hx⟩⟩
@@ -467,7 +467,7 @@ lemma bPoly_coeff' (b : Fin n → ℝ) (j : ℕ) (hj : j < n) :
     (f := fun x : Fin n => (C (b x) * X ^ (x : ℕ)).coeff j) (a := ⟨j, hj⟩) ?_).trans ?_
   · intro k hk
     rw [Polynomial.coeff_C_mul_X_pow, if_neg (fun hc => hk (Fin.ext hc.symm))]
-  · simp [Polynomial.coeff_C_mul_X_pow]
+  · simp
 
 /-! ### The y-vector -/
 
@@ -521,7 +521,8 @@ abbrev psumY {n : ℕ} (y : Fin n → ℝ) (m : ℕ) : ℝ := psumFinY y m
 theorem trace_pow_eq_psumY {q : ℝ[X]} {αs : Fin n → ℝ} {b : Fin n → ℝ}
     (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
     (hαs : ∀ i : Fin n, q.eval (αs i) = 0) (hnd : Function.Injective αs) (m : ℕ) :
-    Matrix.trace ((aeval (companionN (n := n) q) (bPoly (n := n) b)) ^ m) = psumY (yvec (n := n) αs b) m := by
+    Matrix.trace ((aeval (companionN (n := n) q) (bPoly (n := n) b)) ^ m)
+      = psumY (yvec (n := n) αs b) m := by
   have hmonC : (q.map (algebraMap ℝ ℂ)).Monic := hmon.map (algebraMap ℝ ℂ)
   have hnatC : (q.map (algebraMap ℝ ℂ)).natDegree = n := by
     rw [Polynomial.natDegree_map_eq_of_injective (algebraMap ℝ ℂ).injective]
@@ -573,9 +574,10 @@ theorem psum_yvec_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {b : Fin n �
 /-- **PLAN §2.1.** The characteristic polynomial of the y-vector is
 `∏ᵢ (X − yᵢ)`, and its coefficients are P-constructible. -/
 theorem prodSubY_yvec_eq_charpoly_aeval {q : ℝ[X]} {αs : Fin n → ℝ} {b : Fin n → ℝ}
-    (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
+    (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (_hsep : q.Separable)
     (hαs : ∀ i : Fin n, q.eval (αs i) = 0) (hnd : Function.Injective αs) :
-    prodSubY (yvec (n := n) αs b) = (aeval (companionN (n := n) q) (bPoly (n := n) b)).charpoly := by
+    prodSubY (yvec (n := n) αs b)
+      = (aeval (companionN (n := n) q) (bPoly (n := n) b)).charpoly := by
   classical
   have hqn : q.coeff n = 1 := by rw [← hnat]; exact hmon.coeff_natDegree
   have hdeg : q.natDegree ≤ n := le_of_eq hnat
@@ -593,7 +595,7 @@ theorem prodSubY_yvec_eq_charpoly_aeval {q : ℝ[X]} {αs : Fin n → ℝ} {b : 
       (fun i => ⟨(Module.End.mem_eigenspace_iff).mpr
         (by rw [Matrix.toLin'_apply, hvv i]), hvne i⟩)
   have hcardfin : Fintype.card (Fin n) = Module.finrank ℝ (Fin n → ℝ) := by simp
-  haveI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
+  have : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
   set bs : Module.Basis (Fin n) ℝ (Fin n → ℝ) :=
     basisOfLinearIndependentOfCardEqFinrank hli hcardfin with hbs
   have hbeq : ⇑bs = v := coe_basisOfLinearIndependentOfCardEqFinrank hli hcardfin
@@ -627,10 +629,10 @@ theorem prodSubY_yvec_coeff_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {b
 /-- A y-vector of a P-constructible `b` is a real root of the corresponding characteristic
 polynomial: `Φ_b (α)` for a root `α` of `q` is one of the `yᵢ`. -/
 theorem eval_prodSubY_yvec {q : ℝ[X]} {αs : Fin n → ℝ} {b : Fin n → ℝ}
-    (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-    (hcoef : ∀ k, PConstructible (q.coeff k))
-    (hαs : ∀ i : Fin n, q.eval (αs i) = 0) (hnd : Function.Injective αs)
-    (hb : ∀ k, PConstructible (b k)) {i : Fin n} :
+    (_hmon : q.Monic) (_hn : 0 < n) (_hnat : q.natDegree = n) (_hsep : q.Separable)
+    (_hcoef : ∀ k, PConstructible (q.coeff k))
+    (_hαs : ∀ i : Fin n, q.eval (αs i) = 0) (_hnd : Function.Injective αs)
+    (_hb : ∀ k, PConstructible (b k)) {i : Fin n} :
     (prodSubY (yvec αs b)).eval (yvec αs b i) = 0 := by
   exact eval_prodSubY (yvec αs b) i
 
@@ -679,7 +681,7 @@ theorem psumRoots_eq_trace {q : ℝ[X]} {αs : Fin n → ℝ} (hmon : q.Monic) (
       = Matrix.trace ((companionN' (n := n) (Polynomial.map (algebraMap ℝ ℂ) q)) ^ m) := by
     rw [AddMonoidHom.map_trace, hmap]
   have hps : (∑ i : Fin n, ((αs i : ℂ)) ^ m) = algebraMap ℝ ℂ (psumRoots αs m) := by
-    simp [psumRoots, ← map_sum, ← map_pow]
+    simp [psumRoots]
   have hpa : ∀ (M : Matrix (Fin n) (Fin n) ℂ) (k : ℕ),
       (aeval M (Polynomial.X : ℂ[X])) ^ k = M ^ k := by
     intro M k
@@ -740,7 +742,7 @@ theorem psumRoots_Pconstructible_of_roots {q : ℝ[X]} {αs : Fin n → ℝ}
       | zero => simp
       | succ k ih => rw [pow_succ, ih, pow_succ, Polynomial.aeval_X]
     have h1 := trace_pow_companionN_Pconstructible n q Polynomial.X hcoef
-      (fun k => by simp [Polynomial.coeff_X] <;> split <;> pconstructible) m
+      (fun k => by simp only [Polynomial.coeff_X]; split <;> pconstructible) m
     rw [heq m] at h1
     exact h1
   rw [← psumRoots_eq_trace hmon hn hnat hsep hαs hnd m]
@@ -807,7 +809,6 @@ them. (An earlier version of this file asserted a `Fin (a+b) → Fin n` index-li
 for general `a, b`; that is false, e.g. `n = 1`, `a = b = 1`, `u = v = 1`, `αs = 3` gives
 `1` on the left and `9` on the right.) They are reached instead by `psumY_line_poly`
 below, which reads the coefficients off the values by interpolation. -/
-
 -- The four-fold sum over `Fin n` factors: the sum over the roots commutes past the
 -- three sums over `b`-indices. Only the innermost pair can be swapped with a bare
 -- `Finset.sum_comm`, so the other two are swapped under the binders.
@@ -1131,7 +1132,7 @@ def yvecL (αs : Fin n → ℝ) : (Fin n → ℝ) →ₗ[ℝ] (Fin n → ℝ) wh
 `yvec αs b` for a unique `b`. -/
 lemma yvecL_surjective {αs : Fin n → ℝ} (hnd : Function.Injective αs) :
     Function.Surjective (yvecL αs) := by
-  haveI : FiniteDimensional ℝ (Fin n → ℝ) := by infer_instance
+  have : FiniteDimensional ℝ (Fin n → ℝ) := by infer_instance
   exact LinearMap.injective_iff_surjective.1 (yvec_injective hnd)
 
 /-- Rational vectors are dense in `b`-space. This is the only place density is used: it is
@@ -1174,7 +1175,7 @@ lemma yvec_correct (αs : Fin n → ℝ) (b : Fin n → ℝ) (e : Fin n) (c : �
 /-- The image of `ℚ` vectors under `yvec` is dense, so every nonempty open set of y-space
 is met by a P-constructible `b`. The trace correction `b ↦ b − (p₁(y(b))/n)·(1,…,1)` then
 puts the y-vector in `V = {y | p₁(y) = 0}` without leaving the open set. -/
-theorem exists_b_Pconstructible_near {q : ℝ[X]} {αs : Fin n → ℝ}
+theorem exists_b_Pconstructible_near {_q : ℝ[X]} {αs : Fin n → ℝ}
     {U : Set (Fin n → ℝ)} (hn : 0 < n) (hnd : Function.Injective αs) (hU : IsOpen U)
     (hne : (U ∩ {y : Fin n → ℝ | psumY y 1 = 0}).Nonempty)
     (hpsum : ∀ b : Fin n → ℝ, (∀ k, PConstructible (b k)) →
@@ -1212,7 +1213,8 @@ theorem exists_b_Pconstructible_near {q : ℝ[X]} {αs : Fin n → ℝ}
         refine continuous_finsetSum _ fun i _ => ?_
         simpa using (hyv i).pow 1
       exact h2
-    have h3 : Continuous (fun b : Fin n → ℝ => (fun i => yvec αs b i - psumY (yvec αs b) 1 / n)) := by
+    have h3 : Continuous
+        (fun b : Fin n → ℝ => (fun i => yvec αs b i - psumY (yvec αs b) 1 / n)) := by
       refine continuous_pi fun i => ?_
       have hnum : Continuous (fun b : Fin n → ℝ => yvec αs b i - psumY (yvec αs b) 1) :=
         (hyv i).sub hpc
@@ -1236,7 +1238,7 @@ theorem exists_b_Pconstructible_near {q : ℝ[X]} {αs : Fin n → ℝ}
     have hbc : bcorrect b e (psumY (yvec αs b) 1 / n) = b := by
       funext k
       simp [bcorrect, hL]
-    show yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n)) ∈ U
+    change yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n)) ∈ U
     rw [hbc, hb']
     exact hyU
   -- density now supplies a P-constructible `b` whose *corrected* y-vector is in `U`

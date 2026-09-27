@@ -88,11 +88,11 @@ noncomputable section
 /-- The polynomial `Φ_b(X) − β`, which has `α` as a root. It is nonzero precisely when
 `β` is one of the values of `Φ_b` at the roots, and its degree is bounded by the number
 of those values. -/
-noncomputable def recoveryPoly {n : ℕ} (αs : Fin n → ℝ) (b : Fin n → ℝ) (β : ℝ) : ℝ[X] :=
+noncomputable def recoveryPoly {n : ℕ} (_αs : Fin n → ℝ) (b : Fin n → ℝ) (β : ℝ) : ℝ[X] :=
   bPoly b - C β
 
 theorem recoveryPoly_eval_root {n : ℕ} {q : ℝ[X]} {αs : Fin n → ℝ} {b : Fin n → ℝ}
-    (hαs : ∀ i : Fin n, q.eval (αs i) = 0) (hb : ∀ k, PConstructible (b k))
+    (_hαs : ∀ i : Fin n, q.eval (αs i) = 0) (_hb : ∀ k, PConstructible (b k))
     {i : Fin n} (hβ : β = yvec αs b i) :
     (recoveryPoly αs b β).eval (αs i) = 0 := by
   simp only [recoveryPoly, eval_sub, eval_C, hβ, yvec_eq_bPoly_eval]
@@ -128,7 +128,7 @@ and there are at least two of them: `Φ_b` then takes `n ≥ 2` distinct values,
 not the constant polynomial `β`. -/
 theorem recoveryPoly_ne_of_mem {n : ℕ} (h0 : 0 < n) (hn : 2 ≤ n) {αs : Fin n → ℝ}
     {b : Fin n → ℝ} (hnd : Function.Injective (yvec αs b)) {β : ℝ}
-    (hβ : ∃ i : Fin n, yvec αs b i = β) : recoveryPoly αs b β ≠ 0 := by
+    (_hβ : ∃ i : Fin n, yvec αs b i = β) : recoveryPoly αs b β ≠ 0 := by
   intro h
   have hb' : bPoly b = Polynomial.C β := sub_eq_zero.mp h
   have h1n : 1 < n := by omega
@@ -139,13 +139,13 @@ theorem recoveryPoly_ne_of_mem {n : ℕ} (h0 : 0 < n) (hn : 2 ≤ n) {αs : Fin 
     (key ⟨0, h0⟩).trans (key ⟨1, h1n⟩).symm
   have hfin : (⟨0, h0⟩ : Fin n) = ⟨1, h1n⟩ := hnd key2
   have hval := congrArg Fin.val hfin
-  simp only [Fin.val_mk] at hval
+  simp only at hval
   omega
 
 /-- The recovery polynomial is nonzero when the y-entries are distinct, because then
 `Φ_b` takes `n ≥ 2` distinct values and so is nonconstant. -/
 theorem recoveryPoly_ne {n : ℕ} (h0 : 0 < n) (hn : 2 ≤ n) {q : ℝ[X]} {αs : Fin n → ℝ}
-    {b : Fin n → ℝ} (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
+    {b : Fin n → ℝ} (_hαs : ∀ i : Fin n, q.eval (αs i) = 0)
     (hnd : Function.Injective (yvec αs b)) :
     recoveryPoly αs b (yvec αs b ⟨0, h0⟩) ≠ 0 :=
   recoveryPoly_ne_of_mem h0 hn hnd ⟨⟨0, h0⟩, rfl⟩
@@ -157,7 +157,7 @@ theorem recoveryPoly_coeff_Pconstructible {n : ℕ} {αs : Fin n → ℝ} {b : F
   have hz : PConstructible (0 : ℝ) := zero_Pconstructible
   by_cases hk : k = 0
   · subst hk
-    simp only [recoveryPoly, Polynomial.coeff_sub, Polynomial.coeff_C, if_pos rfl]
+    simp only [recoveryPoly, Polynomial.coeff_sub, Polynomial.coeff_C]
     exact PConstructible.sub (bPoly_coeffs_Pconstructible hb 0) hβ
   · have hz' : (Polynomial.C β).coeff k = 0 := Polynomial.coeff_C_of_ne_zero hk
     simp only [recoveryPoly, Polynomial.coeff_sub, hz']
@@ -268,7 +268,7 @@ theorem cubic_seven_coeff_agrees {y : Fin 7 → ℝ} {e₇ r₀ r₁ r₂ : ℝ}
   have heq : prodSubY y = X ^ 7 + C r₂ * X ^ 5 + C r₁ * X ^ 3 + X * C r₀ - C e₇ := by
     refine Polynomial.funext (fun t => ?_)
     rw [h]
-    simp only [cubicVal, eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_neg]
+    simp only [cubicVal, eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C]
     ring
   have h0 := congrArg (fun f : ℝ[X] => f.coeff 0) heq
   have h1 := congrArg (fun f : ℝ[X] => f.coeff 1) heq
@@ -293,7 +293,7 @@ theorem quartic_eight_coeff_agrees {y : Fin 8 → ℝ} {e₇ q₀ q₁ q₂ q₃
       - X * C e₇ := by
     refine Polynomial.funext (fun t => ?_)
     rw [h]
-    simp only [quarticVal, eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_neg]
+    simp only [quarticVal, eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C]
     ring
   have h0 := congrArg (fun f : ℝ[X] => f.coeff 0) heq
   have h1 := congrArg (fun f : ℝ[X] => f.coeff 1) heq

@@ -38,9 +38,9 @@ The files, in dependency order:
 
 | file | content |
 |---|---|
-| `Engines` | quartic graphs are drawable (Lemma Q); `t·R(t²) = c` and `Q(t²) = c·t` are solvable (Lemmas E7, E8) |
+| `Engines` | quartic graphs are drawable (Q); the two resolvent shapes are solvable (E7, E8) |
 | `Newton` | vanishing odd power sums ⟹ vanishing odd `esymm` (Lemma N); the two resolvent shapes |
-| `YSpace` | the generic companion matrix; power sums and symmetric moments of y-vectors are P-constructible; density |
-| `Certificate` | the four-step odd Tschirnhaus chain, its algebra, Lemma C, and the exact rational certificates |
+| `YSpace` | companion matrix; power sums and symmetric moments of y-vectors are P-constructible |
+| `Certificate` | four-step odd Tschirnhaus chain, its algebra, and rational certificates |
 | `Main` | Theorem 7 and Theorem 8 |
 -/
