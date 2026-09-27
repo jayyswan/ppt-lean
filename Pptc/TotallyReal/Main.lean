@@ -91,16 +91,19 @@ of those values. -/
 noncomputable def recoveryPoly {n : ℕ} (_αs : Fin n → ℝ) (b : Fin n → ℝ) (β : ℝ) : ℝ[X] :=
   bPoly b - C β
 
-theorem recoveryPoly_eval_root {n : ℕ} {q : ℝ[X]} {αs : Fin n → ℝ} {b : Fin n → ℝ}
-    (_hαs : ∀ i : Fin n, q.eval (αs i) = 0) (_hb : ∀ k, PConstructible (b k))
+theorem recoveryPoly_eval_root {n : ℕ} {αs : Fin n → ℝ} {b : Fin n → ℝ}
     {i : Fin n} (hβ : β = yvec αs b i) :
     (recoveryPoly αs b β).eval (αs i) = 0 := by
   simp only [recoveryPoly, eval_sub, eval_C, hβ, yvec_eq_bPoly_eval]
   ring
 
-/-- The degree of the recovery polynomial is `< n` as soon as `n > 0`, i.e. `≤ n − 1` and
-so `≤ 6` for `n = 7` and `≤ 7` for `n = 8`. This is the statement of
-`recoveryPoly_degree_lt` below, which however omits `0 < n`. -/
+/-- **The degree of the recovery polynomial: `< n`** as soon as `0 < n`. For `n = 7` this is
+`≤ 6` and for `n = 8` it is `≤ 7`.
+
+The hypothesis `0 < n` is necessary, not cosmetic: at `n = 0` the sum defining `bPoly b`
+is empty, so `bPoly b = 0` and `recoveryPoly αs b β = -C β` has `natDegree = 0 = n`. The
+`≤ n − 1` form of the bound, which holds at `n = 0` as well, is
+`YSpace.bPoly_natDegree_le`. -/
 theorem recoveryPoly_degree_lt_of_pos {n : ℕ} (h0 : 0 < n) (αs : Fin n → ℝ) (b : Fin n → ℝ)
     (β : ℝ) : (recoveryPoly αs b β).natDegree < n := by
   have h1 : (bPoly b).natDegree ≤ n - 1 := bPoly_natDegree_le b
@@ -111,25 +114,14 @@ theorem recoveryPoly_degree_lt_of_pos {n : ℕ} (h0 : 0 < n) (αs : Fin n → �
     exact hmax.trans (max_le h1 (Nat.zero_le _))
   omega
 
-/-- **The degree of the recovery polynomial: `< n`.** For `n = 7` this is `≤ 6` and for
-`n = 8` it is `≤ 7`.
-
-The hypothesis `0 < n` is necessary, not cosmetic: at `n = 0` the sum defining `bPoly b`
-is empty, so `bPoly b = 0` and `recoveryPoly αs b β = -C β` has `natDegree = 0 = n`. The
-`≤ n − 1` form of the bound, which holds at `n = 0` as well, is
-`YSpace.bPoly_natDegree_le`; the workhorse proof is
-`recoveryPoly_degree_lt_of_pos`. -/
-theorem recoveryPoly_degree_lt {n : ℕ} (h0 : 0 < n) (αs : Fin n → ℝ) (b : Fin n → ℝ)
-    (β : ℝ) : (recoveryPoly αs b β).natDegree < n :=
-  recoveryPoly_degree_lt_of_pos h0 αs b β
-
-/-- The recovery polynomial is nonzero at any value of `Φ_b` when the values are distinct
-and there are at least two of them: `Φ_b` then takes `n ≥ 2` distinct values, so it is
-not the constant polynomial `β`. -/
-theorem recoveryPoly_ne_of_mem {n : ℕ} (h0 : 0 < n) (hn : 2 ≤ n) {αs : Fin n → ℝ}
-    {b : Fin n → ℝ} (hnd : Function.Injective (yvec αs b)) {β : ℝ}
-    (_hβ : ∃ i : Fin n, yvec αs b i = β) : recoveryPoly αs b β ≠ 0 := by
+/-- The recovery polynomial is nonzero when the values of `Φ_b` at the roots are distinct
+and there are at least two roots: `Φ_b` then takes `n ≥ 2` distinct values, so it is not
+the constant polynomial `β`. -/
+theorem recoveryPoly_ne_of_mem {n : ℕ} (hn : 2 ≤ n) {αs : Fin n → ℝ}
+    {b : Fin n → ℝ} (hnd : Function.Injective (yvec αs b)) {β : ℝ} :
+    recoveryPoly αs b β ≠ 0 := by
   intro h
+  have h0 : 0 < n := by omega
   have hb' : bPoly b = Polynomial.C β := sub_eq_zero.mp h
   have h1n : 1 < n := by omega
   have key : ∀ j : Fin n, yvec αs b j = β := by
@@ -142,26 +134,14 @@ theorem recoveryPoly_ne_of_mem {n : ℕ} (h0 : 0 < n) (hn : 2 ≤ n) {αs : Fin 
   simp only at hval
   omega
 
-/-- The recovery polynomial is nonzero when the y-entries are distinct, because then
-`Φ_b` takes `n ≥ 2` distinct values and so is nonconstant. -/
-theorem recoveryPoly_ne {n : ℕ} (h0 : 0 < n) (hn : 2 ≤ n) {q : ℝ[X]} {αs : Fin n → ℝ}
-    {b : Fin n → ℝ} (_hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-    (hnd : Function.Injective (yvec αs b)) :
-    recoveryPoly αs b (yvec αs b ⟨0, h0⟩) ≠ 0 :=
-  recoveryPoly_ne_of_mem h0 hn hnd ⟨⟨0, h0⟩, rfl⟩
-
 /-- The recovery polynomial has P-constructible coefficients as soon as `b` and `β` do. -/
 theorem recoveryPoly_coeff_Pconstructible {n : ℕ} {αs : Fin n → ℝ} {b : Fin n → ℝ} {β : ℝ}
     (hb : ∀ k, PConstructible (b k)) (hβ : PConstructible β) (k : ℕ) :
     PConstructible ((recoveryPoly αs b β).coeff k) := by
-  have hz : PConstructible (0 : ℝ) := zero_Pconstructible
-  by_cases hk : k = 0
-  · subst hk
-    simp only [recoveryPoly, Polynomial.coeff_sub, Polynomial.coeff_C]
-    exact PConstructible.sub (bPoly_coeffs_Pconstructible hb 0) hβ
-  · have hz' : (Polynomial.C β).coeff k = 0 := Polynomial.coeff_C_of_ne_zero hk
-    simp only [recoveryPoly, Polynomial.coeff_sub, hz']
-    exact PConstructible.sub (bPoly_coeffs_Pconstructible hb k) hz
+  simp only [recoveryPoly, Polynomial.coeff_sub, Polynomial.coeff_C]
+  split_ifs with hk
+  · exact PConstructible.sub (bPoly_coeffs_Pconstructible hb k) hβ
+  · exact PConstructible.sub (bPoly_coeffs_Pconstructible hb k) zero_Pconstructible
 
 /-! ### Roots of `q`, and a non-real root when `q` does not split -/
 
@@ -204,24 +184,21 @@ theorem exists_nonreal_root_of_not_splits {q : ℝ[X]} (hq0 : q ≠ 0) (hsep : q
     omega
   refine ⟨z, (Polynomial.mem_roots'.mp hz).2, ?_⟩
   intro hzi
-  obtain ⟨w, hw⟩ : ∃ w : ℝ, w = z.re := ⟨z.re, rfl⟩
-  have hz1 : z = (w : ℂ) := by
-    rw [hw, Complex.ext_iff]
+  have hz1 : z = (z.re : ℂ) := by
+    rw [Complex.ext_iff]
     exact ⟨rfl, by simp [hzi]⟩
   have h1 : q.eval₂ (algebraMap ℝ ℂ) z = 0 := by
     rw [← Polynomial.eval_map]
     exact (Polynomial.mem_roots'.mp hz).2
-  have hz1' : z = (algebraMap ℝ ℂ) w := hz1.trans (algebraMap_real w).symm
-  have h3 : q.eval₂ (algebraMap ℝ ℂ) ((algebraMap ℝ ℂ) w) = 0 := by
-    rw [← hz1']
+  have hev : q.eval₂ (algebraMap ℝ ℂ) ((algebraMap ℝ ℂ) z.re) = 0 := by
+    rw [hz1] at h1
     exact h1
-  have h2 : (algebraMap ℝ ℂ) (q.eval w) = 0 := by
-    rw [Polynomial.eval₂_at_apply] at h3
-    exact h3
-  have hroot : q.eval w = 0 := (algebraMap ℝ ℂ).injective h2
-  have hmem : w ∈ q.roots := (Polynomial.mem_roots hq0).mpr hroot
-  have hkey : (algebraMap ℝ ℂ) w = z := hz1'.symm
-  exact hzt (Multiset.mem_map.mpr ⟨w, hmem, hkey⟩)
+  have h2 : (algebraMap ℝ ℂ) (q.eval z.re) = 0 := by
+    rw [Polynomial.eval₂_at_apply] at hev
+    exact hev
+  have hroot : q.eval z.re = 0 := (algebraMap ℝ ℂ).injective h2
+  have hmem : z.re ∈ q.roots := (Polynomial.mem_roots hq0).mpr hroot
+  exact hzt (Multiset.mem_map.mpr ⟨z.re, hmem, (algebraMap_real z.re).trans hz1.symm⟩)
 
 /-- **The `n` real roots of a separable `q` of degree `n` splitting over `ℝ`**, listed as a
 `Fin n → ℝ`, together with the facts that they are pairwise distinct and that they
@@ -270,17 +247,8 @@ theorem cubic_seven_coeff_agrees {y : Fin 7 → ℝ} {e₇ r₀ r₁ r₂ : ℝ}
     rw [h]
     simp only [cubicVal, eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C]
     ring
-  have h0 := congrArg (fun f : ℝ[X] => f.coeff 0) heq
-  have h1 := congrArg (fun f : ℝ[X] => f.coeff 1) heq
-  have h3 := congrArg (fun f : ℝ[X] => f.coeff 3) heq
-  have h5 := congrArg (fun f : ℝ[X] => f.coeff 5) heq
-  constructor
-  · rw [h0]; norm_num
-  constructor
-  · rw [h1]; norm_num
-  constructor
-  · rw [h3]; norm_num
-  · rw [h5]; norm_num
+  rw [heq]
+  simp [coeff_X, coeff_C, coeff_X_pow]
 
 /-- **The octic shape's data are the coefficients of the y-polynomial**, as in
 `cubic_seven_coeff_agrees`: for `χ(t) = Q(t²) − e₇t` one gets `qⱼ` at the even indices and
@@ -295,20 +263,8 @@ theorem quartic_eight_coeff_agrees {y : Fin 8 → ℝ} {e₇ q₀ q₁ q₂ q₃
     rw [h]
     simp only [quarticVal, eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C]
     ring
-  have h0 := congrArg (fun f : ℝ[X] => f.coeff 0) heq
-  have h1 := congrArg (fun f : ℝ[X] => f.coeff 1) heq
-  have h2 := congrArg (fun f : ℝ[X] => f.coeff 2) heq
-  have h4 := congrArg (fun f : ℝ[X] => f.coeff 4) heq
-  have h6 := congrArg (fun f : ℝ[X] => f.coeff 6) heq
-  constructor
-  · rw [h1]; norm_num
-  constructor
-  · rw [h0]; norm_num
-  constructor
-  · rw [h2]; norm_num
-  constructor
-  · rw [h4]; norm_num
-  · rw [h6]; norm_num
+  rw [heq]
+  simp [coeff_X, coeff_C, coeff_X_pow]
 
 /-- **The septic engine.** A real root of `χ = prodSubY y` for a seven-tuple `y` with
 vanishing `S₁, S₃, S₅` and P-constructible coefficients of `χ` is P-constructible: the
@@ -399,19 +355,16 @@ theorem root_Pconstructible_of_odd_shaped {n : ℕ} (hn : n = 7 ∨ n = 8) {q : 
     prodSubY_yvec_coeff_Pconstructible hmon (show 0 < n by omega) hnat hsep hcoef hαs hndαs hb
   have hβ : PConstructible ((bPoly b).eval α) := hengine _ hcoeffY h1 h3 h5 hβroot
   obtain ⟨i, hi⟩ := hcover α hα
-  have hmem : ∃ j : Fin n, yvec αs b j = (bPoly b).eval α := by
-    refine ⟨i, ?_⟩
-    rw [← yvec_eq_bPoly_eval, hi]
   have hne : recoveryPoly αs b ((bPoly b).eval α) ≠ 0 :=
-    recoveryPoly_ne_of_mem (show 0 < n by omega) (show 2 ≤ n by omega) hbinj hmem
+    recoveryPoly_ne_of_mem (show 2 ≤ n by omega) hbinj
   have hdeg : (recoveryPoly αs b ((bPoly b).eval α)).natDegree < n :=
-    recoveryPoly_degree_lt (show 0 < n by omega) αs b ((bPoly b).eval α)
+    recoveryPoly_degree_lt_of_pos (show 0 < n by omega) αs b ((bPoly b).eval α)
   have hcoeffR : ∀ k, PConstructible ((recoveryPoly αs b ((bPoly b).eval α)).coeff k) :=
     recoveryPoly_coeff_Pconstructible hb hβ
   have hroot : (recoveryPoly αs b ((bPoly b).eval α)).eval α = 0 := by
     have hkey : (bPoly b).eval α = yvec αs b i := by
       rw [← hi, yvec_eq_bPoly_eval]
-    have hh := recoveryPoly_eval_root hαs hb hkey
+    have hh := recoveryPoly_eval_root hkey
     rwa [hi] at hh
   exact hrec _ hne hdeg hcoeffR hroot
 
@@ -424,11 +377,7 @@ theorem root_Pconstructible_totallyReal_seven {q : ℝ[X]} (hmon : q.Monic) (h7 
     (hcoef : ∀ k, PConstructible (q.coeff k)) {α : ℝ} (hα : q.eval α = 0) :
     PConstructible α := by
   by_cases hsep : q.Separable
-  · have hq0 : q ≠ 0 := by
-      intro h
-      have h' := h7
-      rw [h] at h'
-      norm_num at h'
+  · have hq0 : q ≠ 0 := by rintro rfl; simp at h7
     obtain ⟨αs, hαs, hndαs, hcover⟩ := exists_αs_of_splits hq0 hsep h7 hsplit
     have hengine : ∀ (y : Fin 7 → ℝ), (∀ k, PConstructible ((prodSubY y).coeff k)) →
         psumY y 1 = 0 → psumY y 3 = 0 → psumY y 5 = 0 →
@@ -581,11 +530,7 @@ theorem root_Pconstructible_totallyReal_eight {q : ℝ[X]} (hmon : q.Monic)
     (hcoef : ∀ k, PConstructible (q.coeff k)) {α : ℝ} (hα : q.eval α = 0) :
     PConstructible α := by
   by_cases hsep : q.Separable
-  · have hq0 : q ≠ 0 := by
-      intro h
-      have h' := h8
-      rw [h] at h'
-      norm_num at h'
+  · have hq0 : q ≠ 0 := by rintro rfl; simp at h8
     obtain ⟨αs, hαs, hndαs, hcover⟩ := exists_αs_of_splits hq0 hsep h8 hsplit
     have hengine : ∀ (y : Fin 8 → ℝ), (∀ k, PConstructible ((prodSubY y).coeff k)) →
         psumY y 1 = 0 → psumY y 3 = 0 → psumY y 5 = 0 →

@@ -163,179 +163,31 @@ def chainStep4 (P v : Fin n → ℝ) (kappa : ℝ) : ℝ := psumY (P + kappa •
 3. `simp only [<the y-space defs>, Pi.add_apply, Pi.smul_apply, Pi.sub_apply, smul_eq_mul]`
    on the goal, so that the `def`s become explicit `∑`s and `hsum` matches, then `rw [hsum]`.
 
-Unfolding *first* is essential: `rw [← hsum]` against an unfolded goal fails, against a
-folded one too, because the summand shapes differ by `Pi.add_apply`/`Pi.smul_apply`.
-Note `^` on `ℝ` is `zpow`, so `pow_succ`/`pow_add` are not available and `ring` is the
-right tool on the pointwise goals. -/
-
-/-- The conic form is a bilinear form squared, so it is additive in each argument. -/
-theorem yConicY_add_left (P u v : Fin n → ℝ) :
-    yConicY (P + u) v = yConicY P v + yConicY u v := by
-  have key : ∀ i : Fin n, (P i + u i) ^ 1 * v i ^ 2
-      = P i ^ 1 * v i ^ 2 + u i ^ 1 * v i ^ 2 := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, (P i + u i) ^ 1 * v i ^ 2
-      = (∑ i : Fin n, P i ^ 1 * v i ^ 2) + ∑ i : Fin n, u i ^ 1 * v i ^ 2 := by
-    calc ∑ i : Fin n, (P i + u i) ^ 1 * v i ^ 2
-        = ∑ i : Fin n, (P i ^ 1 * v i ^ 2 + u i ^ 1 * v i ^ 2) :=
-          Finset.sum_congr rfl (fun i _ => key i)
-      _ = (∑ i : Fin n, P i ^ 1 * v i ^ 2) + ∑ i : Fin n, u i ^ 1 * v i ^ 2 := by
-        rw [Finset.sum_add_distrib]
-  simp only [yConicY, ymoment2Y, Pi.add_apply]
-  exact hsum
-
-theorem yConicY_smul_left (P u : Fin n → ℝ) (s : ℝ) :
-    yConicY (s • P) u = s * yConicY P u := by
-  have key : ∀ i : Fin n, (s * P i) ^ 1 * u i ^ 2 = P i ^ 1 * u i ^ 2 * s := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, (s * P i) ^ 1 * u i ^ 2
-      = s * ∑ i : Fin n, P i ^ 1 * u i ^ 2 := by
-    calc ∑ i : Fin n, (s * P i) ^ 1 * u i ^ 2
-        = ∑ i : Fin n, P i ^ 1 * u i ^ 2 * s := Finset.sum_congr rfl (fun i _ => key i)
-      _ = s * ∑ i : Fin n, P i ^ 1 * u i ^ 2 := by
-        rw [← Finset.sum_mul]
-        ring
-  simp only [yConicY, ymoment2Y, Pi.smul_apply, smul_eq_mul]
-  exact hsum
-
-/-- The pointwise expansion behind `yConicY_add_smul_eq`. -/
-theorem yConicY_add_smul_expand (P u : Fin n → ℝ) (s : ℝ) :
-    yConicY P (u + s • P) = yConicY P u + 2 * s * yNBY P u + s ^ 2 * yNBY P P := by
-  have key : ∀ i : Fin n, P i ^ 1 * (u i + s * P i) ^ 2
-      = P i ^ 1 * u i ^ 2 + P i ^ 2 * u i ^ 1 * (2 * s)
-        + P i ^ 2 * P i ^ 1 * (s ^ 2) := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 1 * (u i + s * P i) ^ 2
-      = (∑ i : Fin n, P i ^ 1 * u i ^ 2)
-        + 2 * s * (∑ i : Fin n, P i ^ 2 * u i ^ 1)
-        + s ^ 2 * (∑ i : Fin n, P i ^ 2 * P i ^ 1) := by
-    calc ∑ i : Fin n, P i ^ 1 * (u i + s * P i) ^ 2
-        = ∑ i : Fin n, (P i ^ 1 * u i ^ 2 + P i ^ 2 * u i ^ 1 * (2 * s)
-            + P i ^ 2 * P i ^ 1 * (s ^ 2)) := Finset.sum_congr rfl (fun i _ => key i)
-      _ = _ := by
-        rw [Finset.sum_add_distrib, Finset.sum_add_distrib,
-          ← Finset.sum_mul, ← Finset.sum_mul]
-        ring
-  simp only [yConicY, ymoment2Y, yNBY, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-  exact hsum
-
-/-- Along `u + sP` the conic form is constant, provided `P` lies on its own conic and
-`u` lies in the `N_P`-hyperplane.
-
-**CORRECTION 1.** This was originally stated with `hN : yNBY P P = 0`, which is **false**
-as a hypothesis: `yNBY P P = Σᵢ (YPᵢ)²·YPᵢ = p₃(YP)` kills only the *third* term of
-`yConicY_add_smul_expand`, not the middle one `2·s·yNBY P u`. Counterexample
-(`n = 3`, `P = ![1, 0, -1]`, `u = ![1, 0, 0]`, `s = 1`): `yNBY P P = 0` yet
-`yConicY P u = 1` and `yConicY P (u + 1 • P) = 3 ≠ 1`. The hypothesis that comes from the
-chain is `yConicY P P = 0` — `P` lies on its own conic, i.e. `p₃(YP) = 0`, which holds at
-the chain's centre `P` by step 1.
-
-**CORRECTION 2.** `hN : yConicY P P = 0` ALONE is still not enough: it kills the third
-term `s²·yNBY P P` (both are `p₃(YP)`, up to `mul_comm` of the summand) but the *middle*
-term `2·s·yNBY P u` survives, and it is not a multiple of `p₃(YP)`. Counterexample
-(`n = 2`, `P = ![1, -1]`, `u = ![1, 0]`, `s = 1`, verified by exact `Integer` arithmetic
-in Wolfram): `yConicY P P = 1·1 + (-1)·1 = 0`, so the hypothesis holds, yet
-`yConicY P u = 1` and `yConicY P (u + 1 • P) = 1·4 + (-1)·1 = 3 ≠ 1`.
-
-So the theorem needs **both** `p₃(YP) = 0` and `u ∈ N_P`; that is what `hN` and `hN0` say.
-Both are available in the chain: `hN` because `P` satisfies step 1, `hN0` because every
-`w̃ⱼ = chainProjN P g wⱼ` obeys `yNBY P w̃ⱼ = 0` (`chainProjN_mem_N`) and `u = w̃₁ + x₀ w̃₂`
-inherits it from `yNBY_add_right`/`yNBY_smul_right`. -/
-theorem yConicY_add_smul_eq (P u : Fin n → ℝ) (s : ℝ) (hN : yConicY P P = 0)
-    (hN0 : yNBY P u = 0) : yConicY P (u + s • P) = yConicY P u := by
-  -- `yConicY P P = Σᵢ Pᵢ¹·Pᵢ²` and `yNBY P P = Σᵢ Pᵢ²·Pᵢ¹` are the same number but not defeq
-  have hN' : yNBY P P = 0 := by
-    simpa only [yConicY, yNBY, ymoment2Y, mul_comm] using hN
-  rw [yConicY_add_smul_expand, hN', hN0]
-  ring
-
-/-- The pairing is additive in each of its three arguments. -/
-theorem yBdotY_add_left (P u v w : Fin n → ℝ) :
-    yBdotY (P + u) v w = yBdotY P v w + yBdotY u v w := by
-  have key : ∀ i : Fin n, (P i + u i) ^ 1 * v i ^ 1 * w i ^ 1
-      = P i ^ 1 * v i ^ 1 * w i ^ 1 + u i ^ 1 * v i ^ 1 * w i ^ 1 := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, (P i + u i) ^ 1 * v i ^ 1 * w i ^ 1
-      = (∑ i : Fin n, P i ^ 1 * v i ^ 1 * w i ^ 1)
-        + ∑ i : Fin n, u i ^ 1 * v i ^ 1 * w i ^ 1 := by
-    calc ∑ i : Fin n, (P i + u i) ^ 1 * v i ^ 1 * w i ^ 1
-        = ∑ i : Fin n, (P i ^ 1 * v i ^ 1 * w i ^ 1 + u i ^ 1 * v i ^ 1 * w i ^ 1) :=
-          Finset.sum_congr rfl (fun i _ => key i)
-      _ = (∑ i : Fin n, P i ^ 1 * v i ^ 1 * w i ^ 1)
-        + ∑ i : Fin n, u i ^ 1 * v i ^ 1 * w i ^ 1 := by
-        rw [Finset.sum_add_distrib]
-  simp only [yBdotY, ymoment3Y, Pi.add_apply]
-  exact hsum
+Each expansion is one `simp only` that unfolds the pairings, pushes scalar factors inside
+the sums (`Finset.mul_sum`) and merges the resulting sums (`← Finset.sum_add_distrib` /
+`← Finset.sum_sub_distrib`), followed by `Finset.sum_congr rfl` with a pointwise `ring`. -/
 
 /-- The cubic power sum along a line, in the order the chain uses. -/
 theorem psumY_cube_eq (P v : Fin n → ℝ) (s : ℝ) :
     psumY (P + s • v) 3
       = psumY P 3 + 3 * s * yNBY P v + 3 * s ^ 2 * yConicY P v + s ^ 3 * psumY v 3 := by
-  have key : ∀ i : Fin n, (P i + s * v i) ^ 3
-      = P i ^ 3 + P i ^ 2 * v i ^ 1 * (3 * s)
-        + P i ^ 1 * v i ^ 2 * (3 * s ^ 2) + v i ^ 3 * (s ^ 3) := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, (P i + s * v i) ^ 3
-      = (∑ i : Fin n, P i ^ 3)
-        + 3 * s * (∑ i : Fin n, P i ^ 2 * v i ^ 1)
-        + 3 * s ^ 2 * (∑ i : Fin n, P i ^ 1 * v i ^ 2)
-        + s ^ 3 * (∑ i : Fin n, v i ^ 3) := by
-    calc ∑ i : Fin n, (P i + s * v i) ^ 3
-        = ∑ i : Fin n, (P i ^ 3 + P i ^ 2 * v i ^ 1 * (3 * s)
-            + P i ^ 1 * v i ^ 2 * (3 * s ^ 2) + v i ^ 3 * (s ^ 3)) :=
-          Finset.sum_congr rfl (fun i _ => key i)
-      _ = _ := by
-        rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.sum_add_distrib,
-          ← Finset.sum_mul, ← Finset.sum_mul, ← Finset.sum_mul]
-        ring
   simp only [psumY, psumFinY, yNBY, ymoment2Y, yConicY, Pi.add_apply, Pi.smul_apply,
-    smul_eq_mul]
-  exact hsum
+    smul_eq_mul, Finset.mul_sum, ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 /-- `S₁` is linear, so `S₁(P + s v) = S₁ P + s S₁ v`. -/
 theorem psumY_one_eq (P v : Fin n → ℝ) (s : ℝ) :
     psumY (P + s • v) 1 = psumY P 1 + s * psumY v 1 := by
-  have key : ∀ i : Fin n, (P i + s * v i) ^ 1 = P i ^ 1 + v i ^ 1 * s := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, (P i + s * v i) ^ 1
-      = (∑ i : Fin n, P i ^ 1) + s * ∑ i : Fin n, v i ^ 1 := by
-    calc ∑ i : Fin n, (P i + s * v i) ^ 1
-        = ∑ i : Fin n, (P i ^ 1 + v i ^ 1 * s) := Finset.sum_congr rfl (fun i _ => key i)
-      _ = _ := by
-        rw [Finset.sum_add_distrib, ← Finset.sum_mul]
-        ring
-  simp only [psumY, psumFinY, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-  exact hsum
+  simp only [psumY, psumFinY, Pi.add_apply, Pi.smul_apply, smul_eq_mul, Finset.mul_sum,
+    ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 /-- The pointwise expansion of the conic form along `q₀ − c d`. -/
 theorem yConicY_sub_smul (P q₀ d : Fin n → ℝ) (c : ℝ) :
     yConicY P (q₀ - c • d) = yConicY P q₀ - 2 * c * yBdotY P q₀ d + c ^ 2 * yBdotY P d d := by
-  have key : ∀ i : Fin n, P i ^ 1 * (q₀ i - c * d i) ^ 2
-      = (P i ^ 1 * q₀ i ^ 2 - P i ^ 1 * q₀ i ^ 1 * d i ^ 1 * (2 * c))
-        + P i ^ 1 * d i ^ 1 * d i ^ 1 * (c ^ 2) := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 1 * (q₀ i - c * d i) ^ 2
-      = (∑ i : Fin n, P i ^ 1 * q₀ i ^ 2)
-        - 2 * c * (∑ i : Fin n, P i ^ 1 * q₀ i ^ 1 * d i ^ 1)
-        + c ^ 2 * (∑ i : Fin n, P i ^ 1 * d i ^ 1 * d i ^ 1) := by
-    calc ∑ i : Fin n, P i ^ 1 * (q₀ i - c * d i) ^ 2
-        = ∑ i : Fin n, (P i ^ 1 * q₀ i ^ 2 - P i ^ 1 * q₀ i ^ 1 * d i ^ 1 * (2 * c)
-            + P i ^ 1 * d i ^ 1 * d i ^ 1 * (c ^ 2)) :=
-          Finset.sum_congr rfl (fun i _ => key i)
-      _ = _ := by
-        rw [Finset.sum_add_distrib, Finset.sum_sub_distrib,
-          ← Finset.sum_mul, ← Finset.sum_mul]
-        ring
   simp only [yConicY, ymoment2Y, yBdotY, ymoment3Y, Pi.sub_apply, Pi.smul_apply,
-    smul_eq_mul]
-  exact hsum
+    smul_eq_mul, Finset.mul_sum, ← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 /-- The second intersection lies on the conic. -/
 theorem chainConicPt_on_conic {P q₀ d : Fin n → ℝ} (hden : yBdotY P d d ≠ 0)
@@ -346,48 +198,16 @@ theorem chainConicPt_on_conic {P q₀ d : Fin n → ℝ} (hden : yBdotY P d d �
 
 /-- `yNBY` is additive/scalable in its *second* argument only — it squares the first. -/
 theorem yNBY_add_right (P u v : Fin n → ℝ) : yNBY P (u + v) = yNBY P u + yNBY P v := by
-  have key : ∀ i : Fin n, P i ^ 2 * (u i + v i) ^ 1
-      = P i ^ 2 * u i ^ 1 + P i ^ 2 * v i ^ 1 := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 2 * (u i + v i) ^ 1
-      = (∑ i : Fin n, P i ^ 2 * u i ^ 1) + ∑ i : Fin n, P i ^ 2 * v i ^ 1 := by
-    calc ∑ i : Fin n, P i ^ 2 * (u i + v i) ^ 1
-        = ∑ i : Fin n, (P i ^ 2 * u i ^ 1 + P i ^ 2 * v i ^ 1) :=
-          Finset.sum_congr rfl (fun i _ => key i)
-      _ = (∑ i : Fin n, P i ^ 2 * u i ^ 1) + ∑ i : Fin n, P i ^ 2 * v i ^ 1 := by
-        rw [Finset.sum_add_distrib]
-  simp only [yNBY, ymoment2Y, Pi.add_apply]
-  exact hsum
+  simp only [yNBY, ymoment2Y, Pi.add_apply, ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 theorem yNBY_sub_right (P u v : Fin n → ℝ) : yNBY P (u - v) = yNBY P u - yNBY P v := by
-  have key : ∀ i : Fin n, P i ^ 2 * (u i - v i) ^ 1
-      = P i ^ 2 * u i ^ 1 - P i ^ 2 * v i ^ 1 := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 2 * (u i - v i) ^ 1
-      = (∑ i : Fin n, P i ^ 2 * u i ^ 1) - ∑ i : Fin n, P i ^ 2 * v i ^ 1 := by
-    calc ∑ i : Fin n, P i ^ 2 * (u i - v i) ^ 1
-        = ∑ i : Fin n, (P i ^ 2 * u i ^ 1 - P i ^ 2 * v i ^ 1) :=
-          Finset.sum_congr rfl (fun i _ => key i)
-      _ = (∑ i : Fin n, P i ^ 2 * u i ^ 1) - ∑ i : Fin n, P i ^ 2 * v i ^ 1 := by
-        rw [Finset.sum_sub_distrib]
-  simp only [yNBY, ymoment2Y, Pi.sub_apply]
-  exact hsum
+  simp only [yNBY, ymoment2Y, Pi.sub_apply, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 theorem yNBY_smul_right (P u : Fin n → ℝ) (s : ℝ) : yNBY P (s • u) = s * yNBY P u := by
-  have key : ∀ i : Fin n, P i ^ 2 * (s * u i) ^ 1 = P i ^ 2 * u i ^ 1 * s := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 2 * (s * u i) ^ 1
-      = s * ∑ i : Fin n, P i ^ 2 * u i ^ 1 := by
-    calc ∑ i : Fin n, P i ^ 2 * (s * u i) ^ 1
-        = ∑ i : Fin n, P i ^ 2 * u i ^ 1 * s := Finset.sum_congr rfl (fun i _ => key i)
-      _ = s * ∑ i : Fin n, P i ^ 2 * u i ^ 1 := by
-        rw [← Finset.sum_mul]
-        ring
-  simp only [yNBY, ymoment2Y, Pi.smul_apply, smul_eq_mul]
-  exact hsum
+  simp only [yNBY, ymoment2Y, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 /-- The projection lands in `N_P`. -/
 theorem chainProjN_mem_N {P g w : Fin n → ℝ} (hden : yNBY P g ≠ 0) :
@@ -395,21 +215,6 @@ theorem chainProjN_mem_N {P g w : Fin n → ℝ} (hden : yNBY P g ≠ 0) :
   rw [chainProjN, yNBY_sub_right, yNBY_smul_right]
   rw [div_mul_cancel₀ (yNBY P w) hden]
   ring
-
-/-- **The point of the whole construction.** If `P ∈ X` and `v` lies in `N_P`, on the
-conic and with `S₁(v) = S₃(v) = 0`, then the entire line `P + κ v` is in `X`.
-
-`hv1` is needed: `S₁(P + κv) = S₁ P + κ S₁ v`, and the chain's `v` is built from `q₀`
-which is a combination of the projected inputs, so `S₁(v) = 0` does not follow from the
-other hypotheses. -/
-theorem psumY_13_line {P v : Fin n → ℝ} {kappa : ℝ}
-    (hP1 : psumY P 1 = 0) (hP3 : psumY P 3 = 0) (hv1 : psumY v 1 = 0)
-    (hN : yNBY P v = 0) (hQ : yConicY P v = 0) (hv3 : psumY v 3 = 0) :
-    psumY (P + kappa • v) 1 = 0 ∧ psumY (P + kappa • v) 3 = 0 := by
-  refine ⟨?_, ?_⟩
-  · rw [psumY_one_eq, hP1, hv1, mul_zero, add_zero]
-  · rw [psumY_cube_eq, hP3, hN, hQ, hv3]
-    ring
 
 /-! ### The chain, bundled -/
 
@@ -603,41 +408,6 @@ theorem continuous_chainStep4' (I : ChainYInputs n) (lam x mu : ℝ) :
   simp only [psumY, psumFinY, Pi.add_apply, Pi.smul_apply]
   fun_prop
 
-/-! ### What the two divisions do at a pole
-
-`/` is total on `ℝ`, so a zero denominator does not make the step functions undefined: it
-makes them take a *reduced* value, and that value is generally not the limit of the
-function from either side. These two lemmas are the whole content of the obstruction
-documented above, and they are the reason a strict sign change at the two endpoints of an
-interval does **not** by itself produce a root. -/
-
-/-- At a zero of `yNBY P g` the projection is the identity: `x/0 = 0`, so the smul vanishes
-and `chainProjN P g w = w - 0 = w`. -/
-theorem chainProjN_of_den_zero {n : ℕ} (P g w : Fin n → ℝ) (h : yNBY P g = 0) :
-    chainProjN P g w = w := by
-  simp [chainProjN, h]
-
-/-- At a zero of `yBdotY P d d` the second intersection collapses onto `q₀`. -/
-theorem chainConicPt_of_den_zero {n : ℕ} (P q₀ d : Fin n → ℝ) (h : yBdotY P d d = 0) :
-    chainConicPt P q₀ d = q₀ := by
-  simp [chainConicPt, h]
-
-/-- **The step-2 function at a pole of its `lam`-denominator: the reduced value is the
-quadratic `yConicY P (w₁ + x w₂)`, which is *not* sign-definite because `yConicY YP Yu =
-Σᵢ YPᵢ·Yuᵢ²` weights `YPᵢ` linearly. -/
-theorem chainStep2'_of_den_zero {n : ℕ} (P g w₁ w₂ : Fin n → ℝ) (x : ℝ)
-    (h : yNBY P g = 0) :
-    chainStep2 P g w₁ w₂ x = yConicY P (w₁ + x • w₂) := by
-  simp [chainStep2, chainProjN_of_den_zero P g w₁ h, chainProjN_of_den_zero P g w₂ h]
-
-/-- **The step-3 function at a pole of its `μ`-denominator: the reduced value is
-`psumY q₀ 3`, independent of `μ`, so the two endpoint values of a strict sign change are
-compatible with there being no root at all between them. -/
-theorem chainStep3'_of_den_zero {n : ℕ} (P q₀ w₁ w₃ : Fin n → ℝ) (mu : ℝ)
-    (h : yBdotY P (mu • w₁ + w₃) (mu • w₁ + w₃) = 0) :
-    chainStep3 P q₀ w₁ w₃ mu = psumY q₀ 3 := by
-  rw [chainStep3, chainConicPt_of_den_zero P q₀ (mu • w₁ + w₃) h]
-
 /-! ### The part of Lemma C that *is* provable: a solution at the centre
 
 Everything below is the `I₀`-half of `exists_chain_roots`: the four one-dimensional
@@ -646,38 +416,14 @@ configuration. The input direction, on which the rest of Lemma C depends, is whe
 statement above fails. -/
 
 /-- **A strict sign change at the two endpoints of an interval produces a root in its
-interior.** This is the only use of `intermediate_value_Icc` in Lemma C: the endpoint values
-are nonzero, so the root cannot sit on either face. -/
+interior.** Immediate from the open-interval intermediate value theorem: the endpoint values
+are strictly opposite, so `0` lies in the open interval between them. -/
 theorem exists_zero_of_sign_change_on {f : ℝ → ℝ} {a b : ℝ} (hab : a ≤ b)
     (hf : ContinuousOn f (Set.Icc a b)) (hs : f a * f b < 0) :
     ∃ t ∈ Set.Ioo a b, f t = 0 := by
-  have hne : f a ≠ 0 ∧ f b ≠ 0 := by
-    constructor
-    · intro h; rw [h] at hs; linarith
-    · intro h; rw [h] at hs; linarith
-  -- the oriented case, in which `0` is visibly in the interval of values
-  have key : ∀ g : ℝ → ℝ, ContinuousOn g (Set.Icc a b) → g a < 0 → 0 < g b →
-      ∃ t ∈ Set.Ioo a b, g t = 0 := by
-    intro g hg hga hgb
-    obtain ⟨t, ht, hgt⟩ :=
-      intermediate_value_Icc hab hg (Set.mem_Icc.mpr ⟨le_of_lt hga, le_of_lt hgb⟩)
-    obtain ⟨ht1, ht2⟩ := Set.mem_Icc.mp ht
-    refine ⟨t, ⟨?_, ?_⟩, hgt⟩
-    · rcases eq_or_lt_of_le ht1 with h | h
-      · rw [← h] at hgt; exact absurd hgt (ne_of_lt hga)
-      · exact h
-    · rcases eq_or_lt_of_le ht2 with h | h
-      · rw [h] at hgt; exact absurd hgt hgb.ne'
-      · exact h
-  rcases lt_or_gt_of_ne hne.1 with h1 | h1
-  · rcases lt_or_gt_of_ne hne.2 with h2 | h2
-    · exact absurd (mul_pos_of_neg_of_neg h1 h2) (not_lt_of_ge (le_of_lt hs))
-    · exact key f hf h1 h2
-  · rcases lt_or_gt_of_ne hne.2 with h2 | h2
-    · -- the reverse orientation is the forward one for `-f`
-      obtain ⟨t, ht, hgt⟩ := key (fun s => -f s) hf.neg (by linarith) (by linarith)
-      exact ⟨t, ht, neg_eq_zero.mp hgt⟩
-    · exact absurd (mul_pos h1 h2) (not_lt_of_ge (le_of_lt hs))
+  rcases mul_neg_iff.mp hs with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · exact intermediate_value_Ioo' hab hf ⟨h2, h1⟩
+  · exact intermediate_value_Ioo hab hf ⟨h1, h2⟩
 
 /-- **A solution of the four chain equations at the centre, in the four open boxes** — the
 `I₀`-half of `exists_chain_roots`, and the whole of it once the sign conditions are known to
@@ -781,13 +527,6 @@ private lemma exists_box_triple {ψ : ℝ × ℝ × ℝ → ℝ} {a b c : ℝ}
     have hmem : (lam, (x, mu)) ∈ U ×ˢ V := ⟨hU' lam hl, hV₁₂ ⟨hV₁' x hx, hV₂' mu hm⟩⟩
     exact hUV hmem⟩
 
-/-- `chainStep1' I lam`, jointly continuous in `(I, lam)`. -/
-private lemma continuous_joint_chainStep1' :
-    Continuous (fun p : ChainYInputs n × ℝ => chainStep1' p.1 p.2) := by
-  simp only [chainStep1', chainStep1, psumY, psumFinY, ChainYInputs.a, ChainYInputs.b,
-    Pi.add_apply, Pi.smul_apply]
-  fun_prop
-
 /-- The step-1 denominator `yNBY (chainP I lam) I.g`, jointly continuous in `(I, lam)`. -/
 private lemma continuous_joint_den1 :
     Continuous (fun p : ChainYInputs n × ℝ => yNBY (chainP p.1 p.2) p.1.g) := by
@@ -840,33 +579,6 @@ private lemma continuousAt_den2 (I₀ : ChainYInputs n) (lam mu : ℝ)
     chainProjN, yNBY, ymoment2Y, Pi.add_apply, Pi.smul_apply]
   fun_prop (disch := assumption)
 
-/-- `chainStep3Cleared` of the projected directions is continuous at points where the
-step-1 denominator `yNBY (chainP I lam) I.g` is nonzero (it has no conic division of its
-own, so the second denominator is irrelevant here). -/
-private lemma continuousAt_chainStep3Cleared_fixed (I₀ : ChainYInputs n) (lam x mu : ℝ)
-    (h : yNBY (chainP I₀ lam) I₀.g ≠ 0) :
-    ContinuousAt (fun q : ChainYInputs n × (ℝ × ℝ) =>
-      chainStep3Cleared (chainP q.1 q.2.1) (chainQ0 q.1 q.2.1 q.2.2)
-        (mu • chainW1 q.1 q.2.1 + chainW3 q.1 q.2.1)) (I₀, (lam, x)) := by
-  simp only [chainStep3Cleared, chainQ0, chainW1, chainW2, chainW3, chainWt, chainProjN,
-    chainP, ChainYInputs.g, ChainYInputs.a, ChainYInputs.b, ChainYInputs.w1, ChainYInputs.w2,
-    ChainYInputs.w3, yNBY, ymoment2Y, yBdotY, ymoment3Y, Pi.add_apply, Pi.sub_apply,
-    Pi.smul_apply, smul_eq_mul]
-  fun_prop (disch := assumption)
-
-/-- `chainY` is continuous at points where both denominators are nonzero. -/
-private lemma continuousAt_chainY_fixed (I₀ : ChainYInputs n) (lam x mu kappa : ℝ)
-    (h1 : yNBY (chainP I₀ lam) I₀.g ≠ 0)
-    (h2 : yBdotY (chainP I₀ lam) (chainD I₀ lam mu) (chainD I₀ lam mu) ≠ 0) :
-    ContinuousAt (fun p : ChainYInputs n × (ℝ × ℝ × ℝ × ℝ) =>
-      chainY p.1 p.2.1 p.2.2.1 p.2.2.2.1 p.2.2.2.2)
-      (I₀, (lam, x, mu, kappa)) := by
-  simp only [chainY, chainP, chainV, chainConicPt, chainD, chainQ0, chainW1, chainW2,
-    chainW3, chainWt, chainProjN, ChainYInputs.g, ChainYInputs.a, ChainYInputs.b,
-    ChainYInputs.w1, ChainYInputs.w2, ChainYInputs.w3, ymoment2Y,
-    yBdotY, ymoment3Y, yNBY, Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
-  fun_prop (disch := assumption)
-
 /-- `exists_nhds_forall_ne` with only *pointwise* continuity at the points `(x₀, y)`,
 `y ∈ K`; the nonvanishing counterpart of `exists_nhds_forall_lt_of_continuousAt`. -/
 private theorem exists_nhds_forall_ne_of_continuousAt {X Y : Type*} [TopologicalSpace X]
@@ -874,26 +586,14 @@ private theorem exists_nhds_forall_ne_of_continuousAt {X Y : Type*} [Topological
     (hφ : ∀ y ∈ K, ContinuousAt (Function.uncurry φ) (x₀, y))
     (h0 : ∀ y ∈ K, φ x₀ y ≠ 0) :
     ∃ U ∈ nhds x₀, ∀ x ∈ U, ∀ y ∈ K, φ x y ≠ 0 := by
-  let s : Set (X × Y) := (Function.uncurry φ) ⁻¹' ({0}ᶜ : Set ℝ)
-  have hmem : ∀ y ∈ K, s ∈ nhds x₀ ×ˢ nhds y := by
-    intro y hy
-    rw [← nhds_prod_eq]
-    exact (hφ y hy).preimage_mem_nhds (isOpen_compl_singleton.mem_nhds (h0 y hy))
-  have hprod : s ∈ nhds x₀ ×ˢ nhdsSet K := hK.mem_prod_nhdsSet_of_forall hmem
-  rw [Filter.mem_prod_iff] at hprod
-  obtain ⟨U, hU, V, hV, hUV⟩ := hprod
-  have hKV : K ⊆ V := fun z hz => mem_of_mem_nhds ((mem_nhdsSet_iff_forall.mp hV) z hz)
-  refine ⟨U, hU, fun x hx y hy => ?_⟩
-  have hxy : (x, y) ∈ s := hUV ⟨hx, hKV hy⟩
-  simpa [s, Function.uncurry] using hxy
+  rw [← Filter.eventually_iff_exists_mem]
+  exact hK.eventually_forall_of_forall_eventually fun y hy =>
+    (hφ y hy).preimage_mem_nhds (isOpen_compl_singleton.mem_nhds (h0 y hy))
 
 /-- Membership in `Icc (c - δ) (c + δ)` is `|t - c| ≤ δ`. -/
 private lemma mem_Icc_abs {c δ t : ℝ} (_hδ : 0 ≤ δ) :
     t ∈ Set.Icc (c - δ) (c + δ) ↔ |t - c| ≤ δ := by
-  rw [Set.mem_Icc, abs_le]
-  constructor
-  · rintro ⟨h1, h2⟩; exact ⟨by linarith, by linarith⟩
-  · rintro ⟨h1, h2⟩; exact ⟨by linarith, by linarith⟩
+  simp [abs_sub_le_iff, and_comm, add_comm]
 
 /-- **Local Lemma C** (PLAN-addendum §2.1). Below the centre sign data `hs1`–`hs4` and the
 two denominator nonvanishing conditions `hden1`, `hden2` at `I₀`, the four chain roots exist
@@ -1329,7 +1029,7 @@ The root of step 4 against `chainV` is `κ₀ = -1`, and there
 
 the `centre7` docstring says. `centre7roots` uses `-1`; with it all four clauses are exact
 
-rational identities. `centre7_signs` needed a further correction — see its own doc comment. -/
+rational identities. -/
 theorem centre7_solves :
     chainStep1' centre7 (centre7roots.1) = 0 ∧
       chainStep2' centre7 centre7roots.1 centre7roots.2.1 = 0 ∧
@@ -1399,83 +1099,6 @@ theorem centre7_inj : Function.Injective (chainY centre7 centre7roots.1 centre7r
 
 
 
-/-- **Strict sign changes at the `n = 7` centre**, with radius `1/3` at each step. This is
-
-the `norm_num`-checkable content of PLAN §2.4: the four step polynomials, evaluated at the
-
-rational centre, are polynomials over `ℚ` of degree `3, 2, 6, 5`, and the plan's
-
-derivative values (`−582`, `21595/111`, `−108084339737784597018125/8236327287823872`,
-
-`−5750080525/761378`) certify that each root is simple.
-
-
-**CORRECTION TO PLAN §2.4: the radius is `1/3`, and steps 1 and 4 run `+, −`.** PLAN §2.4
-
-asks for radius `1` and claims the direction `−, +` at every step. Both are wrong. The exact
-
-rational values at radius `1` are
-
-```
-chainStep1' centre7 (-1)     =       2388        chainStep1' centre7 1      =        252
-chainStep2' centre7 0 (-1/2) = -157.5298…        chainStep2' centre7 0 (3/2) =  231.5693…
-chainStep3' centre7 0 (1/2) (μ₀ - 1) = -0.0761571…
-chainStep3' centre7 0 (1/2) (μ₀ + 1) = -0.0181318…
-chainStep4' centre7 0 (1/2) (8064/617) (-2) = 0
-chainStep4' centre7 0 (1/2) (8064/617)  0  = 0
-```
-
-so five of the eight inequalities fail. The reasons are all "another root, or a pole, is in the
-
-way", and each is forced:
-
-- Step 1 is a cubic in `λ` with a second root in `(−1, 0)`; at radius `1` both endpoints are
-
-  positive. Its derivative at `λ₀ = 0` is the plan's own `−582 < 0`, so the sign change at `λ₀`
-  runs `+, −` — the opposite of what PLAN states. The same is visible in PLAN's `n = 8` data,
-  where the cubic has its second root in `(0, 1)` and `chainStep1' centre8 (-1) = +252 > 0`.
-- Step 2's second root sits at `x = 1` (so radius `1/2` would put an endpoint exactly on it),
-  and for `n = 8` at `x ≈ 3.563`; radius `1` straddles `x₂ = 1/2` correctly and keeps `−, +`.
-- Step 3's second root lies within radius `1` of `μ₀`.
-- Step 4 is a quintic in `κ` with `Σᵢ aᵢ⁵ = 0` at this centre, so `κ = 0` is a root, and at the
-
-  certified `κ₀ = −1` so are `κ = −2` and `κ = −3/2`. Radius `1` therefore puts endpoints on
-
-  roots and can never work; the sign change at `κ₀` runs `+, −`, again the opposite of PLAN.
-
-Radius `1/3` avoids every one of these, and the eight values there are
-
-```
-chainStep1' centre7 (-1/3)     =     358.6667…   chainStep1' centre7 (1/3)     =  -65.3333…
-chainStep2' centre7 0 (1/6)     =     -60.73655…  chainStep2' centre7 0 (5/6)     =  +68.96315…
-chainStep3' centre7 0 (1/2) (μ₀ - 1/3) =  -0.07998354…
-chainStep3' centre7 0 (1/2) (μ₀ + 1/3) =  +0.24283831…
-chainStep4' centre7 0 (1/2) (8064/617) (-4/3) = +59.25926…
-chainStep4' centre7 0 (1/2) (8064/617) (-2/3) = -331.85185…
-```
-
-all strictly signed as claimed below. (Computed with `wolfram_WolframLanguageEvaluator` in exact
-
-`Rational` arithmetic and re-checked here by `norm_num`.) -/
-theorem centre7_signs :
-    0 < chainStep1' centre7 (centre7roots.1 - 1 / 3) ∧
-      chainStep1' centre7 (centre7roots.1 + 1 / 3) < 0 ∧
-      chainStep2' centre7 centre7roots.1 (centre7roots.2.1 - 1 / 3) < 0 ∧
-      0 < chainStep2' centre7 centre7roots.1 (centre7roots.2.1 + 1 / 3) ∧
-      chainStep3' centre7 centre7roots.1 centre7roots.2.1 (centre7roots.2.2.1 - 1 / 3) < 0 ∧
-      0 < chainStep3' centre7 centre7roots.1 centre7roots.2.1 (centre7roots.2.2.1 + 1 / 3) ∧
-      0 < chainStep4' centre7 centre7roots.1 centre7roots.2.1 centre7roots.2.2.1
-          (centre7roots.2.2.2 - 1 / 3) ∧
-      chainStep4' centre7 centre7roots.1 centre7roots.2.1 centre7roots.2.2.1
-          (centre7roots.2.2.2 + 1 / 3) < 0 := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
-    norm_num [chainStep1', chainStep1, chainStep2', chainStep2, chainStep3', chainStep3,
-      chainStep4', chainStep4, psumY, psumFinY, yConicY, yNBY, yBdotY, ymoment2Y, ymoment3Y,
-      chainProjN, chainConicPt, chainP, chainQ0, chainD, chainV, chainY, chainW1, chainW2,
-      chainW3, chainWt, ChainYInputs.a, ChainYInputs.b, ChainYInputs.g, ChainYInputs.w1,
-      ChainYInputs.w2, ChainYInputs.w3, centre7, centre7roots, centre7a, centre7b, centre7g,
-      centre7w1, centre7w2, centre7w3, Fin.sum_univ_succ, Pi.add_apply, Pi.smul_apply,
-      Pi.sub_apply, smul_eq_mul]
 
 
 
@@ -1589,69 +1212,6 @@ theorem centre8_inj : Function.Injective (chainY centre8 centre8roots.1 centre8r
 
 
 
-/-- **Strict sign changes at the `n = 8` centre**, with radius `1/3` at each step.
-
-**CORRECTION TO PLAN §2.4: the radius is `1/3`, and steps 1 and 4 run `+, −`.** Exactly the two
-
-corrections made in `centre7_signs`, and for the same reasons. The exact rational values at the
-
-plan's radius `1` are
-
-```
-chainStep1' centre8 (-1) = 252          chainStep1' centre8 1 = -144
-chainStep2' centre8 0 (2/3) = -169.59…  chainStep2' centre8 0 (8/3) = +52.5049…
-chainStep3' centre8 0 (5/3) (μ₀ - 1) = -27.91829…  chainStep3' … (μ₀ + 1) = +1.776126…
-chainStep4' centre8 0 (5/3) (-5322/2915) (-2) = +9000
-chainStep4' centre8 0 (5/3) (-5322/2915)  0  = 0
-```
-
-so three of the eight clauses fail: both step-1 directions are reversed, and step 4 has a root
-
-at `κ = 0` (because `Σᵢ aᵢ⁵ = 0` at this centre too) as well as at `κ = −2`, `−3/2`, `−1/2` and
-
-`−1`, so radius `1` lands *on* a root for step 4. Note the contrast with `n = 7`: step 3's sign
-
-change at `n = 8` does **not** survive a small radius (at radius `1/4` both endpoints are
-
-positive, `+163201.92` and `+28.06`, because `chainStep3'` has a pole at `μ₀ − 1/4`); radius
-
-`1/3` is above that pole and below the second root, so it is the largest convenient choice that
-
-works for both `n`.
-
-The eight values at radius `1/3` are
-
-```
-chainStep1' centre8 (-1/3) = +18.66667…     chainStep1' centre8 (1/3) = -6.666667…
-chainStep2' centre8 0 (4/3) = -43.52062…   chainStep2' centre8 0 2 = +30.51112…
-chainStep3' centre8 0 (5/3) (μ₀ - 1/3) = -31263.26507…
-chainStep3' centre8 0 (5/3) (μ₀ + 1/3) = +34.73317…
-chainStep4' centre8 0 (5/3) (-5322/2915) (-4/3) = +1111.11111…
-chainStep4' centre8 0 (5/3) (-5322/2915) (-2/3) = -51.851852…
-```
-
-(Computed with `wolfram_WolframLanguageEvaluator` in exact `Rational` arithmetic and re-checked
-
-here by `norm_num`.) -/
-theorem centre8_signs :
-    0 < chainStep1' centre8 (centre8roots.1 - 1 / 3) ∧
-      chainStep1' centre8 (centre8roots.1 + 1 / 3) < 0 ∧
-      chainStep2' centre8 centre8roots.1 (centre8roots.2.1 - 1 / 3) < 0 ∧
-      0 < chainStep2' centre8 centre8roots.1 (centre8roots.2.1 + 1 / 3) ∧
-      chainStep3' centre8 centre8roots.1 centre8roots.2.1 (centre8roots.2.2.1 - 1 / 3) < 0 ∧
-      0 < chainStep3' centre8 centre8roots.1 centre8roots.2.1 (centre8roots.2.2.1 + 1 / 3) ∧
-      0 < chainStep4' centre8 centre8roots.1 centre8roots.2.1 centre8roots.2.2.1
-          (centre8roots.2.2.2 - 1 / 3) ∧
-      chainStep4' centre8 centre8roots.1 centre8roots.2.1 centre8roots.2.2.1
-          (centre8roots.2.2.2 + 1 / 3) < 0 := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
-    norm_num [chainStep1', chainStep1, chainStep2', chainStep2, chainStep3', chainStep3,
-      chainStep4', chainStep4, psumY, psumFinY, yConicY, yNBY, yBdotY, ymoment2Y, ymoment3Y,
-      chainProjN, chainConicPt, chainP, chainQ0, chainD, chainV, chainY, chainW1, chainW2,
-      chainW3, chainWt, ChainYInputs.a, ChainYInputs.b, ChainYInputs.g, ChainYInputs.w1,
-      ChainYInputs.w2, ChainYInputs.w3, centre8, centre8roots, centre8a, centre8b, centre8g,
-      centre8w1, centre8w2, centre8w3, Fin.sum_univ_succ, Pi.add_apply, Pi.smul_apply,
-      Pi.sub_apply, smul_eq_mul]
 
 /-! ### Strict sign changes at *every* sufficiently small radius
 
@@ -1723,30 +1283,9 @@ private theorem psumY_add_smul_five (u v : Fin n → ℝ) (s : ℝ) :
       psumY u 5 + 5 * s * ymoment2Y u v 4 1 + 10 * s ^ 2 * ymoment2Y u v 3 2
         + 10 * s ^ 3 * ymoment2Y u v 2 3 + 5 * s ^ 4 * ymoment2Y u v 1 4
         + s ^ 5 * psumY v 5 := by
-  have key : ∀ i : Fin n, (u i + s * v i) ^ 5
-      = u i ^ 5 + u i ^ 4 * v i ^ 1 * (5 * s) + u i ^ 3 * v i ^ 2 * (10 * s ^ 2)
-        + u i ^ 2 * v i ^ 3 * (10 * s ^ 3) + u i ^ 1 * v i ^ 4 * (5 * s ^ 4)
-        + v i ^ 5 * (s ^ 5) := by
-    intro i
-    ring
-  have hsum : ∑ i : Fin n, (u i + s * v i) ^ 5
-      = (∑ i : Fin n, u i ^ 5) + 5 * s * (∑ i : Fin n, u i ^ 4 * v i ^ 1)
-        + 10 * s ^ 2 * (∑ i : Fin n, u i ^ 3 * v i ^ 2)
-        + 10 * s ^ 3 * (∑ i : Fin n, u i ^ 2 * v i ^ 3)
-        + 5 * s ^ 4 * (∑ i : Fin n, u i ^ 1 * v i ^ 4)
-        + s ^ 5 * (∑ i : Fin n, v i ^ 5) := by
-    calc ∑ i : Fin n, (u i + s * v i) ^ 5
-        = ∑ i : Fin n, (u i ^ 5 + u i ^ 4 * v i ^ 1 * (5 * s)
-            + u i ^ 3 * v i ^ 2 * (10 * s ^ 2) + u i ^ 2 * v i ^ 3 * (10 * s ^ 3)
-            + u i ^ 1 * v i ^ 4 * (5 * s ^ 4) + v i ^ 5 * (s ^ 5)) :=
-          Finset.sum_congr rfl (fun i _ => key i)
-      _ = _ := by
-        rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.sum_add_distrib,
-          Finset.sum_add_distrib, Finset.sum_add_distrib, ← Finset.sum_mul, ← Finset.sum_mul,
-          ← Finset.sum_mul, ← Finset.sum_mul, ← Finset.sum_mul]
-        ring
-  simp only [psumY, psumFinY, ymoment2Y, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-  exact hsum
+  simp only [psumY, psumFinY, ymoment2Y, Pi.add_apply, Pi.smul_apply, smul_eq_mul,
+    Finset.mul_sum, ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 /-! ### The four centre-`n = 7` sign changes, uniformly in the radius -/
 
@@ -1770,29 +1309,19 @@ private theorem centre7_step1_sign :
   · fun_prop
   · norm_num [yNBY, ymoment2Y, yConicY, psumY, psumFinY, centre7a, centre7b, Fin.sum_univ_succ]
 
-/-- `Q_P` along an affine line: `Q_P(u + s w) = Q_P(u) + 2s⟨P;u,w⟩ + s²Q_P(w)`. This is a
-local copy of `yConicY_add_smul_right`, which is stated later in the file than the sign
-lemmas below depend on it. -/
-private theorem yConicY_add_smul_right' (P u w : Fin n → ℝ) (s : ℝ) :
+/-- `Q_P(u) = yConicY P u = ∑ᵢ YPᵢ·(Yuᵢ)²` is a **quadratic** form in `u`, *not* a linear
+functional: `yConicY P (u + v) ≠ yConicY P u + yConicY P v` in general (the cross term
+`2∑ᵢ YPᵢ·Yuᵢ·Yvᵢ` survives). So the right tool is the full expansion along an affine
+line, `u + s·w`, whose middle coefficient is the *mixed* pairing `yBdotY P u w`. That is
+what makes step 2 a genuine quadratic in `x`, of degree `2`. -/
+theorem yConicY_add_smul_right (P u w : Fin n → ℝ) (s : ℝ) :
     yConicY P (u + s • w) = yConicY P u + 2 * s * yBdotY P u w + s ^ 2 * yConicY P w := by
-  have key : ∀ i : Fin n, P i ^ 1 * (u + s • w) i ^ 2
-      = P i ^ 1 * u i ^ 2 + P i ^ 1 * u i ^ 1 * w i ^ 1 * (2 * s)
-        + P i ^ 1 * w i ^ 2 * (s ^ 2) := by
-    intro i
-    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 1 * (u + s • w) i ^ 2
-      = (∑ i : Fin n, P i ^ 1 * u i ^ 2)
-        + (∑ i : Fin n, P i ^ 1 * u i ^ 1 * w i ^ 1) * (2 * s)
-        + (∑ i : Fin n, P i ^ 1 * w i ^ 2) * (s ^ 2) := by
-    rw [Finset.sum_congr rfl (fun i _ => key i), Finset.sum_add_distrib,
-      Finset.sum_add_distrib, Finset.sum_mul, Finset.sum_mul]
-  simp only [yConicY, ymoment2Y, yBdotY, ymoment3Y]
-  rw [hsum]
-  ring_nf
+  simp only [yConicY, ymoment2Y, yBdotY, ymoment3Y, Pi.add_apply, Pi.smul_apply,
+    smul_eq_mul, Finset.mul_sum, ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
 
 /-- Step 2 at `centre7` is a quadratic vanishing at `x = 1/2`, with linear cofactor
-`Q(w̃₂)·x − 2Q(w̃₁)`. The expansion `yConicY_add_smul_right'` provides the coefficients. -/
+`Q(w̃₂)·x − 2Q(w̃₁)`. The expansion `yConicY_add_smul_right` provides the coefficients. -/
 private theorem centre7_step2_sign :
     ∃ ε > 0, ∀ δ, 0 < δ → δ < ε →
       chainStep2' centre7 0 (1 / 2 - δ) * chainStep2' centre7 0 (1 / 2 + δ) < 0 := by
@@ -1807,7 +1336,7 @@ private theorem centre7_step2_sign :
     rw [show chainStep2' centre7 0 x = yConicY (chainP centre7 0)
         (chainProjN (chainP centre7 0) centre7.g (chainW1 centre7 0)
           + x • chainProjN (chainP centre7 0) centre7.g (chainW2 centre7 0)) from rfl,
-      yConicY_add_smul_right']
+      yConicY_add_smul_right]
   have hroot : yConicY (chainP centre7 0)
         (chainProjN (chainP centre7 0) centre7.g (chainW1 centre7 0))
       = -yBdotY (chainP centre7 0)
@@ -2067,7 +1596,7 @@ private theorem centre8_step2_sign :
     rw [show chainStep2' centre8 0 x = yConicY (chainP centre8 0)
         (chainProjN (chainP centre8 0) centre8.g (chainW1 centre8 0)
           + x • chainProjN (chainP centre8 0) centre8.g (chainW2 centre8 0)) from rfl,
-      yConicY_add_smul_right']
+      yConicY_add_smul_right]
   have hroot : yConicY (chainP centre8 0)
         (chainProjN (chainP centre8 0) centre8.g (chainW1 centre8 0))
       = -yBdotY (chainP centre8 0)
@@ -2460,38 +1989,6 @@ theorem chainY_psumY_cube_eq {I : ChainYInputs n} {lam x mu kappa : ℝ}
     ring
   simpa only [chainY] using hlin
 
-/-- **The exact statement of `exists_open_good7`/`exists_open_good8` that is true.** Its two
-hypotheses isolate precisely what those two theorems are missing:
-
-* `hgood` is the Lemma-C half: an open set on which the four step equations hold together
-  with the two denominators and injectivity of the output, i.e. `ChainGood`. That is
-  `exists_chain_roots` (Lemma C) followed by shrinking for `centre*_denom1`,
-  `centre*_denom2` and for injectivity of the output.
-* `hs1` is the missing `S₁` data: the six input directions must have vanishing first power
-  sum. They do at both centres, and it makes `S₁ y = 0` an identity of the chain.
-
-Given those two, all three power-sum conclusions follow from `chainY_psumY_one_eq`,
-`chainY_psumY_cube_eq` and `chainStep4'_psumY_eq` — three lines, no further mathematics. -/
-theorem exists_open_good_of_s1 {n : ℕ} {I₀ : ChainYInputs n}
-    (hs1 : ∀ (I : ChainYInputs n), psumY I.a 1 = 0 ∧ psumY I.b 1 = 0 ∧ psumY I.g 1 = 0 ∧
-      psumY I.w1 1 = 0 ∧ psumY I.w2 1 = 0 ∧ psumY I.w3 1 = 0)
-    (hgood : ∃ U : Set (ChainYInputs n), IsOpen U ∧ I₀ ∈ U ∧
-      ∀ I ∈ U, ∃ lam x mu kappa : ℝ, ChainGood I lam x mu kappa) :
-    ∃ U : Set (ChainYInputs n), IsOpen U ∧ I₀ ∈ U ∧
-      ∀ I ∈ U, ∃ lam x mu kappa : ℝ, ChainGood I lam x mu kappa ∧
-        psumY (chainY I lam x mu kappa) 1 = 0 ∧ psumY (chainY I lam x mu kappa) 3 = 0 ∧
-        psumY (chainY I lam x mu kappa) 5 = 0 := by
-  obtain ⟨U, hUopen, hU₀, hU⟩ := hgood
-  refine ⟨U, hUopen, hU₀, ?_⟩
-  intro I hI
-  obtain ⟨lam, x, mu, kappa, hchain⟩ := hU I hI
-  have h := hs1 I
-  refine ⟨lam, x, mu, kappa, hchain, ?_, ?_, ?_⟩
-  · exact chainY_psumY_one_eq h.1 h.2.1 h.2.2.1 h.2.2.2.1 h.2.2.2.2.1 h.2.2.2.2.2
-  · exact chainY_psumY_cube_eq hchain.1 hchain.2.1 hchain.2.2.1 hchain.2.2.2.2.1 hchain.2.2.2.2.2.1
-  · rw [← chainStep4'_psumY_eq]
-    exact hchain.2.2.2.1
-
 /-! #### The `S₁` input conditions
 
 `S₁(y) = ∑ᵢ yᵢ` is a *fifth* equation in the four step unknowns, and
@@ -2521,47 +2018,9 @@ theorem centre8_s1 :
 /-! #### The `hpole1` condition at the two rational centres
 
 `hpole1` holds at every radius: the step-2 denominator is a quadratic in `lam` with negative
-discriminant and positive leading coefficient, hence strictly positive for every `lam ∈ ℝ`
-(`centre7_hpole1`, `centre8_hpole1`), and in particular nonzero on the closed box of any radius
-whatsoever. This promotes `centre7_denom1`/`centre8_denom1` from "at the centre" to
-"everywhere". -/
-
-/-- **`hpole1` for `n = 7`, at every radius.** `yNBY (chainP centre7 lam) centre7g` is the
-
-quadratic `378·lam² − 544·lam + 244`, whose discriminant is
-`544² − 4·378·244 = −72992 < 0` and whose leading coefficient is positive, so it is strictly
-
-positive on all of `ℝ`. Exact coefficients cross-checked in Wolfram (exact `Rational`
-arithmetic): `Σᵢ (centre7aᵢ + lam·centre7bᵢ)² · centre7gᵢ = 244 − 544·lam + 378·lam²`.
-
-(That `yNBY YP Yv = Σᵢ YPᵢ²·Yvᵢ` — a *quadratic* moment, the `N_P` pairing — is why the
-denominator is quadratic in `lam` and not linear: `P = a + lam • b` is linear in `lam`.) -/
-theorem centre7_hpole1 (lam : ℝ) : 0 < yNBY (chainP centre7 lam) centre7g := by
-  have key : yNBY (chainP centre7 lam) centre7g
-      = 378 * lam ^ 2 - 544 * lam + 244 := by
-    norm_num [yNBY, ymoment2Y, chainP, ChainYInputs.a, ChainYInputs.b, centre7, centre7a,
-      centre7b, centre7g, Fin.sum_univ_succ, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-    ; ring
-  rw [key]
-  -- `4A(A·lam² + B·lam + C) = (2A·lam + B)² + (4AC − B²)`, and `4AC − B² = 72992 > 0`
-  have hid : 4 * 378 * (378 * lam ^ 2 - 544 * lam + 244)
-      = (756 * lam - 544) ^ 2 + 72992 := by ring
-  have hsq : 0 ≤ (756 * lam - 544) ^ 2 := sq_nonneg _
-  nlinarith
-
-/-- **`hpole1` for `n = 8`, at every radius.** The quadratic is
-`14·lam² − lam + 71/2`, with discriminant `1 − 4·14·71/2 = −1987 < 0`. -/
-theorem centre8_hpole1 (lam : ℝ) : 0 < yNBY (chainP centre8 lam) centre8g := by
-  have key : yNBY (chainP centre8 lam) centre8g
-      = 14 * lam ^ 2 - lam + 71 / 2 := by
-    norm_num [yNBY, ymoment2Y, chainP, ChainYInputs.a, ChainYInputs.b, centre8, centre8a,
-      centre8b, centre8g, Fin.sum_univ_succ, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-    ; ring
-  rw [key]
-  have hid : 4 * 14 * (14 * lam ^ 2 - lam + 71 / 2)
-      = (28 * lam - 1) ^ 2 + 1987 := by ring
-  have hsq : 0 ≤ (28 * lam - 1) ^ 2 := sq_nonneg _
-  nlinarith
+discriminant and positive leading coefficient, hence strictly positive for every `lam ∈ ℝ`,
+and in particular nonzero on the closed box of any radius whatsoever. This promotes
+`centre7_denom1`/`centre8_denom1` from "at the centre" to "everywhere". -/
 
 /-- The Vandermonde product `∏_{i < j} (vᵢ - vⱼ)²`, which is nonzero exactly when `v` is
 injective and is continuous in `v`. -/
@@ -3021,37 +2480,14 @@ That is the whole content of PLAN §2.6. The degrees are `3, 2, 6, 5`;
 
 
 
-/-! #### The same theorems with the root hypotheses
+/-! #### The four step polynomials
 
-**WARNING — the seven theorems of this section, as they stand, cannot be proved.**
-
-The coefficients of a step polynomial are *symmetric* functionals of the y-vectors of
-
-the inputs, and a symmetric functional of y-vectors is a `∑ᵢ αs i ^ m` weighted by
-
-P-constructible entries. Those power sums are P-constructible only through
-`psumRoots_Pconstructible_of_roots`, which needs the root hypotheses
-`(hmon) (hn) (hnat) (hsep) (hcoef) (hαs) (hnd)`. None of the seven statements carries
-
-them — `exists_step1_poly` mentions only `αs`, `a`, `b` and their P-constructibility —
-
-so the statements are false. (`YSpace.lean:505` says it outright: the P-constructible
-
-reals are countable, so "almost every real is outside it", and the entries of a
-
-y-vector need not be P-constructible at all. For `n = 2`, `αs = [t, 0]` with `t` outside
-
-the class, `a = [0, 1]`, `b = 0`, the required polynomial is the *constant* `t ^ 3`.)
-
-The helpers below are the intended statements: the same four step polynomials, with
-
-the root hypotheses added. They are proved, and everything downstream of them
-(`exists_step3_poly_of_roots`, `stepRoots_Pconstructible_of_roots`,
-`chainBLift_Pconstructible_of_roots`, `exists_oddTschirnhaus_of_roots`) is proved in
-
-terms of them, so closing the seven public statements is a matter of adding the seven
-
-hypothesis binders to each and applying the helper. -/
+Each step polynomial's coefficients are *symmetric* functionals of the y-vectors of the
+inputs, hence weighted power sums `∑ᵢ αs i ^ m` of the roots, and
+`psumRoots_Pconstructible_of_roots` makes them P-constructible once the root hypotheses
+`(hmon) (hn) (hnat) (hsep) (hcoef) (hαs) (hnd)` are available. Everything downstream
+(`exists_step3_poly`, `stepRoots_Pconstructible`, `chainBLift_Pconstructible`,
+`exists_oddTschirnhaus`) is proved in terms of these four. -/
 
 
 
@@ -3084,46 +2520,6 @@ theorem exists_step4_poly_of_roots {q : ℝ[X]} {αs : Fin n → ℝ} (P v : Fin
   rw [heval, chainStep4, yvec_add, yvec_smul]
 
 
-
-/-- Step 1 as a degree-`≤ 3` polynomial with P-constructible coefficients.
-
-**WARNING: false as stated** — see the section note above. With the root hypotheses
-added, this is `exists_step1_poly_of_roots`. -/
-theorem exists_step1_poly {q : ℝ[X]} {αs : Fin n → ℝ} (a b : Fin n → ℝ)
-    (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-    (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-    (hnd : Function.Injective αs)
-    (ha : ∀ k, PConstructible (a k)) (hb : ∀ k, PConstructible (b k)) :
-    ∃ g : ℝ[X], g.natDegree ≤ 3 ∧ (∀ k, PConstructible (g.coeff k)) ∧
-      ∀ lam : ℝ, g.eval lam = chainStep1 (yvec αs a) (yvec αs b) lam := by
-  exact exists_step1_poly_of_roots a b hmon hn hnat hsep hcoef hαs hnd ha hb
-
-
-
-/-- `Q_P(u) = yConicY P u = ∑ᵢ YPᵢ·(Yuᵢ)²` is a **quadratic** form in `u`, *not* a linear
-
-functional: `yConicY P (u + v) ≠ yConicY P u + yConicY P v` in general (the cross term
-`2∑ᵢ YPᵢ·Yuᵢ·Yvᵢ` survives). So the right tool is the full expansion along an affine
-line, `u + s·w`, whose middle coefficient is the *mixed* pairing `yBdotY P u w`. That is
-what makes step 2 a genuine quadratic in `x`, of degree `2`. -/
-theorem yConicY_add_smul_right (P u w : Fin n → ℝ) (s : ℝ) :
-    yConicY P (u + s • w)
-      = yConicY P u + 2 * s * yBdotY P u w + s ^ 2 * yConicY P w := by
-  have key : ∀ i : Fin n, P i ^ 1 * (u + s • w) i ^ 2
-      = P i ^ 1 * u i ^ 2
-        + P i ^ 1 * u i ^ 1 * w i ^ 1 * (2 * s)
-        + P i ^ 1 * w i ^ 2 * (s ^ 2) := by
-    intro i
-    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 1 * (u + s • w) i ^ 2
-      = (∑ i : Fin n, P i ^ 1 * u i ^ 2)
-        + (∑ i : Fin n, P i ^ 1 * u i ^ 1 * w i ^ 1) * (2 * s)
-        + (∑ i : Fin n, P i ^ 1 * w i ^ 2) * (s ^ 2) := by
-    rw [Finset.sum_congr rfl (fun i _ => key i), Finset.sum_add_distrib,
-      Finset.sum_add_distrib, Finset.sum_mul, Finset.sum_mul]
-  simp only [yConicY, ymoment2Y, yBdotY, ymoment3Y]
-  rw [hsum]; ring_nf
 
 /-- The same, in `b`-coordinates. -/
 theorem yConicB_add_smul_right {n : ℕ} (αs : Fin n → ℝ) (P u w : Fin n → ℝ) (s : ℝ) :
@@ -3212,28 +2608,13 @@ theorem exists_step2_poly_of_roots {q : ℝ[X]} {αs : Fin n → ℝ} (P g w₁ 
       ← yBdot_eq_yBdotY, ← yConicB_eq_yConicY, ← ha_def, ← hc_def, hb_def]
     ring
 
-/-- Step 2 as a degree-`≤ 2` polynomial with P-constructible coefficients.
-
-**WARNING: false as stated** — see the section note above. With the root hypotheses
-added, this is `exists_step2_poly_of_roots`. -/
-theorem exists_step2_poly {q : ℝ[X]} {αs : Fin n → ℝ} (P g w₁ w₂ : Fin n → ℝ)
-    (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-    (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-    (hnd : Function.Injective αs)
-    (hP : ∀ k, PConstructible (P k)) (hg : ∀ k, PConstructible (g k))
-    (hw₁ : ∀ k, PConstructible (w₁ k)) (hw₂ : ∀ k, PConstructible (w₂ k)) :
-    ∃ f : ℝ[X], f.natDegree ≤ 2 ∧ (∀ k, PConstructible (f.coeff k)) ∧
-      ∀ x : ℝ, f.eval x
-        = chainStep2 (yvec αs P) (yvec αs g) (yvec αs w₁) (yvec αs w₂) x := by
-  exact exists_step2_poly_of_roots P g w₁ w₂ hmon hn hnat hsep hcoef hαs hnd hP hg hw₁ hw₂
-
 /-! ### Step 3: the cleared cubic is a polynomial of degree `≤ 6`
 
 **Why the cleared step-3 equation is a polynomial at all.** Along the affine line
 `d = w₃ + mu • w₁` the cleared form is `Σᵢ (Yq₀ᵢ·B − 2·C·dᵢ)³` with `B = ⟨P,d,d⟩` and
 `C = ⟨P,q₀,d⟩`. The pairing `⟨P,·,·⟩ = Σᵢ YPᵢ·YUᵢ·YVᵢ` is *trilinear* in its three
-y-vectors, so `B` is a **quadratic** in `mu` (`yBdotY_add_smul_both` below) and `C` is
-**linear** (`yBdotY_add_smul_last`): the whole thing is a polynomial of degree `2·3 = 6`
+y-vectors, so `B` is a **quadratic** in `mu` and `C` is
+**linear**: the whole thing is a polynomial of degree `2·3 = 6`
 in `mu` — the largest degree the chain ever reaches, and the reason
 `root_Pconstructible_le_six_coeffs` is the engine. The witness is
 
@@ -3246,56 +2627,16 @@ Cp   = Σᵢ C (YPᵢ • Yq₀ᵢ) • affᵢ        (degree ≤ 1)
 
 **Why the coefficients are P-constructible.** `psumY_line_poly` does *not* apply — the
 cleared form is a cubic of a quadratic, not a power sum of an affine line — but the
-*engine* behind it does, and that engine is the only part of it that is `private` in
-`YSpace.lean`. A polynomial of degree `≤ 6` is determined by its values at the seven
-rational nodes `0,…,6`, and the `Lagrange` basis at those nodes has P-constructible
+*engine* behind it does. A polynomial of degree `≤ 6` is determined by its values at the
+seven rational nodes `0,…,6`, and the `Lagrange` basis at those nodes has P-constructible
 coefficients, so the four helpers `prod_coeff_Pconstructible`,
 `X_sub_C_coeff_Pconstructible`, `basisDivisor_coeff_Pconstructible` and
-`basis_coeff_Pconstructible` are copied in below verbatim. The *node values* are
+`basis_coeff_Pconstructible` from `YSpace` are used directly. The *node values* are
 P-constructible because the cleared form is itself a power sum: by
 `chainStep3Cleared_eq_psumY` below it is `psumY (yvec αs (B • q₀ − (2 • C) • b)) 3` with
 `B = yBdot αs P b b` and `C = yBdot αs P q₀ b`, both P-constructible by
 `yBdot_Pconstructible`, so `psum_yvec_Pconstructible` applies to the P-constructible
 `b`-vector `B • q₀ − (2 • C) • b` at every rational `b`. -/
-
-/-- The `yBdotY` pairing `⟨YP,YU,YV⟩ = Σᵢ YPᵢ·YUᵢ·YVᵢ` is trilinear, so along the affine
-line `d = u + s • w` the quantity `⟨P,d,d⟩` that `chainStep3Cleared` needs is a genuine
-**quadratic** form in `s`. -/
-private theorem yBdotY_add_smul_both (P u w : Fin n → ℝ) (s : ℝ) :
-    yBdotY P (u + s • w) (u + s • w)
-      = yBdotY P u u + 2 * s * yBdotY P u w + s ^ 2 * yBdotY P w w := by
-  have key : ∀ i : Fin n, P i ^ 1 * (u + s • w) i ^ 1 * (u + s • w) i ^ 1
-      = P i ^ 1 * u i ^ 1 * u i ^ 1 + (P i ^ 1 * u i ^ 1 * w i ^ 1) * (2 * s)
-        + (P i ^ 1 * w i ^ 1 * w i ^ 1) * (s ^ 2) := by
-    intro i
-    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 1 * (u + s • w) i ^ 1 * (u + s • w) i ^ 1
-      = (∑ i : Fin n, P i ^ 1 * u i ^ 1 * u i ^ 1)
-        + (∑ i : Fin n, P i ^ 1 * u i ^ 1 * w i ^ 1) * (2 * s)
-        + (∑ i : Fin n, P i ^ 1 * w i ^ 1 * w i ^ 1) * (s ^ 2) := by
-    rw [Finset.sum_congr rfl (fun i _ => key i), Finset.sum_add_distrib,
-      Finset.sum_add_distrib, Finset.sum_mul, Finset.sum_mul]
-  simp only [yBdotY, ymoment3Y]
-  rw [hsum]
-  ring_nf
-
-/-- The same trilinearity in the last slot: `⟨P, q, u + s • w⟩` is **linear** in `s`. This
-is the `C` of `chainStep3Cleared`. -/
-private theorem yBdotY_add_smul_last (P q u w : Fin n → ℝ) (s : ℝ) :
-    yBdotY P q (u + s • w) = yBdotY P q u + s * yBdotY P q w := by
-  have key : ∀ i : Fin n, P i ^ 1 * q i ^ 1 * (u + s • w) i ^ 1
-      = P i ^ 1 * q i ^ 1 * u i ^ 1 + (P i ^ 1 * q i ^ 1 * w i ^ 1) * s := by
-    intro i
-    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-    ring
-  have hsum : ∑ i : Fin n, P i ^ 1 * q i ^ 1 * (u + s • w) i ^ 1
-      = (∑ i : Fin n, P i ^ 1 * q i ^ 1 * u i ^ 1)
-        + (∑ i : Fin n, P i ^ 1 * q i ^ 1 * w i ^ 1) * s := by
-    rw [Finset.sum_congr rfl (fun i _ => key i), Finset.sum_add_distrib, Finset.sum_mul]
-  simp only [yBdotY, ymoment3Y]
-  rw [hsum]
-  ring_nf
 
 /-- **The cleared form is itself a power sum.** `chainStep3Cleared P q₀ b` is the cubic
 power sum of the y-vector of the denominator-cleared conic point
@@ -3331,49 +2672,6 @@ private theorem step3Aff_eval (αs : Fin n → ℝ) (w₁ w₃ : Fin n → ℝ) 
   unfold step3Aff
   simp only [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_X]
   ring
-
-/-- A finset-product of polynomials with P-constructible coefficients again has
-P-constructible coefficients. (Copied verbatim from the `private` helper of the same name
-in `YSpace.lean`.) -/
-private theorem prod_coeff_Pconstructible {ι : Type*} {s : Finset ι} {f : ι → ℝ[X]}
-    (hf : ∀ i ∈ s, ∀ k, PConstructible ((f i).coeff k)) (j : ℕ) :
-    PConstructible ((∏ i ∈ s, f i).coeff j) :=
-  (Finset.prod_induction f (fun q => ∀ k, PConstructible (q.coeff k))
-    (fun a b ha hb k => coeff_mul_Pconstructible ha hb k)
-    (fun k => by
-      rw [Polynomial.coeff_one]
-      split_ifs
-      · exact PConstructible.base_one
-      · exact zero_Pconstructible)
-    (fun i hi => hf i hi)) j
-
-/-- The coefficients of `X - C y` are P-constructible when `y` is. (Copied verbatim from
-the `private` helper of the same name in `YSpace.lean`.) -/
-private theorem X_sub_C_coeff_Pconstructible {y : ℝ} (hy : PConstructible y) (k : ℕ) :
-    PConstructible ((Polynomial.X - Polynomial.C y).coeff k) := by
-  rw [Polynomial.coeff_sub]
-  refine PConstructible.sub ?_ (coeff_C_Pconstructible hy k)
-  rw [Polynomial.coeff_X]
-  split_ifs with h
-  · exact PConstructible.base_one
-  · exact zero_Pconstructible
-
-/-- Likewise for `Lagrange.basisDivisor x y`. (Copied verbatim from the `private` helper
-of the same name in `YSpace.lean`.) -/
-private theorem basisDivisor_coeff_Pconstructible {x y : ℝ} (hx : PConstructible x)
-    (hy : PConstructible y) (k : ℕ) :
-    PConstructible ((Lagrange.basisDivisor x y).coeff k) := by
-  unfold Lagrange.basisDivisor
-  exact C_mul_coeff_Pconstructible
-    (inv_Pconstructible (PConstructible.sub hx hy))
-    (fun j => X_sub_C_coeff_Pconstructible hy j) k
-
-/-- Likewise for the `Lagrange.basis` polynomials at P-constructible nodes. (Copied
-verbatim from the `private` helper of the same name in `YSpace.lean`.) -/
-private theorem basis_coeff_Pconstructible {ι : Type*} [Fintype ι] [DecidableEq ι] {v : ι → ℝ}
-    (hv : ∀ i, PConstructible (v i)) (i : ι) (k : ℕ) :
-    PConstructible ((Lagrange.basis (Finset.univ : Finset ι) v i).coeff k) :=
-  prod_coeff_Pconstructible (fun j _ => basisDivisor_coeff_Pconstructible (hv i) (hv j)) k
 
 /-- Step 3, denominator cleared, as a degree-`≤ 6` polynomial with P-constructible
 coefficients.
@@ -3551,9 +2849,8 @@ fixed here, and the proof is real.**
    "not identically zero", and it cannot be replaced by the simpler data conditions.
 
    *Recommendation to the caller:* **`ChainGood` should be extended with these four
-   conjuncts.**  They are exactly what the sign certificates give: `centre7_signs` and
-   `centre8_signs` (both proved) put a strict sign change across each step function at the
-   centre, so each is nonzero *somewhere*, and "step `k` is nonzero somewhere" is **open**
+   conjuncts.**  At each rational centre a strict sign change across each step function
+   makes each step nonzero *somewhere*, and "step `k` is nonzero somewhere" is **open**
    in `(I, lam, …)`, so the open set of good inputs inherits all four.  `ChainGood` is not
    edited here, since it has other callers.
 
@@ -3596,7 +2893,7 @@ theorem stepRoots_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {I : ChainBI
   have hstep1 (t : ℝ) : chainStep1' (chainBtoY αs I) t
       = chainStep1 (yvec αs I.a) (yvec αs I.b) t := rfl
   obtain ⟨g1, hdeg1, hcoeff1, heval1⟩ :=
-    exists_step1_poly I.a I.b hmon hn hnat hsep hcoef hαs hnd ha hb
+    exists_step1_poly_of_roots I.a I.b hmon hn hnat hsep hcoef hαs hnd ha hb
   have hg1ne : g1 ≠ 0 := by
     rintro rfl
     obtain ⟨t, ht⟩ := hne1
@@ -3634,7 +2931,7 @@ theorem stepRoots_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {I : ChainBI
     simp only [chainStep2', chainW1, chainW2]
     rw [← ChainB.yvec_P αs I lam, ← ChainB.yvec_Wt αs I lam 0 hden1,
       ← ChainB.yvec_Wt αs I lam 1 hden1, hgdef]
-  obtain ⟨g2, hdeg2, hcoeff2, heval2⟩ := exists_step2_poly (P := ChainB.P I lam)
+  obtain ⟨g2, hdeg2, hcoeff2, heval2⟩ := exists_step2_poly_of_roots (P := ChainB.P I lam)
     I.g (ChainB.Wt αs I lam 0) (ChainB.Wt αs I lam 1)
     hmon hn hnat hsep hcoef hαs hnd hP hg hW1 hW2
   have hg2ne : g2 ≠ 0 := by
@@ -3805,24 +3102,6 @@ theorem chainBLift_Pconstructible_of_roots {q : ℝ[X]} {αs : Fin n → ℝ}
   rw [ChainB.out, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
   exact PConstructible.add (hP k) (PConstructible.mul hroots.2.2.2 (hV k))
 
-/-- The output `b`-vector is P-constructible.
-
-**WARNING: false as stated** — see the section note above. With the root hypotheses added
-this is `chainBLift_Pconstructible_of_roots`, which does not need `hchain` at all. -/
-theorem chainBLift_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {I : ChainBInputs n}
-    (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable)
-    (hcoef : ∀ k, PConstructible (q.coeff k)) (hαs : ∀ i : Fin n, q.eval (αs i) = 0)
-    (hnd : Function.Injective αs)
-    (hI : ∀ k, PConstructible (I.a k) ∧ PConstructible (I.b k) ∧ PConstructible (I.g k) ∧
-      PConstructible (I.w1 k) ∧ PConstructible (I.w2 k) ∧ PConstructible (I.w3 k))
-    (lam x mu kappa : ℝ)
-    (_hchain : ChainGood (chainBtoY αs I) lam x mu kappa)
-    (hroots : PConstructible lam ∧ PConstructible x ∧ PConstructible mu ∧
-      PConstructible kappa) :
-    ∀ k, PConstructible (ChainB.out αs I lam x mu kappa k) := by
-  exact chainBLift_Pconstructible_of_roots hmon hn hnat hsep hcoef hαs hnd hI lam x mu kappa
-    hroots
-
 /-! #### The `b`-space density argument -/
 
 /-- `b ↦ chainBtoY αs b` is onto: `yvec αs` is a bijection of the two vector spaces, so every
@@ -3866,7 +3145,8 @@ private theorem continuous_chainBtoY {m : ℕ} (αs : Fin m → ℝ) :
             (hyv.comp continuous_snd.snd.snd.snd.snd)))))
 
 /-- **Density, for an arbitrary continuous map into y-space.** The six-step argument of
-`exists_Pconstructible_lift`, with `chainBtoY αs` replaced by an arbitrary continuous `G`.
+the P-constructible `b`-input density proof, with `chainBtoY αs` replaced by an arbitrary
+continuous `G`.
 Fixing five slots and varying the sixth is a continuous map (a `G`-preimage of a slice), so
 each slice of the open set is open and nonempty, and density of rational vectors fills it
 with a P-constructible slot. -/
@@ -4087,81 +3367,6 @@ theorem exists_PC_inputs_s1 {m : ℕ} {q : ℝ[X]} {αs : Fin m → ℝ} {U : Se
   · exact psumY_yvec_correctSlot hm I.2.2.2.1
   · exact psumY_yvec_correctSlot hm I.2.2.2.2.1
   · exact psumY_yvec_correctSlot hm I.2.2.2.2.2
-
-/-- **Density of the P-constructible `b`-inputs, one coordinate at a time.** Let `U` be a nonempty
-open set of y-space inputs.  Fixing five of the six coordinates of a `b`-input and letting the
-sixth vary is a continuous map into y-space — it is `chainBtoY αs` composed with a substitution
-that is `continuous_id` in the varying slot and `continuous_const` in the other five — so the
-slice of `U` in that coordinate is open, and it is nonempty because the point reached so far lies
-in `U`.  Rational vectors are dense in `Fin n → ℝ`, so each slice contains a `b`-vector whose
-entries are all P-constructible; the six steps in turn leave a `b`-input whose six entries are
-P-constructible and whose y-image is in `U`.  This is the whole use of density in the file. -/
-private theorem exists_Pconstructible_lift {m : ℕ} {αs : Fin m → ℝ} {U : Set (ChainYInputs m)}
-    (hU : IsOpen U) (hne : U.Nonempty) (hnd : Function.Injective αs) :
-    ∃ I : ChainBInputs m, (∀ k, PConstructible (I.a k)) ∧ (∀ k, PConstructible (I.b k)) ∧
-      (∀ k, PConstructible (I.g k)) ∧ (∀ k, PConstructible (I.w1 k)) ∧
-      (∀ k, PConstructible (I.w2 k)) ∧ (∀ k, PConstructible (I.w3 k)) ∧
-      chainBtoY αs I ∈ U := by
-  obtain ⟨Y₀, hY₀⟩ := hne
-  obtain ⟨I₀, hI₀⟩ := chainBtoY_surjective hnd Y₀
-  obtain ⟨B₁, B₂, B₃, B₄, B₅, B₆⟩ := I₀
-  have hmem : chainBtoY αs (B₁, (B₂, (B₃, (B₄, (B₅, B₆))))) ∈ U := by
-    rw [hI₀]
-    exact hY₀
-  have hyv : Continuous fun b : Fin m → ℝ => yvec αs b := continuous_yvec αs
-  have c₂ : Continuous fun _ : Fin m → ℝ => yvec αs B₂ := continuous_const
-  have c₃ : Continuous fun _ : Fin m → ℝ => yvec αs B₃ := continuous_const
-  have c₄ : Continuous fun _ : Fin m → ℝ => yvec αs B₄ := continuous_const
-  have c₅ : Continuous fun _ : Fin m → ℝ => yvec αs B₅ := continuous_const
-  have c₆ : Continuous fun _ : Fin m → ℝ => yvec αs B₆ := continuous_const
-  have g₁ : Continuous fun v : Fin m → ℝ => chainBtoY αs (v, (B₂, (B₃, (B₄, (B₅, B₆))))) := by
-    unfold chainBtoY
-    exact hyv.prodMk (c₂.prodMk (c₃.prodMk (c₄.prodMk (c₅.prodMk c₆))))
-  obtain ⟨b₁, hb₁, hd₁⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₁)
-    ⟨B₁, Set.mem_preimage.mpr hmem⟩
-  have h₁ : chainBtoY αs (b₁, (B₂, (B₃, (B₄, (B₅, B₆))))) ∈ U :=
-    Set.mem_preimage.mp hd₁
-  have d₁ : Continuous fun _ : Fin m → ℝ => yvec αs b₁ := continuous_const
-  have g₂ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (v, (B₃, (B₄, (B₅, B₆))))) := by
-    unfold chainBtoY
-    exact d₁.prodMk (hyv.prodMk (c₃.prodMk (c₄.prodMk (c₅.prodMk c₆))))
-  obtain ⟨b₂, hb₂, hd₂⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₂)
-    ⟨B₂, Set.mem_preimage.mpr h₁⟩
-  have h₂ : chainBtoY αs (b₁, (b₂, (B₃, (B₄, (B₅, B₆))))) ∈ U :=
-    Set.mem_preimage.mp hd₂
-  have d₂ : Continuous fun _ : Fin m → ℝ => yvec αs b₂ := continuous_const
-  have g₃ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (v, (B₄, (B₅, B₆))))) := by
-    unfold chainBtoY
-    exact d₁.prodMk (d₂.prodMk (hyv.prodMk (c₄.prodMk (c₅.prodMk c₆))))
-  obtain ⟨b₃, hb₃, hd₃⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₃)
-    ⟨B₃, Set.mem_preimage.mpr h₂⟩
-  have h₃ : chainBtoY αs (b₁, (b₂, (b₃, (B₄, (B₅, B₆))))) ∈ U :=
-    Set.mem_preimage.mp hd₃
-  have d₃ : Continuous fun _ : Fin m → ℝ => yvec αs b₃ := continuous_const
-  have g₄ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (b₃, (v, (B₅, B₆))))) := by
-    unfold chainBtoY
-    exact d₁.prodMk (d₂.prodMk (d₃.prodMk (hyv.prodMk (c₅.prodMk c₆))))
-  obtain ⟨b₄, hb₄, hd₄⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₄)
-    ⟨B₄, Set.mem_preimage.mpr h₃⟩
-  have h₄ : chainBtoY αs (b₁, (b₂, (b₃, (b₄, (B₅, B₆))))) ∈ U :=
-    Set.mem_preimage.mp hd₄
-  have d₄ : Continuous fun _ : Fin m → ℝ => yvec αs b₄ := continuous_const
-  have g₅ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (b₃, (b₄, (v, B₆))))) := by
-    unfold chainBtoY
-    exact d₁.prodMk (d₂.prodMk (d₃.prodMk (d₄.prodMk (hyv.prodMk c₆))))
-  obtain ⟨b₅, hb₅, hd₅⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₅)
-    ⟨B₅, Set.mem_preimage.mpr h₄⟩
-  have h₅ : chainBtoY αs (b₁, (b₂, (b₃, (b₄, (b₅, B₆))))) ∈ U :=
-    Set.mem_preimage.mp hd₅
-  have d₅ : Continuous fun _ : Fin m → ℝ => yvec αs b₅ := continuous_const
-  have g₆ : Continuous fun v : Fin m → ℝ => chainBtoY αs (b₁, (b₂, (b₃, (b₄, (b₅, v))))) := by
-    unfold chainBtoY
-    exact d₁.prodMk (d₂.prodMk (d₃.prodMk (d₄.prodMk (d₅.prodMk hyv))))
-  obtain ⟨b₆, hb₆, hd₆⟩ := exists_Pconstructible_mem_isOpen (hU.preimage g₆)
-    ⟨B₆, Set.mem_preimage.mpr h₅⟩
-  refine ⟨(b₁, (b₂, (b₃, (b₄, (b₅, b₆))))), fun k => hb₁ k, fun k => hb₂ k, fun k => hb₃ k,
-    fun k => hb₄ k, fun k => hb₅ k, fun k => hb₆ k, ?_⟩
-  exact Set.mem_preimage.mp hd₆
 
 /-- **The assembly, given an open set of good y-space inputs carrying the four nonzero-step
 witnesses.** `exists_PC_inputs_s1` puts a `b`-input `I` with P-constructible entries inside the

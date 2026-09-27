@@ -257,61 +257,6 @@ theorem companionN'_trace_pow (n : ℕ) {K : Type*} [Field K] [IsAlgClosed K]
   apply congrArg Multiset.sum
   exact Multiset.map_congr rfl (fun z _ => by rw [Polynomial.eval_pow])
 
-/-- The characteristic polynomial of `Φ (companionN q)` is `∏_{z ∈ q.roots} (X − Φ z)`. -/
-theorem companionN'_charpoly_aeval_eq_prod (n : ℕ) {K : Type*} [Field K] [IsAlgClosed K]
-    (q φ : K[X]) (hmon : q.Monic) (hn : 0 < n) (hnat : q.natDegree = n) (hsep : q.Separable) :
-    (aeval (companionN' (n := n) q) φ).charpoly
-      = (q.roots.map (fun z => Polynomial.X - Polynomial.C (φ.eval z))).prod := by
-  classical
-  set M : Matrix (Fin n) (Fin n) K := companionN' (n := n) q with hM
-  have hqn : q.coeff n = 1 := by rw [← hnat]; exact hmon.coeff_natDegree
-  have hdeg : q.natDegree ≤ n := le_of_eq hnat
-  have hnodup : q.roots.Nodup := Polynomial.nodup_roots hsep
-  have hcard : q.roots.card = n := by
-    rw [← hnat]; exact (IsAlgClosed.splits q).natDegree_eq_card_roots.symm
-  have : Nonempty q.roots.toFinset := by
-    obtain ⟨x, hx⟩ := Finset.card_pos.mp (by
-      rw [Multiset.toFinset_card_of_nodup hnodup, hcard]; exact hn)
-    exact ⟨⟨x, hx⟩⟩
-  set v : q.roots.toFinset → (Fin n → K) := fun z => companionVecN (n := n) (z : K) with hv
-  have hvv : ∀ z : q.roots.toFinset, M *ᵥ v z = (z : K) • v z := by
-    intro z
-    have hz : q.eval (z : K) = 0 :=
-      (Polynomial.mem_roots hmon.ne_zero).mp (Multiset.mem_toFinset.mp z.2)
-    exact companionN'_mulVec_companionVecN hn hqn hdeg hz
-  have hvne : ∀ z : q.roots.toFinset, v z ≠ 0 := by
-    intro z h0
-    have h1 := congrFun h0 ⟨0, by omega⟩
-    simp [v, companionVecN] at h1
-  have hli : LinearIndependent K v :=
-    Module.End.eigenvectors_linearIndependent' M.toLin' (fun z : q.roots.toFinset => (z : K))
-      Subtype.coe_injective v (fun z =>
-        ⟨(Module.End.mem_eigenspace_iff).mpr (by rw [Matrix.toLin'_apply]; exact hvv z),
-          hvne z⟩)
-  have hcardfin : Fintype.card q.roots.toFinset = Module.finrank K (Fin n → K) := by
-    rw [Fintype.card_coe, Multiset.toFinset_card_of_nodup hnodup, hcard]
-    norm_num
-  set b : Module.Basis q.roots.toFinset K (Fin n → K) :=
-    basisOfLinearIndependentOfCardEqFinrank hli hcardfin with hb
-  have hbeq : ⇑b = v := coe_basisOfLinearIndependentOfCardEqFinrank _ _
-  have heig : ∀ z : q.roots.toFinset,
-      (aeval M φ).mulVecLin (b z) = (φ.eval (z : K)) • b z := by
-    intro z
-    rw [Matrix.mulVecLin_apply, hbeq]
-    exact aeval_mulVec_eigenvector_gen M (hvv z) φ
-  have hchar := charpoly_eq_prod_of_eigenbasis ((aeval M φ).mulVecLin) b
-    (fun z : q.roots.toFinset => φ.eval (z : K)) heig
-  rw [Matrix.charpoly_mulVecLin] at hchar
-  rw [hM] at hchar
-  rw [hchar]
-  rw [Finset.prod_coe_sort q.roots.toFinset
-    (fun z : K => Polynomial.X - Polynomial.C (φ.eval z))]
-  have hval : q.roots.toFinset.val = q.roots := by
-    rw [Multiset.toFinset_val, Multiset.dedup_eq_self.mpr hnodup]
-  rw [show (∏ i ∈ q.roots.toFinset, (Polynomial.X - Polynomial.C (φ.eval i)))
-      = (q.roots.toFinset.val.map
-          (fun z : K => Polynomial.X - Polynomial.C (φ.eval z))).prod from rfl, hval]
-
 /-- Mapping `aeval (companionN q) φ` along `ℝ → ℂ` is `aeval` of the mapped companion
 matrix and the mapped polynomial. The `n`-general `companion7_aeval_map_eq`. -/
 theorem companionN_aeval_map_eq (n : ℕ) (q φ : ℝ[X]) :
@@ -378,13 +323,6 @@ theorem roots_eq_map_αs {q : ℝ[X]} {αs : Fin n → ℝ} (hmon : q.Monic) (hn
   exact h1.symm
 
 /-! ### P-constructibility of the trace machinery -/
-
-/-- Every entry of `Φ (companionN q)` is P-constructible when the coefficients of `q` and
-`Φ` are. Immediate from `aeval_entries_Pconstructible`, which is already `n`-general. -/
-theorem aeval_companionN_entries_Pconstructible (n : ℕ) (q φ : ℝ[X])
-    (hq : ∀ k, PConstructible (q.coeff k)) (hφ : ∀ k, PConstructible (φ.coeff k))
-    (i j : Fin n) : PConstructible ((aeval (companionN (n := n) q) φ) i j) := by
-  exact aeval_entries_Pconstructible _ (companionN_entries_Pconstructible n q hq) φ hφ i j
 
 /-- The trace of a power of `Φ (companionN q)` is P-constructible. This is the `n`-general
 replacement for `trace_pow_companion7_Pconstructible`. -/
@@ -482,10 +420,6 @@ theorem yvec_eq_bPoly_eval (αs : Fin n → ℝ) (b : Fin n → ℝ) (i : Fin n)
   rw [bPoly, Polynomial.eval_finsetSum, yvec]
   refine Finset.sum_congr rfl (fun k _ => ?_)
   rw [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_pow, Polynomial.eval_X]
-
-theorem yvec_zero (αs : Fin n → ℝ) : yvec αs 0 = 0 := by
-  funext i
-  simp [yvec]
 
 theorem yvec_add (αs : Fin n → ℝ) (b c : Fin n → ℝ) :
     yvec αs (b + c) = yvec αs b + yvec αs c := by
@@ -626,16 +560,6 @@ theorem prodSubY_yvec_coeff_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {b
   exact charpoly_aeval_companionN_coeff_Pconstructible n q (bPoly (n := n) b) hcoef
     (bPoly_coeffs_Pconstructible hb) k
 
-/-- A y-vector of a P-constructible `b` is a real root of the corresponding characteristic
-polynomial: `Φ_b (α)` for a root `α` of `q` is one of the `yᵢ`. -/
-theorem eval_prodSubY_yvec {q : ℝ[X]} {αs : Fin n → ℝ} {b : Fin n → ℝ}
-    (_hmon : q.Monic) (_hn : 0 < n) (_hnat : q.natDegree = n) (_hsep : q.Separable)
-    (_hcoef : ∀ k, PConstructible (q.coeff k))
-    (_hαs : ∀ i : Fin n, q.eval (αs i) = 0) (_hnd : Function.Injective αs)
-    (_hb : ∀ k, PConstructible (b k)) {i : Fin n} :
-    (prodSubY (yvec αs b)).eval (yvec αs b i) = 0 := by
-  exact eval_prodSubY (yvec αs b) i
-
 /-! ### Power sums of the roots, and symmetric functionals of y-vectors
 
 Everything the odd Tschirnhaus chain needs to know about P-constructibility rests on one
@@ -749,21 +673,12 @@ theorem psumRoots_Pconstructible_of_roots {q : ℝ[X]} {αs : Fin n → ℝ}
   exact htr
 
 /-- A symmetric pairing of three plain `n`-vectors:
-`Σᵢ uᵢ^a vᵢ^b wᵢ^c`. This is the object the odd Tschirnhaus chain actually works with;
-`ymoment3` below is its lift to `b`-vectors. -/
+`Σᵢ uᵢ^a vᵢ^b wᵢ^c`. This is the object the odd Tschirnhaus chain actually works with. -/
 def ymoment3Y {n : ℕ} (u v w : Fin n → ℝ) (a b c : ℕ) : ℝ :=
   ∑ i, u i ^ a * v i ^ b * w i ^ c
 
 /-- A symmetric moment of two plain `n`-vectors: `Σᵢ uᵢ^a vᵢ^b`. -/
 def ymoment2Y {n : ℕ} (u v : Fin n → ℝ) (a b : ℕ) : ℝ := ∑ i, u i ^ a * v i ^ b
-
-/-- `ymoment3Y` at the y-vectors of three `b`-vectors. -/
-def ymoment3 {n : ℕ} (αs : Fin n → ℝ) (u v w : Fin n → ℝ) (a b c : ℕ) : ℝ :=
-  ymoment3Y (yvec αs u) (yvec αs v) (yvec αs w) a b c
-
-/-- `ymoment2Y` at the y-vectors of two `b`-vectors. -/
-def ymoment2 {n : ℕ} (αs : Fin n → ℝ) (u v : Fin n → ℝ) (a b : ℕ) : ℝ :=
-  ymoment2Y (yvec αs u) (yvec αs v) a b
 
 /-- The bilinear pairing `⟨P; u, v⟩ = Σᵢ YP i · Yu i · Yv i` of the y-space. -/
 def yBdot {n : ℕ} (αs : Fin n → ℝ) (P u v : Fin n → ℝ) : ℝ :=
@@ -948,14 +863,6 @@ theorem yNB_Pconstructible {q : ℝ[X]} {αs : Fin n → ℝ} {P v : Fin n → �
     (PConstructible.mul (PConstructible.mul (hP _) (hP _)) (hv j))
     (psumRoots_Pconstructible_of_roots hmon hn hnat hsep hcoef hαs hnd _)
 
-/-- The quadratic form is the pairing squared. -/
-theorem yConicB_eq_yBdot {n : ℕ} (αs : Fin n → ℝ) (P u : Fin n → ℝ) :
-    yConicB αs P u = yBdot αs P u u := by
-  simp only [yConicB, ymoment2Y, yBdot, ymoment3Y]
-  refine Finset.sum_congr rfl (fun i _ => ?_)
-  simp only [pow_one, pow_two]
-  ring
-
 /-! ### Interpolation at rational nodes
 
 Small coefficient facts used by `psumY_line_poly` below: the coefficients of `X - C y`, and
@@ -965,7 +872,7 @@ P-constructible coefficients again has P-constructible coefficients. (The `C ·`
 and binary-product steps are `C_mul_coeff_Pconstructible` and `coeff_mul_Pconstructible`,
 already public in `Pptc.DegreeSeven`.) -/
 
-private theorem prod_coeff_Pconstructible {ι : Type*} {s : Finset ι} {f : ι → ℝ[X]}
+theorem prod_coeff_Pconstructible {ι : Type*} {s : Finset ι} {f : ι → ℝ[X]}
     (hf : ∀ i ∈ s, ∀ k, PConstructible ((f i).coeff k)) (j : ℕ) :
     PConstructible ((∏ i ∈ s, f i).coeff j) :=
   (Finset.prod_induction f (fun q => ∀ k, PConstructible (q.coeff k))
@@ -977,7 +884,7 @@ private theorem prod_coeff_Pconstructible {ι : Type*} {s : Finset ι} {f : ι �
       · exact zero_Pconstructible)
     (fun i hi => hf i hi)) j
 
-private theorem X_sub_C_coeff_Pconstructible {y : ℝ} (hy : PConstructible y) (k : ℕ) :
+theorem X_sub_C_coeff_Pconstructible {y : ℝ} (hy : PConstructible y) (k : ℕ) :
     PConstructible ((Polynomial.X - Polynomial.C y).coeff k) := by
   rw [Polynomial.coeff_sub]
   refine PConstructible.sub ?_ (coeff_C_Pconstructible hy k)
@@ -986,7 +893,7 @@ private theorem X_sub_C_coeff_Pconstructible {y : ℝ} (hy : PConstructible y) (
   · exact PConstructible.base_one
   · exact zero_Pconstructible
 
-private theorem basisDivisor_coeff_Pconstructible {x y : ℝ} (hx : PConstructible x)
+theorem basisDivisor_coeff_Pconstructible {x y : ℝ} (hx : PConstructible x)
     (hy : PConstructible y) (k : ℕ) :
     PConstructible ((Lagrange.basisDivisor x y).coeff k) := by
   unfold Lagrange.basisDivisor
@@ -994,7 +901,7 @@ private theorem basisDivisor_coeff_Pconstructible {x y : ℝ} (hx : PConstructib
     (inv_Pconstructible (PConstructible.sub hx hy))
     (fun j => X_sub_C_coeff_Pconstructible hy j) k
 
-private theorem basis_coeff_Pconstructible {ι : Type*} [Fintype ι] [DecidableEq ι] {v : ι → ℝ}
+theorem basis_coeff_Pconstructible {ι : Type*} [Fintype ι] [DecidableEq ι] {v : ι → ℝ}
     (hv : ∀ i, PConstructible (v i)) (i : ι) (k : ℕ) :
     PConstructible ((Lagrange.basis (Finset.univ : Finset ι) v i).coeff k) :=
   prod_coeff_Pconstructible (fun j _ => basisDivisor_coeff_Pconstructible (hv i) (hv j)) k
@@ -1171,86 +1078,5 @@ lemma yvec_correct (αs : Fin n → ℝ) (b : Fin n → ℝ) (e : Fin n) (c : �
     simp
   simp only [yvec, bcorrect, sub_mul]
   rw [Finset.sum_sub_distrib, hone]
-
-/-- The image of `ℚ` vectors under `yvec` is dense, so every nonempty open set of y-space
-is met by a P-constructible `b`. The trace correction `b ↦ b − (p₁(y(b))/n)·(1,…,1)` then
-puts the y-vector in `V = {y | p₁(y) = 0}` without leaving the open set. -/
-theorem exists_b_Pconstructible_near {_q : ℝ[X]} {αs : Fin n → ℝ}
-    {U : Set (Fin n → ℝ)} (hn : 0 < n) (hnd : Function.Injective αs) (hU : IsOpen U)
-    (hne : (U ∩ {y : Fin n → ℝ | psumY y 1 = 0}).Nonempty)
-    (hpsum : ∀ b : Fin n → ℝ, (∀ k, PConstructible (b k)) →
-      PConstructible (psumY (yvec αs b) 1)) :
-    ∃ b : Fin n → ℝ, (∀ k, PConstructible (b k)) ∧ yvec αs b ∈ U ∧ psumY (yvec αs b) 1 = 0 := by
-  obtain ⟨e, he⟩ : ∃ e : Fin n, e = ⟨0, hn⟩ := ⟨⟨0, hn⟩, rfl⟩
-  -- the correction, and the fact that it lands in `V`
-  have hcorr : ∀ b : Fin n → ℝ,
-      psumY (yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n))) 1 = 0 := by
-    intro b
-    have h1 : yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n))
-        = fun i => yvec αs b i - psumY (yvec αs b) 1 / n := by
-      funext i
-      rw [yvec_correct, he]
-      simp
-    rw [h1]
-    simp only [psumY, psumFinY, pow_one, Finset.sum_sub_distrib]
-    have h2 : (∑ i : Fin n, (∑ x, yvec αs b x) / ↑n) = ∑ x, yvec αs b x := by
-      simp only [Finset.sum_const, nsmul_eq_mul, Finset.card_univ, Fintype.card_fin]
-      field_simp
-    rw [h2]
-    ring
-  -- the corrected y-vector moves continuously, so its inverse image of `U` is open …
-  have hfc : Continuous (fun b : Fin n → ℝ =>
-      yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n))) := by
-    have hyv : ∀ i : Fin n, Continuous fun b : Fin n → ℝ => yvec αs b i := by
-      intro i
-      have h2 : Continuous fun b : Fin n → ℝ => yvec αs b i := by
-        simp only [yvec]
-        refine continuous_finsetSum _ fun k _ => (continuous_apply k).mul continuous_const
-      exact h2
-    have hpc : Continuous fun b : Fin n → ℝ => psumY (yvec αs b) 1 := by
-      have h2 : Continuous fun b : Fin n → ℝ => psumY (yvec αs b) 1 := by
-        simp only [psumY, psumFinY]
-        refine continuous_finsetSum _ fun i _ => ?_
-        simpa using (hyv i).pow 1
-      exact h2
-    have h3 : Continuous
-        (fun b : Fin n → ℝ => (fun i => yvec αs b i - psumY (yvec αs b) 1 / n)) := by
-      refine continuous_pi fun i => ?_
-      have hnum : Continuous (fun b : Fin n → ℝ => yvec αs b i - psumY (yvec αs b) 1) :=
-        (hyv i).sub hpc
-      exact (hyv i).sub (hpc.div_const (n : ℝ))
-    have heq : (fun b : Fin n → ℝ => yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n)))
-        = (fun b : Fin n → ℝ => (fun i => yvec αs b i - psumY (yvec αs b) 1 / n)) := by
-      funext b i
-      rw [yvec_correct, he]
-      simp
-    rw [heq]
-    exact h3
-  -- … and is nonempty, because `yvec αs` is onto and `U ∩ V` is nonempty
-  have hne' : {b : Fin n → ℝ | yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n)) ∈ U}.Nonempty := by
-    obtain ⟨y, hyU, hyH⟩ := hne
-    obtain ⟨b, hb⟩ := yvecL_surjective hnd y
-    refine ⟨b, ?_⟩
-    have hb' : yvec αs b = y := hb
-    have hL : psumY (yvec αs b) 1 = 0 := by
-      rw [hb']
-      exact hyH
-    have hbc : bcorrect b e (psumY (yvec αs b) 1 / n) = b := by
-      funext k
-      simp [bcorrect, hL]
-    change yvec αs (bcorrect b e (psumY (yvec αs b) 1 / n)) ∈ U
-    rw [hbc, hb']
-    exact hyU
-  -- density now supplies a P-constructible `b` whose *corrected* y-vector is in `U`
-  obtain ⟨b, hb, hbmem⟩ :=
-    exists_Pconstructible_mem_isOpen (hU.preimage hfc) hne'
-  refine ⟨bcorrect b e (psumY (yvec αs b) 1 / n), ?_, hbmem, hcorr b⟩
-  intro k
-  by_cases hk : k = e
-  · rw [bcorrect, if_pos hk]
-    exact PConstructible.sub (hb k)
-      (PConstructible.div (hpsum b hb) (nat_Pconstructible n))
-  · rw [bcorrect, if_neg hk, sub_zero]
-    exact hb k
 
 end Pconstructible

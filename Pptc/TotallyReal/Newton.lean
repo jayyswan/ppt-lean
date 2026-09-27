@@ -53,70 +53,6 @@ namespace Pconstructible
 
 open Polynomial
 
-/-! ### The remaining Newton identities -/
-
-/-- Newton's identity for `k = 4`, in the same shape as `two_mul_esymm_two` and
-`three_mul_esymm_three`:
-
-    k · e_k = Σᵢ₌₁..ₖ (−1)^(i−1) · e_{k−i} · p_i. -/
-theorem four_mul_esymm_four (s : Multiset ℂ) :
-    4 * s.esymm 4 = s.esymm 3 * s.sum - s.esymm 2 * (s.map (fun z => z ^ 2)).sum
-      + s.esymm 1 * (s.map (fun z => z ^ 3)).sum - (s.map (fun z => z ^ 4)).sum := by
-  induction s using Multiset.induction_on with
-  | empty => simp [Multiset.esymm, Multiset.powersetCard_zero_right]
-  | cons a s ih =>
-      rw [show (a ::ₘ s).esymm 4 = s.esymm 4 + a * s.esymm 3 from esymm_cons a s 3,
-        show (a ::ₘ s).esymm 3 = s.esymm 3 + a * s.esymm 2 from esymm_cons a s 2,
-        show (a ::ₘ s).esymm 2 = s.esymm 2 + a * s.esymm 1 from esymm_cons a s 1,
-        show (a ::ₘ s).esymm 1 = s.esymm 1 + a * s.esymm 0 from esymm_cons a s 0,
-        esymm_zero, mul_one]
-      rw [Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons, Multiset.map_cons,
-        Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons]
-      have h1 := esymm_one_eq_sum s
-      have h3 := three_mul_esymm_three s
-      rw [h1] at ih h3 ⊢
-      linear_combination ih + a * h3
-
-/-- Newton's identity for `k = 5`. -/
-theorem five_mul_esymm_five (s : Multiset ℂ) :
-    5 * s.esymm 5 = s.esymm 4 * s.sum - s.esymm 3 * (s.map (fun z => z ^ 2)).sum
-      + s.esymm 2 * (s.map (fun z => z ^ 3)).sum
-      - s.esymm 1 * (s.map (fun z => z ^ 4)).sum
-      + (s.map (fun z => z ^ 5)).sum := by
-  induction s using Multiset.induction_on with
-  | empty => simp [Multiset.esymm, Multiset.powersetCard_zero_right]
-  | cons a s ih =>
-      rw [show (a ::ₘ s).esymm 5 = s.esymm 5 + a * s.esymm 4 from esymm_cons a s 4,
-        show (a ::ₘ s).esymm 4 = s.esymm 4 + a * s.esymm 3 from esymm_cons a s 3,
-        show (a ::ₘ s).esymm 3 = s.esymm 3 + a * s.esymm 2 from esymm_cons a s 2,
-        show (a ::ₘ s).esymm 2 = s.esymm 2 + a * s.esymm 1 from esymm_cons a s 1,
-        show (a ::ₘ s).esymm 1 = s.esymm 1 + a * s.esymm 0 from esymm_cons a s 0,
-        esymm_zero, mul_one]
-      rw [Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons, Multiset.map_cons,
-        Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons, Multiset.map_cons,
-        Multiset.sum_cons]
-      have h1 := esymm_one_eq_sum s
-      have h4 := four_mul_esymm_four s
-      rw [h1] at ih h4 ⊢
-      linear_combination ih + a * h4
-
-/-- **Lemma N.** Vanishing odd power sums force vanishing odd elementary symmetric
-functions. -/
-theorem esymm_odd_eq_zero_of_psum_odd_zero (s : Multiset ℂ)
-    (h1 : s.sum = 0) (h3 : (s.map (fun z => z ^ 3)).sum = 0)
-    (h5 : (s.map (fun z => z ^ 5)).sum = 0) :
-    s.esymm 1 = 0 ∧ s.esymm 3 = 0 ∧ s.esymm 5 = 0 := by
-  have e1 : s.esymm 1 = 0 := by rw [esymm_one_eq_sum, h1]
-  have e3 : s.esymm 3 = 0 := by
-    have h := three_mul_esymm_three s
-    rw [e1, h1, h3] at h
-    simpa using h
-  have e5 : s.esymm 5 = 0 := by
-    have h := five_mul_esymm_five s
-    rw [e1, e3, h1, h3, h5] at h
-    simpa using h
-  exact ⟨e1, e3, e5⟩
-
 /-! ### The same identities in an arbitrary commutative ring
 
 `Multiset.esymm` only needs a commutative semiring, and none of the proofs divide, so the
@@ -255,14 +191,6 @@ def multisetOfY {n : ℕ} (y : Fin n → ℝ) : Multiset ℝ :=
 /-- The `m`-th power sum of the entries of `y : Fin n → ℝ`. -/
 def psumFinY {n : ℕ} (y : Fin n → ℝ) (m : ℕ) : ℝ := ∑ i, y i ^ m
 
-@[pconstructible]
-theorem psumFinY_Pconstructible {n : ℕ} {y : Fin n → ℝ} (hy : ∀ i, PConstructible (y i))
-    (m : ℕ) : PConstructible (psumFinY y m) := by
-  simp only [psumFinY]
-  refine Finset.sum_induction _ PConstructible (fun _ _ ha hb => PConstructible.add ha hb)
-    zero_Pconstructible (fun i _ => ?_)
-  exact pow_Pconstructible (hy i) m
-
 /-- The power sum of the multiset of entries of `y` is the power sum over `Fin n`. -/
 theorem psum_multisetOfY {n : ℕ} (y : Fin n → ℝ) (m : ℕ) :
     ((multisetOfY y).map (fun z : ℝ => z ^ m)).sum = psumFinY y m := by
@@ -297,20 +225,6 @@ theorem prodSubY_natDegree {n : ℕ} (y : Fin n → ℝ) : (prodSubY y).natDegre
             (fun i : Fin n => X - C (y i)) fun i _ => Polynomial.monic_X_sub_C _
       _ = n := by simp
   exact h
-
-/-- Every entry of `y` is a root of `prodSubY y`. -/
-theorem eval_prodSubY {n : ℕ} (y : Fin n → ℝ) (i : Fin n) : (prodSubY y).eval (y i) = 0 := by
-  classical
-  change ((∏ j : Fin n, (X - C (y j))) : ℝ[X]).eval (y i) = 0
-  rw [eval_prod]
-  refine Finset.prod_eq_zero (Finset.mem_univ i) ?_
-  simp [eval_sub, eval_X, eval_C]
-
-/-- The product over a `Finset` of linear factors vanishes at each of the points. -/
-theorem eval_prodSubY_of_mem {n : ℕ} (y : Fin n → ℝ) {x : ℝ} (hx : x ∈ Set.range y) :
-    (prodSubY y).eval x = 0 := by
-  obtain ⟨i, rfl⟩ := hx
-  exact eval_prodSubY y i
 
 /-- `coeff (n − k) = (−1)^k e_k(y)`, the link between the elementary symmetric functions
 and the coefficients of the characteristic polynomial. -/

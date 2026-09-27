@@ -80,14 +80,6 @@ legitimate here because Lemma Q's construction ends in `scale_x λ` with `λ = �
 def quarticGraph (c₀ c₁ c₂ c₃ c₄ : ℝ) : Set (ℝ × ℝ) :=
   {p : ℝ × ℝ | p.2 = quarticVal c₀ c₁ c₂ c₃ c₄ p.1}
 
-@[pconstructible]
-theorem quarticVal_Pconstructible {c₀ c₁ c₂ c₃ c₄ x : ℝ} (h₀ : PConstructible c₀)
-    (h₁ : PConstructible c₁) (h₂ : PConstructible c₂) (h₃ : PConstructible c₃)
-    (h₄ : PConstructible c₄) (hx : PConstructible x) :
-    PConstructible (quarticVal c₀ c₁ c₂ c₃ c₄ x) := by
-  simp only [quarticVal]
-  pconstructible
-
 /-- The depressed-quartic coefficients: with `z = x + c₃/4` the monic quartic
 `x⁴ + c₃x³ + c₂x² + c₁x + c₀` becomes `z⁴ + a z² + b z + c` with
 
