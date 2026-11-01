@@ -962,7 +962,7 @@ theorem ellipticPiInc_Pconstructible_hyp_diag_gt {c n φ : ℝ}
     · exact h
   have hcos : Real.cos φ ≠ 0 :=
     (Real.cos_pos_of_mem_Ioo ⟨by linarith [Real.pi_pos, h0], hπ⟩).ne'
-  rw [ellipticPiInc_eq_circUpper_of_lt hc0 hc hnc h0 hπ.le]
+  rw [ellipticPiInc_eq_circUpper hc0 hc hnc.ne' (by linarith) h0 hπ.le]
   unfold circUpperRHS
   set n1 := circUpperNu c n with hn1def
   set p1 := circUpperPhi c φ with hp1def
@@ -1101,39 +1101,8 @@ theorem ellipticPiInc_Pconstructible_hyp_lower {c n φ : ℝ}
 theorem ellipticPiInc_Pconstructible_hyp_lower_all {c n Φ : ℝ}
     (hcP : PConstructible c) (hnP : PConstructible n) (hΦP : PConstructible Φ)
     (hc0 : 0 < c) (hc : c < 1) (hn : 0 < n) (hnc : n < c) :
-    PConstructible (ellipticPiInc c n Φ) := by
-  obtain ⟨m, h0, hpi⟩ := exists_int_half_turns Φ
-  set θ := Φ - m * Real.pi with hθdef
-  have hθP : PConstructible θ := by
-    rw [hθdef]
-    exact PConstructible.sub hΦP (PConstructible.mul (int_Pconstructible m) pi_Pconstructible)
-  have hkey := ellipticPiInc_add_int_mul_pi hc (by linarith : n < 1) θ m
-  have hΦ_eq : θ + m * Real.pi = Φ := by rw [hθdef]; ring
-  rw [hΦ_eq] at hkey
-  have hK : PConstructible (ellipticPi c n) :=
-    ellipticPi_Pconstructible hcP hnP hc0 hc (by linarith)
-  have hterm : PConstructible (m * (2 * ellipticPi c n)) :=
-    PConstructible.mul (int_Pconstructible m)
-      (PConstructible.mul two_Pconstructible hK)
-  rw [hkey]
-  rcases le_or_gt θ (Real.pi / 2) with hle | hgt
-  · rcases lt_or_eq_of_le hle with hlt | heq
-    · exact PConstructible.add
-        (ellipticPiInc_Pconstructible_hyp_lower hcP hnP hθP hc0 hc hn hnc h0 hlt) hterm
-    · have hPiEq : ellipticPiInc c n θ = ellipticPi c n := by
-        rw [heq]
-        exact (ellipticPi_eq_inc c n).symm
-      rw [hPiEq]
-      exact PConstructible.add hK hterm
-  · have h1 : Real.pi / 2 ≤ θ := hgt.le
-    have hsym := ellipticPiInc_eq_two_complete_sub hc (by linarith : n < 1) h1 hpi
-    rw [hsym]
-    have hθ'P : PConstructible (Real.pi - θ) :=
-      PConstructible.sub pi_Pconstructible hθP
-    have hpart : PConstructible (ellipticPiInc c n (Real.pi - θ)) :=
-      ellipticPiInc_Pconstructible_hyp_lower hcP hnP hθ'P hc0 hc hn hnc
-        (by linarith) (by linarith)
-    exact PConstructible.add
-      (PConstructible.sub (PConstructible.mul two_Pconstructible hK) hpart) hterm
+    PConstructible (ellipticPiInc c n Φ) :=
+  ellipticPiInc_Pconstructible_of_base hcP hnP hΦP hc0 hc (by linarith) fun θ hθP h0 hlt =>
+    ellipticPiInc_Pconstructible_hyp_lower hcP hnP hθP hc0 hc hn hnc h0 hlt
 
 end Pconstructible

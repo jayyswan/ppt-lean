@@ -787,25 +787,9 @@ theorem ellipticPiInc_Pconstructible_neg_Ico {c n θ : ℝ} (hcP : PConstructibl
 for every real upper limit. -/
 theorem ellipticPiInc_Pconstructible_neg {c n Φ : ℝ} (hcP : PConstructible c)
     (hnP : PConstructible n) (hΦP : PConstructible Φ) (hc0 : 0 < c) (hc : c < 1)
-    (hn : n < 0) : PConstructible (ellipticPiInc c n Φ) := by
-  obtain ⟨m, h0, hpi⟩ := exists_int_half_turns Φ
-  have hθP : PConstructible (Φ - m * Real.pi) :=
-    PConstructible.sub hΦP (PConstructible.mul (int_Pconstructible m) pi_Pconstructible)
-  have hkey := ellipticPiInc_add_int_mul_pi (c := c) (n := n) hc (by linarith)
-    (Φ - m * Real.pi) m
-  rw [sub_add_cancel] at hkey
-  have hcomp : PConstructible (ellipticPi c n) :=
-    ellipticPi_Pconstructible hcP hnP hc0 hc (by linarith)
-  have hterm : PConstructible (m * (2 * ellipticPi c n)) :=
-    PConstructible.mul (int_Pconstructible m) (PConstructible.mul two_Pconstructible hcomp)
-  rw [hkey]
-  rcases lt_or_eq_of_le hpi with hlt | heq
-  · exact PConstructible.add
-      (ellipticPiInc_Pconstructible_neg_Ico hcP hnP hθP hc0 hc hn h0 hlt) hterm
-  · have hpi2 : ellipticPiInc c n Real.pi = 2 * ellipticPi c n := by
-      have h := ellipticPiInc_add_int_mul_pi (c := c) (n := n) hc (by linarith) 0 1
-      simpa [ellipticPiInc] using h
-    rw [heq, hpi2]
-    exact PConstructible.add (PConstructible.mul two_Pconstructible hcomp) hterm
+    (hn : n < 0) : PConstructible (ellipticPiInc c n Φ) :=
+  ellipticPiInc_Pconstructible_of_base hcP hnP hΦP hc0 hc (by linarith) fun θ hθP h0 hlt =>
+    ellipticPiInc_Pconstructible_neg_Ico hcP hnP hθP hc0 hc hn h0
+      (by linarith [Real.pi_pos])
 
 end Pconstructible

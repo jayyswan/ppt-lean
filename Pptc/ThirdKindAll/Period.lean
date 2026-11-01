@@ -127,4 +127,82 @@ theorem ellipticPiInc_add_int_mul_pi {c n : ℝ} (hc : c < 1) (hn : n < 1) (φ :
     (b := (m : ℝ) * Real.pi) (hint 0 _) (hint _ _), hA, hB]
   ring
 
+theorem ellipticPiIntegrand_pi_sub (c n x : ℝ) :
+    ellipticPiIntegrand c n (Real.pi - x) = ellipticPiIntegrand c n x := by
+  simp [ellipticPiIntegrand, ellipticEIntegrand]
+
+/-- Reflection about the quarter turn. -/
+theorem ellipticPiInc_eq_two_complete_sub {c n θ : ℝ} (hc : c < 1) (hn : n < 1)
+    (h1 : Real.pi / 2 ≤ θ) (_h2 : θ ≤ Real.pi) :
+    ellipticPiInc c n θ = 2 * ellipticPi c n - ellipticPiInc c n (Real.pi - θ) := by
+  have hint : ∀ a b : ℝ, IntervalIntegrable (ellipticPiIntegrand c n)
+      MeasureTheory.volume a b :=
+    fun a b => (continuous_ellipticPiIntegrand hc hn).intervalIntegrable a b
+  have hsplit := intervalIntegral.integral_add_adjacent_intervals
+    (μ := MeasureTheory.volume) (f := ellipticPiIntegrand c n)
+    (a := (0 : ℝ)) (b := Real.pi / 2) (c := θ) (hint 0 _) (hint _ _)
+  change (∫ x in (0 : ℝ)..θ, ellipticPiIntegrand c n x)
+    = 2 * ellipticPi c n - ellipticPiInc c n (Real.pi - θ)
+  rw [← hsplit]
+  have hsecond : (∫ x in Real.pi / 2..θ, ellipticPiIntegrand c n x)
+      = ellipticPi c n - ellipticPiInc c n (Real.pi - θ) := by
+    calc (∫ x in Real.pi / 2..θ, ellipticPiIntegrand c n x)
+        = ∫ x in Real.pi / 2..θ, ellipticPiIntegrand c n (Real.pi - x) := by
+          refine intervalIntegral.integral_congr fun x _ => ?_
+          exact (ellipticPiIntegrand_pi_sub c n x).symm
+      _ = ∫ x in Real.pi - θ..Real.pi - Real.pi / 2,
+            ellipticPiIntegrand c n x :=
+          intervalIntegral.integral_comp_sub_left
+            (a := Real.pi / 2) (b := θ) (ellipticPiIntegrand c n) Real.pi
+      _ = ∫ x in Real.pi - θ..Real.pi / 2, ellipticPiIntegrand c n x := by
+          rw [show Real.pi - Real.pi / 2 = Real.pi / 2 by ring]
+      _ = (∫ x in (0 : ℝ)..Real.pi / 2, ellipticPiIntegrand c n x)
+            - (∫ x in (0 : ℝ)..Real.pi - θ, ellipticPiIntegrand c n x) := by
+          have h := intervalIntegral.integral_add_adjacent_intervals
+            (μ := MeasureTheory.volume) (f := ellipticPiIntegrand c n)
+            (a := (0 : ℝ)) (b := Real.pi - θ) (c := Real.pi / 2)
+            (hint 0 _) (hint _ _)
+          rw [eq_sub_iff_add_eq]
+          simpa [add_comm] using h
+      _ = ellipticPi c n - ellipticPiInc c n (Real.pi - θ) := by
+          change (∫ x in (0 : ℝ)..Real.pi / 2, ellipticPiIntegrand c n x)
+              - (∫ x in (0 : ℝ)..Real.pi - θ, ellipticPiIntegrand c n x)
+            = (∫ x in (0 : ℝ)..Real.pi / 2, ellipticPiIntegrand c n x)
+              - (∫ x in (0 : ℝ)..Real.pi - θ, ellipticPiIntegrand c n x)
+          rfl
+  rw [hsecond]
+  change ellipticPi c n + (ellipticPi c n - ellipticPiInc c n (Real.pi - θ))
+    = 2 * ellipticPi c n - ellipticPiInc c n (Real.pi - θ)
+  ring
+
+/-- **Reduction to the first quarter turn.** For `n < 1`, if `Π(n, ·)` is P-constructible at
+every P-constructible `θ ∈ [0, π/2)`, then it is P-constructible at every P-constructible
+upper limit: shift by whole half-turns (`Π(θ + mπ) = Π(θ) + 2mΠ(n)`), then reflect about
+`π/2`; the complete integral `Π(n)` handles the endpoint. -/
+theorem ellipticPiInc_Pconstructible_of_base {c n Φ : ℝ} (hcP : PConstructible c)
+    (hnP : PConstructible n) (hΦP : PConstructible Φ) (hc0 : 0 < c) (hc : c < 1)
+    (hn : n < 1)
+    (base : ∀ θ : ℝ, PConstructible θ → 0 ≤ θ → θ < Real.pi / 2 →
+      PConstructible (ellipticPiInc c n θ)) :
+    PConstructible (ellipticPiInc c n Φ) := by
+  obtain ⟨m, h0, hpi⟩ := exists_int_half_turns Φ
+  have hθP : PConstructible (Φ - m * Real.pi) :=
+    PConstructible.sub hΦP (PConstructible.mul (int_Pconstructible m) pi_Pconstructible)
+  have hkey := ellipticPiInc_add_int_mul_pi hc hn (Φ - m * Real.pi) m
+  rw [sub_add_cancel] at hkey
+  have hK : PConstructible (ellipticPi c n) := ellipticPi_Pconstructible hcP hnP hc0 hc hn
+  have hterm : PConstructible (m * (2 * ellipticPi c n)) :=
+    PConstructible.mul (int_Pconstructible m) (PConstructible.mul two_Pconstructible hK)
+  rw [hkey]
+  set θ := Φ - m * Real.pi
+  rcases lt_trichotomy θ (Real.pi / 2) with hlt | heq | hgt
+  · exact PConstructible.add (base θ hθP h0 hlt) hterm
+  · rw [heq, ← ellipticPi_eq_inc]
+    exact PConstructible.add hK hterm
+  · rw [ellipticPiInc_eq_two_complete_sub hc hn hgt.le hpi]
+    have hpart := base (Real.pi - θ) (PConstructible.sub pi_Pconstructible hθP)
+      (by linarith) (by linarith)
+    exact PConstructible.add
+      (PConstructible.sub (PConstructible.mul two_Pconstructible hK) hpart) hterm
+
 end Pconstructible

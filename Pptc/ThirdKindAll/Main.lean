@@ -29,97 +29,26 @@ modulus and upper limit. -/
 
 namespace Pconstructible
 
-/-- The pole angle of `1 - n sin²θ` for `n > 1`. -/
-noncomputable def gtOneBeta (n : ℝ) : ℝ :=
-  Real.arcsin (1 / Real.sqrt n)
-
-theorem gtOneBeta_nonneg {n : ℝ} (_hn : 1 < n) : 0 ≤ gtOneBeta n := by
-  unfold gtOneBeta
-  exact Real.arcsin_nonneg.mpr (div_nonneg zero_le_one (Real.sqrt_nonneg n))
-
-theorem gtOneBeta_lt_pi_div_two {n : ℝ} (hn : 1 < n) :
-    gtOneBeta n < Real.pi / 2 := by
-  unfold gtOneBeta
-  rw [Real.arcsin_lt_pi_div_two]
-  have hnpos : 0 < n := by linarith
-  have hsqrtpos : 0 < Real.sqrt n := Real.sqrt_pos.mpr hnpos
-  have hsqrtgt : 1 < Real.sqrt n := by
-    nlinarith [Real.sq_sqrt hnpos.le, Real.sqrt_nonneg n]
-  rw [div_lt_one hsqrtpos]
-  exact hsqrtgt
-
-theorem gtOneBeta_sin {n : ℝ} (hn : 1 < n) :
-    Real.sin (gtOneBeta n) = 1 / Real.sqrt n := by
-  unfold gtOneBeta
-  have hnpos : 0 < n := by linarith
-  have hsqrtpos : 0 < Real.sqrt n := Real.sqrt_pos.mpr hnpos
-  have hsqrtgt : 1 < Real.sqrt n := by
-    nlinarith [Real.sq_sqrt hnpos.le, Real.sqrt_nonneg n]
-  refine Real.sin_arcsin ?_ ?_
-  · have : 0 ≤ 1 / Real.sqrt n := div_nonneg zero_le_one (Real.sqrt_nonneg n)
-    linarith
-  · rw [div_le_one hsqrtpos]
-    exact hsqrtgt.le
-
-theorem gtOneBeta_pole {n : ℝ} (hn : 1 < n) :
-    n * Real.sin (gtOneBeta n) ^ 2 = 1 := by
-  have hnpos : 0 < n := by linarith
-  have hsqrtpos : 0 < Real.sqrt n := Real.sqrt_pos.mpr hnpos
-  rw [gtOneBeta_sin hn]
-  field_simp [hsqrtpos.ne']
-  rw [Real.sq_sqrt hnpos.le]
+/-- No pole on `[0, Φ]` forces `n sin²Φ < 1`: otherwise the intermediate value theorem
+produces a root of `1 - n sin²` in `[0, Φ]`. -/
+theorem gtOne_sin_sq_lt_one {n Φ : ℝ} (hΦ0 : 0 ≤ Φ)
+    (hne : ∀ θ ∈ Set.uIcc (0 : ℝ) Φ, 1 - n * Real.sin θ ^ 2 ≠ 0) :
+    n * Real.sin Φ ^ 2 < 1 := by
+  by_contra h
+  have hcont : ContinuousOn (fun θ : ℝ => n * Real.sin θ ^ 2) (Set.Icc 0 Φ) := by fun_prop
+  obtain ⟨θ, hθ, hθeq⟩ := intermediate_value_Icc hΦ0 hcont ⟨by simp, not_lt.mp h⟩
+  exact hne θ (by rw [Set.uIcc_of_le hΦ0]; exact hθ) (by simp only at hθeq; rw [hθeq]; norm_num)
 
 theorem gtOne_phi_lt_pi_div_two {n Φ : ℝ} (hn : 1 < n) (hΦ0 : 0 ≤ Φ)
     (hne : ∀ θ ∈ Set.uIcc (0 : ℝ) Φ, 1 - n * Real.sin θ ^ 2 ≠ 0) :
     Φ < Real.pi / 2 := by
   by_contra h
-  have hβ0 := gtOneBeta_nonneg hn
-  have hβlt := gtOneBeta_lt_pi_div_two hn
-  have hmem : gtOneBeta n ∈ Set.uIcc (0 : ℝ) Φ := by
-    rw [Set.uIcc_of_le hΦ0]
-    exact ⟨hβ0, le_trans hβlt.le (le_of_not_gt h)⟩
-  have hzero := hne (gtOneBeta n) hmem
-  rw [gtOneBeta_pole hn] at hzero
-  norm_num at hzero
-
-theorem gtOne_sin_sq_lt_one {n Φ : ℝ} (hn : 1 < n) (hΦ0 : 0 ≤ Φ)
-    (hne : ∀ θ ∈ Set.uIcc (0 : ℝ) Φ, 1 - n * Real.sin θ ^ 2 ≠ 0) :
-    n * Real.sin Φ ^ 2 < 1 := by
-  have hΦlt := gtOne_phi_lt_pi_div_two hn hΦ0 hne
-  have hnpos : 0 < n := by linarith
-  have hsqrtpos : 0 < Real.sqrt n := Real.sqrt_pos.mpr hnpos
-  have hsqrtgt : 1 < Real.sqrt n := by
-    nlinarith [Real.sq_sqrt hnpos.le, Real.sqrt_nonneg n]
-  have hβ0 := gtOneBeta_nonneg hn
-  have hβlt := gtOneBeta_lt_pi_div_two hn
-  have hβsin := gtOneBeta_sin hn
-  by_contra h
-  have hle : 1 ≤ n * Real.sin Φ ^ 2 := le_of_not_gt h
-  have hsinΦ0 : 0 ≤ Real.sin Φ :=
-    Real.sin_nonneg_of_nonneg_of_le_pi hΦ0 (by linarith [hΦlt, Real.pi_pos])
-  have hsinΦ_ge : 1 / Real.sqrt n ≤ Real.sin Φ := by
-    have hdiv : 1 / n ≤ Real.sin Φ ^ 2 := by
-      rw [div_le_iff₀ hnpos]
-      nlinarith
-    have hsq : (1 / Real.sqrt n) ^ 2 ≤ Real.sin Φ ^ 2 := by
-      rw [div_pow, one_pow, Real.sq_sqrt hnpos.le]
-      exact hdiv
-    nlinarith [hsinΦ0, hsqrtpos]
-  have hβle : gtOneBeta n ≤ Φ := by
-    calc gtOneBeta n = Real.arcsin (Real.sin (gtOneBeta n)) := by
-          rw [Real.arcsin_sin]
-          · linarith [hβ0]
-          · exact hβlt.le
-      _ ≤ Real.arcsin (Real.sin Φ) := by
-          apply Real.arcsin_le_arcsin
-          simpa [hβsin] using hsinΦ_ge
-      _ = Φ := Real.arcsin_sin (by linarith [hΦlt]) hΦlt.le
-  have hmem : gtOneBeta n ∈ Set.uIcc (0 : ℝ) Φ := by
-    rw [Set.uIcc_of_le hΦ0]
-    exact ⟨hβ0, hβle⟩
-  have hzero := hne (gtOneBeta n) hmem
-  rw [gtOneBeta_pole hn] at hzero
-  norm_num at hzero
+  have hle : Real.pi / 2 ≤ Φ := not_lt.mp h
+  have := gtOne_sin_sq_lt_one (n := n) (Φ := Real.pi / 2) (by positivity) fun θ hθ => by
+    rw [Set.uIcc_of_le (by positivity)] at hθ
+    exact hne θ (by rw [Set.uIcc_of_le hΦ0]; exact ⟨hθ.1, hθ.2.trans hle⟩)
+  simp at this
+  linarith
 
 theorem ellipticPiInc_Pconstructible_gt_one_all {c n Φ : ℝ}
     (hcP : PConstructible c) (hnP : PConstructible n) (hΦP : PConstructible Φ)
@@ -137,7 +66,7 @@ theorem ellipticPiInc_Pconstructible_gt_one_all {c n Φ : ℝ}
       have := hne (-θ) hmem
       simpa [Real.sin_neg] using this
     have hp : n * Real.sin (-Φ) ^ 2 < 1 :=
-      gtOne_sin_sq_lt_one hn hpos'.le hne'
+      gtOne_sin_sq_lt_one hpos'.le hne'
     have hlt : -Φ < Real.pi / 2 :=
       gtOne_phi_lt_pi_div_two hn hpos'.le hne'
     have hnegP : PConstructible (ellipticPiInc c n (-Φ)) :=
@@ -149,7 +78,7 @@ theorem ellipticPiInc_Pconstructible_gt_one_all {c n Φ : ℝ}
     simpa [ellipticPiInc] using zero_Pconstructible
   · exact ellipticPiInc_Pconstructible_gt_one' hcP hnP hΦP hc0 hc hn hpos
       (gtOne_phi_lt_pi_div_two hn hpos.le hne)
-      (gtOne_sin_sq_lt_one hn hpos.le hne)
+      (gtOne_sin_sq_lt_one hpos.le hne)
 
 theorem ellipticPiInc_Pconstructible_one_all {c Φ : ℝ}
     (hcP : PConstructible c) (hΦP : PConstructible Φ) (hc : c < 1)
