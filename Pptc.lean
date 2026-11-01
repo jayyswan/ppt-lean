@@ -4,6 +4,7 @@ import Pptc.Box
 import Pptc.Basic
 import Pptc.Offset
 import Pptc.ThirdKind
+import Pptc.ThirdKindAll.Main
 import Pptc.GaussMultiplicationK3
 import Pptc.Gamma
 import Pptc.Level24Alg
