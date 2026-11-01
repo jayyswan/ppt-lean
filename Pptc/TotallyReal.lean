@@ -30,9 +30,10 @@ The headline results are `root_Pconstructible_deg7_coeffs` and
 `root_Pconstructible_totallyReal_eight` in `Pptc/TotallyReal/Main`: every real root of a
 polynomial of degree `≤ 7` whose coefficients are P-constructible is P-constructible, and
 every real root of a totally real (splitting) octic with P-constructible coefficients is
-P-constructible. The new case is the totally real one; `Pptc.DegreeSeven` already handles
-septics with a nonreal root and non-separable septics. Octics with a nonreal root are not
-covered — see `PLAN.md` §5.
+P-constructible. The new case here is the totally real one; `Pptc.DegreeSeven` already handles
+septics with a nonreal root and non-separable septics, and the nonreal octic is completed in
+`Pptc.Octic.Main` (`root_Pconstructible_deg8_coeffs`), which uses the two lemmas above for its
+totally real and non-separable branches.
 
 The files, in dependency order:
 

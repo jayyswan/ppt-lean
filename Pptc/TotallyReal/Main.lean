@@ -24,8 +24,9 @@ import Pptc.TotallyReal.Certificate
 septic (resp. octic) with P-constructible coefficients is P-constructible. For septics this
 lifts to *every* real root of any septic whatsoever (`root_Pconstructible_deg7_coeffs`); for
 octics the degree-8 result proved here is the totally real / splitting case
-(`root_Pconstructible_totallyReal_eight`), and the nonreal-octic case is recorded as future
-work in `PLAN.md` §5.
+(`root_Pconstructible_totallyReal_eight`). The nonreal-octic case is proved in
+`Pptc/Octic/Main.lean` (`root_Pconstructible_deg8_coeffs`), which completes the degree-8
+statement; this file only supplies the non-separable and totally real branches it uses.
 
 ## The assembly
 
@@ -59,8 +60,7 @@ octic case is closed as well, and `root_Pconstructible_totallyReal_eight` is pro
 The nonreal-root one does **not** lift for free: `root_Pconstructible_of_nonreal_root` is
 the Bring–Jerrard reduction, and every ingredient of that reduction is dimension-fixed to
 degree `7`. A separable octic that does not split over `ℝ` is therefore **not** covered by
-this file. The missing statement is the degree-8 analogue of
-`Pptc.DegreeSeven.root_Pconstructible_of_nonreal_root`:
+this file. It is proved in `Pptc/Octic/Main.lean`, which establishes
 
 ```
 ∀ {q : ℝ[X]}, q.natDegree = 8 → (∀ k, PConstructible (q.coeff k)) →
@@ -68,13 +68,13 @@ this file. The missing statement is the degree-8 analogue of
   {β : ℝ} → q.eval β = 0 → PConstructible β
 ```
 
-(the `z` is available from `exists_nonreal_root_of_not_splits` above). The septic proof is
-`root_Pconstructible_of_one_conjugate_pair` / `root_Pconstructible_of_two_conjugate_pairs_monic`,
-and *every* ingredient of that reduction is dimension-fixed to degree `7`: `Gram`, `stereo`,
-`p1vec`, `p3vec`, `Lcomb`, `qform`, `Hmat`, `hermiteForm`, the `Fin 6` vectors and the sextic
-`exists_sextic_along_line`. A degree-`8` version needs all of those rebuilt in dimension `7`,
-and is a new result rather than a re-run of an existing proof. It is recorded as future work
-in `PLAN.md` §5.
+as `root_Pconstructible_of_nonreal_root8` and then assembles
+`root_Pconstructible_deg8_coeffs` from it, the totally real branch above and
+`root_Pconstructible_of_nonSeparable_eight`. The septic proof is
+`root_Pconstructible_of_one_conjugate_pair` / `root_Pconstructible_of_two_conjugate_pairs_monic`;
+the octic versions (`Pptc/Octic/OnePair.lean`, `Pptc/Octic/TwoPairs.lean`) use dimension-7
+coefficient vectors, a dimension-7 Gram matrix, and the sextic engine for the parameter
+along the stereographic line.
 -/
 
 namespace Pconstructible
