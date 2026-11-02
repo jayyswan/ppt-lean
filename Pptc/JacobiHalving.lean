@@ -105,4 +105,21 @@ theorem jacobiAm_dyadic_ellipticF_Pconstructible {c φ : ℝ} (hcP : PConstructi
   · rw [Int.cast_neg, neg_mul, jacobiAm_neg hc]
     exact neg_Pconstructible (by exact_mod_cast jacobiAm_Pconstructible_nsmul hcP hc h0 k)
 
+/-! ### The amplitude is exactly as hard as Jacobi's epsilon function
+
+Jacobi's epsilon function is `ℰ(u) = E(am u)`. The ellipse inverts `E` exactly
+(`ellipticEAm_Pconstructible`), so `am u = E⁻¹(ℰ(u))`: constructing the amplitude is the same
+problem as constructing `ℰ(u)`. Every inversion the drawing operations offer pins down a
+combination `α F + β E + R` at the unknown point, with `β` and the algebraic or elementary
+remainder `R` never both zero. So evaluating such a combination at `am u` always needs `ℰ(u)`
+(or `R(am u)`) first; making curve parameters depend on `u` does not remove this. -/
+
+-- Theorem: the amplitude `am u` is P-constructible exactly when Jacobi's epsilon
+-- `ℰ(u) = E(am u)` is.
+theorem jacobiAm_Pconstructible_iff_epsilon {c u : ℝ} (hcP : PConstructible c) (hc : c < 1) :
+    PConstructible (jacobiAm c u) ↔ PConstructible (ellipticE c (jacobiAm c u)) :=
+  ⟨fun h => ellipticE_Pconstructible hcP h hc, fun h => by
+    rw [← ellipticEAm_ellipticE hc (jacobiAm c u)]
+    exact ellipticEAm_Pconstructible hcP h hc⟩
+
 end Pconstructible
