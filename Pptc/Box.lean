@@ -215,15 +215,17 @@ are graphs of continuous functions, `ellipse` and `rectangle` are level sets / f
 of closed edges, and `cubic_bezier` is the continuous image of the compact parameter interval
 `Icc 0 1`. All six are closed, so the general lemma applies to any cropped instance.
 
-`power_law` is deliberately **not** on that list, and cropping cannot repair it. Its locus
-`{(x, a x ^ b) : 0 < x}` omits `x = 0`, so for `b > 0` it has the limit point `(0, 0)`
-outside itself and is not closed; even cut to the closed window `[0, 1] × [0, 1]` the result
+`power_law` is deliberately **not** on that list. For `b > 0` it now includes the origin and
+is closed, but for `b ≤ 0` its locus `{(x, a x ^ b) : 0 < x}` omits `x = 0`: for `b < 0` it
+is an unbounded hyperbola branch, and for `b = 0` it is a half-line that stops short of
+`x = 0`, so it is not closed, and even cut to the closed window `[0, 1] × [0, 1]` the result
 `{0 < x ≤ 1}` is still not closed in `ℝ × ℝ`, because a closed window contributes closed
 edges but cannot add the missing curve point. This is the same subtlety recorded at
-`Defs.lean:190-196` for `sSup` / `sInf`: the abscissae have infimum `0`, a limit no point of
-the curve attains, and box-taking such a curve would assert that an infinite limiting process
-is a finite construction. So a `power_law` restrict must supply `IsCompact` from elsewhere
-(e.g. from a tracing by `isCompact_traced_arc`), not from this classification. -/
+`Defs.lean` (`box_xmax`) for `sSup` / `sInf`: the abscissae have infimum `0`, a limit no
+point of the curve attains, and box-taking such a curve would assert that an infinite
+limiting process is a finite construction. Since the constructor is uniform in `b`, a
+`power_law` restrict must supply `IsCompact` from elsewhere (e.g. from a tracing by
+`isCompact_traced_arc`), not from this classification. -/
 
 -- Theorem: a closed set cropped to a closed axis-aligned window is compact. The window is
 -- exactly the one `PConstructibleCurve.restrict` produces, so this discharges the

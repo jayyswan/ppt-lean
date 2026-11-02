@@ -359,7 +359,9 @@ theorem negHalf_cubic_root_Pconstructible {r₀ r₁ r₂ c β : ℝ}
       Set.mem_singleton_iff, Prod.mk.injEq, cubicGraph]
     constructor
     · rintro ⟨⟨x, y, ⟨hap, hb⟩, hM1, hM2⟩, hlo, hhi, hgraph⟩
-      have hrp : (x ^ ((-1 / 2 : ℚ) : ℝ)) ^ (2 : ℕ) = x⁻¹ := hrpow2 x hap
+      -- the origin is only on `power_law` for positive exponents, and `-1/2` is not
+      have hxpos : 0 < x := hap.resolve_right (by rintro ⟨-, h⟩; norm_num at h)
+      have hrp : (x ^ ((-1 / 2 : ℚ) : ℝ)) ^ (2 : ℕ) = x⁻¹ := hrpow2 x hxpos
       have hb' : y = x ^ ((-1 / 2 : ℚ) : ℝ) := by simpa using hb
       have hkey : a * cubicVal r₀ r₁ r₂ 1 a ^ 2 = c ^ 2 := by
         calc a * cubicVal r₀ r₁ r₂ 1 a ^ 2 = x * (s * y) ^ 2 := by
@@ -373,7 +375,7 @@ theorem negHalf_cubic_root_Pconstructible {r₀ r₁ r₂ c β : ℝ}
     · rintro ⟨rfl, rfl⟩
       constructor
       · refine ⟨(β ^ 2), (β ^ 2) ^ ((-1 / 2 : ℚ) : ℝ), ⟨?_, ?_⟩, rfl, hmemb.symm⟩
-        · exact sq_pos_of_ne_zero hβ
+        · exact Or.inl (sq_pos_of_ne_zero hβ)
         · simp
       · exact ⟨hq₁b.le, hq₂a.le, rfl⟩
   -- the two signs of `β`, and then `β = ±√(β²)`
@@ -428,11 +430,11 @@ theorem half_quartic_root_Pconstructible {q₀ q₁ q₂ q₃ c β : ℝ}
       simpa using neg_Pconstructible hsqrt
     · rw [Real.sqrt_sq_eq_abs, abs_of_pos hβpos] at hsqrt
       exact hsqrt
-  have hrpow2 : ∀ x : ℝ, 0 < x → (x ^ ((1 / 2 : ℚ) : ℝ)) ^ (2 : ℕ) = x := by
+  have hrpow2 : ∀ x : ℝ, 0 ≤ x → (x ^ ((1 / 2 : ℚ) : ℝ)) ^ (2 : ℕ) = x := by
     intro x hx
     calc (x ^ ((1 / 2 : ℚ) : ℝ)) ^ (2 : ℕ)
         = (x ^ ((1 / 2 : ℚ) : ℝ)) ^ ((2 : ℕ) : ℝ) := (Real.rpow_natCast _ _).symm
-      _ = x ^ (((1 / 2 : ℚ) : ℝ) * 2) := (Real.rpow_mul hx.le _ _).symm
+      _ = x ^ (((1 / 2 : ℚ) : ℝ) * 2) := (Real.rpow_mul hx _ _).symm
       _ = x ^ (1 : ℝ) := by norm_num
       _ = x := Real.rpow_one x
   -- the crossing of the quartic graph with `x ↦ s·x ^ (1/2)`, isolated on the roots of
@@ -513,7 +515,9 @@ theorem half_quartic_root_Pconstructible {q₀ q₁ q₂ q₃ c β : ℝ}
       Set.mem_singleton_iff, Prod.mk.injEq, quarticGraph]
     constructor
     · rintro ⟨⟨x, y, ⟨hap, hb⟩, hM1, hM2⟩, hgraph, hlo, hhi, hyl, hyh⟩
-      have hrp : (x ^ ((1 / 2 : ℚ) : ℝ)) ^ (2 : ℕ) = x := hrpow2 x hap
+      have hrp : (x ^ ((1 / 2 : ℚ) : ℝ)) ^ (2 : ℕ) = x :=
+        -- the origin is now on `power_law 1 (1/2)`; `0 ^ (1/2)` squared is still `0`
+        hrpow2 x (hap.elim le_of_lt fun h => h.1.ge)
       have hb' : y = x ^ ((1 / 2 : ℚ) : ℝ) := by simpa using hb
       have hkey : quarticVal q₀ q₁ q₂ q₃ 1 a ^ 2 = c ^ 2 * a := by
         calc quarticVal q₀ q₁ q₂ q₃ 1 a ^ 2 = (s * y) ^ 2 := by rw [← hgraph, ← hM2]
@@ -526,7 +530,7 @@ theorem half_quartic_root_Pconstructible {q₀ q₁ q₂ q₃ c β : ℝ}
     · rintro ⟨rfl, rfl⟩
       constructor
       · refine ⟨(β ^ 2), (β ^ 2) ^ ((1 / 2 : ℚ) : ℝ), ⟨?_, ?_⟩, rfl, hmemb.symm⟩
-        · exact sq_pos_of_ne_zero hβ
+        · exact Or.inl (sq_pos_of_ne_zero hβ)
         · simp
       · exact ⟨rfl, hub.le, hvb.le, hylo.le, hyhi.le⟩
   -- the two signs of `β`, and then `β = ±√(β²)`

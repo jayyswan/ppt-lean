@@ -229,7 +229,7 @@ theorem sqrt_Pconstructible {x : ℝ} (hx : PConstructible x) :
       subst hline
       exact ⟨rfl, by rw [hb, one_mul, Real.sqrt_eq_rpow]⟩
     · rintro ⟨rfl, rfl⟩
-      exact ⟨⟨h, by rw [one_mul, Real.sqrt_eq_rpow]⟩, rfl⟩
+      exact ⟨⟨Or.inl h, by rw [one_mul, Real.sqrt_eq_rpow]⟩, rfl⟩
 
 -- Theorem: the square of a P-constructible number is P-constructible.
 @[pconstructible]
@@ -527,8 +527,8 @@ theorem powerLaw_root_pos_Pconstructible {n : ℕ} (hn : 6 < n) {a : ℚ} (ha : 
     (neg_Pconstructible (nat_Pconstructible M)) (nat_Pconstructible M)
   refine PConstructible.inter_x hS (PConstructibleCurve.poly_graph p hdeg)
     (x := β) (y := (a : ℝ) * β ^ n) ?_
-  have hpow : ∀ u : ℝ, 0 < u → u ^ (((n : ℚ) : ℝ)) = u ^ n := by
-    intro u hu
+  have hpow : ∀ u : ℝ, u ^ (((n : ℚ) : ℝ)) = u ^ n := by
+    intro u
     push_cast
     exact Real.rpow_natCast u n
   have hbound : |(a : ℝ) * β ^ n| < (M : ℝ) := by
@@ -539,16 +539,17 @@ theorem powerLaw_root_pos_Pconstructible {n : ℕ} (hn : 6 < n) {a : ℚ} (ha : 
       _ < (M : ℝ) := hM
   obtain ⟨hlo, hhi⟩ := abs_lt.mp hbound
   have hmem : ((β, (a : ℝ) * β ^ n) : ℝ × ℝ) ∈
-      ({pt : ℝ × ℝ | 0 < pt.1 ∧ pt.2 = (a : ℝ) * pt.1 ^ (((n : ℚ)) : ℝ)} ∩
+      ({pt : ℝ × ℝ | (0 < pt.1 ∨ (pt.1 = 0 ∧ 0 < (n : ℚ))) ∧
+          pt.2 = (a : ℝ) * pt.1 ^ (((n : ℚ)) : ℝ)} ∩
         {pt : ℝ × ℝ | (q₁ : ℝ) ≤ pt.1 ∧ pt.1 ≤ (q₂ : ℝ) ∧
           -(M : ℝ) ≤ pt.2 ∧ pt.2 ≤ (M : ℝ)}) ∩
       {pt : ℝ × ℝ | pt.2 = aeval pt.1 p} :=
-    ⟨⟨⟨hβ, by rw [hpow β hβ]⟩, hq₁b.le, hq₂a.le, hlo.le, hhi.le⟩, heq⟩
+    ⟨⟨⟨Or.inl hβ, by rw [hpow β]⟩, hq₁b.le, hq₂a.le, hlo.le, hhi.le⟩, heq⟩
   ext ⟨u, v⟩
   simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_singleton_iff, Prod.mk.injEq]
   constructor
-  · rintro ⟨⟨⟨hupos, hv⟩, hb1, hb2, -, -⟩, hgraph⟩
-    rw [hpow u hupos] at hv
+  · rintro ⟨⟨⟨-, hv⟩, hb1, hb2, -, -⟩, hgraph⟩
+    rw [hpow u] at hv
     have hru : P.IsRoot u := by
       rw [Polynomial.IsRoot, hevalP, ← hgraph, ← hv, sub_self]
     have hu : u = β := huniq u hru hb1 hb2
@@ -945,23 +946,24 @@ theorem powerLaw_cubic_root_pos_Pconstructible {n : ℕ} (hn : 3 < n) {c₀ c₁
     (rat_Pconstructible q₁) (rat_Pconstructible q₂) (by linarith : (q₁ : ℝ) < q₂)
   refine PConstructible.inter_x (PConstructibleCurve.power_law 1 (n : ℚ)) hT
     (x := β) (y := β ^ n) ?_
-  have hpow : ∀ t : ℝ, 0 < t → t ^ (((n : ℚ) : ℝ)) = t ^ n := by
-    intro t ht
+  have hpow : ∀ t : ℝ, t ^ (((n : ℚ) : ℝ)) = t ^ n := by
+    intro t
     push_cast
     exact Real.rpow_natCast t n
   have hmem : ((β, β ^ n) : ℝ × ℝ) ∈
-      {pt : ℝ × ℝ | 0 < pt.1 ∧ pt.2 = ((1 : ℚ) : ℝ) * pt.1 ^ (((n : ℚ)) : ℝ)} ∩
+      {pt : ℝ × ℝ | (0 < pt.1 ∨ (pt.1 = 0 ∧ 0 < (n : ℚ))) ∧
+          pt.2 = ((1 : ℚ) : ℝ) * pt.1 ^ (((n : ℚ)) : ℝ)} ∩
         cubicGraph c₀ c₁ c₂ c₃ (q₁ : ℝ) (q₂ : ℝ) := by
-    refine ⟨⟨hβ, ?_⟩, hq₁b.le, hq₂a.le, heq⟩
-    rw [hpow β hβ]
+    refine ⟨⟨Or.inl hβ, ?_⟩, hq₁b.le, hq₂a.le, heq⟩
+    rw [hpow β]
     push_cast
     ring
   ext ⟨a, b⟩
   simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, cubicGraph, Set.mem_singleton_iff,
     Prod.mk.injEq]
   constructor
-  · rintro ⟨⟨hapos, hb⟩, hlo, hhi, hgraph⟩
-    rw [hpow a hapos] at hb
+  · rintro ⟨⟨-, hb⟩, hlo, hhi, hgraph⟩
+    rw [hpow a] at hb
     norm_num at hb
     have hra : P.IsRoot a := by
       rw [Polynomial.IsRoot, hevalP, ← hgraph, ← hb, sub_self]

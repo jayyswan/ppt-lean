@@ -32,36 +32,20 @@ is (semantically) a `power_law` curve, and the tracing
 runs along it for `t ∈ [0, 1]`. The arc starts at the origin, so its two plane endpoints
 `(0, 0)` and `(1, (1 + σ/2)⁻¹)` are rational.
 
-**This is where the development is conditional.** The real `power_law` constructor draws only
-the half-line `x > 0`; it does *not* include the origin. The family is therefore correctly
-stated as `PowerLawWithOrigin`: "there is a constructible power-law curve that does contain
-the origin". Under that hypothesis the arc is a genuine closed interval, and `arc_length`
-applied to this tracing returns
+The `power_law` constructor draws the power-law curve of any positive rational
+exponent all the way down to the origin, so the arc is a genuine closed interval and
+`arc_length` applied to this tracing returns
 
     ℓ(σ) = ∫₀¹ √(1 + x ^ σ) dx.
 
 This file proves every analytic side condition (`speed_powerLawParam`,
 `arcLengthOf_powerLawParam`, `powerLawParam_injOn`, `powerLawParam_differentiableAt`,
-`powerLawParam_intervalIntegrable`) *unconditionally* — none of them touches a constructor.
-The origin-inclusive *set* is also written down and membership in it is checked pointwise;
-what is missing, and what `PowerLawWithOrigin` supplies, is that this set is a constructible
-curve. The analytic conversion from `ℓ(σ)` to the *inverse*-square-root integral `A(σ)` is the
-subject of `Pptc.GammaRational.Conversion`. -/
+`powerLawParam_intervalIntegrable`), and checks pointwise that the tracing lies on the
+`power_law` set. The analytic conversion from `ℓ(σ)` to the *inverse*-square-root
+integral `A(σ)` is the subject of `Pptc.GammaRational.Conversion`. -/
 
 namespace Pconstructible
 
-/-- **The one missing primitive, named as a hypothesis.** In this project the `power_law`
-constructor draws only `x > 0`. If it were extended to include the origin whenever the
-exponent is positive — that is, if the set `{(x, a x ^ b) : 0 < x ∨ (x = 0 ∧ 0 < b)}` were
-a constructible curve — then `Γ` would be P-constructible at every rational. This `Prop`
-packages that extension as a hypothesis so the rest of `Pptc.GammaRational` can be stated and
-proved now, and becomes trivial (supplied by a single application of the constructor) the
-moment the definitions are widened. The *only* use of `hPL` anywhere is the image side
-condition `powerLawParam_image_subset` below; everything after it is unconditional. -/
-def PowerLawWithOrigin : Prop :=
-  ∀ a b : ℚ, 0 < b →
-    PConstructibleCurve
-      {pt : ℝ × ℝ | (0 < pt.1 ∨ (pt.1 = 0 ∧ 0 < b)) ∧ pt.2 = (a : ℝ) * pt.1 ^ (b : ℝ)}
 
 /-- The tracing `t ↦ (t, (1 + σ/2)⁻¹ t ^ (1 + σ/2))` of the power-law curve with exponent
 `1 + σ/2`, the arc whose length is `ℓ(σ)`. -/
@@ -105,10 +89,8 @@ theorem arcLengthOf_powerLawParam {σ : ℝ} (hσ : 0 < σ) :
   exact speed_powerLawParam hσ hx.1
 
 -- Theorem: for rational `σ > 0` the tracing lands on the origin-inclusive `power_law` curve
--- with the matching rational data. The *set* is the one `PowerLawWithOrigin` asserts is a
--- curve; membership itself is checked pointwise and is unconditional. Stated so that
--- `exact PConstructibleCurve.power_law _ _` closes the constructor side goal after
--- `push_cast`.
+-- with the matching rational data. The *set* is the one `power_law` draws. Stated so
+-- that the constructor's side goal closes after `push_cast`.
 theorem powerLawParam_image_subset {σ : ℚ} (hσ : 0 < σ) :
     powerLawParam σ '' Set.Icc 0 1 ⊆
       {pt : ℝ × ℝ | (0 < pt.1 ∨ (pt.1 = 0 ∧ 0 < (1 + σ / 2 : ℚ))) ∧

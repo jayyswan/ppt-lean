@@ -108,16 +108,16 @@ theorem powerLaw_quartic_root_pos_PConstructible {c₀ c₁ c₂ c₃ c₄ β : 
     (PConstructible.add (pow_Pconstructible (rat_Pconstructible q₂) 8)
       PConstructible.base_one)
   refine PConstructible.inter_x hS hT (x := β) (y := β ^ 8) ?_
-  have hpow : ∀ t : ℝ, 0 < t → t ^ (((8 : ℚ) : ℝ)) = t ^ 8 := by
-    intro t ht
+  have hpow : ∀ t : ℝ, t ^ (((8 : ℚ) : ℝ)) = t ^ 8 := by
+    intro t
     push_cast
     exact Real.rpow_natCast t 8
   ext ⟨a, b⟩
   simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, quarticGraph, Set.mem_singleton_iff,
     Prod.mk.injEq]
   constructor
-  · rintro ⟨⟨⟨hapos, hb⟩, hlo, hhi, _h0, _hy⟩, hgraph⟩
-    rw [hpow a hapos] at hb
+  · rintro ⟨⟨⟨-, hb⟩, hlo, hhi, _h0, _hy⟩, hgraph⟩
+    rw [hpow a] at hb
     norm_num at hb
     have hra : P.IsRoot a := by
       rw [Polynomial.IsRoot, hevalP, ← hgraph, ← hb, sub_self]
@@ -130,8 +130,8 @@ theorem powerLaw_quartic_root_pos_PConstructible {c₀ c₁ c₂ c₃ c₄ β : 
       have h : β ^ 8 < (q₂ : ℝ) ^ 8 :=
         pow_lt_pow_left₀ hq₂a hβ.le (by norm_num)
       linarith
-    refine ⟨⟨⟨hβ, ?_⟩, hq₁b.le, hq₂a.le, hpos.le, hlt.le⟩, heq⟩
-    rw [hpow β hβ]
+    refine ⟨⟨⟨Or.inl hβ, ?_⟩, hq₁b.le, hq₂a.le, hpos.le, hlt.le⟩, heq⟩
+    rw [hpow β]
     ring
 
 -- Theorem: the same for any root, by reflecting the negative case in the `y` axis. For

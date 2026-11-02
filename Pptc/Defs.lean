@@ -192,8 +192,8 @@ inductive PConstructible : ℝ → Prop
   -- sits at the reported edge and the program has something to put a handle on. Both
   -- failure modes are live here. Unboundedness is loud — `poly_graph` is the whole,
   -- endless graph, whose `sSup` is not a real number at all. Non-closedness is quiet and
-  -- is the dangerous one: `power_law` omits `x = 0`, so the restricted arc
-  -- `{(x, √x) : 0 < x ≤ 1}` has `sInf` of its abscissae equal to `0`, a perfectly good
+  -- is the dangerous one: a negative-exponent `power_law` omits `x = 0`, so the restricted
+  -- arc `{(x, 1/x) : 0 < x ≤ 1}` has `sInf` of its abscissae equal to `0`, a perfectly good
   -- real that no point of the curve attains. Concluding it were P-constructible would
   -- assert that an infinite limiting process is a finite construction, which is precisely
   -- what this class is built to exclude. Compactness rules out both at once. In practice
@@ -245,9 +245,16 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- `PConstructible`) coefficients.
   | poly_graph (p : Polynomial ℚ) (hdeg : p.natDegree ≤ 6) :
       PConstructibleCurve {pt : ℝ × ℝ | pt.2 = Polynomial.aeval pt.1 p}
-  -- A power-law curve `y = a * x ^ b` for `x > 0`, with rational `a`, `b`.
+  -- A power-law curve `y = a * x ^ b` for `x > 0`, with rational `a`, `b`. When the
+  -- exponent is positive the curve is drawn all the way down to the origin, so the point
+  -- `(0, 0)` is included: a positive-exponent power law is continuous at `0` with value
+  -- `0`, and the program draws a closed stroke starting there. For `b ≤ 0` the curve stays
+  -- open at `x = 0` — a negative exponent is an asymptote that is never reached (Mathlib's
+  -- `0 ^ b = 0` would otherwise put a spurious origin on `y = a / x`), and `b = 0` is flat
+  -- with a jump at `0`.
   | power_law (a b : ℚ) :
-      PConstructibleCurve {pt : ℝ × ℝ | 0 < pt.1 ∧ pt.2 = (a : ℝ) * pt.1 ^ (b : ℝ)}
+      PConstructibleCurve
+        {pt : ℝ × ℝ | (0 < pt.1 ∨ (pt.1 = 0 ∧ 0 < b)) ∧ pt.2 = (a : ℝ) * pt.1 ^ (b : ℝ)}
   -- The exponential curve `y = 2 ^ x`, with `^` real exponentiation. Unlike `power_law`
   -- the variable is in the exponent, so this is genuinely a new family: it is what makes
   -- logarithms reachable, by reading off the other coordinate.
