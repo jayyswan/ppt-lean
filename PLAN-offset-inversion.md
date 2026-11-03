@@ -40,6 +40,10 @@ None of it is in Lean.
 - Which named problems fall into it.
 - A Lean headline theorem.
 
+**Survey, not hunt.** The named equations in §0 are entries in a catalogue, not the
+measure of success. A family that solves nothing named is still a result: report it in full.
+Never drop a path because it misses a particular target.
+
 **Not in scope:** adding curves to `Defs.lean`. Curves outside the current constructors (catenary,
 spirals, …) are investigated only in `PLAN-ppt-tan-curves.md`.
 

@@ -10,6 +10,12 @@ Adding it to `Defs.lean` is the user's decision, never a probe's.
 
 This plan finds the candidate routes and collects the evidence for that decision.
 
+**Survey, not hunt.** The wishlist in §2 motivated this plan, but it does not filter what is
+explored. Each probe catalogues *every* curve, map or read-out it meets, together with its
+exact form and idealization class. That includes ones that reach nothing on the wishlist; for
+example, a text warp that gives a "linearly varying offset" curve is a finding in its own
+right. Report negative results in full too, saying what the path *does* give.
+
 ## 1. Rules for every probe
 
 - **Constructions must be UI actions.**
