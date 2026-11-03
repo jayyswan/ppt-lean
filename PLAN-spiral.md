@@ -95,3 +95,68 @@ The orchestrator writes `notes/spiral/SUMMARY.md`:
 - the constructor options from stream D for the user's decision.
 
 Nothing goes into `Defs.lean` without the user's explicit decision.
+
+## 4. Wave 1 results and follow-ups (2026-11-03)
+
+Notes: `notes/spiral/W.md`, `I1.md`, `I2.md`, `I3.md`.
+
+**What wave 1 established:**
+
+- **W: normal form [Proof].**
+  - Every reachable arc is a mirrored similarity image of `r = ψ` over a window
+    `ψ ∈ [2πq₁, 2πq₂]`, with `q₁ = Δu(1+v₀)/Δv` and `q₂ = q₁ + Δu`. This implies:
+    - one arc turns at most once, and `q₂ ≤ 2q₁`;
+    - the window ends and the plane endpoints are P-constructible;
+    - `A` in `r = A + Bθ` adds nothing;
+    - non-uniform scaling adds no new box values.
+  - **The §0 "(0, 4π]" claim is false for fixed fonts:** there are gaps, for example between
+    one and two ◢. Beyond 4π *is* reachable: flat edges, rotated text, mixed font sizes.
+  - **Open:**
+    - whether the warp normalises by the whole row's ink box;
+    - the ink box under rotated text;
+    - whether the Arch/Button Pour presets give exact spirals (Arch Down Pour defaults to
+      `ρ = R/4`);
+    - whether character spacing and font size can be set exactly by UI;
+    - isolating a sub-arc.
+- **I1: lines and conics.** One master equation covers every case:
+  `Re(Aθ²e^{2iθ} + Bθe^{iθ}) + mθ² + f = 0`.
+  - **E:** a line through the centre; a circle centred at the centre.
+  - **R:** a general line; centred conics; off-centre circles and circles through the centre
+    (the partner `x + q/x` is a sheared hyperbola); Dottie; Kepler.
+  - **?:** generic conics; conics symmetric about a line through the centre (parabola `y = kx²`,
+    `y² = 4x`); off-centre hyperbolas.
+  - **Negative [Proof]:** no line or conic reaches T1, T2 or T6. Only the box gives a tan
+    family (T3).
+  - **Caveat:** root counts came from sign-change scans, which miss tangential double roots.
+- **I2: polynomials, power laws, Béziers.** Equations collapse to R only as `θ^p ×` one
+  harmonic.
+  - **Parabola:** `sin θ = kθ cos²θ`, which is the sine meeting the non-drawable cubic
+    `kx(1−y²) = y`. Class **?**.
+  - **Power laws:** R for `b ∈ {0, −1}`, E for `b = 1`, **?** for every other `b`.
+  - **Béziers:** the solitary-node Bézier with its node at the centre is R
+    (`cos θ = θ^{−1/3}`); the loop and cusp are **?**.
+  - **Scope gap:** only the *aligned* frame was enumerated. General position, a shifted
+    spiral and non-uniform images were not.
+- **I3: `exp_two` and the sine.** The normal forms nest `θ cos(θ−β)` inside a second
+  transcendental. Both families are **?** [Heuristic], with no name found.
+  - Roots of `θ sin θ = 2^{θ cos θ}` in (0, 4π]: four, then two per turn.
+  - `θ sin θ = sin(θ cos θ)`: trivial roots at `mπ` plus a non-trivial root `0.75986…`. The
+    sign-flipped case has no non-trivial root, which is unexplained.
+  - A side claim, "spiral ∩ log spiral → Lambert W is likely N", is wrong: Lambert W is R (a
+    line meeting `exp_two`). It is also moot, because no route draws a log spiral.
+
+**Overall:** the box families (T3, and `(x+β)tan x = 1`) are the only named new numbers so
+far. Many intersection families look new, but none is named and none is proved
+non-reducible.
+
+### Follow-up streams (wave 1b)
+
+| id | kind | question | depends on |
+|---|---|---|---|
+| F1 | PowerPoint probe (real UI automation, COM/XML only to observe) | Settle W's open PowerPoint questions: (a) the normalisation of multi-glyph rows (whole-row ink box or per glyph?), measured on rows of ◢ and ▲; (b) Arch Up, Arch Down and Button Pour: are their edges exact spirals, and what are their default handle values and windows? (c) can the character-spacing control (spinner or preset list) and the font-size list set values exactly, and which ones? (d) what does "rotated text" mean in the UI (text direction, Rotate all text 90°/270°, shape rotation), and how does each change the warp? (e) the box sizes with both circles at 360° for the presets in (b). | — |
+| F2 | math | **Reachable-roots audit.** Recompute the "reachable roots" column of I1, I2 and I3 against W's exact window set, and F1's once it lands. Redo the root counts with a method that catches double roots (resultant or derivative check, not sign changes). Produce one table: family → roots → which window reaches each → glyph/route. | W, F1 |
+| F3 | math | **General position for I2.** Enumerate the spiral meeting polynomial graphs, power laws and Béziers in *general* affine position: shifted spiral, rotated partner, non-uniform image. Reduce each case (E/R/N/?). Find the general collapse conditions, for example which shifts or rotations bring the equation down to `θ^p ×` one harmonic. Also explain I3's sign-flipped sine case. | — |
+| F4 | math (proof) | **Novelty.** Try to *prove* non-reducibility for the main **?** classes: the parabola class `sin θ = kθcos²θ`, the generic conic, and `θ sin θ = 2^{θ cos θ}`. Use the framework of `notes/sheared-sine-intersections.md` §3 (uniform convention, analytic continuation) or a differential-algebra / Ax–Schanuel-type argument. Settle the precise statement first: "no single intersection of existing curves solves this family uniformly in its parameters". A proof for one class is a success; a clear account of why the approach fails is also a result. | — |
+
+**Order:** F1, F3 and F4 now; F2 after F1. Wave 2 (I4, O, L) follows as planned. L should take
+F4's statements as input.
