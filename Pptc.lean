@@ -16,4 +16,5 @@ import Pptc.BoxGraph
 import Pptc.BoxOffset
 import Pptc.OffsetInversion.Projectile
 import Pptc.OffsetInversion.Speed
+import Pptc.OffsetInversion.Parabola
 import Pptc.Octic.Main

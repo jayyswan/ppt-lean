@@ -38,7 +38,7 @@ coefficients, power laws, the exponential `y = 2 ^ x`, the sine curve `y = sin x
 cubic Bézier curves with P-constructible control points) and the geometric operations of
 translating along either axis, scaling either axis, rotating by whole-degree increments,
 cropping to a rectangular window, marking off an arc of prescribed length, and offsetting
-an arc sideways by a fixed normal distance. The `box_xmax`/`box_ymax` constructors are
+a whole curve sideways by a fixed normal distance. The `box_xmax`/`box_ymax` constructors are
 the coordinate-extreme step above; only the two maxima are axioms, the minima following
 by reflection.
 
@@ -419,8 +419,8 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- to its start, `γ b = γ a`; PowerPoint offsets a closed outline whole. `hseam` asks that
   -- it then close smoothly, with the same normal at both ends, so the offset is the closed
   -- parallel curve that is drawn, not one with a gap where a line join would go. An open
-  -- arc injective on all of `Icc a b` meets both conditions trivially (the planned helper
-  -- `offset_open`, see `PLAN-offset-soundness.md`).
+  -- arc injective on all of `Icc a b` meets both conditions trivially (`offset_open`, the
+  -- open-arc form of this constructor in `Pptc/Offset.lean`).
   --
   -- Nothing is integrated here, so `hint` is absent. Two hypotheses take its place, both
   -- about the *velocity*, which is what the offset moves with:

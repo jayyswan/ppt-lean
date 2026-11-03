@@ -135,6 +135,33 @@ theorem offsetParam_dist_sq (γ : ℝ → ℝ × ℝ) (d t : ℝ) (hreg : speed 
   nlinarith [hsq]
 
 
+/-! ### The open-arc form of the `offset` constructor
+
+The constructor accepts a closed curve traced once round, with `γ b = γ a` and a matching
+normal at the seam. Most uses have an open arc, injective on the whole of `Icc a b`; for
+those the seam condition holds vacuously, and the constructor reduces to the form below. -/
+
+-- Theorem: the `offset` constructor for an arc that does not close up. Injectivity on
+-- `Icc a b` (rather than `Ico a b`) makes the seam hypothesis vacuous: `γ b = γ a` would
+-- force `b = a`, contradicting `a < b`.
+theorem PConstructibleCurve.offset_open {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+    (γ : ℝ → ℝ × ℝ) {a b : ℝ} (hab : a < b)
+    (himg : γ '' Set.Icc a b = S)
+    (hinj : Set.InjOn γ (Set.Icc a b))
+    (hdiff : ∀ t ∈ Set.Icc a b,
+      DifferentiableAt ℝ (fun s => (γ s).1) t ∧ DifferentiableAt ℝ (fun s => (γ s).2) t)
+    (hreg : ∀ t ∈ Set.Icc a b, speed γ t ≠ 0)
+    (hC1 : ContinuousOn (deriv (fun s => (γ s).1)) (Set.Icc a b) ∧
+      ContinuousOn (deriv (fun s => (γ s).2)) (Set.Icc a b))
+    {d : ℝ} (hd : PConstructible d) :
+    PConstructibleCurve (offsetParam γ d '' Set.Icc a b) := by
+  have hne : γ b ≠ γ a := by
+    intro h
+    have hba : b = a := hinj ⟨hab.le, le_rfl⟩ ⟨le_rfl, hab.le⟩ h
+    exact (ne_of_gt hab) hba
+  exact PConstructibleCurve.offset hS γ hab himg (hinj.mono Set.Ico_subset_Icc_self)
+    (fun h => absurd h hne) hdiff hreg hC1 hd
+
 /-! ### Derivative, speed and normal of a cubic pair
 
 `cubicPairParam` is the curve the Bézier draws (`cubicPairArc_PConstructibleCurve`), and
@@ -291,7 +318,7 @@ theorem offsetCubicPairArc_PConstructibleCurve {c₀ c₁ c₂ c₃ e₀ e₁ e�
     intro a b c
     unfold cubicDer
     fun_prop
-  exact PConstructibleCurve.offset harc _ huv.le Set.Subset.rfl hinj
+  exact PConstructibleCurve.offset_open harc _ huv rfl hinj
     (fun t _ => ⟨(hasDerivAt_cubicVal c₀ c₁ c₂ c₃ t).differentiableAt,
       (hasDerivAt_cubicVal e₀ e₁ e₂ e₃ t).differentiableAt⟩)
     hreg

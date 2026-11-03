@@ -132,17 +132,17 @@ theorem offsetArc_box_ymin_Pconstructible {γ : ℝ → ℝ × ℝ} {d u v : ℝ
 /-! ### The right edge, straight from the `offset` constructor's hypotheses
 
 The four wrappers above take the offset arc's constructibility and continuity as given. The
-convenience form below instead takes the `offset` constructor's own hypothesis list, builds
-the `PConstructibleCurve` with `PConstructibleCurve.offset` and the continuity with
-`continuousOn_offsetParam`, and hands both to `offsetArc_box_xmax_Pconstructible` — so a
-caller holding a regular traced arc can read the right edge of its parallel copy in one
-step. -/
+convenience form below instead takes the `offset_open` hypothesis list — a whole open arc,
+traced injectively on `Icc a b` — builds the `PConstructibleCurve` with
+`PConstructibleCurve.offset_open` and the continuity with `continuousOn_offsetParam`, and
+hands both to `offsetArc_box_xmax_Pconstructible`, so a caller holding a regular traced arc
+can read the right edge of its parallel copy in one step. -/
 
--- Theorem: the right edge of the offset of a regular traced arc, from the constructor's
--- hypotheses alone.
+-- Theorem: the right edge of the offset of a regular whole traced arc, from the
+-- constructor's hypotheses alone.
 theorem offsetArc_box_xmax_of_offsetHyp {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
-    (γ : ℝ → ℝ × ℝ) {a b d : ℝ} (hab : a ≤ b)
-    (hsub : γ '' Set.Icc a b ⊆ S) (hinj : Set.InjOn γ (Set.Icc a b))
+    (γ : ℝ → ℝ × ℝ) {a b d : ℝ} (hab : a < b)
+    (himg : γ '' Set.Icc a b = S) (hinj : Set.InjOn γ (Set.Icc a b))
     (hdiff : ∀ t ∈ Set.Icc a b,
       DifferentiableAt ℝ (fun s => (γ s).1) t ∧ DifferentiableAt ℝ (fun s => (γ s).2) t)
     (hreg : ∀ t ∈ Set.Icc a b, speed γ t ≠ 0)
@@ -150,8 +150,8 @@ theorem offsetArc_box_xmax_of_offsetHyp {S : Set (ℝ × ℝ)} (hS : PConstructi
       ContinuousOn (deriv (fun s => (γ s).2)) (Set.Icc a b))
     (hd : PConstructible d) :
     PConstructible (sSup (Prod.fst '' (offsetParam γ d '' Set.Icc a b))) :=
-  offsetArc_box_xmax_Pconstructible (PConstructibleCurve.offset hS γ hab hsub hinj hdiff hreg
-    hC1 hd) hab (continuousOn_offsetParam hdiff hreg hC1)
+  offsetArc_box_xmax_Pconstructible (PConstructibleCurve.offset_open hS γ hab himg hinj hdiff
+    hreg hC1 hd) hab.le (continuousOn_offsetParam hdiff hreg hC1)
 
 /-! ### The offset cusp abscissa of a concrete cubic pair -/
 

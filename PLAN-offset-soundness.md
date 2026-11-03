@@ -1,15 +1,18 @@
 # PLAN-offset-soundness: remodel `offset` to match what PowerPoint can actually do
 
-**Status:** the axiom is changed; downstream alignment is open. See "Alignment work" at the
-end. On 2026-11-03 the user chose **option 2** (whole curve, open or closed), and it was
-applied to `Pptc/Defs.lean`. `Defs.lean` compiles. Its dependents have **not** been rebuilt
-and will break until they are repaired.
+**Status (2026-11-03): alignment complete.** The user chose **option 2** (whole curve,
+open or closed), it was applied to `Pptc/Defs.lean`, and the dependents have been repaired:
+`Pptc.Offset`, `Pptc.BoxOffset`, `Pptc.OffsetInversion.Speed` and
+`Pptc.OffsetInversion.Parabola` all build narrowly. The parabola headline now uses the
+legitimate whole-arc route, `CollapseTest.lean` is a documented negative test failing only
+at `b < b`, and the docs/defect note are updated. See "Alignment work" at the end.
 
 ## The problem
 
 As currently stated, `PConstructibleCurve.offset` (`Pptc/Defs.lean:430`) makes **every real
 number P-constructible**. The full write-up is `../notes/offset-inversion/DEFECT-defs-soundness.md`.
-A compiling proof is in the untracked file `Pptc/Scratch/CollapseTest.lean`.
+The old compiling proof is preserved as a documented negative test in
+`Pptc/Scratch/CollapseTest.lean`; it no longer compiles, by design.
 
 - **Cause.** `offset` takes `hsub : γ '' Icc a b ⊆ S`, so *any* sub-arc of a drawn curve can
   be used. There is no condition on `a`, on `b`, or on the plane endpoints, and `a = b` is
@@ -17,9 +20,10 @@ A compiling proof is in the untracked file `Pptc/Scratch/CollapseTest.lean`.
 - **Collapse.** Take the parabola `y = x²`, the interval `Icc b b` and `d = 0`. The offset is
   the single point `{(b, b²)}`, and its box gives `b`.
 - **Not only a degenerate case.** It works for any `a < b` and any non-vertical graph.
-- **Consequence.** `parabola_offset_root_Pconstructible` (`Pptc/OffsetInversion/Parabola.lean`)
-  is true but vacuous: its proof offsets over `Icc 0 w` for arbitrary `w`. Treat any result
-  that goes through `offset` as suspect until it has been re-checked.
+- **Consequence (historical).** `parabola_offset_root_Pconstructible`
+  (`Pptc/OffsetInversion/Parabola.lean`) was true but vacuous: the old proof offset over
+  `Icc 0 w` for arbitrary `w`. It has been re-proved along the whole-arc route, and every
+  result that goes through `offset` has been re-checked.
 
 ## What needs doing
 
@@ -164,7 +168,7 @@ Compared with the old constructor:
 explain both holes and the closed-curve case: the constructor comment and the module
 docstring's `offset` paragraph.
 
-## Alignment work (to do, in this order)
+## Alignment work (done, in this order)
 
 Keep each step to one file, per `CLAUDE.md`. Use `lean_diagnostic_messages` while iterating.
 Build only narrow targets (`lake build Pptc.Offset`, and so on), one at a time.
@@ -234,3 +238,19 @@ Build only narrow targets (`lake build Pptc.Offset`, and so on), one at a time.
       `Pptc.OffsetInversion.Parabola`.
     - Run `lean_verify` on the repaired headline theorem.
     - Never run a whole-project build.
+
+## Alignment status, 2026-11-03
+
+All eleven steps are done; step 8 (the optional closed-curve lemma) was completed after the
+initial repair.
+
+- `lake env lean` on `Pptc/Offset.lean`, `Pptc/BoxOffset.lean`,
+  `Pptc/OffsetInversion/Speed.lean` and `Pptc/OffsetInversion/Parabola.lean` exits `0` with
+  no diagnostics. `Projectile.lean` and the scratch `OffsetA3` / `OffsetB4` files also
+  compile.
+- `Pptc/Scratch/CollapseTest.lean` fails at exactly one goal, `b < b` in the singleton
+  variant, as designed.
+- The constructor audit and the informal non-collapse argument are written up in
+  `../notes/offset-inversion/DEFECT-defs-soundness.md` §§7–8.
+- `Pptc/Offset.lean` gains `ellipseOffset_PConstructibleCurve`, the first use of the closed
+  branch of the constructor (`hseam` discharged by `2π`-periodicity).
