@@ -58,6 +58,89 @@ A compiling proof is in the untracked file `Pptc/Scratch/CollapseTest.lean`.
 6. **Delete** `Pptc/Scratch/CollapseTest.lean`, or keep it as a regression test that must
    *fail* to compile.
 
+## Findings, 2026-11-03: how PowerPoint actually offsets
+
+Sources:
+- the user's deck "constructible (1).pptx", slides 51–58 ("Parallel Curves"), plus slides
+  38–43 and 67–76 for context;
+- a COM-observed probe, `scratchpad/offset_probe/`.
+
+**The route.**
+1. Copy the curve and give it a 6 pt line.
+2. Scale the curve so that `K` maps to a fixed fraction of that width: a 1/24 in square, then
+   a further ½.
+3. Set the line to a compound Thick-Thin style.
+4. Copy, then Paste Special as EMF, and ungroup twice. The stroke outline is now a freeform.
+5. Scale it back up, registering on the centreline copy's bounding box.
+6. Align the straight end-cap segment on the original curve's endpoint.
+
+**What it produces [Measured, probe].**
+- **It acts on a whole drawn shape.** The stroke belongs to the shape's entire path. A piece of
+  a curve can only be offset after it has been made into its own shape, for example by Edit
+  Points ▸ Open Path, Merge Shapes, or the arc-division dash route.
+- **Both sides at once,** at the band edges of the compound line: several fixed fractions of
+  the width.
+  - For an *open* curve, each band is one closed polygon: the `+d` offset, a flat end cap, the
+    `−d` offset, then the other end cap.
+  - For a *closed* curve (ellipse), each edge is its own closed offset curve. The probe gave 6
+    concentric closed polylines.
+- **The raw offset, folds included.** On a bend tighter than `d`, the inner offset keeps its
+  swallowtail loop; it is not trimmed to the envelope. Slides 57–58 show the same loop. This
+  matches `offsetParam γ d '' Icc a b`, cusps and all.
+- **Corners** (not probed) get a line join: miter, round or bevel. This is outside the
+  current `C¹` model, which is the conservative choice.
+- **Idealization (b).**
+  - The output is a polyline on the EMF grid, measured at 0.125 pt at the shrunken scale.
+  - Because the curve is shrunk so that `K` ≈ a few pt and then enlarged, the error is a fixed
+    fraction of `K`, a few percent. It does not converge.
+  - Under the user's convention, this is still treated as the exact parallel curve.
+
+**Consequences for the axiom.**
+1. **The input must be a whole constructed curve**: `γ '' Icc a b = S`, not `⊆ S`. This is
+   Option A. Pieces come only from constructors that pin them: `restrict`, `arc_of_length`,
+   and so on.
+2. **`a < b` is also required.** This is a second collapse that Option A alone does *not* block:
+   - `restrict` with a degenerate window (`xmin = xmax`, `ymin = ymax`) yields a singleton
+     `{p}`;
+   - with `a = b`, `γ` is pinned only at `a`, so `deriv γ a`, and hence `unitNormal γ a`, is
+     arbitrary;
+   - `offset` then yields `{p + d·v}` for *any* unit vector `v`, and `box_xmax` reads every
+     real in `[p.1 − |d|, p.1 + |d|]`.
+
+   With `a < b`, `DifferentiableAt` at an endpoint forces the derivative to equal the one-sided
+   derivative from inside `[a, b]`, so the normal is the tangent normal of `S` itself. Recheck
+   the other constructors for the same `a = b` gap. `arc_of_length` and `arc_length` look
+   harmless: a zero-length arc is just its constructible start point.
+3. **Signed `d`, any P-constructible value:** matches PowerPoint, since both sides are produced
+   and `K` is set by scaling.
+4. **Closed curves** are offset whole by PowerPoint. Two choices:
+   - keep `InjOn γ (Icc a b)` (open arcs only): conservative, since closed curves are offset
+     piecewise after `restrict`;
+   - or allow `InjOn γ (Ico a b)` with `γ a = γ b`, plus a matching-normal condition at the seam,
+     so that the offset is the closed parallel curve PowerPoint draws.
+
+**Recommended statement (draft, not applied):**
+
+```lean
+  | offset {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
+      (γ : ℝ → ℝ × ℝ) {a b : ℝ} (hab : a < b)
+      -- `γ` traces the *whole* drawn curve: PowerPoint strokes an entire shape,
+      -- never an arbitrary piece of one ...
+      (himg : γ '' Set.Icc a b = S)
+      (hinj : Set.InjOn γ (Set.Icc a b))
+      (hdiff : ∀ t ∈ Set.Icc a b,
+        DifferentiableAt ℝ (fun s => (γ s).1) t ∧ DifferentiableAt ℝ (fun s => (γ s).2) t)
+      (hreg : ∀ t ∈ Set.Icc a b, speed γ t ≠ 0)
+      (hC1 : ContinuousOn (deriv (fun s => (γ s).1)) (Set.Icc a b) ∧
+        ContinuousOn (deriv (fun s => (γ s).2)) (Set.Icc a b))
+      {d : ℝ} (hd : PConstructible d) :
+      PConstructibleCurve (offsetParam γ d '' Set.Icc a b)
+```
+
+**Regression tests to keep, both must fail to compile:**
+- the sub-arc collapse (`Scratch/CollapseTest.lean`);
+- the singleton collapse (degenerate `restrict`, then `offset` with `a = b`).
+
 ## Notes
 
 - Until this is resolved, results that depend on offset inversion, such as the
