@@ -1,7 +1,9 @@
 # PLAN-offset-soundness: remodel `offset` to match what PowerPoint can actually do
 
-**Status: open, blocking.** Decision owner: the user, since `Defs.lean` changes are theirs.
-Nothing has been changed yet.
+**Status:** the axiom is changed; downstream alignment is open. See "Alignment work" at the
+end. On 2026-11-03 the user chose **option 2** (whole curve, open or closed), and it was
+applied to `Pptc/Defs.lean`. `Defs.lean` compiles. Its dependents have **not** been rebuilt
+and will break until they are repaired.
 
 ## The problem
 
@@ -146,3 +148,89 @@ Sources:
 - Until this is resolved, results that depend on offset inversion, such as the
   `ln sec` row in `../notes/ppt-curves/M.md`, are conditional on the repaired axiom.
 - No `Defs.lean` edits without the user's explicit decision.
+
+## The applied axiom (option 2)
+
+Compared with the old constructor:
+
+| Old | New |
+|---|---|
+| `hab : a ≤ b` | `hab : a < b` |
+| `hsub : γ '' Icc a b ⊆ S` | `himg : γ '' Icc a b = S` |
+| `hinj : InjOn γ (Icc a b)` | `hinj : InjOn γ (Ico a b)` |
+| none | `hseam : γ b = γ a → unitNormal γ b = unitNormal γ a` |
+
+`hdiff`, `hreg`, `hC1`, `hd` and the conclusion are unchanged. Two comments were rewritten to
+explain both holes and the closed-curve case: the constructor comment and the module
+docstring's `offset` paragraph.
+
+## Alignment work (to do, in this order)
+
+Keep each step to one file, per `CLAUDE.md`. Use `lean_diagnostic_messages` while iterating.
+Build only narrow targets (`lake build Pptc.Offset`, and so on), one at a time.
+
+1. **`Pptc/Offset.lean`: add the helper `PConstructibleCurve.offset_open`.**
+   - **Statement:** the old hypothesis list, with `hab : a < b`, `himg : γ '' Icc a b = S` and
+     `hinj : InjOn γ (Icc a b)`, gives the same conclusion.
+   - **Proof:** `hinj.mono Set.Ico_subset_Icc_self`. The seam holds vacuously, since
+     `γ b = γ a` together with injectivity on `Icc` and `a < b` gives `b = a`, a contradiction.
+   - **Tag:** none; it is a curve lemma, not a `pconstructible` closure lemma.
+2. **`Pptc/Offset.lean:294`, `offsetCubicPairArc_PConstructibleCurve`.** This is already a
+   whole-curve use: `harc` is the curve `cubicPairParam '' Icc u v` itself. Switch to
+   `offset_open` with `huv` (not `huv.le`) and `rfl` for `himg`. The statement is unchanged.
+   Then check the rest of `Offset.lean` for statements phrased as "an arc *of* `S`", and
+   rephrase them.
+3. **`Pptc/BoxOffset.lean:142`, `offsetArc_box_xmax_of_offsetHyp`.** Change its hypothesis
+   list to the new constructor's, or to `offset_open`'s (`a < b`, `=`, `Icc`-injective).
+   Update every caller in the file, for example the cusp-abscissa example over `[1/2, 1]`.
+   - That window is a sub-arc of a cubic pair. It now needs the window to be a curve in its
+     own right. Either:
+     - take the cubic pair *over* `[1/2, 1]` as the curve, via `cubicPairArc_PConstructibleCurve`
+       with those bounds, if that lemma accepts arbitrary P-constructible windows; or
+     - restrict first.
+   - Check that the `offsetArc_box_xmax_Pconstructible` wrappers needing only `hab : a ≤ b`
+     still make sense. They take constructibility as a hypothesis, so they are probably
+     unaffected.
+4. **`Pptc/OffsetInversion/Speed.lean`.** It imports `BoxOffset`; re-check after step 3. The
+   speed identity itself does not use the constructor.
+5. **`Pptc/OffsetInversion/Parabola.lean`: genuine repair.** The headline proof offsets the
+   half-parabola over `Icc 0 w` for arbitrary `w`. That is exactly the banned sub-arc, so the
+   proof must be redone along the legitimate route:
+   1. lay the arc with `arc_of_length` (P-constructible length `x` from the vertex), which is a
+      curve in its own right;
+   2. offset that whole arc;
+   3. read the endpoint with `box_xmax`.
+
+   The hypotheses on `x` should now actually be used. If a hypothesis turns out to be unused,
+   that is a red flag; check with `lean_minimal_hypotheses`. Update
+   `notes/offset-inversion/L2*` and `HANDOFF-offinv-L2.md` to say that the earlier proof
+   was vacuous.
+6. **`Pptc/Scratch/CollapseTest.lean`.** It must no longer compile. Turn it into a documented
+   negative test, or delete it. Add the singleton variant (a degenerate `restrict` window,
+   then `offset` with `a = b`) as a comment showing why `a < b` is needed.
+7. **Scratch files** `Pptc/Scratch/OffsetA3.lean` and `OffsetB4.lean` import `Offset`. Fix them
+   or delete them; they are not on `main`'s build path, so `Pptc.lean` must not import them.
+8. **Optional: offset a whole ellipse.** Add a lemma applying `offset` to the `ellipse` base
+   curve traced over `[0, 2π]`, with `hseam` by periodicity. This is the first closed-curve
+   use, and it shows that the closed case is usable.
+9. **Docs.**
+   - Update the `offset` bullet in `C:\dev\Powerpoint\lean\CLAUDE.md`. It currently says
+     "push an arc `d` units...". It should say: the whole curve, `a < b`, closed curves
+     allowed with a smooth seam.
+   - Update the defect note `notes/offset-inversion/DEFECT-defs-soundness.md` with
+     "resolved by option 2", and give both holes.
+   - In `notes/ppt-curves/M.md` and the offset-inversion notes, check every result that went
+     through `offset`. Re-mark each as reachable only by the whole-arc route.
+10. **Audit the other constructors** (step 3 of "What needs doing" above), now including the
+    `a = b` / singleton pattern:
+    - `arc_length` and `arc_of_length` look harmless, since a zero-length arc is its own
+      constructible start point;
+    - `box_xmax` / `box_ymax` and `inter_x` / `inter_y` take whole curves already;
+    - also check every `Basic.lean` lemma that builds a curve from "an arc of `S`".
+11. **Confirm.**
+    - Run `lake_check` on each repaired file.
+    - Then build the import chain narrowly, one target at a time: `Pptc.Offset`, then
+      `Pptc.BoxOffset`, then `Pptc.OffsetInversion.Speed`, then
+      `Pptc.OffsetInversion.Parabola`.
+    - Run `lean_verify` on the repaired headline theorem.
+    - Never run a whole-project build.

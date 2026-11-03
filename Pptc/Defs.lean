@@ -55,7 +55,8 @@ use rather than being stored in `PConstructibleCurve`; see the comment on
 `PConstructible.arc_length`.
 
 `PConstructibleCurve.offset` follows the same convention for the same reason: it takes a
-tracing `γ` of an arc and pushes every point of it a fixed signed distance along the
+tracing `γ` of a whole constructible curve, open or closed, and pushes every point of it
+a fixed signed distance along the
 `unitNormal` there, so it too needs a parametrization at the point of use, and it needs
 that parametrization to be regular (nonvanishing `speed`) for the normal to exist at all.
 -/
@@ -393,21 +394,36 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
       {x : ℝ} (hx : PConstructible x) (hlen : arcLengthOf γ a b = x) :
       PConstructibleCurve (γ '' Set.Icc a b)
 
-  -- Offset an arc of a constructible curve sideways by a fixed `PConstructible` normal
-  -- distance `d`: push every point of the arc `d` units along its unit normal
-  -- (`offsetParam`). Modelling: the parallel-copy or outline operation of the drawing
-  -- program, the stroke that runs alongside a drawn path at constant clearance. That is
-  -- not a scaled copy — scaling moves points along rays from a centre, so the clearance
-  -- it leaves varies from place to place, while this one is the same everywhere.
+  -- Offset a whole constructible curve sideways by a fixed `PConstructible` normal
+  -- distance `d`: push every point `d` units along its unit normal (`offsetParam`).
+  -- Modelling: the parallel-copy operation of the drawing program. In PowerPoint, give the
+  -- shape a thick compound line and paste it as EMF; the stroke outline is the parallel
+  -- curve on both sides, folds included. That is not a scaled copy: scaling moves points
+  -- along rays from a centre, so the clearance it leaves varies from place to place, while
+  -- this one is the same everywhere.
   --
   -- `d` is required to be `PConstructible` but not positive. Its sign chooses which side
   -- of the path the copy runs on, and both sides are equally drawable.
   --
-  -- The arc is presented by a tracing `γ`, as in `PConstructible.arc_length` and
-  -- `arc_of_length`, with the same `hsub` and `hinj` making `γ` a genuine non-retracing
-  -- tracing of a piece of `S`. Nothing is integrated here, so `hint` is absent; two
-  -- hypotheses take its place, both about the *velocity*, which is what the offset moves
-  -- with:
+  -- The curve is presented by a tracing `γ` of *all* of `S` (`himg`), not of a piece of
+  -- it. A stroke belongs to a whole shape, and a piece can only be offset once some other
+  -- constructor (`restrict`, `arc_of_length`, ...) has made it a curve in its own right.
+  -- Allowing any sub-arc (`⊆ S`) would let the offset of an arc ending at an arbitrary
+  -- point be measured by `box_xmax`, which makes every real reachable. `a < b` closes a
+  -- second hole: with `a = b` the curve is a single point, its "normal" depends on `γ` off
+  -- that point, and the offset could land anywhere on a circle around it. With `a < b`
+  -- the derivative at each endpoint is the one-sided derivative from inside `[a, b]`, so
+  -- the normal is that of `S` itself.
+  --
+  -- `hinj` asks for injectivity on `Ico a b` only, so a closed curve traced once may return
+  -- to its start, `γ b = γ a`; PowerPoint offsets a closed outline whole. `hseam` asks that
+  -- it then close smoothly, with the same normal at both ends, so the offset is the closed
+  -- parallel curve that is drawn, not one with a gap where a line join would go. An open
+  -- arc injective on all of `Icc a b` meets both conditions trivially (the planned helper
+  -- `offset_open`, see `PLAN-offset-soundness.md`).
+  --
+  -- Nothing is integrated here, so `hint` is absent. Two hypotheses take its place, both
+  -- about the *velocity*, which is what the offset moves with:
   --
   -- * `hreg` says the arc is regular, its speed never vanishing. This is what gives the
   --   arc a tangent direction at every parameter, and so makes `unitNormal` an honest
@@ -428,12 +444,14 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- further than the radius of curvature, a parallel copy folds over and acquires cusps
   -- and self-crossings. That is what the operation draws, so it is not excluded.
   | offset {S : Set (ℝ × ℝ)} (hS : PConstructibleCurve S)
-      (γ : ℝ → ℝ × ℝ) {a b : ℝ} (hab : a ≤ b)
-      -- `γ` traces an arc of `S` without retracing it ...
-      (hsub : γ '' Set.Icc a b ⊆ S)
-      (hinj : Set.InjOn γ (Set.Icc a b))
-      -- ... and does so with a continuous, nowhere-vanishing velocity, so that the arc
-      -- has a continuously turning unit normal at every point.
+      (γ : ℝ → ℝ × ℝ) {a b : ℝ} (hab : a < b)
+      -- `γ` traces the whole of `S`, once round without retracing ...
+      (himg : γ '' Set.Icc a b = S)
+      (hinj : Set.InjOn γ (Set.Ico a b))
+      -- ... closing smoothly if it closes at all ...
+      (hseam : γ b = γ a → unitNormal γ b = unitNormal γ a)
+      -- ... with a continuous, nowhere-vanishing velocity, so that the curve has a
+      -- continuously turning unit normal at every point.
       (hdiff : ∀ t ∈ Set.Icc a b,
         DifferentiableAt ℝ (fun s => (γ s).1) t ∧ DifferentiableAt ℝ (fun s => (γ s).2) t)
       (hreg : ∀ t ∈ Set.Icc a b, speed γ t ≠ 0)
