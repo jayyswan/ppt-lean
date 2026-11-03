@@ -30,7 +30,9 @@ negative verdicts should be read as "not found by those routes", not "impossible
 - **UI-only constructions** (memory `ui-only-constructions`):
   - clicks, menu items, galleries and spinner arrows count;
   - typing numbers into boxes or into a chart's data sheet does not;
-  - fill-handle data from existing cells is fine.
+  - fill-handle data from existing cells is fine;
+  - **constructions stay inside PowerPoint.** Round trips through Word, Excel, OneNote, Paint,
+    Photos or any other app do not count (user rule, 2026-11-03).
 - COM, VBA, XML and scripts are for **observation only**: reading frames back, exporting,
   measuring. A capability that needs COM or XML to *set* something is "not UI-reachable".
   Record it anyway, marked as such, because the observation may still be informative.

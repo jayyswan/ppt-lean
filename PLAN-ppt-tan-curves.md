@@ -23,6 +23,9 @@ right. Report negative results in full too, saying what the path *does* give.
   - Typing numbers into boxes does **not** count, and neither does typing into a chart's data
     sheet.
   - Excel fill-handle series made from existing cells are fine. Clearing cells is fine.
+  - **Stay inside PowerPoint.** Round trips through Paint, Photos, Word, OneNote or any other
+    app do not count (user rule, 2026-11-03). The chart data sheet that PowerPoint opens itself
+    is part of the chart feature.
 - **Observation only.** COM, VBA, XML and scripts may be used to *observe*: read geometry
   back, export, measure, screenshot. They may never be used to *construct* a capability. If a
   route needs a COM-only property, the verdict is "not UI-reachable".
