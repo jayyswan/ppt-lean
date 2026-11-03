@@ -853,4 +853,129 @@ theorem offsetCrossPoly_normalForm (c₀ c₁ c₂ c₃ e₀ e₁ e₂ e₃ d A 
   field_simp
   ring
 
+/-! ### The closed-curve case: offsetting a whole ellipse
+
+`offset` asks for injectivity only on the half-open `[a, b)`, so it can be applied to a
+closed loop: the tracing is allowed to come back to its starting point at `b`, as long as
+its unit normal comes back to the same value too (the `hseam` hypothesis). The ellipse is
+the first curve in the library that closes up this way — `ellipseParam b` runs once round
+`x² + (y/b)² = 1` as `θ` goes from `0` to `2π`, and both the point and its unit normal are
+`2π`-periodic — so the whole parallel copy of an ellipse is again a constructible curve.
+
+Nothing extra is needed beyond `Pptc.Basic`: `speed_ellipseParam` identifies the speed,
+which gives regularity and the continuity of the derivatives, and the two facts proved
+here — the image is the ellipse and the tracing is injective before the seam — are what
+the constructor's `himg` and `hinj` want. -/
+
+-- Theorem: `ellipseParam b` traces the ellipse `x² + (y/b)² = 1` exactly once as `θ`
+-- runs over `[0, 2π]`.
+theorem ellipseParam_image_Icc_two_pi {b : ℝ} (hbpos : 0 < b) :
+    ellipseParam b '' Set.Icc (0 : ℝ) (2 * Real.pi)
+      = {p : ℝ × ℝ | p.1 ^ 2 + (p.2 / b) ^ 2 = 1} := by
+  apply Set.eq_of_subset_of_subset
+  · rintro _ ⟨θ, -, rfl⟩
+    simp only [Set.mem_ofPred_eq, ellipseParam]
+    field_simp
+    linear_combination Real.sin_sq_add_cos_sq θ
+  · intro p hp
+    simp only [Set.mem_ofPred_eq] at hp
+    set y : ℝ := p.2 / b with hydef
+    have hy2 : y ^ 2 ≤ 1 := by nlinarith [sq_nonneg p.1]
+    have hy : y ∈ Set.Icc (-1 : ℝ) 1 := by
+      constructor <;> nlinarith [sq_nonneg (y - 1), sq_nonneg (y + 1)]
+    obtain ⟨φ, hφ, hφcos⟩ := Real.surjOn_cos hy
+    have hsq : Real.sin φ ^ 2 = p.1 ^ 2 := by
+      have h1 : Real.sin φ ^ 2 = 1 - Real.cos φ ^ 2 := by
+        nlinarith [Real.sin_sq_add_cos_sq φ]
+      rw [h1, hφcos]
+      nlinarith
+    rcases sq_eq_sq_iff_eq_or_eq_neg.mp hsq with hsin | hsin
+    · refine ⟨φ, ⟨hφ.1, by linarith [hφ.2, Real.pi_pos]⟩, ?_⟩
+      refine Prod.ext ?_ ?_
+      · simpa [ellipseParam] using hsin
+      · simp only [ellipseParam]
+        rw [hφcos, hydef]
+        field_simp
+    · refine ⟨2 * Real.pi - φ,
+        ⟨by linarith [hφ.2, Real.pi_pos], by linarith [hφ.1]⟩, ?_⟩
+      refine Prod.ext ?_ ?_
+      · simp only [ellipseParam]
+        rw [Real.sin_two_pi_sub, hsin]
+        ring
+      · simp only [ellipseParam]
+        rw [Real.cos_two_pi_sub, hφcos, hydef]
+        field_simp
+
+-- Theorem: `ellipseParam b` is injective on the half-open interval `[0, 2π)`: the only
+-- parameter at which it repeats itself is the seam `2π`.
+theorem injOn_ellipseParam_Ico {b : ℝ} (hbpos : 0 < b) :
+    Set.InjOn (ellipseParam b) (Set.Ico (0 : ℝ) (2 * Real.pi)) := by
+  rintro θ₁ h₁ θ₂ h₂ h
+  have hcos : Real.cos θ₁ = Real.cos θ₂ := by
+    have h' := congrArg Prod.snd h
+    simp only [ellipseParam] at h'
+    exact mul_left_cancel₀ hbpos.ne' h'
+  have hsin : Real.sin θ₁ = Real.sin θ₂ := by
+    have h' := congrArg Prod.fst h
+    simpa only [ellipseParam] using h'
+  have hone : Real.cos (θ₁ - θ₂) = 1 := by
+    rw [Real.cos_sub, hcos, hsin]
+    nlinarith [Real.sin_sq_add_cos_sq θ₂]
+  have hlt₁ : -(2 * Real.pi) < θ₁ - θ₂ := by linarith [h₁.1, h₂.2]
+  have hlt₂ : θ₁ - θ₂ < 2 * Real.pi := by linarith [h₁.2, h₂.1]
+  have hzero := (Real.cos_eq_one_iff_of_lt_of_lt hlt₁ hlt₂).mp hone
+  linarith
+
+-- Theorem: the parallel copy of a whole ellipse at a P-constructible distance is a
+-- constructible curve. The tracing runs once round the ellipse and closes at `2π`, where
+-- the normals match, so this is the closed-curve case of `offset`.
+theorem ellipseOffset_PConstructibleCurve {b d : ℝ} (hb : PConstructible b) (hbpos : 0 < b)
+    (hd : PConstructible d) :
+    PConstructibleCurve (offsetParam (ellipseParam b) d '' Set.Icc 0 (2 * Real.pi)) := by
+  have hderivx : deriv (fun s => (ellipseParam b s).1) = Real.cos := by
+    funext t
+    exact (Real.hasDerivAt_sin t).deriv
+  have hderivy : deriv (fun s => (ellipseParam b s).2) = fun t => b * -Real.sin t := by
+    funext t
+    exact ((Real.hasDerivAt_cos t).const_mul b).deriv
+  have hs2 : speed (ellipseParam b) (2 * Real.pi) = 1 := by
+    rw [speed_ellipseParam, Real.cos_two_pi, Real.sin_two_pi]
+    norm_num
+  have hs0 : speed (ellipseParam b) 0 = 1 := by
+    rw [speed_ellipseParam, Real.cos_zero, Real.sin_zero]
+    norm_num
+  have hseam : ellipseParam b (2 * Real.pi) = ellipseParam b 0 →
+      unitNormal (ellipseParam b) (2 * Real.pi) = unitNormal (ellipseParam b) 0 := by
+    intro _
+    simp only [unitNormal, hderivx, hderivy, hs2, hs0, Real.cos_two_pi,
+      Real.sin_two_pi, Real.cos_zero, Real.sin_zero]
+  have himg : ellipseParam b '' Set.Icc (0 : ℝ) (2 * Real.pi)
+      = {p : ℝ × ℝ | ((p.1 - 0) / (2 / 2)) ^ 2 + ((p.2 - 0) / (2 * b / 2)) ^ 2 = 1} := by
+    rw [ellipseParam_image_Icc_two_pi hbpos]
+    ext p
+    simp only [Set.mem_ofPred_eq]
+    rw [show (2 : ℝ) / 2 = 1 by norm_num, div_one, sub_zero,
+      show (2 : ℝ) * b / 2 = b by ring, sub_zero]
+  have hdiff : ∀ t ∈ Set.Icc (0 : ℝ) (2 * Real.pi),
+      DifferentiableAt ℝ (fun s => (ellipseParam b s).1) t ∧
+      DifferentiableAt ℝ (fun s => (ellipseParam b s).2) t := by
+    intro t _
+    exact ⟨(Real.hasDerivAt_sin t).differentiableAt,
+      ((Real.hasDerivAt_cos t).const_mul b).differentiableAt⟩
+  have hreg : ∀ t ∈ Set.Icc (0 : ℝ) (2 * Real.pi), speed (ellipseParam b) t ≠ 0 := by
+    intro t _
+    rw [speed_ellipseParam]
+    refine ne_of_gt (Real.sqrt_pos.2 ?_)
+    rcases eq_or_ne (Real.cos t) 0 with hc | hc
+    · have hs : Real.sin t ^ 2 = 1 := by nlinarith [Real.sin_sq_add_cos_sq t]
+      nlinarith [hbpos]
+    · nlinarith [sq_pos_of_ne_zero hc]
+  have hC1 : ContinuousOn (deriv (fun s => (ellipseParam b s).1))
+        (Set.Icc 0 (2 * Real.pi)) ∧
+      ContinuousOn (deriv (fun s => (ellipseParam b s).2)) (Set.Icc 0 (2 * Real.pi)) := by
+    rw [hderivx, hderivy]
+    exact ⟨Real.continuous_cos.continuousOn, by fun_prop⟩
+  exact PConstructibleCurve.offset (ellipse_PConstructibleCurve hb hbpos) (ellipseParam b)
+    (by positivity) himg (injOn_ellipseParam_Ico hbpos) hseam hdiff hreg hC1 hd
+
 end Pconstructible
