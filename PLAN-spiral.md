@@ -1,6 +1,6 @@
 # PLAN-spiral: everything the Archimedean spiral makes constructible
 
-**Status:** plan, nothing launched. The spiral is **not** in `Defs.lean`. Adding it is the
+**Status:** survey complete (2026-11-03); see `notes/spiral/SUMMARY.md`. The spiral is **not** in `Defs.lean`. Adding it is the
 user's decision; stream D drafts the constructor for that decision.
 
 **Survey, not hunt.** The goal is to characterise the capability completely. Do not chase one
