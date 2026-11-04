@@ -144,7 +144,7 @@ dark edges against a white background)?
 
 For each object type:
 
-- preset shapes, including the **wave** preset (the project's `sine` idealization) and the arcs;
+- preset shapes, including the **wave** preset and the arcs;
 - lines and open paths;
 - freeforms and curves;
 - text boxes and WordArt;
@@ -231,7 +231,7 @@ For each drawable curve type:
 - power law;
 - cubic Bézier (as PowerPoint stores it);
 - `exp_two`;
-- `sine` (and the wave preset's actual geometry);
+- `sine` (idealized from a sine-wave font glyph);
 - offsets of each;
 - multi-Bézier outlines such as the oval;
 
