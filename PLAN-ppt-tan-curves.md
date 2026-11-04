@@ -167,3 +167,10 @@ Missing curves, ranked by what they unlock (`notes/offset-inversion/SUMMARY.md` 
 2. log-cosine `y = ln sec x`: both beam spectra, rhumb lines;
 3. the goat curve `R = tan ψ − (π/2)sec ψ`;
 4. tractrix and elastica.
+
+## Status: complete (2026-11-04)
+
+Waves 1 and 2 are done: M, P1, P1b, P3, P3b, P4 and P5.
+- **Summary:** `notes/ppt-curves/SUMMARY.md`.
+- **The only wishlist hit** is the Archimedean spiral. Its constructor decision is the user's.
+- **No route was found** for the catenary, the log-cosine or the circle involute.
