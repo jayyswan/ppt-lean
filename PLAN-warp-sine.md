@@ -1,6 +1,8 @@
 # PLAN-warp-sine, part 1: what curve does the sine glyph become under Warped Circle?
 
-**Status:** plan, nothing launched (2026-11-03).
+**Status:** part 1 complete (2026-11-03). **Negative:** there is no exact route to a limaçon or
+rose. The spine's image is an exact rose of degree 4n+2, but recovering it from the warped band
+is impossible [Proof]. See `notes/warp/SUMMARY-part1.md` (streams G, WP, M).
 
 **Why.** Warped Circle sends a glyph point at ink-box fractions `(u, v)` to the polar point
 `θ = π + 2πu`, `r = ρ + (R − ρ)v` (spiral notes `F1.md`, `W.md`). If a glyph edge is a sine
