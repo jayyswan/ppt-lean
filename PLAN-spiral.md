@@ -244,3 +244,44 @@ Notes: `notes/spiral/I4.md`, `O.md`, `L.md`.
 
 Next: wave 3. B (read-outs beyond the basic box), then C (compositions), then D (draft
 constructor and decision packet).
+
+### Wave 3 results (2026-11-03)
+
+Notes: `notes/spiral/B.md`.
+
+- **B: read-outs beyond the basic box.**
+  - **Boxing the uniform spiral gives nothing new.** Boxes of `restrict` pieces, of whole-arc
+    offsets (either sign of d) and of uniform images give one of four things:
+    - a T3/T2 box number;
+    - that number shifted by ∓d;
+    - an end coordinate;
+    - a spiral∩line coordinate.
+  - **Offset cusps** (d > 1/2) satisfy `c³ = d(c² + 1)` with `c = √(1+ψ²)`. Class E/R. For d = 1,
+    c is the supergolden ratio.
+  - **Non-uniform images.** They are invisible to the box, but not to offsets or arc length.
+    - The cusp equation of an offset (diag(2,1), d = 1) is trig with polynomial coefficients:
+      class **?** [Heuristic].
+    - Inverting arc length along a non-uniform image inverts a non-elementary integral: class
+      **?**.
+  - **Isolating a sub-arc.** `arc_of_length` from any P-constructible start isolates a sub-arc.
+    This removes F2's condition that the window must end before the next extremum, and answers
+    W's open question.
+  - **Directions.** Every spiral number is a legal rotation angle (`rotate` + scaling), so
+    depth-2 boxes exist. Example: β₁ = 2.02875… gives θ = 2.42053345642…. Angles that are not
+    P-constructible are unreachable.
+  - **Arc lengths.** Between intersection points of the uniform spiral or its offset, they are
+    elementary in P-constructible roots: R. On non-uniform images they are **?**.
+  - **Inverse arc length from a non-vertex start.** On the uniform spiral it is R (parabola
+    inversion). OI-S stays **?**.
+  - **Degenerate `restrict` (xmin = xmax) plus box** returns the extreme crossing on a vertical
+    line without isolation. Orchestrator check: this adds nothing. Crossings at algebraic or
+    P-constructible heights are separated by a rational, so `restrict` + `inter_y` reaches them
+    anyway.
+  - No B read-out reaches T1, T2 (λ ≠ 1) or T6.
+  - **Open:**
+    - offset injectivity on windows longer than one turn;
+    - the non-uniform cusp scan covered only starts 0.3–3.8;
+    - mirrored arcs have cusps for the opposite sign of d, so a Lean form must fix the
+      orientation.
+
+Next: C (compositions), then D.
