@@ -320,3 +320,12 @@ Note: `notes/offset-inversion/R4-combinations.md`.
   `∞±`, so offsets cannot cancel the residue obstruction.
 
 Next: S (synthesis).
+
+## Status: complete (2026-11-03)
+
+S is written: `notes/offset-inversion/SUMMARY.md`.
+- Every stream is done: W0, R0–R5 and L0–L2. The Lean files were repaired to the whole-curve
+  `offset` axiom.
+- The named payoff is gated on the catenary and the log-cosine curve. That ranking has been
+  handed to `PLAN-ppt-tan-curves.md`.
+- Open items are listed in SUMMARY §7.

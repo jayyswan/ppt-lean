@@ -158,3 +158,12 @@ The orchestrator writes `notes/ppt-curves/SUMMARY.md`:
   it would unlock (from M).
 
 Nothing goes into `Defs.lean` without the user's explicit decision.
+
+## Hand-off from offset inversion (2026-11-03)
+
+Missing curves, ranked by what they unlock (`notes/offset-inversion/SUMMARY.md` §5):
+
+1. catenary: `tan x = λx`, the involute function, `j₁` zeros;
+2. log-cosine `y = ln sec x`: both beam spectra, rhumb lines;
+3. the goat curve `R = tan ψ − (π/2)sec ψ`;
+4. tractrix and elastica.
