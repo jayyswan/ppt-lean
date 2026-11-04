@@ -209,3 +209,38 @@ Notes: `notes/spiral/F1.md` to `F4.md`.
   - **Needs independent review.**
 
 Next: wave 2 (I4, O, L). L takes F4's statements and the I1–I3/F3 "?" list as input.
+
+### Wave 2 results (2026-11-03)
+
+Notes: `notes/spiral/I4.md`, `O.md`, `L.md`.
+
+- **I4: spiral ∩ spiral.**
+  - **Same pole: E**, in closed form. With equal pitch the arms are disjoint.
+  - **Same pole with a non-uniform partner: ?**
+  - **Different poles: ?** No single-harmonic collapse. With mirror-symmetric poles, the
+    on-axis roots are R (a spiral meeting a line).
+  - **Spiral ∩ its own offset: ?** It is the normal-chord condition: an irreducible quartic
+    meeting `t = tan(Δ/2)`. There are no intersections for `|d| < π/2`.
+  - **Warp by-products:** circles and rays from the same pole are E; from another box they are
+    R.
+  - Arch presets have the same normal form, so all of the above applies to them.
+  - Root counts are sign-change scans, not certified.
+- **O: offset spiral.**
+  - Closed form, curvature, and arc length verified. Cusps occur only for `d > 1/2`.
+  - Box: the spiral's box value ± d, or a cusp coordinate: E/R.
+  - Intersections: **?**
+  - Warp arcs satisfy the new `offset` hypotheses, given a spiral constructor.
+  - **Offset inversion:** arc → offset → box gives nothing beyond the parabola (R). The working
+    route is: offset the whole arc, then `arc_of_length` along the offset, then two boxes in
+    non-parallel directions. It solves `½(sinh u cosh u + u) − d(sinh u + gd u) = c` for all
+    P-constructible `d` and `c`. Class **?**.
+- **L: named problems.** Only the box families are named:
+  - `x tan x = 1` (0.86033…): slab Biot number Bi = 1; rod with a tip mass equal to its own;
+  - `tan x = −x` (2.02876…): rod with a Robin end, h = 1.
+
+  No named match for any intersection or offset-inversion class [Heuristic: limited search; OEIS
+  not fetchable]. Routes for each root were derived from F2's windows and are untested in
+  PowerPoint.
+
+Next: wave 3. B (read-outs beyond the basic box), then C (compositions), then D (draft
+constructor and decision packet).
