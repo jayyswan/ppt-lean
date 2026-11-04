@@ -308,4 +308,12 @@ Notes: `notes/spiral/B.md`.
     - curve-level depth 2 (spiral ∩ offset of a base curve) was not surveyed;
     - the mirror-pole scan is uncertified.
 
-Next: D (draft constructor and decision packet), then `notes/spiral/SUMMARY.md`.
+- **D: decision packet.** Notes: `notes/spiral/D.md`.
+  - **Recommended:** one fixed open ray, `archimedes : PConstructibleCurve (spiralParam '' Set.Ioi 0)`
+    with `spiralParam t = (t cos t, t sin t)`. It works like `sine` and `exp_two`.
+  - **Fallback:** rational turn fractions plus the W/F2 window law as hypotheses.
+  - **Key over-claim:** roots above ψ ≈ 47 are new and cannot be removed by scaling.
+  - Five questions for the user.
+
+**Status: survey complete.** Summary: `notes/spiral/SUMMARY.md`. Adding the spiral to `Defs.lean`
+awaits the user's decision.
