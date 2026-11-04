@@ -160,3 +160,52 @@ non-reducible.
 
 **Order:** F1, F3 and F4 now; F2 after F1. Wave 2 (I4, O, L) follows as planned. L should take
 F4's statements as input.
+
+### Wave 1b results (2026-11-03)
+
+Notes: `notes/spiral/F1.md` to `F4.md`.
+
+- **F1: PowerPoint, measured by real UI.**
+  - `(u, v)` are normalised by the **whole row's** ink box, so an edge's turn fraction is
+    `a = glyph width / row ink width`.
+  - Three spiral presets:
+
+    | Preset | Inner radius ρ | Sweep |
+    |---|---|---|
+    | Warped Circle | R/2 | full turn |
+    | Arch: Warped (and Warped Button, identical on one line) | R/2 | 180° |
+    | Arch: Warped Down | R/4 | 180° |
+
+    Corners match to within 0.06–0.74 pt; between corners the error is 2.8–5.4 % of R.
+  - Character spacing (presets and a 0.1 pt spinner) and font size (list, then ×1.2 steps)
+    snap to 0.75 pt. Rotating text 90°/270° is rigid. *Stacked* text gives new turn fractions.
+  - Box sizes with both guides full are listed per preset.
+  - **Pitfall:** ◢ and ▲ use the `ea` typeface, not the Latin one.
+- **F2: reachable windows and root audit.**
+  - The window law is the same for all three presets, with these limits: Warped Circle and
+    Arch: Warped end at most at 2× their start; Arch: Warped Down at most at 4×.
+  - Rows of up to 40 glyphs plus sizes from the list cover `[0.055, 4π]`. Mixed-height rows
+    reach about `[0.76, 47]`. Starts go down to about 0.002 with Arch: Warped Down plus spacing.
+    There is a ceiling near 50, so (0, ∞) is not covered.
+  - All 343 roots so far are reachable, each with a route.
+  - Interval-certified recount: no missed roots, no tangential double roots.
+  - The box needs the stationary θ to be the arc's global extremum. Every audited box root has
+    a suitable window.
+  - M.md was corrected for `tan x = −x`.
+- **F3: general position.**
+  - **New R stratum:** a conic with a **focus at the spiral centre** (`B² = 8fA`) factors into a
+    cosine meeting a hyperbola. It is the only factoring case for graphs.
+  - Rotating the partner is the same as using the spiral `r = θ + α`.
+  - Graphs of degree ≥ 2 never collapse to `θ^p ×` one harmonic [Proof].
+  - The sign-flipped sine has no non-trivial root [Proof].
+  - No polynomial, power law or Bézier reaches T1, T2 or T6 [Proof].
+- **F4: novelty.** The setting is the "RU1" statement: no regular, uniform, one-step competitor
+  from the spiral-free tower, using Ax–Schanuel.
+  - **`exp_two` class:** argued non-reducible except for one degenerate case.
+  - **Parabola class:** reducible only through a trig curve meeting an algebraic curve that
+    contains `kx(1−y²) = y`. Shown impossible for phase (1, 0); open in general and for offset
+    partners.
+  - **Generic conic class:** its partner is elliptic, so no rational base curve contains it.
+  - **Needs independent review.**
+
+Next: wave 2 (I4, O, L). L takes F4's statements and the I1–I3/F3 "?" list as input.
