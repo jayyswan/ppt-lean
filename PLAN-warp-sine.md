@@ -123,9 +123,12 @@ not the spine recovered by this route.
 
 ## 4. Decisions that belong to the user
 
-- If only an *approximate* limaçon or rose is reachable, with an error the size of the band
-  thickness, does it count as an idealization? The deck goes to some length to remove the
-  thickness for the flat sine, which suggests not, but it is the user's call.
+- **Decided (user, 2026-11-03): the idealization is only to the glyph's centreline.** A warped
+  edge that approximates a limaçon or rose is **not** idealizable as one. A limaçon or rose counts
+  only if some exact UI route produces it. That could be a recovery of `P(spine)` after warping,
+  or a glyph whose warped edge is exactly the curve, for example a band whose edges are vertical
+  shifts of its spine. The streams look for such workarounds; approximate edges are recorded only
+  as by-products.
 - Any constructor (limaçon, rose, warped glyph image) goes into `Defs.lean` only on the user's
   explicit decision.
 
