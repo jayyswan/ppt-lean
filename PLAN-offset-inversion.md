@@ -298,3 +298,25 @@ The orchestrator merges R0–R5 into `SUMMARY.md`:
 
 Then update §0 of this plan, and hand the missing-curve ranking to `PLAN-ppt-tan-curves.md`
 (stream M there).
+
+## R4 results (2026-11-03)
+
+Note: `notes/offset-inversion/R4-combinations.md`.
+
+- **Feeding outputs forward is triangular [Proof, adapted from spiral `C.md`].** Outputs used as
+  `d`, `x`, start points, crop bounds, scale or rotation only extend parameters. They add no new
+  equation shapes.
+  - Curve-level composition reduces by a cut-commutation lemma [Proof sketch].
+  - Two offsets add (`d1+d2`) where `1 − d1κ > 0`.
+  - Chains of two offset inversions are [Open].
+- **R2's N1 is a legal construction:** restrict → offset → `scale_y` → offset → `arc_of_length`
+  → two boxes.
+  - Correction to R2: the speed is `(1−d1/s³)t − d2c/t²`, and the curve is cusp-free iff
+    `1 − d1 − d2c > 0`. R2's eq. (2.3) and its tables stand.
+- **Non-uniform targets** (`tan x = x`, beam, goat): nothing found; 288 PSLQ tests at 130 digits.
+  - New [Proof sketch]: an offset sheared sine never meets an algebraic offset/affine word to give
+    `tan x = x` uniformly.
+- **`am`:** confirmed [Proof + Wolfram]. `dψ` and R2's weighted angle forms are holomorphic at
+  `∞±`, so offsets cannot cancel the residue obstruction.
+
+Next: S (synthesis).
