@@ -220,6 +220,14 @@ Framing for every stream:
   V'_K ⊂ ℙ⁸ (MI-1). The point was found for an explicit S₁₀ decic.
 - General n: the bookkeeping law; real Brauer (k! < n); the elliptic ceiling at PSL(2,p).
 
+### Wave 3 (launched 2026-11-04; user: focus on leads 3 and 4; MI-1 and the S₁₀ decic in Lean stay open)
+
+| id | question |
+|---|---|
+| W1 | **Offset towers as engines.** Overshoot with towers of depth j: what does it cost to find τ, and does the number of free parameters keep pace with n? |
+| W2 | **Two-graph and big-F engines.** H1's τ = R(P(τ)) (a rational sextic graph against a rotated copy of itself), and H3's F = 9 and F = 13 families, at n = 10–12: measured rank, degree, realness and search. |
+| W3 | **Transcendental monodromy.** Inverse periods via offset towers; the scope of Ritt and Lattès (which polynomials are conjugate to linear maps by exp, cos or ℘); and the monodromy of transcendental crossings (sine or `exp_two` against algebraic curves). Could any of them carry Aₙ into an algebraic output? |
+
 ### Wave 2 (original proposal, superseded)
 
 - **N1b:** find a certificate centre over ℚ(√d), or an isolating-interval certificate, for s = 3 and
