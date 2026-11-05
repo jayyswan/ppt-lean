@@ -439,3 +439,16 @@ ever combines two user-controlled guides with P weights.
 - Picture tools: preset clip paths, raster effects [Heuristic]. Equation glyphs: discrete size
   variants plus integer extender repeats [Proof sketch, OpenType MATH]. Ink pens: freehand
   centrelines [Heuristic].
+
+**Z5 done (2026-11-05): no hit, structurally.** See `notes/algebraic/Z5.md`.
+- Theorem Z5 [Proof sketch]: for Gal(K_L/L) ⊇ A_n (primitive), n ≥ 9, an L-curve C ⊂ V_τ other
+  than ℓ_τ, of genus g and degree e, satisfies (n−8)e ≤ 4g−4. So there are no genus-0 or genus-1
+  curves, for any τ, and real-quadratic fields of definition don't help. Proof: Galois-irreducibility
+  of the 8-dim heart module forces C birational onto a plane curve; a Plücker bound on its dual
+  meeting Δ* gives the inequality.
+- Dimension counts: degree-d rational curves −3d−1 on V_τ; with τ free (6 effective dims, PGL₂)
+  the incidence is 5−3d. V_τ: K² = 576, c₂ = 768, χ = 112.
+- Wolfram conic search: N = 5 control finds 6 conics; N = 6–8 none; N = 9 only the lines ℓ_ε.
+- Consequence: Theorem R needs isolated points (SS_{n−1}), which stays open.
+- Open: a formal write-up; A₉-irreducibility of the heart in characteristic 2; imprimitive groups;
+  curves with a ℤ/2 stabiliser.
