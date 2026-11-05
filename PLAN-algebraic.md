@@ -318,3 +318,18 @@ non-elliptical Minkowski summand.
 - Caveat: some stroke weights, shadow values and other settings were set via COM or typed in the
   pane. Fine for measurement, not for a construction.
 - Next per plan: Y1a, the simultaneous-squares problem (Opus), if wanted.
+
+**Y1a done (2026-11-05).** See `notes/algebraic/Y1a.md`.
+- **Theorem R [Proof].** Given τ ∈ K_L and n−1 non-homothetic positive-definite forms Q_j over L
+  with every Q_j(τ) a square in K_L, plus two nondegeneracy conditions, β ∈ P. The offset distances
+  come from linear algebra, and totally real q is fine.
+- Tower formula verified to 10⁻⁵⁰.
+- End-to-end test on a totally real S₅ quintic: the parabola tower crossing works.
+- **Open:** the simultaneous squares for n ≥ 7, i.e. L-points off the degenerate line on V_τ. V_τ is
+  a smooth complete intersection of n−3 diagonal quadrics: K3 at n = 6, general type for n ≥ 7. τ
+  may vary.
+- Searches at n = 9 and 10 found nothing.
+- Leads:
+  - n = 6 (K3: elliptic fibrations);
+  - genus-0 or genus-1 curves on V_τ;
+  - the family over τ.
