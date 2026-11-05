@@ -6,7 +6,8 @@
 theorem algebraic_Pconstructible {α : ℝ} (h : IsAlgebraic ℚ α) : PConstructible α
 ```
 
-**Status:** plan, written 2026-11-04 after a quick analysis (§1–§2). Nothing launched.
+**Status:** wave 1 done (2026-11-04): N1a, N2, N4, G1, G2; notes in `notes/algebraic/`. Results in §6.
+Wave 2 not launched.
 
 **Ground rule for this plan: do not conclude negatives.** Obstructions are recorded *scoped to
 the route they block* ("this route cannot…"), never as "the target is false". A route
@@ -27,7 +28,8 @@ Read first, every task:
 | 8 | P | done (all cases) | `Octic/Main` (`root_Pconstructible_deg8_coeffs`) |
 | 9 | ℚ, with a nonreal root | done | `Nonic/Nonic` (`root_Pconstructible_of_rat_nonic_nonreal`), via Meyer / Hasse–Minkowski |
 | 9 | P, ≥ 3 conjugate pairs | constructed on paper, all aux degrees ≤ 6; needs realness certificates | `NonicReal/THREE-PAIRS.md` |
-| 9 | P with s ∈ {1, 2}; any totally real (ℚ or P) | **open** | `NOTES-general.md` |
+| 9 | ℚ with s ∈ {1, 2} | done: covered by the nonreal-root theorem above (N2) | `Nonic/Nonic` |
+| 9 | P with s ∈ {1, 2}; any totally real (ℚ or P) | **open**; for ℚ the only open case is totally real | `NOTES-general.md`, N2 |
 | ≥ 10 | — | not started | — |
 
 **The algebraic part of P.** Write `F = P ∩ ℝ_alg`. It is a real field closed under real roots of
@@ -139,3 +141,60 @@ polynomials of degree ≤ 8 over itself. The question is whether `F = ℝ_alg`.
   - a Lean roadmap.
 - **Lean:** each degree-9 case that closes on paper gets its own Lean stream after N1 sets the
   pattern.
+
+## 6. Wave 1 results (2026-11-04)
+
+- **N1a** (`N1a.md`): rational certificate for s = 3, 4 **not found yet**.
+  - The chain was rewritten as 8 steps, all of degree ≤ 6; the ruling plane is replaced by two
+    quadratic steps.
+  - The pencil quintic is `E'(λ)/λ³`, so a rational λ* comes from a pair with v = 0.
+  - The (2,2) signature needs no formalization.
+  - Blocker: the rank-4 discriminant is never a rational square (~80 centres), so step R5 onward
+    lives in ℚ(√d). Scoped to rational-root centres.
+  - Next: centres over ℚ(√d), or isolating-interval certificates.
+  - Lean breakdown: 9 files; Engine9, Resolvent9 and ChainOpen can start now. Lemma C needs a
+    k-step generalization.
+- **N2** (`N2.md`):
+  - Rational s ∈ {1, 2} is already done.
+  - The odd route at n = 9 needs `e₁ = e₃ = e₅ = e₇ = 0` (degree 105).
+  - **Overshoot engines:** the crossing polynomial may have degree > 9 if `χ_τ` divides it. With a
+    rational sextic graph the odd route drops to **2 conditions**: 1, τ, τ³, …, τ¹³ are
+    ℚ-dependent. This locus has degree 1428 and real points in every totally real K. No ℚ-point
+    has been found yet.
+  - Solvable Galois groups are handled (sketch). PSL(2,8), PΓL(2,8), A₉ and S₉ remain; the list
+    is from memory.
+  - Rational degree-8 graphs would close the rational case; that is a `Defs` decision for the
+    user.
+- **N4** (`N4.md`):
+  - **Gap theorem [Proof]:** a totally real sparse shape needs every gap ≤ 2, which leaves three
+    6-term classes: A (odd), B (A inverted) and C {9,7,5,4,2,0} (new, no drawable crossing yet).
+  - New s = 0 engines: Bézier × Neile and parabola-offset × conic through 3 known points. Each has
+    2 conditions, of degree ≥ 18 and ≥ 15.
+  - Ranking for s = 0: odd route > N4-2 > N4-1.
+  - Scoped to the routes tried, no family keeps its condition count bounded as n grows.
+- **G1** (`G1.md`):
+  - No real or arithmetic resolvent-degree literature was found.
+  - Wolfson, Sutherland and Heberle–Sutherland bounds are cited.
+  - Realness constraints [Proof]: a t-term shape needs n ≤ 2(t−1) for totally real f, and
+    Hilbert's 3-plane step needs s ≥ 4.
+  - New heuristic, the **square lift** `f(y² + c)`: c controls s, at the cost of doubling the
+    degree.
+  - Some classical citations are unverified.
+- **G2** (`G2.md`):
+  - Algebraic P-curves are `Aff ∘ (offset ∘ Aff)^j (base)`; each offset layer adds 3 parameters
+    while the degree roughly doubles.
+  - Line crossings are versal only for D ≤ 4. The parabola offset × line has codimension 1 in the
+    monic sextics.
+  - Lead: offset × circle (through the circular points).
+
+### Wave 2 (proposed)
+
+- **N1b:** find a certificate centre over ℚ(√d), or an isolating-interval certificate, for s = 3 and
+  s = 4.
+- **N1-Lean:** Engine9, Resolvent9 and ChainOpen, which are not blocked by the certificate. One
+  worker per file.
+- **N5:** totally real nonics. Use points over P-towers, not just ℚ, on N2's overshoot locus and on
+  the odd variety `{e₁ = e₃ = e₅ = e₇ = 0}`.
+- **N3:** P-coefficient s ∈ {1, 2}, restricted to the odd and even engines (N2's Descartes table).
+- **G3:** general-n engines. Cover overshoot for general n, two-curve crossings with a power law,
+  the square lift, and offset × circle.
