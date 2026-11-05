@@ -396,3 +396,18 @@ Question. Is there a UI-only composition that adds many P-weighted terms **witho
 - (c) any drawable family whose crossing equation is linear in many P-parameters at bounded degree.
 A hit makes general n linear algebra plus gcd recovery; a clean negative sharpens the dependence
 on open problems ("PowerPoint only adds through circles").
+
+**Z4 done (2026-11-05): no hit.** See `notes/algebraic/Z4.md`.
+- (a) No pointwise sums [Proof sketch]: every curve constructor is unary with numeric parameters,
+  so a curve depends on another only through P-numbers. The affine ops between offsets compose to
+  one 6-parameter map; `offset` has constant d. The only built-in P-weighted sum is the cubic
+  Bézier (4 weights). Without offset, about 28 parameters at most, independent of n.
+- (b) No summand other than ellipses [Proof]. Scale by 0 is legal (rank-1 form, constant summand)
+  but collapses the base and all earlier layers to a segment; the parallel curve of a segment is a
+  translated segment; back-and-forth tracings are illegal for offset [Wolfram check a=3, b=2, d=5/7].
+- (c) Best linear families: rotated ellipse × x^k (F=5, degree 2k); Bézier graph × a·x^n (F=4,
+  degree n). They fail (BD) and help gcd recovery only for n ≤ 5.
+- Conclusion: offsets are the only way to add parameters (J+2 for J layers), each costing a
+  square root. The offset route's one obstacle is Y1a's simultaneous squares.
+- Open: interleaved restrict/seam-sign case of the rank-1 tower; Z1's unmeasured features
+  (3-D models, equation glyphs, picture tools).
