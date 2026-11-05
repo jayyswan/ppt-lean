@@ -263,3 +263,15 @@ Framing for every stream:
 trinomial variety over ℚ^solv ∩ ℝ. (SR) is implied by a positive answer to Taylor's question, which
 is open. Solvable real algebraic numbers ⊆ P [Proof]. The Galois-class base case needs (BR_n). See
 SUMMARY §6.
+
+### X2 (planned, not run; user is conserving usage)
+
+Recast (SR) so that a Wooley/Brauer-type theorem applies (Wooley, arXiv:1501.01789: dim ≥ 2^{2^deg}
+⇒ solvable points; Cor 4.6: odd degree over totally real K ⇒ K-points). Four directions:
+1. a sign-tracking real Brauer/Wooley;
+2. trading degree for dimension: Weil restriction, parameter-rich engines, auxiliary variables,
+   overshoot;
+3. odd-degree-only engine conditions, starting from the odd shape;
+4. dim/deg verdict per route.
+
+Full brief: the X2 prompt in the 2026-11-05 session.
