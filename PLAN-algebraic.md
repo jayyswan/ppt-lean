@@ -187,7 +187,34 @@ polynomials of degree ≤ 8 over itself. The question is whether `F = ℝ_alg`.
     monic sextics.
   - Lead: offset × circle (through the circular points).
 
-### Wave 2 (proposed)
+### User decisions (2026-11-04)
+
+- `poly_graph` stays capped at degree 6. Routes that need rational degree-8 graphs are out.
+- **All resources go to degree > 9 and to general strategies for extending the tower.** The
+  degree-9 streams (N1b, N1-Lean, N3, N5) are parked.
+
+### Wave 2 (launched 2026-11-04): general n
+
+Framing for every stream:
+- Write `F_{<n}` for the closure of ℚ under real roots of degree < n. By induction on n,
+  auxiliary equations of any degree < n are allowed.
+- The obstacles are therefore:
+  - realness;
+  - the degree of the variety of good Tschirnhaus elements, i.e. finding points on it with
+    coordinates in `F_{<n}`;
+  - the Aₙ filter, which requires one engine step that carries Aₙ.
+- By a dimension count, divisibility `χ_τ | (crossing polynomial)` almost always has solutions; it
+  is the *cost* of finding them that matters.
+
+| id | question |
+|---|---|
+| H1 | **Incidence cost for engine families, general n.** For a crossing polynomial of degree D ≥ n (power law `x^m` with m free, against a line, conic, quartic graph, Bézier, offset or circle), study the incidence variety `{(τ, params) : χ_τ ∣ crossing}`. Give its dimension and degree, and look for low-degree or rational components (lines, linear spaces, rational curves). Tabulate cost against n for n = 9…13. Include N2's overshoot and G2's offset × circle. |
+| H2 | **Real Tschirnhaus over `F_{<n}`.** Which conditions (killing p₁…p_k, divisibility patterns) can be met with real points over `F_{<n}`, as a function of n and s? Cover points on subvarieties of degree < n, polar cones, and linear spaces (Hilbert/Sylvester/Brauer, made real). Include G1's square lift as a way to manufacture nonreal pairs. |
+| H3 | **Arithmetic route for rational q of any degree n.** Combine Meyer, Birch, Heath-Brown and Browning–Heath-Brown (forms in many variables) with the affine freedom of rational sextic graphs and power laws, and with overshoot. For which n does a rational (or `F_{<n}`) τ give a drawable engine when q has a nonreal root? Then the square lift for totally real q. |
+| H4 | **Transcendental Galois sources.** P has elliptic integrals and their inverses (arc length, `arc_of_length`, box). Can it evaluate division values of elliptic or abelian functions, or modular or theta functions, à la Hermite–Klein–Umemura? Which non-solvable Galois groups does this reach, e.g. PSL(2,p), PSL(2,8), and any Aₙ? |
+| H5 | **Crack degree 10 (and 11) concretely, by any route.** Rational with a nonreal root first, then the rest. This is the test case for H1–H3. |
+
+### Wave 2 (original proposal, superseded)
 
 - **N1b:** find a certificate centre over ℚ(√d), or an isolating-interval certificate, for s = 3 and
   s = 4.
