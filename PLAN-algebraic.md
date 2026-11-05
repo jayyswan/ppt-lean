@@ -275,3 +275,8 @@ Recast (SR) so that a Wooley/Brauer-type theorem applies (Wooley, arXiv:1501.017
 4. dim/deg verdict per route.
 
 Full brief: the X2 prompt in the 2026-11-05 session.
+
+**X2 done (2026-11-05).** See SUMMARY §7.
+- Real Wooley (RW) is proved, but no existing engine lies in its range.
+- (BD), a family with bounded-degree, unbounded-parameter crossings, would close all n.
+- Theorem O: degrees 9–13 including totally real, conditional on a rational point of O_m.
