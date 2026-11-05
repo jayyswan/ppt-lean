@@ -452,3 +452,13 @@ ever combines two user-controlled guides with P weights.
 - Consequence: Theorem R needs isolated points (SS_{n−1}), which stays open.
 - Open: a formal write-up; A₉-irreducibility of the heart in characteristic 2; imprimitive groups;
   curves with a ℤ/2 stabiliser.
+
+### Assumption-breaking streams (2026-11-05)
+
+Every route so far shares built-in assumptions. These streams drop them.
+
+| id | status | question |
+|---|---|---|
+| Z7 (#1) | **launched** (Opus) | **Multi-crossing readout / field embedding.** Every engine reached α as a root of ONE crossing equation E (χ_τ a factor of E_p). But `restrict` isolates every real crossing, and P is closed under arithmetic, so α need only be a rational function of several crossings: K ⊂ F(real roots of E_p). This is a parametric-polynomial condition: Gal(E_p) must specialize to a group H with an S_n/A_n quotient acting on the N crossings (on k-subsets, imprimitively, …), and the Diophantine problem is the K-twist of the cover Y_H → parameter space, not the factor locus. Classify the H available to our engines (overshoot, trinomial, offset towers), compute the geometry of the twisted covers, and look for one that is rational/unirational or has a guaranteed F-point. Check totally real cases. |
+| Z8 (#2) | planned | **F-points, not ℚ-points.** Audit each route (MI-1, Theorem O, Theorem X, Theorem R, overshoot) for where rationality of parameters is genuinely forced (e.g. `poly_graph` ℚ-coefficients) versus where any P-point suffices. Then (i) linear sections of degree ≤ 8 give F-points for free (Lemma A); (ii) genus-1 curves over F need no rank, since elliptic functions at P-arguments are drawable (H4/W3): test whether the condition varieties of Theorem O / MI-1 contain F-defined elliptic curves with real points. |
+| Z9 (#4) | planned (audit) | **Hyperelliptic / theta route.** Umemura: roots of any polynomial via Siegel theta constants of a hyperelliptic curve. Audit what genus ≥ 2 abelian-function machinery is in P (single-variable arc-length inversions; combinations of several arcs; whether Abel–Jacobi inversion or Siegel modular values are reachable). External input: other groups' results on hyperelliptic functions in P (user to supply). |
