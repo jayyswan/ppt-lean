@@ -214,6 +214,12 @@ Framing for every stream:
 | H4 | **Transcendental Galois sources.** P has elliptic integrals and their inverses (arc length, `arc_of_length`, box). Can it evaluate division values of elliptic or abelian functions, or modular or theta functions, à la Hermite–Klein–Umemura? Which non-solvable Galois groups does this reach, e.g. PSL(2,p), PSL(2,8), and any Aₙ? |
 | H5 | **Crack degree 10 (and 11) concretely, by any route.** Rational with a nonreal root first, then the rest. This is the test case for H1–H3. |
 
+**Wave 2 done (2026-11-04).** See `notes/algebraic/SUMMARY.md`.
+- Headline: a route for rational decics with a nonreal root (H5), using `power_law 10` against a
+  rational sextic graph. It needs a rational point on a smooth (2,3) complete intersection
+  V'_K ⊂ ℙ⁸ (MI-1). The point was found for an explicit S₁₀ decic.
+- General n: the bookkeeping law; real Brauer (k! < n); the elliptic ceiling at PSL(2,p).
+
 ### Wave 2 (original proposal, superseded)
 
 - **N1b:** find a certificate centre over ℚ(√d), or an isolating-interval certificate, for s = 3 and
