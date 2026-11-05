@@ -340,7 +340,7 @@ non-elliptical Minkowski summand.
 |---|---|---|
 | Z1 (C) | **launched** (Sonnet) | **Additive or sweeping PowerPoint operations for (BD).** Look for any UI operation that adds geometry or sweeps a shape, giving many linear parameters at bounded degree. Candidates: Morph, 3-D models, stretchy equation glyphs, crop-to-shape, radar/surface/contour charts, untested ink pens (brush, pencil, galaxy), and anything else. Y1c already covered strokes and effects. |
 | Z2 (B1) | **launched** (Sonnet) | **Engine shape C = {9,7,5,4,2,0}** (N4 gap theorem; serves totally real nonics). Is there a drawable crossing that realises it, and what are the cost and realness of its conditions? |
-| Z3 (B2) | planned | **Cusp/extremum engine.** Offsets of a cubic Bézier have a cusp polynomial of degree 12 that seems to carry A₁₂ (N4). Measure the rank and cost of using it as an engine (box readout of the cusp), and whether a cubic factor can be forced. |
+| Z3 (B2) | **launched** (Sonnet) | **Cusp/extremum engine.** Offsets of a cubic Bézier have a cusp polynomial of degree 12 that seems to carry A₁₂ (N4). Measure the rank and cost of using it as an engine (box readout of the cusp), and whether a cubic factor can be forced. |
 
 Also noted, not scheduled:
 - N1b (ℚ(√d) certificate);
