@@ -420,3 +420,11 @@ twisted cubic) or genus 1 with positive rank, other than ℓ_τ — that would g
 points and solve SS_{n−1} outright, unconditionally. Lines are excluded. τ is free.
 Target n = 9, totally real S₉ (the first open case): dimension count for (τ, conic ⊂ V_τ), then an
 explicit search on Y1a's nonic; then twisted cubics and genus-1 curves.
+
+### Z6: the unmeasured UI features (2026-11-05, launched, Sonnet)
+
+Finish Z1's unmeasured list, aimed at Z4's diagnosis: look for a two-curve (pointwise-sum or
+Minkowski) operation, a non-constant offset, or a (BD) family. Items: 3-D models, the equation
+editor, picture tools (crop to shape), the remaining ink pens (Brush, Pencil, Galaxy, Rainbow),
+what Morph interpolates (and node-count mismatch), and whether text warps' (1−y)·T(x) + y·B(x)
+ever combines two user-controlled guides with P weights.
