@@ -258,3 +258,8 @@ Framing for every stream:
   conditions and MI-1.
 - **Output.** Reduce the target to precise open statements, if possible.
 - Note: `notes/algebraic/X1.md`.
+
+**X1 done (2026-11-05).** Theorem X: the full target follows from (SR), points of the twisted
+trinomial variety over ℚ^solv ∩ ℝ. (SR) is implied by a positive answer to Taylor's question, which
+is open. Solvable real algebraic numbers ⊆ P [Proof]. The Galois-class base case needs (BR_n). See
+SUMMARY §6.
