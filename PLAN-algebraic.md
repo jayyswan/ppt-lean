@@ -304,3 +304,17 @@ Full brief: the X2 prompt in the 2026-11-05 session.
 - Use the circle partner: rank +2.
 - Can any non-ellipse Minkowski summand be drawn? That is, a non-circular "pen" or stroke in
   PowerPoint. It would give (BD) outright.
+
+**Y1c done (2026-11-05).** See `notes/algebraic/Y1c.md`. Scoped to the operations tested: no curved
+non-elliptical Minkowski summand.
+- Strokes are exact disk-pen offsets: 0.03 pt at w = 30.
+- Compound lines are several offsets at once.
+- The only non-disk summands are polygons (miter/square joins, highlighter ink), and they are inert
+  [Proof sketch]: they act as translations.
+- Bevels, contour, extrusion and soft edges are raster.
+- By-products:
+  - a vector stroke-outline route: opaque shadow → EMF → ungroup ×2;
+  - dash ends sit at exact arclength multiples of w.
+- Caveat: some stroke weights, shadow values and other settings were set via COM or typed in the
+  pane. Fine for measurement, not for a construction.
+- Next per plan: Y1a, the simultaneous-squares problem (Opus), if wanted.
