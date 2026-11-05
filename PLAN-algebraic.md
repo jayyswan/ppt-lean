@@ -239,3 +239,9 @@ Framing for every stream:
 - **N3:** P-coefficient s ∈ {1, 2}, restricted to the odd and even engines (N2's Descartes table).
 - **G3:** general-n engines. Cover overshoot for general n, two-curve crossings with a power law,
   the square lift, and offset × circle.
+
+**Wave 3 done (2026-11-05).** See `notes/algebraic/SUMMARY.md` §5.
+- Offset towers and the two-graph family meet the parameter count; the cost lies in genus ≥ 1 and
+  high-degree loci.
+- Transcendental routes are closed, scoped.
+- New positive: solvable-Galois real algebraic numbers are P-constructible (sketch).
