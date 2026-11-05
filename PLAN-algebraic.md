@@ -280,3 +280,27 @@ Full brief: the X2 prompt in the 2026-11-05 session.
 - Real Wooley (RW) is proved, but no existing engine lies in its range.
 - (BD), a family with bounded-degree, unbounded-parameter crossings, would close all n.
 - Theorem O: degrees 9–13 including totally real, conditional on a rational point of O_m.
+
+### Y1: offset engine via support functions (proposed 2026-11-05, not launched)
+
+**Reformulation [Proof sketch, orchestrator].**
+- Offset by d is the Minkowski sum with d·disk, and linear maps commute with Minkowski sums. So
+  `Aff ∘ (offset ∘ Aff)^J (base)` = affine base ⊕ Σ_j d_j·E_j, where the E_j are ellipses.
+- Its point with unit normal u is x(u) = ∇H(u), with H(u) = h₀(P₀ᵀu) + Σ_j d_j·√(Q_j(u)) and
+  Q_j = |P_jᵀu|². The parabola's support function h₀ is rational.
+- So the offset distances d_j enter **linearly**, which is exactly the (BD) shape. All degree growth
+  comes from the shape square roots √Q_j.
+- Crossing with a line at normal slopes s = τ_k gives one linear equation over K ⊗ L in
+  (d_1..d_J, c). With J ≈ n−1 layers, Cramer's rule plus Galois descent gives d_j ∈ L for free,
+  **provided** each Q_j(τ) is a square in K ⊗ L. That is W1's condition.
+- Distinct positive-definite Q_j share no branch points, so each layer adds a new double cover
+  (W1/G2 genus growth).
+
+**Questions for Y1.**
+- Find τ and many shapes with Q_j(τ) a square in K ⊗ L, through rational points of the conics
+  ρ² = Q(τ), the fibre product of double covers, or Mordell–Weil growth over K.
+- Get bases other than the parabola: rational sextic graphs, Béziers, power laws with rational
+  support functions.
+- Use the circle partner: rank +2.
+- Can any non-ellipse Minkowski summand be drawn? That is, a non-circular "pen" or stroke in
+  PowerPoint. It would give (BD) outright.
