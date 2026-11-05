@@ -428,3 +428,14 @@ Minkowski) operation, a non-constant offset, or a (BD) family. Items: 3-D models
 editor, picture tools (crop to shape), the remaining ink pens (Brush, Pencil, Galaxy, Rainbow),
 what Morph interpolates (and node-count mismatch), and whether text warps' (1−y)·T(x) + y·B(x)
 ever combines two user-controlled guides with P weights.
+
+**Z6 done (2026-11-05): nothing found; mostly reasoned, one measurement.** See `notes/algebraic/Z6.md`.
+- Morph has the right shape, (1−w)A + wB of two user curves, but w is a clock value (typed
+  Duration) that can't be frozen, and no vector frame is readable (Z1). Its linearity is
+  unconfirmed [Heuristic]; node mismatch [Open].
+- Text warps: the guides are preset curves with 1–2 handles; on y = g(x) a warp gives T + g·(B−T),
+  g times a fixed function, not a user-curve sum [Heuristic].
+- 3-D models: COM insert fails again [Measured]; UI insert not driven [Open].
+- Picture tools: preset clip paths, raster effects [Heuristic]. Equation glyphs: discrete size
+  variants plus integer extender repeats [Proof sketch, OpenType MATH]. Ink pens: freehand
+  centrelines [Heuristic].
