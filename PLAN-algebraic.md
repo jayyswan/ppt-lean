@@ -360,3 +360,13 @@ tested.
 - Merging shapes only takes unions.
 - Not measured: 3-D models (no COM insert), the equation editor (COM dropped), picture tools, the
   remaining ink pens.
+
+**Z2 done (2026-11-05).** See `notes/algebraic/Z2.md`.
+- C's own variety has degree 144, dearer than the odd route's 105. Its full realisation would need
+  a nodal cubic with its node at infinity, which is not in G2's catalogue.
+- Exact realisation: `power_law 5/2` × a shifted `power_law b=−2`. It has 5 conditions, degree 4032,
+  and ≤ 7 real roots.
+- The sheared variant C∪{6} has 4 conditions, degree 1344, and no totally real point found.
+- New non-C engine: Bézier × y = a·x⁻² has 2 conditions of degree ≥ 28, and 9 real roots occur.
+- n = 10–13: no gap-≤2 class beats Theorem O.
+- Correction to N4: with signed exponents, power law × shifted power law does reach gap-≤2 supports.
