@@ -370,3 +370,13 @@ tested.
 - New non-C engine: Bézier × y = a·x⁻² has 2 conditions of degree ≥ 28, and 9 real roots occur.
 - n = 10–13: no gap-≤2 class beats Theorem O.
 - Correction to N4: with signed exponents, power law × shifted power law does reach gap-≤2 supports.
+
+**Z3 done (2026-11-05).** See `notes/algebraic/Z3.md`.
+- The cusp of an offset cubic Bézier is legally readable: `restrict` + `box`. The cusp is a local
+  x-extremum [Proof + Wolfram].
+- The cusp polynomial has degree 12 with Galois group S₁₂ [Wolfram].
+- As an engine it is dominated: rank 5, so n−5 conditions (4 at n = 9); at most 8 real cusps
+  [Proof sketch], 6 observed; so no totally real nonics.
+- Factor forcing equals overshoot and does not lower the count.
+- By-product (new readout tool): **box readouts of offset cusps return the centre of curvature at a
+  parameter where the curvature takes a prescribed value**.
