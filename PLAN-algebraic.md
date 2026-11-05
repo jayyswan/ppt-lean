@@ -349,3 +349,14 @@ Also noted, not scheduled:
 - partner curves absorbing a square root (W1);
 - PSL(2,8)/PΓL(2,8) nonics;
 - N3 and N5.
+
+**Z1 done (2026-11-05).** See `notes/algebraic/Z1.md`. No (BD) family was found among the operations
+tested.
+- Chart smoothing is a uniform Catmull-Rom spline. It is local: each segment depends on 4 points.
+- Polynomial trendlines are capped at order 6, and chart data carry only fill-handle values.
+- Radar and area charts are polylines; surface and contour charts are raster.
+- No vector intermediate frame of a Morph could be read.
+- Curved connectors are local presets.
+- Merging shapes only takes unions.
+- Not measured: 3-D models (no COM insert), the equation editor (COM dropped), picture tools, the
+  remaining ink pens.
