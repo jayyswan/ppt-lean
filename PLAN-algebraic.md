@@ -411,3 +411,12 @@ on open problems ("PowerPoint only adds through circles").
   square root. The offset route's one obstacle is Y1a's simultaneous squares.
 - Open: interleaved restrict/seam-sign case of the rank-1 tower; Z1's unmeasured features
   (3-D models, equation glyphs, picture tools).
+
+### Z5: rational curves on V_τ (2026-11-05, launched, Sonnet)
+
+Theorem R needs n − 1 L-points on V_τ (general type for n ≥ 7); isolated-point searches failed
+(Y1a §0.7). Y1a §4.4 leaves [Open] whether V_τ contains an L-rational curve of genus 0 (conic,
+twisted cubic) or genus 1 with positive rank, other than ℓ_τ — that would give infinitely many
+points and solve SS_{n−1} outright, unconditionally. Lines are excluded. τ is free.
+Target n = 9, totally real S₉ (the first open case): dimension count for (τ, conic ⊂ V_τ), then an
+explicit search on Y1a's nonic; then twisted cubics and genus-1 curves.
