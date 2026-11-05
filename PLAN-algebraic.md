@@ -380,3 +380,19 @@ tested.
 - Factor forcing equals overshoot and does not lower the count.
 - By-product (new readout tool): **box readouts of offset cusps return the centre of curvature at a
   parameter where the curvature takes a prescribed value**.
+
+### Z4: an addition without square roots (2026-11-05, launched, Sonnet)
+
+Motivation. Every route so far reduces to a rational-points problem. Taylor himself (Question 5.5,
+Ann. Toulouse 2004) "does not know if it is reasonable to expect" a positive answer to the
+question behind (SR). The structural reason (Y1a): the only "addition" PowerPoint has is offsetting,
+i.e. Minkowski sum with a circle; affine maps turn earlier circles into ellipses, whose support
+functions are square roots √Q_j, so each new parameter doubles the degree.
+
+Question. Is there a UI-only composition that adds many P-weighted terms **without square roots**?
+- (a) a pointwise graph sum y = f(x) + c·g(x) of drawable graphs;
+- (b) a Minkowski summand other than the circle/ellipse, with a square-root-free support function
+  (parabola-like);
+- (c) any drawable family whose crossing equation is linear in many P-parameters at bounded degree.
+A hit makes general n linear algebra plus gcd recovery; a clean negative sharpens the dependence
+on open problems ("PowerPoint only adds through circles").
