@@ -645,3 +645,16 @@ See `notes/algebraic/B3.md`.
 table, corrections to §§6–7 (Z8), new §8 (what PowerPoint can add), §9 (F-points: Theorem G, Lemma N,
 the two one-line reductions, Engine C), §10 (the frontier: the (PRC₈) question and ranked open
 targets). Remaining: Z9 (awaiting external input), B3's leftover items.
+
+**Z9 rescoped (2026-11-06): rebuild the hyperelliptic machinery ourselves**, starting from arc
+lengths of quartic graphs (user's pointer to what the external group did).
+- Arc length of y = c·p(λx + μ) (p ∈ ℚ[x] quartic, P-valued affine data) is ∫ √(1 + c²λ²p′²) dx on
+  w² = 1 + c²λ²p′(x)², degree 6, genus 2 (genus ≤ 4 for sextic graphs). Decompose the differential into
+  first/second-kind and exact parts; when does the Jacobian split (e.g. even p, extra involutions)
+  and the integral reduce to elliptic ones?
+- Inversion: arc_of_length + box gives x(s) for ONE genus-2 integral. Abel–Jacobi needs two. Can
+  two arcs plus an intersection/box impose two integral conditions at once? Which special values
+  are algebraic?
+- Galois groups reachable: division points of genus-2 Jacobians give GSp(4, ℓ) (composition
+  factors PSp(4, ℓ)); 2-torsion gives split(1 + p′²). Does anything reach A_n, n ≥ 9 (W3/H4 said
+  no for genus 1)? Relevance to Umemura's theta formula.
