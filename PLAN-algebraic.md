@@ -727,3 +727,16 @@ real roots of degree ≤ 8 polynomials plus all solvable real numbers (E ⊆ F =
 | Q1 | Opus | **launched** | Verify Lemma LS + Theorem H rigorously (Grunwald–Wang incl. Wang's special case; all places; circle-method HP + WA over arbitrary number fields and exact hypotheses). Literature: is (H*) — high-dimensional smooth varieties with a real point have dense ℚ^{tr,solv}-points — already known? What it gives for Taylor's question. |
 | Q2 | Sonnet | **launched** | Rebuild X2's regime table with Theorem H (and W, C3): does any route's condition variety come into range, for which n, needing ℚ- or E-points? How Theorem H changes the (BD) criterion. |
 | Q3 | Opus | planned (after Q1, Q2) | **Redesign the target.** Tools work on Fano / high-dimensional / quadric-containing varieties, fail on general type. Can engines, the square lift and multi-step towers be combined so the condition variety is Fano, high-dimensional, or contains a quadric (Theorem W)? |
+
+**Q2 done (2026-11-06): no route comes into Theorem H's range for any n.** See `notes/algebraic/Q2.md`.
+- [Proof of the arithmetic] Nearest misses: MI-1 9 variables vs 36; Engine C (n = 10) 9 vs 10⁶;
+  Theorem O's W_r 9 vs 10^9.5; A/C excess 14 vs ~10¹⁶; Theorem X's surface dim 2; V_τ dim 2 for all n.
+  Holds even if Theorem H fails (threshold failures).
+- Point kinds: H gives E/F-points, never ℚ-points (MI-1, A/C, the n = 9 quadric need ℚ). Routes
+  containing p₂ = 0 have no real point (p₂ positive definite), so H and W can't apply.
+- No fixed-degree CI in growing dimension: conditions n + 1 − F with F ≤ 36, degrees growing.
+  H beats Lemma A only for many equal low-degree forms (c quadrics need n ≳ 2c²).
+- (BD) under H [Heuristic]: fibre = n conjugate equations of degree δ; criterion
+  M ≥ n + n(n+1)(δ−1)2^(δ−1) (polynomial in n, vs RW's triple exponential). Needs δ ≲ log₂M;
+  offset towers (δ ≥ 2^j, M = 3j+4) miss doubly exponentially.
+- Open: a block-linear Birch-type theorem [not searched]; smoothness at infinity of fibres.
