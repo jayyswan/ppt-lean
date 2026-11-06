@@ -37,20 +37,31 @@ That gives the two restrictions on warps for free:
 Only choices count: list entries, spinner arrow steps, the Grow/Shrink Font buttons and
 preset menu items, never a typed value. Measured in PowerPoint
 (`notes/warp/probes/probe_ui_inputs.py`, `probe_layout.py`, `probe_layout2.py`,
-`probe_handle.py`):
+`probe_offset.py`, `probe_offset2.py`, `probe_handle.py`):
 
-* **Font size.** The Font dialog's spinner steps by 0.1 pt over `[1, 4000]`, but a glyph
-  outline is drawn at the size rounded to the nearest multiple of 0.75 pt (one pixel at
-  96 dpi): 72.1 to 72.26 draw the 72 pt outline, 72.4 to 72.9 the 72.75 pt one. So the
-  drawn sizes are exactly the multiples `3k/4` pt, `1 ≤ k ≤ 5333`, and a size is stored
-  as that `k`.
+* **Font size.** The Font dialog's spinner steps by 0.1 pt over `[1, 4000]`, and the size
+  is stored as that number of tenths. A glyph outline is drawn at the stored size rounded
+  to the nearest multiple of 0.75 pt (one pixel at 96 dpi): 72.1 to 72.26 draw the 72 pt
+  outline, 72.4 to 72.9 the 72.75 pt one. No stored size lies halfway between two
+  multiples, so the rounding never meets a tie. The stored size, not the drawn one, is what
+  baseline offset reads.
+* **Baseline offset.** The Offset spinner steps by 2 % over `[-100 %, 100 %]`; the
+  Superscript and Subscript checkboxes set 30 % and −25 %, and stepping from −25 % lands back
+  on even values. With a stored size `S` and a nonzero offset `p %`, writing
+  `d = |p| · S / 100` (fitted exactly over about 800 glyphs at 9 sizes):
+  - the glyph is drawn at `2S/3` rounded to the nearest multiple of 0.75 pt (again never a
+    tie), and the pen then advances by that drawn size;
+  - a superscript (`p > 0`) moves up by `0.75 · ⌊4d/3 + 1/2⌋`, that is `d` rounded to the
+    nearest 0.75 pt (never a tie on this grid);
+  - a subscript (`p < 0`) moves down by `0.75 · max 0 ⌊4d/3 - 1/2⌋`: one pixel less than
+    that, ties going down (−25 % at 10.5 pt moves 2.25 pt), and never upward.
 * **Character spacing.** The dialog's `By` spinner steps by 0.1 pt (Expanded or
   Condensed); the menu presets −3, −1.5, 0, 3, 6 pt lie on that grid. Its range has not been
   measured: COM accepts any value, and a UI bound has not been read off yet.
 * **Layout.** Each glyph advances the pen by `advance · size / unitsPerEm + spacing`,
-  rounded to a multiple of 0.75 pt, step by step (not cumulatively). All glyphs share the
-  baseline. Baseline offset (2 % steps, Superscript 30 %, Subscript −25 %) is not modelled
-  yet, nor is kerning (none of the glyphs below have kerning pairs).
+  rounded to a multiple of 0.75 pt, step by step (not cumulatively), with `size` the drawn
+  size. Glyphs sit on a common baseline unless offset. Kerning is not modelled (none of the
+  glyphs below have kerning pairs), nor is Equalize Character Height.
 * **Box size.** The Height and Width spinners step by 0.1 in = 7.2 pt. The warp fills the
   whole shape box: the text insets do not enter.
 * **Handle.** A drag stores whatever value the pointer lands on, which is not a clear
@@ -130,25 +141,46 @@ def Glyph.pieces : Glyph → List GlyphPiece
 
 /-! ### Rows -/
 
-/-- One character of a row: its glyph, its drawn size as a number of 0.75 pt steps, and the
-character spacing after it in tenths of a point. -/
+/-- `x` rounded to the nearest multiple of 0.75 pt, the pixel grid layout snaps to. -/
+def snap (x : ℚ) : ℚ := 3 / 4 * round (x / (3 / 4))
+
+/-- One character of a row: its glyph, its stored font size in tenths of a point, the
+character spacing after it in tenths of a point, and its baseline offset in percent
+(`0` for none, `30` for Superscript, `-25` for Subscript). -/
 structure RowGlyph where
   glyph : Glyph
-  sizeSteps : ℕ
+  sizeTenths : ℕ
   spacingTenths : ℤ
+  offsetPercent : ℤ := 0
 
-/-- The drawn font size in points. -/
-def RowGlyph.size (g : RowGlyph) : ℚ := 3 / 4 * g.sizeSteps
+/-- The stored font size in points. -/
+def RowGlyph.storedSize (g : RowGlyph) : ℚ := g.sizeTenths / 10
 
-/-- How far the pen moves past this glyph: advance plus spacing, rounded to 0.75 pt. -/
+/-- The size the outline is drawn at: the stored size, or two thirds of it when offset,
+snapped to 0.75 pt. -/
+def RowGlyph.size (g : RowGlyph) : ℚ :=
+  if g.offsetPercent = 0 then snap g.storedSize else snap (2 / 3 * g.storedSize)
+
+/-- How far the glyph's baseline moves up, in points (negative is down). Superscripts round
+`d = |p| · S / 100` to the nearest pixel; subscripts go one pixel less, with ties going
+down, and never above the baseline. -/
+def RowGlyph.rise (g : RowGlyph) : ℚ :=
+  let d : ℚ := |(g.offsetPercent : ℚ)| * g.storedSize / 100
+  if 0 < g.offsetPercent then 3 / 4 * ⌊4 * d / 3 + 1 / 2⌋
+  else if g.offsetPercent < 0 then -(3 / 4 * max 0 ⌊4 * d / 3 - 1 / 2⌋)
+  else 0
+
+/-- How far the pen moves past this glyph: advance at the drawn size plus spacing, snapped
+to 0.75 pt. -/
 def RowGlyph.penStep (g : RowGlyph) : ℚ :=
-  3 / 4 * round ((g.glyph.advance * g.size / g.glyph.unitsPerEm + g.spacingTenths / 10) / (3 / 4))
+  snap (g.glyph.advance * g.size / g.glyph.unitsPerEm + g.spacingTenths / 10)
 
 /-- The outline of a glyph with its pen at `pen` on the baseline `y = 0`, in points with `y`
-down: font units are scaled by `size / unitsPerEm` and flipped. -/
+down: font units are scaled by `size / unitsPerEm`, flipped, and raised by `rise`. -/
 def RowGlyph.toSet (g : RowGlyph) (pen : ℚ) : Set (ℝ × ℝ) :=
   (fun z : ℝ × ℝ =>
-      (pen + g.size / g.glyph.unitsPerEm * z.1, -(g.size / g.glyph.unitsPerEm * z.2))) ''
+      (pen + g.size / g.glyph.unitsPerEm * z.1,
+        -(g.rise + g.size / g.glyph.unitsPerEm * z.2))) ''
     ⋃ piece ∈ g.glyph.pieces, piece.toSet
 
 /-- The ink of a row whose first pen position is `pen`. -/
@@ -243,12 +275,15 @@ noncomputable def TextBox.outline (T : TextBox) : Set (ℝ × ℝ) :=
   | .none => T.ink
   | .preset k s => k.map ((k.adj s : ℝ) / 100000) T.w T.h '' (inkNormalize T.ink '' T.ink)
 
-/-- The side conditions for a text box to be drawable: at least one glyph, each drawn at a
-size in `[0.75, 3999.75]` pt, and a box of positive size. Character spacing is not bounded
-here yet (its UI range is unmeasured). -/
+/-- The side conditions for a text box to be drawable: at least one glyph, each stored at a
+size in `[1, 4000]` pt with a baseline offset the UI can set (an even percentage in
+`[-100, 100]`, or the Subscript preset `-25`), and a box of positive size. Character spacing
+is not bounded here yet (its UI range is unmeasured). -/
 structure TextBox.WellFormed (T : TextBox) : Prop where
   glyphs_ne : T.glyphs ≠ []
-  size_mem : ∀ g ∈ T.glyphs, 1 ≤ g.sizeSteps ∧ g.sizeSteps ≤ 5333
+  size_mem : ∀ g ∈ T.glyphs, 10 ≤ g.sizeTenths ∧ g.sizeTenths ≤ 40000
+  offset_mem : ∀ g ∈ T.glyphs, (Even g.offsetPercent ∨ g.offsetPercent = -25) ∧
+    -100 ≤ g.offsetPercent ∧ g.offsetPercent ≤ 100
   w_pos : 0 < T.wSteps
   h_pos : 0 < T.hSteps
 
