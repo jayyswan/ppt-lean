@@ -679,3 +679,9 @@ lengths of quartic graphs (user's pointer to what the external group did).
   give (BR₅) via Thomae; P can't compute them, so this is a target, not a route.
 - Open: real Abel sums making a genus-2 period a P-number; a differential-algebraic proof that
   chained single inversions never give Jacobi inversion values.
+
+**L1 done (2026-11-06): (PRC₈) appears open and unstudied.** See `notes/algebraic/L1.md`. No work on
+PAC/PRC properties of bounded-degree-root fields (or origami/neusis fields). ℚ^solv PAC is open.
+Northcott gives no obstruction (Fehm 1708.06599: PAC + Northcott coexist; our field has all roots of
+unity anyway). Bombieri–Zannier's Northcott is for abelian degree-≤ d composita; ℚ^(d) is open for
+d > 2. Nearest: Pál 2006 (genus 0, 2–4 curves have solvable points), Çiperiani–Wiles, Rawson.
