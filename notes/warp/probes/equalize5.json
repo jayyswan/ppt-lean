@@ -1,0 +1,587 @@
+[
+ {
+  "small": 9,
+  "big": 9,
+  "small_band": [
+   0.75,
+   9.0
+  ],
+  "big_band": [
+   0.75,
+   9.0
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 20,
+  "small_band": [
+   11.25,
+   19.5
+  ],
+  "big_band": [
+   0.0,
+   19.5
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 21,
+  "small_band": [
+   12.0,
+   20.25
+  ],
+  "big_band": [
+   -0.75,
+   20.25
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 22,
+  "small_band": [
+   13.5,
+   21.75
+  ],
+  "big_band": [
+   0.0,
+   21.75
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 23,
+  "small_band": [
+   14.25,
+   22.5
+  ],
+  "big_band": [
+   0.0,
+   22.5
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 24,
+  "small_band": [
+   15.0,
+   23.25
+  ],
+  "big_band": [
+   0.0,
+   23.25
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 25,
+  "small_band": [
+   15.75,
+   24.0
+  ],
+  "big_band": [
+   -0.75,
+   24.0
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 30,
+  "small_band": [
+   21.0,
+   29.25
+  ],
+  "big_band": [
+   0.0,
+   29.25
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 40,
+  "small_band": [
+   30.75,
+   39.0
+  ],
+  "big_band": [
+   0.0,
+   39.0
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 50,
+  "small_band": [
+   40.5,
+   48.75
+  ],
+  "big_band": [
+   0.0,
+   48.75
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 60,
+  "small_band": [
+   50.25,
+   58.5
+  ],
+  "big_band": [
+   0.0,
+   58.5
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 72,
+  "small_band": [
+   61.5,
+   69.75
+  ],
+  "big_band": [
+   0.0,
+   69.75
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 73,
+  "small_band": [
+   63.0,
+   71.25
+  ],
+  "big_band": [
+   0.75,
+   71.25
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 99,
+  "small_band": [
+   88.5,
+   96.75
+  ],
+  "big_band": [
+   0.75,
+   96.75
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 9,
+  "big": 100,
+  "small_band": [
+   89.25,
+   97.5
+  ],
+  "big_band": [
+   0.0,
+   97.5
+  ],
+  "small_H": 8.25
+ },
+ {
+  "small": 13.5,
+  "big": 13.5,
+  "small_band": [
+   0.75,
+   13.5
+  ],
+  "big_band": [
+   0.75,
+   13.5
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 20,
+  "small_band": [
+   6.75,
+   19.5
+  ],
+  "big_band": [
+   0.0,
+   19.5
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 21,
+  "small_band": [
+   7.5,
+   20.25
+  ],
+  "big_band": [
+   -0.75,
+   20.25
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 22,
+  "small_band": [
+   9.0,
+   21.75
+  ],
+  "big_band": [
+   0.0,
+   21.75
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 23,
+  "small_band": [
+   9.75,
+   22.5
+  ],
+  "big_band": [
+   0.0,
+   22.5
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 24,
+  "small_band": [
+   10.5,
+   23.25
+  ],
+  "big_band": [
+   0.0,
+   23.25
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 25,
+  "small_band": [
+   11.25,
+   24.0
+  ],
+  "big_band": [
+   -0.75,
+   24.0
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 30,
+  "small_band": [
+   16.5,
+   29.25
+  ],
+  "big_band": [
+   0.0,
+   29.25
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 40,
+  "small_band": [
+   26.25,
+   39.0
+  ],
+  "big_band": [
+   0.0,
+   39.0
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 50,
+  "small_band": [
+   36.0,
+   48.75
+  ],
+  "big_band": [
+   0.0,
+   48.75
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 60,
+  "small_band": [
+   45.75,
+   58.5
+  ],
+  "big_band": [
+   0.0,
+   58.5
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 72,
+  "small_band": [
+   57.0,
+   69.75
+  ],
+  "big_band": [
+   0.0,
+   69.75
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 73,
+  "small_band": [
+   58.5,
+   71.25
+  ],
+  "big_band": [
+   0.75,
+   71.25
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 99,
+  "small_band": [
+   84.0,
+   96.75
+  ],
+  "big_band": [
+   0.75,
+   96.75
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 13.5,
+  "big": 100,
+  "small_band": [
+   84.75,
+   97.5
+  ],
+  "big_band": [
+   0.0,
+   97.5
+  ],
+  "small_H": 12.75
+ },
+ {
+  "small": 15,
+  "big": 15,
+  "small_band": [
+   -0.75,
+   14.25
+  ],
+  "big_band": [
+   -0.75,
+   14.25
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 20,
+  "small_band": [
+   4.5,
+   19.5
+  ],
+  "big_band": [
+   0.0,
+   19.5
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 21,
+  "small_band": [
+   5.25,
+   20.25
+  ],
+  "big_band": [
+   -0.75,
+   20.25
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 22,
+  "small_band": [
+   6.75,
+   21.75
+  ],
+  "big_band": [
+   0.0,
+   21.75
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 23,
+  "small_band": [
+   7.5,
+   22.5
+  ],
+  "big_band": [
+   0.0,
+   22.5
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 24,
+  "small_band": [
+   8.25,
+   23.25
+  ],
+  "big_band": [
+   0.0,
+   23.25
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 25,
+  "small_band": [
+   9.0,
+   24.0
+  ],
+  "big_band": [
+   -0.75,
+   24.0
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 30,
+  "small_band": [
+   14.25,
+   29.25
+  ],
+  "big_band": [
+   0.0,
+   29.25
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 40,
+  "small_band": [
+   24.0,
+   39.0
+  ],
+  "big_band": [
+   0.0,
+   39.0
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 50,
+  "small_band": [
+   33.75,
+   48.75
+  ],
+  "big_band": [
+   0.0,
+   48.75
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 60,
+  "small_band": [
+   43.5,
+   58.5
+  ],
+  "big_band": [
+   0.0,
+   58.5
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 72,
+  "small_band": [
+   54.75,
+   69.75
+  ],
+  "big_band": [
+   0.0,
+   69.75
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 73,
+  "small_band": [
+   56.25,
+   71.25
+  ],
+  "big_band": [
+   0.75,
+   71.25
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 99,
+  "small_band": [
+   81.75,
+   96.75
+  ],
+  "big_band": [
+   0.75,
+   96.75
+  ],
+  "small_H": 15.0
+ },
+ {
+  "small": 15,
+  "big": 100,
+  "small_band": [
+   82.5,
+   97.5
+  ],
+  "big_band": [
+   0.0,
+   97.5
+  ],
+  "small_H": 15.0
+ }
+]
