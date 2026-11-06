@@ -573,3 +573,8 @@ See `notes/algebraic/A1.md`.
 - (c) Z7's conclusion stands [Wolfram + maximal-subgroup classification; GAP not installed]: for
   n ≥ 9 the transitive degrees below C(n,2) are 1, 2, n, 2n. Exceptions for 5 ≤ n ≤ 8: A₅/S₅ on 6;
   A₆/S₆ on 6 and 10; A₇ on 15; A₈ on 15. Z7 erred at n = 7 (missed A₇ on 15); small-n only.
+
+**Phase B launched (2026-11-05):** B1 (Opus; also closes A2's Lemma N gap, aims for a uniform
+construction, PSL(2,8)/PΓL(2,8) side task) and B2 (Opus), with recoverable notes
+(`notes/algebraic/B1.md`, `B2.md`; logs `HANDOFF-alg-B1.md`, `HANDOFF-alg-B2.md`). B3 drops the
+decic (MI-2) surface per A2.
