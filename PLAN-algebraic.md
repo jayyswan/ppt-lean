@@ -640,3 +640,8 @@ See `notes/algebraic/B3.md`.
 - Uniform in K, both ways: failures and any success would hold for all S₉/A₉ nonics and
   S₁₀/A₁₀ decics.
 - Open: irregularity and fibrations of S_split; the intrinsic curves; the real counts on T.
+
+**Phase D done (2026-11-06).** `notes/algebraic/SUMMARY.md` updated: one-paragraph status, status
+table, corrections to §§6–7 (Z8), new §8 (what PowerPoint can add), §9 (F-points: Theorem G, Lemma N,
+the two one-line reductions, Engine C), §10 (the frontier: the (PRC₈) question and ranked open
+targets). Remaining: Z9 (awaiting external input), B3's leftover items.
