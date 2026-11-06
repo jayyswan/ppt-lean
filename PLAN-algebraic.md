@@ -658,3 +658,24 @@ lengths of quartic graphs (user's pointer to what the external group did).
 - Galois groups reachable: division points of genus-2 Jacobians give GSp(4, ℓ) (composition
   factors PSp(4, ℓ)); 2-torsion gives split(1 + p′²). Does anything reach A_n, n ≥ 9 (W3/H4 said
   no for genus 1)? Relevance to Umemura's theta formula.
+
+**Z9 done (2026-11-06): no hyperelliptic/theta route to A_n (n ≥ 9).** See `notes/algebraic/Z9.md`.
+- [Proof] Drawable genus-2 family: arc-length curves of quartic graphs are exactly w² = D + q(u)²
+  (q a real cubic over P, D > 0): 2 P-moduli; ∞₊ − ∞₋ is 3-torsion; branch points = nonreal roots of
+  q = ±i√D. Sextic graphs: q quintic, genus 4. Béziers stay genus ≤ 1; offsets add only elliptic pieces.
+- [Wolfram] Explicit decomposition of w du (no third-kind part). b = 0 splits (elliptic); b ≠ 0
+  looks geometrically simple, End = ℤ [Heuristic]: new transcendentals, no new Galois groups.
+- [Proof sketch] Only chained single inversions exist (all constructors unary); no coupled
+  Abel–Jacobi inversion. Abel relations force only endpoints quadratic over P. Genus-2 periods are
+  not P-numbers (no real arc closes into a cycle). Whether chains can match Jacobi inversion values
+  is [Open].
+- [Proof mod citations] Torsion of a genus-g Jacobian has composition factors in projective
+  dimension ≤ 2g: genus 2 caps at A₇/PSp(4,ℓ); genus 4 gives A₉/A₁₀ only via 2-torsion with 10 free
+  branch points, which no drawable curve has.
+- [Proof] Umemura blocked first by (U1): arc-length branch points have degree ≤ 5 and real zeros
+  only double, so a target's roots are never branch points.
+- [Proof] New: sextic graphs from p = x⁶/6 + x²/2 have branch points exactly the roots of
+  z⁵ + z + c, any c ∈ P(i) with Im c ≠ 0 — X1's (BR₅). Genus-4 theta constants of these curves would
+  give (BR₅) via Thomae; P can't compute them, so this is a target, not a route.
+- Open: real Abel sums making a genus-2 period a P-number; a differential-algebraic proof that
+  chained single inversions never give Jacobi inversion values.
