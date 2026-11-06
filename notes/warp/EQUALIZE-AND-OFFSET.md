@@ -35,6 +35,16 @@ is a spinner with 2 % steps.
   not 2/3. The shift is snapped to 0.75 pt.
 - Combined with Equalize, the glyph fills the band for 2/3 of its size, then gets shifted.
 
+**Exact rule** (`probe_offset2.py`, about 800 glyphs at 9 sizes, no misses), with stored size
+`S` and offset `p` (range −100 % to 100 %, COM rejects 1.02), and `d = |p|·S/100`:
+- drawn size `snap(2S/3)`. It uses the stored size, not the drawn one: 72.4 gives 48, not 48.75.
+- superscript rise `0.75·⌊4d/3 + ½⌋`, which is `d` rounded to the nearest pixel.
+- subscript drop `0.75·max(0, ⌊4d/3 − ½⌋)`, one pixel less than `d` rounded, with ties going
+  down. For example −25 % at 10.5 pt drops 2.25 pt, and −2 % at 13 pt doesn't move.
+- the pen then advances by the offset glyph's drawn size.
+
+This is formalized as `RowGlyph.size` / `RowGlyph.rise` in `Pptc/TextBox.lean`.
+
 ## Why neither gives a new kind of shape
 
 The measured warp law reads every glyph only through its *rectangle*.
