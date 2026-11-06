@@ -719,3 +719,11 @@ real roots of degree ≤ 8 polynomials plus all solvable real numbers (E ⊆ F =
 - First open: (3,3) ⊂ ℙ⁶ without the index condition; (2,5) ⊂ ℙ⁷ sphere-type; (3,4) ⊂ ℙ⁷; degree-9
   hypersurfaces in ℙ⁹…ℙ⁴⁰⁹⁵.
 - None of this reaches general type (V_τ, S, T); Witt slicing on V_τ has expected dimension 44 − 6n < 0.
+
+### After P1 (2026-11-06)
+
+| id | model | status | question |
+|---|---|---|---|
+| Q1 | Opus | **launched** | Verify Lemma LS + Theorem H rigorously (Grunwald–Wang incl. Wang's special case; all places; circle-method HP + WA over arbitrary number fields and exact hypotheses). Literature: is (H*) — high-dimensional smooth varieties with a real point have dense ℚ^{tr,solv}-points — already known? What it gives for Taylor's question. |
+| Q2 | Sonnet | **launched** | Rebuild X2's regime table with Theorem H (and W, C3): does any route's condition variety come into range, for which n, needing ℚ- or E-points? How Theorem H changes the (BD) criterion. |
+| Q3 | Opus | planned (after Q1, Q2) | **Redesign the target.** Tools work on Fano / high-dimensional / quadric-containing varieties, fail on general type. Can engines, the square lift and multi-step towers be combined so the condition variety is Fano, high-dimensional, or contains a quadric (Theorem W)? |
