@@ -1,0 +1,6 @@
+- start: created Q3.md stubs; next: read SUMMARY/Y1a/P1/Q2
+- step1 done: (1) written: structural count dim/R -> 0; Bezier base gives J>=n-2 (small win); next: (2),(3) then literature
+- step1 done: (1) written: dim/R -> 0 structurally; Bezier base gives J>=n-2 (small win); next: (2),(3), then literature (4)
+- step2/3 done: (2) sharing worsens dim/R; (3) quadratisation useless, square lift same count, V_tau slicing blocked by K-twist; Lemma Q (r quadrics, N~r^2/2 => E-points, no circle method) sketched; next: literature (4)
+- step4 done: literature: Myerson n>=9R quadrics (Q, transfers to number fields via Weil restriction -> Theorem H(f)); Hochfilzer (1,1),(2,1) linear; weighted forms paper; none rescues (dim/R->0). next: verdict (5)
+- step5 done: verdict written, Status done. Nothing in range; partial wins: Bezier base J>=n-2, Lemma Q, Myerson/Hochfilzer bounds (Q only).

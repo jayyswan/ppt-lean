@@ -1,0 +1,7 @@
+- 11:01 Q1 started; Q1.md stubbed. next: Lemma LS write-up
+- 11:01 (1) Lemma LS proof + all-places local solubility written [Proof]; GW citation numbers to confirm. next: confirm NSW 9.2.8 / Artin-Tate, then (2)
+- 11:02 (1) Lemma LS proof + all-places local solubility written [Proof]. next: confirm GW citation numbers, then (2)
+- 11:03 (1b) GW = NSW 9.2.8 confirmed via secondary source; (2) Frei-Madritsch read: Thm 1.4 any smooth geom-int X, HP+WA, hypotheses independent of [K:Q]; BHB Cor1.4/1.5 valid over NF. next: (3) literature
+- 11:04 (3) FOUND: Wooley arXiv:1501.01789 'Solvable points on smooth projective varieties' - directly relevant (dim >= 2^{2^D}, uses BHB/FM, totally real case Cor 4.6). next: read it fully
+- 11:05 (3a) Wooley 2016 read: dim>=2^{2^D} solvable (non-real, Brauer); totally real only Cor4.6 odd D exp-range; no GW trick -> (H*) improves it. next: search follow-ups/folklore (Pal, CW Rem 2.8.2, Moret-Bailly, Taylor PSC)
+- 11:08 (3b-c),(4) written: H* correct for k=Q / k in Q^{tr,solv}; false as phrased for general k (counterex point (1:alpha), x^5-x-1); Wooley 2016 closest, no GW trick; nothing for routes. Status: done

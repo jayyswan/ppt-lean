@@ -1,0 +1,29 @@
+- start M1
+- step1 p1.py preset camera dump via COM
+- step2 p3.py: made m1ui.pptx with window, opened format pane; next UIA
+- step3 UIA works via pywinauto (h.py helper, select()/invoke patterns, no mouse); Format pane Effects tab reachable
+- step4 my window m1ui.pptx now foreground; controls: X/Y/Z/Perspective spinners + arrow buttons (Left/Right, Up/Down, Clockwise/CCW, Narrow/Widen fov), Keep text flat, Distance from ground, Reset, Presets gallery. Perspective spinner disabled at flat/no-scene
+- step5 gallery popup found via UIA (NetUIGalleryButton items); looping gallery items p19.py
+- step6 p19 gallery loop gave 19/26 items (some retries failed from focus contention): gallery1.json; names list in p19.out line1. retry missing
+- step7 all 25 gallery presets recorded: gallery1.json+gallery2.json (stored: prst only, no rot, no fov; COM gives implicit angles). next: spinners (p21)
+- step8 (see p22)
+- step8 flat start: spinner More on X/Y/Z => 10deg, arrow buttons => 5deg(float noise 21299999); creates orthographicFront+rot not legacy; Perspective spinner disabled on ortho. gallery presets keep prst; spinner on perspectiveFront adds <a:rot>, fov Widen +5deg (stored fov attr). p22,p23
+- step9 UI display: angle in [0,360), 1 decimal; Iso Top Up UI shows X314.7 Y324.6 Z60.2; Oblique presets show 0/0/0 (shear is in prst only); rot on top of preset keeps prst (p23,p24). next: step sizes by repeated clicks, wrap, ranges; 3-D Format
+- step10 spinner X: step 10deg, range [0,359.9] clamped no wrap; Less from 359.9 -> 350 (snap). arrow buttons +-5deg with wrap mod 360, float noise (355->21299999, 350->20999997). Iso presets are 35deg-based not true 35.264 (foreshortening .8152/.8192 vs .8165). testing snapping p27
+- step11 spinner rule: More = next multiple of 10 above, Less = prev multiple of 10 below, clamp [0,359.9]; arrows +-5 wrap. Y arrows Up +5/Down -5. next: perspective spinner range, distance from ground, keep text flat (p28)
+- step12 Perspective spinner: step 5deg (arrows and More/Less), range [0,120], clamped, 0 allowed (fov=0 stored); Reset removes scene3d entirely (XML None). next: distance from ground, keep text flat, 3-D Format (p29...)
+- step13 Distance from ground = sp3d z: step 0.5pt both signs (6350 EMU), z=0 default no sp3d attr. next keep text flat, 3-D format
+- step14 Keep text flat = bodyPr/flatTx only (text, no geometry). presets keep sp3d z. next 3-D Format dump (p32)
+- step15 3-D Format controls found: Top/Bottom bevel (type gallery 12 + None; Width,Height spinners), Depth (color, Size), Contour (color,Size), Material, Lighting below. looping bevel types p34
+- step16 bevel type defaults (w/h pt): circle 6/6, relaxedInset 6/6, cross 11/6, coolSlant 13/6, angle 6/6, softRound 12/4, convex 6/6, slope(UI 'Cutout') 6/6, divot 11/11, riblet 8/6, hardEdge 9/6, artDeco(UI 'Round Convex') 9/6; UI names Slant=coolSlant. next spinner steps p35
+- step17 bevel width/height spinner step 0.5pt (6350 EMU). next min, depth/contour steps (p36)
+- step18 depth & contour size spinners: step 0.5pt, min 0 (extrusionH/contourW attrs). next material, lighting (p37)
+- step19 materials: 11 UI items -> matte, warmMatte(default, attr omitted), plastic, metal, dkEdge, softEdge, flat, legacyWireframe, powder, translucentPowder, clear. next lighting (p39)
+- step20 lighting: 15 rigs (threePt balanced soft harsh flood contrasting morning sunrise sunset chilly freezing flat twoPt glow brightRoom) dir stays t. next lighting angle spinner (p42)
+- step21 lighting Angle: step 10deg, stored lightRig/rot rev, min 0. next: preset+spinner interplay (p43)
+- step22 KEY: spinner on a preset writes full rot triple (preset Euler materialised, e.g. IsoLD Y more -> lat 40 lon 45 rev 0, prst kept); arrow buttons compose a 5deg screen-frame rotation (IsoLD X Left gave 38.485/39.817/355.8 not Euler edit), Z arrow edits rev exactly; presets replace any custom rot/fov. verifying numerically p46/iso2.py
+- step23 KEY (fitted resid <=1e-6): arrow buttons = left-mult M by 5deg screen-axis rotation: XLeft=Ry(+5)M, XRight=Ry(-5)M, YUp=Rx(-5)M, YDown=Rx(+5)M, ZCW=Rz(+5)M, ZCCW=Rz(-5)M (A convention M=Rz(-rev)Rx(-lat)Ry(-lon)); then Euler re-extracted & rounded 1/60000deg. buttons.json iso3.py. next: fov=0 render vs ortho (p47), ribbon menu, 3D models, morph
+- step24 fov=0 (P spinner Narrow to 0) renders ~orthographic (bbox within 1px of orthographicFront same rot) p47. next ribbon menu, Insert 3D Models, morph (p48)
+- step25 ribbon Shape Effects>3-D Rotation = same 26-item gallery; ribbon Bevel gallery = same 12 types; ribbon bevel on fresh shape adds scene3d orthographicFront + bevelT (p51). next: morph/3D models quick (p52), then write M1.md
+- step26 3D models cmds Insert3DModelFromFile/FromOnline enabled via COM GetEnabledMso (no file to insert); morph not probed. writing M1.md
+- step27 wrote notes/3d/M1.md; done
