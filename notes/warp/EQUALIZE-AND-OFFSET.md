@@ -122,35 +122,61 @@ Open questions:
 - The spacing range.
 - Whether the reachable rectangle grid differs between the routes.
 
-## The Equalize band height: what is known (probes 17–21)
+## The Equalize band height: the exact rule (probes 17–23)
 
-Every equalized glyph is stretched onto a band `[B − H, B]`.
-- **B is its baseline.** For an offset glyph that is the shifted baseline.
-- **The plain baseline** is `round(0.97357·n)` pixels below the box top, where `n` is the
-  drawn size in pixels (0.75 pt each). It is exact at 131 of 132 sizes; the miss, n = 19,
-  sits on a near-tie at 18.498.
-- **0.97357 = 1.2 · winAscent/(winAscent + winDescent)**, the ascent share of a 1.2 × size
-  line. The same formula with Times New Roman's metrics predicts its different baselines.
+Every equalized glyph is stretched by one vertical affine map onto a band `[B − H, B]`.
+- **B is its baseline**, the shifted one for an offset glyph.
+- **H depends only on the font and the drawn size.** It is the same for ●, ◗, `I` and `H`,
+  and the same whatever the rest of the row is. Offset glyphs use H at their drawn (2/3)
+  size.
 
-What H depends on:
-- **It depends only on the drawn size.** 72.3 and 72 pt agree, and so do 13.3 and 13.5.
-- **It doesn't depend on the glyph.** ●, ◗, `I` and `H` agree at all 110 sizes tested.
-- **It doesn't depend on the row.** A 9 pt glyph's band is the same next to neighbours from
-  20 pt to 100 pt.
-- **It does depend on the font.** At 72 pt, Segoe gives 69.75 and Arial 70.5.
-- **Offset glyphs reuse the plain table** at their drawn (2/3) size, with no misses in 238.
+**The rule.** Let `n` be the drawn size in pixels (0.75 pt each), `upm` the font's units per
+em, and round to the nearest pixel at every step:
 
-H is not a simple formula. In pixels it is always `⌊0.97357·n⌋` or `⌈0.97357·n⌉`. Below
-n ≈ 41 it is `n` or `n − 1`, and the band top moves −1, 0 or +1 pixel without any monotone
-pattern. These searches all failed to fit it exactly:
-- one rounding of `a·n + b`: best 82/110;
-- a difference of two roundings `R(a·n + c) − R(b·n + d)`, with R ∈ {round, floor, ceil}
-  and a fine grid of a, b, c, d: no exact fit;
-- line height minus descent rounded separately: 92/110;
-- formulas from Windows' integer per-size metrics (GDI tmAscent, tmDescent, tmHeight,
-  tmInternalLeading) and the font's VDMX table: best 81/132.
+```
+a = round(n · winAscent / upm)      em ascent, in pixels
+d = round(n · winDescent / upm)     em descent, in pixels
+L = round(1.2 · n)                  line height, in pixels
+H = round(L · a / (a + d))          band height, in pixels
+```
 
-The irregularity looks like TrueType hinting, whose per-size instructions nudge metrics by a
-pixel. It is not yet confirmed. The test would be an unhinted copy of the font, which needs a
-temporary font install. Until then, the exact model of Equalize is a measured table `H(n)` per
-font. `probes/equalize6.json` holds n = 2–133 for Segoe UI Symbol.
+**How well it fits.**
+- Segoe UI Symbol: all 5332 drawn sizes, n = 2 … 5333 (`probes/equalize_table_SegoeUISymbol.json`).
+- Arial, Times New Roman, Cambria: n = 2 … 1500, all sizes. In each of these fonts the mixed-row
+  table showed 3 instead of 4 at n = 4, but a direct single-glyph measurement gives 4, as the
+  rule predicts.
+- The rule is `equalizeBand` in `Pptc/TextBox.lean`.
+
+**How it was found.** The search went through several wrong turns:
+- **Single formulas failed.** A single rounding, a difference of two roundings,
+  point-grid roundings, and Windows' GDI or VDMX metrics all fit at best about 80–100 sizes
+  of 132.
+- **It is not hinting.** An unhinted copy of the font (`probes/make_nohint.py`, installed
+  for the test and then removed) gave an identical table.
+- **The full table cracked it.** In the spectrum of `H − 0.97357·n`, the peaks sit at the
+  fractional slopes of 1.2·n (line height), the line descent, and winDescent/upm (em
+  descent). That pointed to line metrics computed from pixel-rounded em metrics, and the
+  nested form above was the only search hit.
+
+**The plain baseline** sits `round(1.2 · n · winAscent / (winAscent + winDescent))` pixels
+below the line top, using the exact ratio. That fits 131 of 132 sizes; the miss, n = 19,
+lies 0.002 px from a tie. The model doesn't need it, because glyphs are placed relative to
+their shared baseline.
+
+## Character spacing is scaled with the drawn size (probe 23)
+
+The pen step past a glyph is
+
+```
+snap(advance · drawn / upm) + snap(spacing · drawn / stored)
+```
+
+The spacing is rounded separately, and scaled by drawn size ÷ stored size. Examples:
+- plain 13.5 pt with 0.5 pt spacing steps 12.75, not 12.0;
+- an offset glyph's spacing shrinks with it: 20 pt at −25 % with 3 pt spacing steps 14.25;
+- the ratio is the real drawn/stored one, not 2/3: at 13 pt with 16 pt spacing the step is
+  18.75, where 2/3 would give 18.00.
+
+`probe_row_model.py` checks the whole row model at once against PowerPoint: mixed sizes,
+superscript, subscript, spacing and Equalize. The boxes predicted by `#eval` of the Lean
+definitions match to 0.0001 pt.

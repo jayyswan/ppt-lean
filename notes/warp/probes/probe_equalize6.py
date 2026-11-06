@@ -1,3 +1,5 @@
+import sys
+FONT = sys.argv[1] if len(sys.argv) > 1 else "Segoe UI Symbol"
 """Probe 21: single-size equalized rows, one per pixel size n (S = 0.75 n): band top T and
 bottom B relative to the box top, plus the plain baseline. Usage: py probe_equalize6.py"""
 import json
@@ -9,7 +11,7 @@ try:
     for n in range(2, 134):
         S = 0.75 * n; r = dict(n=n)
         for eq in (False, True):
-            tb = lab.textbox("H", size=S, box=(100, 100, 600, 300))
+            tb = lab.textbox("H", font=FONT, size=S, box=(100, 100, 600, 300))
             if eq: tb.TextFrame2.TextRange.Font.Equalize = -1
             subs = lab.bake(tb, flat=True); tb.Delete()
             if not subs: r["eq" if eq else "plain"] = None; continue
@@ -18,4 +20,4 @@ try:
         out.append(r); print(r)
 finally:
     lab.close()
-json.dump(out, open("equalize6.json", "w"), indent=1)
+json.dump(out, open("equalize6.json" if FONT == "Segoe UI Symbol" else "equalize6_%s.json" % FONT.replace(" ", ""), "w"), indent=1)

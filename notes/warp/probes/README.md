@@ -31,6 +31,12 @@ foreground; do not run it while someone else is using the screen.
 | `probe_ui_inputs.py [STEP…]` | UI Automation: size list, grow/shrink closure, spacing presets, dialog and size spinners (takes the screen) |
 | `probe_offset.py`, `probe_offset2.py SIZE [TOP]` | baseline offset: 2/3 size, rise and pixel snapping (exact rule in `Pptc/TextBox.lean`, `RowGlyph.rise`) |
 | `probe_equalize.py`, `probe_equalize2.py` | Equalize Character Height and baseline offset: per-glyph maps, band, 2/3 size, warp of equalized rows (`../EQUALIZE-AND-OFFSET.md`) |
+| `probe_equalize3.py` … `probe_equalize6.py` | Equalize band across fonts, sizes, offsets, glyphs and rows |
+| `probe_equalize_table.py [FONT] [NMAX]` | the full band table per font (`equalize_table_*.json`); rule in `Pptc/TextBox.lean`, `equalizeBand` |
+| `make_nohint.py SRC DST FAMILY` | unhinted renamed font copy, to test whether a metric comes from hinting |
+| `gdi_metrics.py` | Windows' integer font metrics per pixel size |
+| `probe_kern.py` | kerning threshold and pair adjustment |
+| `probe_row_model.py LEAN_EVAL` | end-to-end: Lean row model (`#eval`) vs PowerPoint, sizes/offsets/spacing/Equalize |
 
 Results of the UI-input probe are in `ui_inputs.json`.
 
