@@ -740,3 +740,18 @@ real roots of degree ≤ 8 polynomials plus all solvable real numbers (E ⊆ F =
   M ≥ n + n(n+1)(δ−1)2^(δ−1) (polynomial in n, vs RW's triple exponential). Needs δ ≲ log₂M;
   offset towers (δ ≥ 2^j, M = 3j+4) miss doubly exponentially.
 - Open: a block-linear Birch-type theorem [not searched]; smoothness at infinity of fibres.
+
+**Q1 done (2026-11-06): (H*) correct for k = ℚ (and k ⊂ ℚ^{tr,solv} with real points at every
+real embedding); false for arbitrary real k.** See `notes/algebraic/Q1.md`.
+- Lemma LS [Proof]: prime-degree cyclic steps via Grunwald–Wang (NSW 9.2.8; Artin–Tate X.5); the
+  special case needs 8 | degree, never at prime degree; real places stay split; all places covered
+  (Lang–Weil + Hensel at good places, LS at the finitely many bad ones).
+- HP + WA over any number field [Cited, read]: Frei–Madritsch (Mathematika 63, 2017) Thm 1.4,
+  smooth geometrically integral X with dim X ≥ (deg X − 1)2^{deg X} − 1; positivity of the singular
+  integral needs real points at every real place, which the construction supplies.
+- Counterexample to the general-k version: k = ℚ(α), α the real root of x⁵ − x − 1, X a point.
+- Literature: closest is Wooley, Monatsh. Math. 180 (2016), arXiv:1501.01789 (solvable, not real,
+  points for dim ≥ 2^{2^D}). LS is likely standard in potential-automorphy work (from memory). No
+  source combines LS with the circle method: (H*) is an easy corollary not in print. A modest
+  partial answer to Taylor's question (circle-method range only).
+- Project: nothing beyond Theorem H; no route variety qualifies.
