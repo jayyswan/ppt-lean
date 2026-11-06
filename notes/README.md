@@ -20,7 +20,7 @@ One folder per topic, named for the construction or investigation it belongs to:
 | `spiral/` | spiral and arc-length constructions |
 | `third-kind/` | third-kind integrals at arbitrary `n` |
 | `trendline/` | PowerPoint trendline origin (COM, XML, UI, registry) |
-| `warp/` | sheared/warped sine curves |
+| `warp/` | sheared/warped sine curves; Unicode glyph catalogue (`GLYPH-CATALOGUE.md`) |
 | `archive/` | retired material from earlier programmes (septic, nonic, Jacobi, totally real, gamma, …) |
 
 Inside a topic folder:
