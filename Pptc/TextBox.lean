@@ -55,13 +55,21 @@ preset menu items, never a typed value. Measured in PowerPoint
     nearest 0.75 pt (never a tie on this grid);
   - a subscript (`p < 0`) moves down by `0.75 · max 0 ⌊4d/3 - 1/2⌋`: one pixel less than
     that, ties going down (−25 % at 10.5 pt moves 2.25 pt), and never upward.
-* **Character spacing.** The dialog's `By` spinner steps by 0.1 pt (Expanded or
-  Condensed); the menu presets −3, −1.5, 0, 3, 6 pt lie on that grid. Its range has not been
-  measured: COM accepts any value, and a UI bound has not been read off yet.
+* **Character spacing.** The dialog's `By` spinner steps by 0.1 pt, Expanded or Condensed,
+  up to 1000 pt either way: the field accepts `1000` and refuses the keystroke that would
+  make `1001`, `1000.1` or a second decimal. The menu presets −3, −1.5, 0, 3, 6 pt lie on
+  that grid. (COM accepts any value, so only the dialog shows the bound.)
 * **Layout.** Each glyph advances the pen by `advance · size / unitsPerEm + spacing`,
   rounded to a multiple of 0.75 pt, step by step (not cumulatively), with `size` the drawn
-  size. Glyphs sit on a common baseline unless offset. Kerning is not modelled (none of the
-  glyphs below have kerning pairs), nor is Equalize Character Height.
+  size. Exact halves round up (a 192 pt `●` advances 165.375 → 165.75 pt), as Lean's
+  `round` does. Glyphs sit on a common baseline unless offset.
+* **Kerning** is on by default from 12 pt, and adds the font's pair adjustment to the pen
+  step before it is snapped (Arial `AV` at 72 pt: −152 units, step 48 → 42.75 pt). Segoe UI
+  Symbol has no kerning pairs among the glyphs below, so it does not enter here; a glyph
+  with pairs would need it in `penStep`.
+* **Equalize Character Height** is not modelled yet: it stretches each glyph onto a band
+  whose height is a font-specific function of the pixel size with no closed form found
+  (`notes/warp/EQUALIZE-AND-OFFSET.md`).
 * **Box size.** The Height and Width spinners step by 0.1 in = 7.2 pt. The warp fills the
   whole shape box: the text insets do not enter.
 * **Handle.** A drag stores whatever value the pointer lands on, which is not a clear
@@ -277,11 +285,12 @@ noncomputable def TextBox.outline (T : TextBox) : Set (ℝ × ℝ) :=
 
 /-- The side conditions for a text box to be drawable: at least one glyph, each stored at a
 size in `[1, 4000]` pt with a baseline offset the UI can set (an even percentage in
-`[-100, 100]`, or the Subscript preset `-25`), and a box of positive size. Character spacing
-is not bounded here yet (its UI range is unmeasured). -/
+`[-100, 100]`, or the Subscript preset `-25`), character spacing within ±1000 pt, and a box
+of positive size. -/
 structure TextBox.WellFormed (T : TextBox) : Prop where
   glyphs_ne : T.glyphs ≠ []
   size_mem : ∀ g ∈ T.glyphs, 10 ≤ g.sizeTenths ∧ g.sizeTenths ≤ 40000
+  spacing_mem : ∀ g ∈ T.glyphs, -10000 ≤ g.spacingTenths ∧ g.spacingTenths ≤ 10000
   offset_mem : ∀ g ∈ T.glyphs, (Even g.offsetPercent ∨ g.offsetPercent = -25) ∧
     -100 ≤ g.offsetPercent ∧ g.offsetPercent ≤ 100
   w_pos : 0 < T.wSteps

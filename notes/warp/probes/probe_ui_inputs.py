@@ -139,6 +139,44 @@ try:
             out[nm] = seq; print(nm, seq)
         res["size_spinners"] = out
 
+    if "spacingrange" in steps:
+        import threading
+        from pywinauto import keyboard
+        out = {}
+        for mode, val in [("Expanded", v) for v in ("1583", "1500", "1400", "1300", "1200", "1100", "1050", "1001", "1000.1")] + [("Condensed", v) for v in ("1583", "1500", "1200", "1001")]:
+            tr.Font.Spacing = 0; sel()
+            threading.Thread(target=lambda: ctl(w, aid="FontDialogPowerPoint").invoke(), daemon=True).start()
+            time.sleep(1.5)
+            d = ([x for x in Desktop(backend="uia").windows() if x.window_text() == "Font"] or
+                 [x for x in w.wrapper_object().descendants(control_type="Window") if x.window_text() == "Font"])[0]
+            [c for c in d.descendants(control_type="TabItem") if c.window_text() == "Character Spacing"][0].select()
+            time.sleep(0.5)
+            cb = [c for c in d.descendants(control_type="ComboBox") if c.window_text() == "Spacing"][0]
+            cb.expand(); time.sleep(0.3)
+            [c for c in cb.descendants(control_type="ListItem") if c.window_text() == mode][0].select(); time.sleep(0.3)
+            try: cb.collapse()
+            except Exception: pass
+            sp = [c for c in d.descendants(control_type="Spinner") if c.window_text() == "By"][0]
+            ed = sp.descendants(control_type="Edit")[0]
+            ed.set_focus(); time.sleep(0.2); keyboard.send_keys("^a", pause=0.2); keyboard.send_keys("{DEL}", pause=0.2)
+            keyboard.send_keys(val, pause=0.15); time.sleep(0.3); typed = ed.window_text()
+            keyboard.send_keys("{TAB}", pause=0.2); time.sleep(0.5)
+            shown = ed.window_text()
+            ok = [c for c in d.descendants(control_type="Button") if c.window_text() == "OK"][0]
+            threading.Thread(target=ok.invoke, daemon=True).start(); time.sleep(1.2)
+            msg = [x for x in list(Desktop(backend="uia").windows()) + list(w.wrapper_object().descendants(control_type="Window"))
+                   if x.window_text() in ("Microsoft PowerPoint", "Font")]
+            texts = []
+            for m in msg:
+                texts += [c.window_text() for c in m.descendants(control_type="Text") if c.window_text()]
+            if msg:
+                keyboard.send_keys("{ENTER}"); time.sleep(0.6)
+                for x in list(Desktop(backend="uia").windows()) + list(w.wrapper_object().descendants(control_type="Window")):
+                    if x.window_text() == "Font": keyboard.send_keys("{ESC}"); time.sleep(0.5); break
+            out[f"{mode} {val}"] = dict(typed=typed, field_after_tab=shown, spacing=tr.Font.Spacing, dialog_text=texts[:6])
+            print(mode, val, out[f"{mode} {val}"])
+        res["spacing_range"] = out
+
     if "spacing" in steps:
         sel()
         mi = ctl(w, aid="CharacterSpacingGallery")
