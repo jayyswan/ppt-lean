@@ -24,6 +24,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
+import Pptc.TextBox
 
 /-! # Pptc.Defs
 
@@ -59,6 +60,11 @@ tracing `γ` of a whole constructible curve, open or closed, and pushes every po
 a fixed signed distance along the
 `unitNormal` there, so it too needs a parametrization at the point of use, and it needs
 that parametrization to be regular (nonvanishing `speed`) for the normal to exist at all.
+
+Text enters through the single constructor `PConstructibleCurve.text`, which draws the
+outline of a `TextBox` (`Pptc.TextBox`). A text box is plain rational data, not a third
+mutual inductive: it never depends on `PConstructible`, and nothing turns a curve back
+into text.
 -/
 
 namespace Pconstructible
@@ -460,6 +466,26 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
       -- The displacement is a P-constructible signed distance, of either sign.
       {d : ℝ} (hd : PConstructible d) :
       PConstructibleCurve (offsetParam γ d '' Set.Icc a b)
+
+  -- The outline of a text box, as Merge Shapes ▸ Fragment turns it into a freeform. This is
+  -- the only way text enters the class, and it goes one way: a `TextBox` (`Pptc.TextBox`)
+  -- is built from rational data alone, so no curve can be turned back into text, and its
+  -- single `warp` field means each box is transformed once. Placing the box on the slide is
+  -- left to `translate_x` / `translate_y`; the outline sits in the box's own frame.
+  --
+  -- What this adds is the Transform warps. Unwarped, a catalogued glyph is a circle, a half
+  -- disc or a polygon, all drawable already. Warped, its outline goes through a
+  -- piecewise-bilinear map that no closure operation here performs: an affine image
+  -- of a circle is an ellipse, but the Triangle image of a circle is a quartic egg, and
+  -- pinned at its stop the Triangle collapses the flat side of ◗ to a point and draws a
+  -- lobe of the lemniscate of Gerono (`notes/warp/TEXT-WARP-THEORY.md`).
+  --
+  -- A `TextBox` is made of UI choices only, never typed values: font sizes and box sizes as
+  -- spinner step counts, character spacing in its 0.1 pt steps, and the handle at its
+  -- default or dragged past either stop, which stores the `pin` bound exactly. Its
+  -- `WellFormed` hypotheses are the ranges of those choices.
+  | text (T : TextBox) (hT : T.WellFormed) :
+      PConstructibleCurve T.outline
 end
 
 end Pconstructible

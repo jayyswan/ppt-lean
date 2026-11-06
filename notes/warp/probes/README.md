@@ -25,5 +25,11 @@ foreground; do not run it while someone else is using the screen.
 | `probe_followpath.py`, `probe_follow_render.py` | Follow Path presets: rigid or bent |
 | `probe_handle.py PRESET HX HY DX DY` | UI drag of a handle past its stop |
 | `plotcase.py TEXT PRESET [MODE]` | plot model vs PowerPoint |
+| `probe_textbox_model.py [CASE…]` | `Pptc/TextBox.lean`'s `TextBox.outline`, evaluated literally, vs PowerPoint |
+| `probe_ctrlpts.py`, `probe_fitbox.py` | exact image vs control-point warp; fitted normalizing box (box-size anomaly) |
+| `probe_layout.py`, `probe_layout2.py` | pen advance, 0.75 pt snapping, drawn-size quantization |
+| `probe_ui_inputs.py [STEP…]` | UI Automation: size list, grow/shrink closure, spacing presets, dialog and size spinners (takes the screen) |
+
+Results of the UI-input probe are in `ui_inputs.json`.
 
 The spec XML is downloaded once from the LibreOffice repository into `%TEMP%`.
