@@ -476,3 +476,24 @@ Every route so far shares built-in assumptions. These streams drop them.
 - Ties only at n = 5 (PGL(2,5) sextic) and n = 6 (twin field), both already closed.
 - Open: Dixon–Mortimer and n ≤ 8 exceptions in GAP; arithmetic of the n = 5 twists; non-linear
   engines (W2).
+
+**Z8 done (2026-11-05): five over-constraints found, no route closed.** See `notes/algebraic/Z8.md`.
+- Over-constraints:
+  1. Theorem O (n ≥ 10) needs no rational τ: the P-valued freedom of a rational poly_graph of
+     degree d leaves d − 4 rationality conditions [Wolfram rank] (1 at n = 10, 11; 2 at n = 12, 13);
+     the rest is an F-point on O_m. X2's negative height exponents concern ℚ-points only. Totally
+     real still possible (T₅(t²−2)/16 − t/1000 has 10 real roots).
+  2. Z5's "genus ≥ 2 ⇒ Faltings" is wrong for L = F: F-curves with a degree ≤ 8 map to ℙ¹
+     (with real points) have dense F-points. At n = 9 genus 2 and all degree ≤ 7 curves on V_τ are
+     excluded (Castelnuovo; every L-quadric in the system is smooth of rank 9). Open: degree 8,
+     genus 3; genus 4–5 in degrees 9–16.
+  3. "No field enlargement helps poly_graph rationality" is too strong (MI-1 fibre degree
+     ~5400 → ~2016, still > 8).
+  4. Theorem X needs points over F, not ℚ^solv ∩ ℝ: Taylor's question is sufficient, not necessary.
+  5. N1a's rational certificate centre is a Lean convenience only.
+- New reductions [Proof]: totally real nonics follow from one F-line in {p₁ = p₃ = p₅ = 0} ⊂ ℙ⁷
+  off the pairing ℙ³'s; MI-2 decics from one F-line in {p₂ = p₃ = p₄ = 0}. Both line families are
+  surfaces; no low-degree structure found.
+- Genus 1 over F with a real point already has dense F-points; elliptic functions add nothing.
+  Z5's argument extends to every subfield of P.
+- Open: the Fano surface of lines in X₃ ∩ X₅ (degree, Kodaira dimension, fibrations).
