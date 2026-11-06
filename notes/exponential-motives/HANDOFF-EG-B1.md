@@ -1,0 +1,5 @@
+- step 1: read EulerGamma.md sections 0-4 and WS-B/B1; loaded wolfram tool; drafted 45 candidate formulas.
+- step 2a: Wolfram batch 1 (E01-E14): all verified to <=1e-41 (E01, E02 NIntegrate warnings, diffs 1e-42, 1e-41).
+- step 2b: Wolfram E15-E45 verified in small batches; E30 first form was off by -ln2 (transcription slip, ln(z/2) term), corrected form verified.
+- step 2c: Wolfram tool timed out (504) on E16 (Sondow double integral), E18 (Vacca, exact HarmonicNumber too large), E21 (zeta limit: Wolfram Zeta near 1 unreliable); marked NOT VERIFIED, excluded from main table.
+- step 3: writing notes/EG-B1-catalogue.md (42 verified, 1 rejected-then-corrected, 3 not verified, FLAGGED: none).

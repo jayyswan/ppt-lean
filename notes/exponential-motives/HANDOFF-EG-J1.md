@@ -1,0 +1,5 @@
+- 23:56 J1 start: tools loaded, mathlib path confirmed, notes folder created, WS-J read (candidate name Real.eulerMascheroniConstant)
+- step 1: lean_local_search and run_code failed (no project path) then succeeded after lean_file_outline on Impress/Defs.lean; #check ran for eulerMascheroni names, all confirmed
+- step 2: rg eulerMascheroni on Harmonic and Gamma dirs done; Digamma.lean TODO noted (Gauss integral not in Mathlib)
+- step 3: loogle integral query empty; leansearch HTTP 500 (inconclusive); harmonic names checked
+- step 4: note written to impress/notes/EG-J1-mathlib-gamma.md; J1 complete

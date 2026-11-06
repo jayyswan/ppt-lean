@@ -1,0 +1,2 @@
+N2 start: read PLAN, NOTES-general, THREE-PAIRS, Nonic docstrings. Key realisation: rational nonic with nonreal root already closed (Nonic.lean, engine y^9=sextic rational); remaining Q case = totally real. Idea: overshoot engines (cofactor rho) cut conditions 4 -> 2 for rational tau.
+N2: Wolfram runs done (capacity table, Newton, Porteous 1428, S9 example in overshoot family, box search q=prod(x-i)-1). Note written to notes/algebraic/N2.md.

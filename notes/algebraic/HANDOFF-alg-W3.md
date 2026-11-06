@@ -1,0 +1,4 @@
+W3 step 0: read PLAN-algebraic, SUMMARY, H4, G1, G2, offset-inversion SUMMARY. Key idea: tower arc length = base term + elliptic terms in Gauss-map variable (sqrt(Q_k Q_i)) + angle; to verify in Wolfram.
+W3 step 1: Wolfram verified tower speed formula sigma_k = sqrt(Q_k)(1 - sum_{i<k} e_i W/Q_i^{3/2}) - e_k W/Q_k at depth 2 (diff 0 at 40 digits); depth 3 check run; Lean has cos_Pconstructible/sin_Pconstructible (Basic.lean:2652) so complex radicals => all solvable real algebraics in P.
+W3 step 2: depth-3 formula verified (Wolfram, 40 digits). Control x^5+20x+16 has disc 32000^2 and A5 Frobenius stats; R5(x)=x(P) on y^2=x^3-x+1 is irreducible degree 25; tower inversion L(t*)=1 depth 2: t*=0.23404733..., no LLL relation deg<=8 height<~1e6. Citations searched: Ritt 1923, Wustholz 1989, Khovanskii 2014, Pila-Wilkie 2006/Pila 2009. Next: write W3.md.
+W3 step 3: wrote notes/algebraic/W3.md. Done.

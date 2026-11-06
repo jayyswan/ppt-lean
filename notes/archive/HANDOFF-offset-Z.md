@@ -1,0 +1,18 @@
+# HANDOFF-offset-Z (synthesis worker)
+
+Append-only progress log. One line after every step.
+
+- [start] Read PLAN-offset-00-overview.md and PLAN-offset-Z-synthesis.md in full; enumerated NOTES/HANDOFF and wave-1 scripts.
+- [recon] Read all NOTES-offset-{A1..A4,B1..B4}.md and all HANDOFF-offset-*.md, plus the six wave-1 scratch .lean files. Wave-1 status: A1,A2,A3,A4,B2,B3 complete (A3 has one `sorry`); B1 reduced-not-solved; B4 infrastructure with several `sorry`/stated-only. Env checked: Python 3.12 sympy 1.12/mpmath/numpy/scipy ok.
+- [Z-01] Wrote/ran archived files/offset-scripts/Z-01-A1-graph.py: re-derived A1 degree-14/18/22 graph-offset polynomials. CONFIRMED (with correction: NOTES' `4096·` prefix spurious, genuine leading coeff 65536; n=5 needs d=+1 for one root; Galois S14 not just A14).
+- [Z-02] Wrote/ran Z-02-A2-crossing.py: re-derived Q2 (degree 20, exact match) and Q3 (raw deg 34 = (45t^4-24t^3+10t^2+1)*(-printed Q3), degree-30 factor exact+irreducible). CONFIRMED; root precision resolved with mpmath 80 dps (sympy nroots was the error).
+- [Z-03] Wrote/ran Z-03-A3-offsetoffset.py + Z-03b-A3-elim.py: offset x offset crossing to 44-61 digits, det 267.857637; f32 degree 32 irreducible; Groebner honest elimination degree 96 = q1*deg92 at p=101,1000003; Wolfram FactorList[Resultant G,H] over Q = (4)^2(16)^4(20)^2(92). CONFIRMED.
+- [NOTES] Wrote C:\dev\Powerpoint\lean\NOTES-offset-Z.md (central deliverable): 20-line summary, wave-1 status, verification table, reconciled master tables, programme answer, follow-up PLAN list, Side discoveries, Leads.
+- [next] Fix Wolfram f92 mod-p sampling to certify S92; then A4 re-verify + one coverage claim; then OffsetZ.lean; then PLAN files.
+- [Z-04] Fixed Wolfram f92 sampling: factored f92 mod 74 primes. Found 53-cycle (q=41), 63-cycle (q=109), 90-cycle, and odd permutations (3/5/7 factors). Primitive + Jordan (53<=89) => A92; odd => S92. CONFIRMED. NOTES-offset-Z.md rows 18/4.1 and summary updated.
+- [Z-05] Wrote/ran Z-05-A4-chains.py: length-2 chain line-crossing poly deg 28, irreducible, leading 311233107240000, constant 5459729809, 6 real roots (first -1.6296561354... matches), cycle types {23,3,1,1}@103 etc; parabola-offset implicit deg 6 x cubic Bezier = deg 18 irreducible. A4 CONFIRMED.
+- [Z-06] Wrote/ran Z-06-B2-decic-rank.py: decic family coefficient rank 7, PGL2-saturation rank 9 (codim 1) at 4 random rational points. B2 negative CONFIRMED. NOTES updated (rows 20,21,26, master tables, summary).
+- [next] Create Scratch/OffsetZ.lean certifying offsetCrossPoly normal form + rationalize; check only with lean_diagnostic_messages. Then write PLAN-offset-L*/C* files.
+- [Z-07] Created pptc/Pptc/Scratch/OffsetZ.lean (imports only 4 targeted Mathlib modules, no Pptc.*). 7 theorems: normalForm_speed, offsetCross_norm, offsetCross_norm_mul, offsetCrossPoly_normalForm, recovery_perp, offsetOffsetE1_of_xeq, ph_normal_unit. Checked with lake_check (single-file `lake env lean`, no lake build): "OK - no errors or warnings". No sorry.
+- [Z-08] Wrote 8 follow-up PLAN files at repo root: PLAN-offset-L1-polygraph-offset.md, L2-isolation-crossing-library.md, L3-offset-conic-engine.md, L4-rational-recovery.md, C1-totally-real-septic-elimination.md, C2-offsetoffset-galois-coverage.md, C3-covering-system-ksolvability.md, C4-rational-offset-exact-engines.md. Verified present. NOTES section 6 updated to "Written".
+- [DONE] Z deliverable complete: NOTES-offset-Z.md on disk; scripts Z-01..Z-06 in archived files/offset-scripts/; scratch OffsetZ.lean compiles clean; 8 PLAN files written. No git, no lake build, no other .lean touched.
