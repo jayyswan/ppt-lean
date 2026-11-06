@@ -621,3 +621,22 @@ decic (MI-2) surface per A2.
 for totally real nonics (Z8/A2); (D) the Fano 3-fold of lines in Y₀ for totally real decics (B2).
 Find P-points via Theorem G / Lemma A (curves cut by Schubert conditions, fibrations), or explain
 why none works. Recoverable notes: `notes/algebraic/B3.md`, log `HANDOFF-alg-B3.md`.
+
+**B3 done (2026-11-06): no P-point on either line family; Lemma A and Theorem G don't apply.**
+See `notes/algebraic/B3.md`.
+- [Proof] S (nonics) and T (decics) are defined over ℚ (twists of the split Fano schemes by K's
+  S_n cocycle); an F-point is a line spanned by u, v ∈ K_F. K_S = O(13), K_T = O(18): both general
+  type. The 945 pairing ℙ³'s give G(2,4) components meeting S̄, so the clean excess formula fails.
+- [Proof] Component-orbit lemma: an F-curve is geometrically irreducible and S_n-intrinsic, or
+  built from F-linear data; reducible invariant curves don't help.
+- [Wolfram] Virtual Schubert numbers: S: σ₁² = 344925, σ₂ = 208800, σ₁₁ = 136125;
+  T: σ₁³ = 9303984, σ₃ = 2663280. Real LM lower bounds on S: ≥ 12 good lines meet a rational ℙ⁴,
+  ≥ 13 lie in X ∩ H; so deg S ≥ 25 and Lemma A fails. Real counts on T timed out.
+- [Proof sketch + Heuristic] The natural F-pencils on Plücker sections of S have degree ≥ 12, ≥ 13,
+  independent of K. Any other degree ≤ 8 pencil would need a fibration by curves of Plücker
+  degree ≤ 8 (Serrano); none is visible (heuristic: deg S > 81 not proven).
+- Intrinsic curves: Γ_Q (lines tangent to p₂ = 0) has no real points [Proof]; the F-gonality of
+  Γ₇, Γ_{2,4}, Γ_pl is [Open].
+- Uniform in K, both ways: failures and any success would hold for all S₉/A₉ nonics and
+  S₁₀/A₁₀ decics.
+- Open: irregularity and fibrations of S_split; the intrinsic curves; the real counts on T.
