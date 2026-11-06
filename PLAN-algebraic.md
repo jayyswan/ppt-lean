@@ -700,3 +700,22 @@ real roots of degree ≤ 8 polynomials plus all solvable real numbers (E ⊆ F =
   del Pezzo fibrations, Kollár's real rationally connected varieties. Deliverable: the best explicit
   threshold N(d) for hypersurfaces and CIs, the first uncovered Fano types, and whether
   rational connectedness alone suffices.
+
+**P1 done (2026-11-06).** See `notes/algebraic/P1.md` ("Theorem P1").
+- Hilbert/Wolfson/Sutherland recursions don't transfer (they bound resolvent degree and start with
+  a degree-d solve; Brauer's radical step breaks on realness).
+- **Lemma LS [Proof sketch, Grunwald–Wang]:** any finitely many local extensions are realised by
+  completions of a totally real field inside ℚ^solv. So local solubility is free over E.
+- **Theorem H [Proof sketch + Cited]:** X smooth over a number field in E, with a real point,
+  satisfying HP + WA over number fields ⇒ E-points dense in X(ℝ). Hypersurfaces: N ≥ (d−1)2^d
+  (Birch–Skinner; 4096 at d = 9). Any smooth X: dim ≥ (D−1)2^D − 1 (Browning–Heath-Brown,
+  Frei–Madritsch). Replaces X2's RW bound (4095 vs 10^4294 at D = 9); X2's regime table needs redoing.
+- **Theorem W [Proof sketch]:** E is Euclidean; slicing by an E-isotropic subspace of a quadric in
+  the ideal leaves degree ≤ 8. Covers (2,2,3), (2,2,4) (nondegenerate quadric), (2,2,2,2) for N ≥ 10
+  (N ≥ 8 generically), (2,e), e = 5–8 unless sphere signature. **Lemma C3:** cubics with a real point
+  whose second fundamental form has index ≥ 2 contain E-lines: (3,3), (3,5), (3,7) under that condition.
+- Rational connectedness alone gives nothing unconditional (Picard rank 1, no fibrations);
+  Colliot-Thélène's conjecture would cover all smooth Fano CIs with a real point.
+- First open: (3,3) ⊂ ℙ⁶ without the index condition; (2,5) ⊂ ℙ⁷ sphere-type; (3,4) ⊂ ℙ⁷; degree-9
+  hypersurfaces in ℙ⁹…ℙ⁴⁰⁹⁵.
+- None of this reaches general type (V_τ, S, T); Witt slicing on V_τ has expected dimension 44 − 6n < 0.
