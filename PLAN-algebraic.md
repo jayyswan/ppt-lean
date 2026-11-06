@@ -541,3 +541,16 @@ Whatever B returns, update `notes/algebraic/SUMMARY.md`: status by degree, the c
 
 A1 ∥ A2 → B1 ∥ B2 → B3 → D. Z9 slots in whenever its input arrives. Five agents in total
 (three Opus). Each launches only on the user's go-ahead.
+
+**A2 done (2026-11-05): Z8's positives mostly confirmed.** See `notes/algebraic/A2.md`.
+- (a) Rank count CONFIRMED [Proof + Wolfram]: Jacobian rank 5 for d = 4..7, so d − 4 invariants
+  (1 condition at n = 10, 11; 2 at n = 12, 13). All group parameters are rational in the data;
+  offsets are not needed. Rests on rotate + scale giving every P-angle.
+- (b) Both line reductions CONFIRMED as algebra [Proof]. The nonic's last step is sound (the
+  septic has a real zero; β read off by gcd). **Gap:** both use Lemma N over F, which assumes
+  Gal(Ω/F∩Ω) ⊇ A_n; X2 proves it only for solvable L∩Ω. Nonic: real good lines exist in the
+  totally real model (smooth points of a 2-dim Fano scheme). **MI-2: no real line found for s = 2, 3**
+  [Wolfram, Heuristic; min residuals 0.135, 0.042]; real lines only at s = 4. If so, the MI-2
+  reduction is vacuous for s = 2, 3.
+- (c) T₅(t²−2)/16 − t/1000: 10 real roots, Galois group S₁₀, a smooth real point of O₄ ∩ {b₂ = 0}.
+  A realness witness only, not an F-point for a given K.
