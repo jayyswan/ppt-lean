@@ -59,17 +59,20 @@ preset menu items, never a typed value. Measured in PowerPoint
   up to 1000 pt either way: the field accepts `1000` and refuses the keystroke that would
   make `1001`, `1000.1` or a second decimal. The menu presets −3, −1.5, 0, 3, 6 pt lie on
   that grid. (COM accepts any value, so only the dialog shows the bound.)
-* **Layout.** Each glyph advances the pen by `advance · size / unitsPerEm + spacing`,
-  rounded to a multiple of 0.75 pt, step by step (not cumulatively), with `size` the drawn
-  size. Exact halves round up (a 192 pt `●` advances 165.375 → 165.75 pt), as Lean's
-  `round` does. Glyphs sit on a common baseline unless offset.
+* **Layout.** Each glyph advances the pen by `advance · size / unitsPerEm` rounded to a
+  multiple of 0.75 pt, plus its character spacing scaled by drawn size / stored size and
+  rounded separately, step by step (not cumulatively). Exact halves round up (a 192 pt `●`
+  advances 165.375 → 165.75 pt), as Lean's `round` does; the scaled spacing never meets a
+  tie. Glyphs sit on a common baseline unless offset.
 * **Kerning** is on by default from 12 pt, and adds the font's pair adjustment to the pen
   step before it is snapped (Arial `AV` at 72 pt: −152 units, step 48 → 42.75 pt). Segoe UI
   Symbol has no kerning pairs among the glyphs below, so it does not enter here; a glyph
   with pairs would need it in `penStep`.
-* **Equalize Character Height** is not modelled yet: it stretches each glyph onto a band
-  whose height is a font-specific function of the pixel size with no closed form found
-  (`notes/warp/EQUALIZE-AND-OFFSET.md`).
+* **Equalize Character Height** (Font dialog checkbox, here for the whole row) stretches
+  each glyph vertically, by one affine map, so that its ink runs from its baseline (raised
+  or lowered if offset) up to the band height `equalizeBand` of its drawn size. The band is
+  computed from pixel-rounded font metrics; see `equalizeBand` and
+  `notes/warp/EQUALIZE-AND-OFFSET.md`.
 * **Box size.** The Height and Width spinners step by 0.1 in = 7.2 pt. The warp fills the
   whole shape box: the text insets do not enter.
 * **Handle.** A drag stores whatever value the pointer lands on, which is not a clear
@@ -132,6 +135,18 @@ inductive Glyph
 /-- Units per em of the font the glyphs come from. -/
 def Glyph.unitsPerEm (_ : Glyph) : ℚ := 2048
 
+/-- The font's Windows ascent (`OS/2.usWinAscent`), in font units. -/
+def Glyph.winAscent (_ : Glyph) : ℚ := 2210
+
+/-- The font's Windows descent (`OS/2.usWinDescent`), in font units. -/
+def Glyph.winDescent (_ : Glyph) : ℚ := 514
+
+/-- The bottom and top of a glyph's ink, in font units (`glyf` bounding box). -/
+def Glyph.inkBottom (_ : Glyph) : ℚ := -25
+
+/-- See `Glyph.inkBottom`. -/
+def Glyph.inkTop (_ : Glyph) : ℚ := 1458
+
 /-- The advance width of a glyph, in font units (`hmtx`). -/
 def Glyph.advance : Glyph → ℚ
   | .blackCircle => 1764
@@ -178,23 +193,49 @@ def RowGlyph.rise (g : RowGlyph) : ℚ :=
   else if g.offsetPercent < 0 then -(3 / 4 * max 0 ⌊4 * d / 3 - 1 / 2⌋)
   else 0
 
-/-- How far the pen moves past this glyph: advance at the drawn size plus spacing, snapped
-to 0.75 pt. -/
+/-- How far the pen moves past this glyph: the advance at the drawn size, snapped to 0.75 pt,
+plus the character spacing scaled by drawn size / stored size (so by about 2/3 for an offset
+glyph), snapped separately (probe_row_model.py and the spacing sweeps in
+`notes/warp/EQUALIZE-AND-OFFSET.md`). -/
 def RowGlyph.penStep (g : RowGlyph) : ℚ :=
-  snap (g.glyph.advance * g.size / g.glyph.unitsPerEm + g.spacingTenths / 10)
+  snap (g.glyph.advance * g.size / g.glyph.unitsPerEm) +
+    snap (g.spacingTenths / 10 * (g.size / g.storedSize))
+
+/-- The Equalize Character Height band, in points, for a glyph drawn at `size` points: the
+ascent share of a 1.2-size line, computed from pixel-rounded metrics. With `n` the size in
+pixels, `a` and `d` the font's Windows ascent and descent rounded to pixels and
+`L = round(1.2 n)` the line height, the band is `round(L · a / (a + d))` pixels. It is a
+function of the font and the drawn size only (not of the glyph or the rest of the row), and
+it fits all 5332 drawn sizes of Segoe UI Symbol and 1497 of Arial, Times New Roman and
+Cambria (`probe_equalize_table.py`). -/
+def equalizeBand (g : Glyph) (size : ℚ) : ℚ :=
+  let n : ℚ := size / (3 / 4)
+  let a : ℤ := round (n * g.winAscent / g.unitsPerEm)
+  let d : ℤ := round (n * g.winDescent / g.unitsPerEm)
+  let L : ℤ := round (6 / 5 * n)
+  3 / 4 * round ((L * a : ℚ) / (a + d))
+
+/-- The vertical scale of a glyph's outline, from font units to points: `size / unitsPerEm`,
+or under Equalize the factor that stretches its ink onto the band. -/
+def RowGlyph.yScale (g : RowGlyph) (eq : Bool) : ℚ :=
+  if eq then equalizeBand g.glyph g.size / (g.glyph.inkTop - g.glyph.inkBottom)
+  else g.size / g.glyph.unitsPerEm
 
 /-- The outline of a glyph with its pen at `pen` on the baseline `y = 0`, in points with `y`
-down: font units are scaled by `size / unitsPerEm`, flipped, and raised by `rise`. -/
-def RowGlyph.toSet (g : RowGlyph) (pen : ℚ) : Set (ℝ × ℝ) :=
+down: font units are scaled by `size / unitsPerEm` across, by `yScale` up (under Equalize,
+with the ink's bottom moved onto the baseline), flipped, and raised by `rise`. Equalize
+leaves `x` alone and stretches each glyph by one exact affine map (probes 13–14). -/
+def RowGlyph.toSet (g : RowGlyph) (eq : Bool) (pen : ℚ) : Set (ℝ × ℝ) :=
+  let lift : ℚ := if eq then g.glyph.inkBottom else 0
   (fun z : ℝ × ℝ =>
       (pen + g.size / g.glyph.unitsPerEm * z.1,
-        -(g.rise + g.size / g.glyph.unitsPerEm * z.2))) ''
+        -(g.rise + g.yScale eq * (z.2 - lift)))) ''
     ⋃ piece ∈ g.glyph.pieces, piece.toSet
 
-/-- The ink of a row whose first pen position is `pen`. -/
-def rowInk : List RowGlyph → ℚ → Set (ℝ × ℝ)
+/-- The ink of a row whose first pen position is `pen`, with Equalize on or off. -/
+def rowInk (eq : Bool) : List RowGlyph → ℚ → Set (ℝ × ℝ)
   | [], _ => ∅
-  | g :: gs, pen => g.toSet pen ∪ rowInk gs (pen + g.penStep)
+  | g :: gs, pen => g.toSet eq pen ∪ rowInk eq gs (pen + g.penStep)
 
 /-! ### Warps -/
 
@@ -258,6 +299,8 @@ structure TextBox where
   wSteps : ℕ
   hSteps : ℕ
   warp : TextWarp
+  /-- Equalize Character Height, applied to the whole row (Font dialog checkbox). -/
+  equalize : Bool := false
 
 /-- The box width in points. -/
 def TextBox.w (T : TextBox) : ℚ := 36 / 5 * T.wSteps
@@ -267,7 +310,7 @@ def TextBox.h (T : TextBox) : ℚ := 36 / 5 * T.hSteps
 
 /-- The unwarped ink of a text box, with the first pen position at `0`. -/
 def TextBox.ink (T : TextBox) : Set (ℝ × ℝ) :=
-  rowInk T.glyphs 0
+  rowInk T.equalize T.glyphs 0
 
 /-- The affine map sending the bounding box of `S` onto `[0, 1]²`, the `(u, v)` frame of a
 warp. A warp reads `u`, `v` off the ink box of the whole row, not the box of each glyph. -/
