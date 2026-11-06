@@ -162,6 +162,41 @@ Not the focus, but for orientation:
 - The transcendental families have box and intersection equations of the same shape as
   the spiral catalogue, with `E(φ | m)` or a Bézier arc length in place of `θ`.
 
+### 3.3 Threads: possible new numbers (open, each worth its own investigation)
+
+Novel shapes are a goal in their own right (user, 2026-11-06). The threads below are where a
+shape might also give numbers the class does not reach yet. None is established.
+
+- **T1. Elliptic trochoid: mixed sine and elliptic-integral equations.** Today `E(φ | m)`
+  enters only as a number: `arc_length` reads it at P-constructible endpoints, and
+  `arc_of_length` inverts it. The trochoid puts `sin φ`, `cos φ` and `E(φ | m)` in one curve.
+  - A line meeting it solves `b·sin φ + c·E(φ | m) = λ·a·cos φ + μ`. That is a
+    Kepler-type equation with an elliptic integral in place of `φ`.
+  - The question is whether such roots are already reachable, by composing `arc_of_length`
+    with the sine curve, or are new. This is the analogue of `sin x = x/2`, which needed the
+    `sine` constructor.
+  - Its box extremes are probably *not* new. The derivative condition is algebraic in
+    `sin φ`, so the extreme value is `E` at an algebraic amplitude, which `arc_length`
+    already gives. Check that.
+- **T2. Mismatch blends: `arsinh` inside a curve.** Inflate/Deflate Top/Bottom match a
+  parabola point and a line point by equal arc-length fraction. The parabola's arc length
+  involves `arsinh`, so its intersections mix algebraic and `arsinh` terms.
+  - Compare with `exp_two` (logarithms) and with what arc lengths of `poly_graph` already
+    give.
+- **T3. Polar warps: `θ` inside a curve with rational angular rate.** The Pour presets send
+  `u` to an angle linearly, so a glyph's image is a curve in `(r, θ)` with `θ` appearing
+  outside the trig functions.
+  - The Archimedean-spiral case is in `../spiral/`.
+  - The polar ellipse is the new case. Its intersections with rays and circles give
+    equations like `r(θ) = const` mixing `θ` with square roots.
+  - Check against what `rotate` with P-constructible angles already provides.
+- **T4. Arc-length-sheared Bézier.** Hyperelliptic arc length inside a curve. Same question
+  as T1, with a Bézier arc length in place of `E`.
+- **T5. Algebraic engines.** The straight-guide families (egg quartics, piriform, Gerono lobe)
+  are one-parameter families of rational quartics. Each could be a new rational-coefficient
+  engine for the open degree 9–10 cases in `../algebraic/SUMMARY.md`. That is unlikely to help
+  much on its own (F is small), but cheap to test against the bookkeeping law there.
+
 ## 4. Lean formalization plan
 
 You are right that nothing *new* is constructible until `Defs.lean` has a warp constructor.
