@@ -755,3 +755,20 @@ real embedding); false for arbitrary real k.** See `notes/algebraic/Q1.md`.
   source combines LS with the circle method: (H*) is an easy corollary not in print. A modest
   partial answer to Taylor's question (circle-method range only).
 - Project: nothing beyond Theorem H; no route variety qualifies.
+
+**Q3 done (2026-11-06): no redesign brings a condition variety into range.** See `notes/algebraic/Q3.md`.
+- [Proof] Thresholds depend on dim vs the number R of equations, not on unknowns (Birch dim ≳ 2R²;
+  Myerson dim ≥ 8R, quadrics over ℚ). An unknown with its own equation adds nothing. Each
+  K-condition is n equations, so ~c·n P-parameters per K-condition are needed: sharpened (BD).
+- Best construction [Proof]: Theorem R with a Bézier base, ~n² unknowns but dim ≈ 3n vs R ≈ n²; it
+  splits into J uncoupled copies of V_τ. Each ellipse summand adds ≤ 4 parameters but costs n
+  equations. Sharing targets, gcd across engines, square / multi-quadratic lifts: ratio no better.
+  Witt slicing of V_τ at n = 7 blocked (index ≤ 3 < 4).
+- Literature [Cited]: Myerson (Invent. 2018) R quadrics in ≥ 9R variables; Myerson 1709.08917;
+  Hochfilzer (Acta Arith. 2024) bidegree (2,1), (1,1); Schindler 2014; Browning–Hu 2019. All over ℚ;
+  no number-field version found.
+- Small wins: a cubic Bézier base with quadratic x(t) lets Theorem R use n − 2 forms [Proof +
+  Wolfram]. Lemma Q: r quadrics in ~r²/2 variables with a smooth real point have dense E-points
+  [Proof sketch].
+- What would close it: ≥ ~9n P-parameters per K-condition at bounded degree, i.e. a Minkowski-sum or
+  two-curve constructor (no UI route known).
