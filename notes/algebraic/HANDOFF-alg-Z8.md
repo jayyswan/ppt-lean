@@ -1,0 +1,7 @@
+- step 0: read SUMMARY, PLAN Z-rows, H5 (2026-11-05)
+- step 1: read Z5, Y1a (Thm R, L may be F), X1 (MI-1 over F already audited: J1,J2 rationality; Thm X weaker hyp over F)
+- step 2: X2 Thm O read; found x-translation nu => invariants = deg Q - 4 (n=9:0, n=10,11:1, n=12,13:2); X2 'n>=10 needs rational tau' over-constrained
+- step 3: read N2 (P-quartic Lemma Q), Z2 Bezier engine, N1a (rational centre = Lean-cert only), H4 (jacobiAm only at u=F(phi))
+- step 4: Wolfram: invariant ranks (quartic 0, quintic 1, sextic 2) confirmed; n=10 special orbit u^5-u^3 is totally-real compatible (T5(t^2-2)/16 - t/1000 has 10 real roots); u^5+u^2 orbit and all sextic special orbits fail Descartes; random rational P^3 slices of O_4 (n=9 S9 nonic): 105 pts, 0 real (2 seeds)
+- step 5: Castelnuovo + "every L-rational quadric of V_tau's system has rank n" excludes genus 2..5 curves of degree <= 7 on V_tau (n=9); survivor (e,r,g)=(8,5,3); writing Z8.md
+- step 6: wrote notes/algebraic/Z8.md (verdict: 5 over-constraints, no route closed, 2 new odd-last-step reductions to Fano surfaces of lines). DONE

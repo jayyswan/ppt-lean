@@ -1,0 +1,17 @@
+- R4 start: read notes; scratch R4/ created
+- setup done: R4test.pptx w/ 8 pics (oval/tri/wave/bez x EMF/PNG) slides2-9; h.py ink() measures alpha box vs frame
+- Crop Fit/Fill on stretched EMF pic: frame-based (Fill crops 79.34 t/b symmetric; Fit negative crop -131.14 l/r); ink box not used
+- Crop to Shape(Oval), Aspect 1:1: frame/aspect only (square 302.52 from height); no ink awareness. UIA ListItem click_input fails for gallery; use mouse.click coords
+- Reset Picture&Size restores pasted frame; Compress (96ppi, delete cropped) on cropped PNG bakes crop, frame unchanged, transparent margin kept (17/26pt). Picture Quality menu: Compress Pictures, Upscale Picture (new AI). Ribbon also Edit Picture, Erase (new)
+- Remove Background has dropdown: AI-assisted (new Edit Picture editor: Erase/Upscale/Edit object/Remove background; Keep/Remove/Brush/Select) + Manual editing. AI-assisted on tri EMF pic, Save: frame/crop unchanged (237.72x302.52, crop 0), EMF becomes raster (Artistic Effects enabled), ink unchanged, no trim
+- Edit Picture > Edit object > Object select > Cutout, Save: frame/crop unchanged, mask slightly eroded (ink box 28..255 vs 26..258 px of 316); no tight frame/new shape
+- Upscale (Picture Quality): 498x634 -> 2988x3804 px (6x), frame unchanged
+- Picture Border/Glow/Shadow (COM-set for observation): frame unchanged; border = frame rect; glow follows frame border+alpha ink raster-wise; no frame change
+- Artistic Effects gallery (21 effects): pixel filters; one applied to PNG, frame/crop unchanged
+- Picture Layout (SmartArt, Accented Picture): picture converted to SmartArt with same frame 476.16x477.12; picture placed with frame-based crop in placeholder; no ink awareness
+- Designer (Design Suggestions) on cropped PNG pic: layout 1 applied: frame scaled uniformly 159x264 -> 264.2x438.67, transparent margins kept; no ink awareness
+- Paint roundtrip: frame same aspect (scaled 1.565x), ink margins preserved, no trim
+- Paint roundtrip: paste-back frame 372.05x473.32 (1.565x, same aspect), ink margins preserved, no trim; Paint flattens alpha to white; closed Paint w/o saving
+- RULE UPDATE: Paint not allowed. Paint was opened earlier (my instance, closed, nothing saved); all Paint-derived results (frame 372.05x473.32 etc.) EXCLUDED BY USER RULE, fromPaint shape deleted. Paint dropped from route 6
+- Crop left-handle drag on EMF oval pic (slide2): CropLeft plateau 10.86 pt for all drags d=4..28 px (model outline-left offset ~10.9 pt!) - investigating possible snap-to-ink
+- Crop-handle sweep: oval plateau 10.86 (=model outline-left 10.9) but control tri pic (ink-left 19.6) plateau 67.88, then 292.89: not ink-snap, inconclusive/artifact. Morph/video/ink untested. Writing note.

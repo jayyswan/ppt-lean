@@ -1,0 +1,21 @@
+# HANDOFF 3d-M2
+- started, read plan+A
+- harness h.py in scratch (python-pptx build with raw XML + COM export)
+- t1: area/edge fitting harness works (edge.py: per-edge subpixel 50% crossings, fit d,delta; rms 0.03pt). first result: k_eff=d*tan(fov/2) NOT const at low fov (442 at fov30 w/ small shape) - testing w/ big shapes
+- t2/t3: big-shape fits k_eff = 452.2+-0.3 for fov 20..120 (not 453.54!), principal pt = bbox centre within 0.1-1pt. next: k vs export scale/shape size/slide size/zdist
+- t5: k_eff=452.22 sd 0.14 (n=15, fov 60-120, 6 rotations, px/pt 5), indep of export scale, slide size, shape size, position; delta-free fit gives 452.0-452.3. 16cm=453.54 DISFAVOURED. principal pt = pivot.
+- t6: pivot = bbox of path GEOMETRY not xfrm frame (frame hypotheses fail, geometry bbox fits rms .04). next: curve vs control-point bbox (outl.py)
+- t7: closed Bezier blob: pivot = bbox centre of true curve (not ctrl pts, not frame): sd .11pt in 4 rotations, ctrlbbox off by 1-9pt. (edge.load cache bug fixed)
+- t8: open L polyline w/ 40pt flat-cap stroke, no fill: pivot = STROKE-inclusive bbox centre (sd .095), geometry-only bbox off by 6pt
+- t9: closed filled+stroked triangle w/ miter 40pt: pivot = stroke-inclusive bbox centre incl. miter spikes (sd .075); geom bbox off 3.4pt
+- t10: effects: glow(white) no info; white shadow 60pt right -> free-pivot fit gives x=+30 shift (shadow-inclusive bbox?) but rms .87 [Open]; softedge junk. next: vanishing plane (t11)
+- t11: rect 800x300 fov120 lon sweep: exact homography (IoU .9997) while Zmax<d; for Zmax>=d image NOT clipped-homography: far-edge displaced -> hypothesis effective d'=max(d, Zmax+eps) (camera auto pulled back). testing t12
+- t12: for Zmax>=d: effective d'=Zmax+~1.3..1.7 fits IoU .9998 (camera auto pulled back; no clip, no wrap). t13: camera zoom attr (ECMA) = isotropic scale of image about pivot (area z^2, centroid z), zoom=0 -> nothing drawn; both persp & ortho. next: extrusion t14
+- t14: extrusion: back face at z=-h (plane coords, +z toward viewer), front stays at plane; pivot = flat bbox centre only (depth excluded); (x,y,z)->c+d/(d-Z)(X,Y), M(x,y,z); matches ortho+persp bbox to <=0.5pt. next sp3d z (t15)
+- t15: sp3d z (Distance from ground) = shift along +z before rotation; persp scale d/(d-z) even unrotated (z=100,fov90: x1.284); ortho shear matches; all <=0.2pt. next: presets table (ortho/oblique/iso/persp*), groups, pictures
+- t16: all 62 preset prst rendered w/o rot: legacy*/oblique*/orthographicFront/perspectiveFront = identity; iso*, perspective(non-Front) nontrivial; 5 presets render NOTHING (isometricBottomUp, LeftDown, OffAxis1Left, OffAxis4Bottom...) investigating
+- t16p: fitted implied (lat,lon,rev,fov) for all presets: persp presets fov~45 (HeroicExtreme 80), Left/Right lon~+-19.8, etc; all iso/ortho affine. next: group pivot, picture pivot, legacy rev (t17)
+- t17: group: scene3d stored in grpSpPr, single pivot = group bbox centre, children rendered as one flat unit; model matches 0.1pt. next picture pivot (t18)
+- t18: picture pivot = frame (xfrm) centre, not opaque content bbox (area/centroid match .05pt)
+- t19: legacyPerspectiveFront default fov 65 (d=709.05, rev ignored), perspectiveFront default 45 (d=1090.7). t12 done. next: Wolfram identities (iso matrices), then write M2.md
+- DONE: wrote notes/3d/M2.md

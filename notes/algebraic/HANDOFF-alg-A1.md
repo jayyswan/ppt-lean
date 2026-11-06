@@ -1,0 +1,6 @@
+- A1 started: created notes/algebraic/A1.md with stubs. Next: read Z5/Z7/Z8.
+- Read Z5/Z8/Z7 orbit passage. (b) Wolfram enumeration of (g,e,r) done (input saved in A1.md (b)); r=4 excluded for e>=7 by quadric count, r=5 needs e<=10. Next: write (a) criterion into A1.md.
+- (a) written into A1.md: Theorem G (chain of deg<=8/solvable maps => dense P-points), sources G0-G7, clean statement + residuals. Next: write (b) table.
+- (b) written: window table (Wolfram input in A1.md), new exclusions r=4 entirely, r=5&e>=11, (6,10); Class A = 28 unconditional (g,e) pairs, Class B open. Next: (c) group check (no GAP installed; use Wolfram permutation groups).
+- (c) FiniteGroupData Subgroups (iso types, orders) gives indices < C(n,2): A5{1,5,6} S5{1,2,5,6} A6{1,6,10} S6{1,2,6,10,12} A7{1,7,15} A8{1,8,15}; S7,S8,A9,S9 not available -> doing normalizer check + maximal-subgroup argument. Next: Wolfram inequality checks.
+- (c) done: Z7 n>=9 conclusion stands; S7,S8 no exceptions (Wolfram: no odd perm normalises PSL(2,7)<A7 or AGL(3,2)<A8); A7 has index-15 actions (Z7 said none for n=7). A1.md Status: done.

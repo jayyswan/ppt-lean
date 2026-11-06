@@ -1,0 +1,11 @@
+11:14:21 start R2; read plan/R1/h.py; python is 'py'
+11:15:31 t1: PasteSpecial dt 0..12: 1 bmp,2 EMF,4 GIF,5 JPG,6 PNG,12 SVG(embedded raster PNG 96dpi) ok; 3,7-10 fail; GIF/PNG have transparent bg -> alpha bbox = ink bbox (B) +-1px. frames all differ
+11:17:18 t2: Shape.Export gif/jpg/png/bmp/wmf/emf + Slide.Export (tif,pdf,...) all raster; shape png=96dpi 272x178 frame=A_px+~5px, alpha bbox=ink+-1px. svg/tiff via Slide.Export unsupported. ExecuteMso(PictureBackgroundRemoval) E_FAIL: instance shared, foreground dialog 'Grid and Guides' from another stream; retry later. My open pres: Presentation129-131 (close at end)
+11:19:11 bat.py: oval/tri/wave/bez rotated(20,50,0,persp60): every frame (paste emf/png/jpg/gif/bmp/svg, Shape.Export, PDF image placement) follows projected flat rect (oval=tri frame; bez curve-proj 188x104 vs frame 198.7x106.9), raster alpha/smask bbox = ink within 1px. PDF gives image 200dpi+SMask placed at real slide pos (frame=A+3pt). files R2/o_*
+11:25:33 UI bgremoval entered via UIA
+11:25:49 R2 note: HANDOFF path is /c/dev/Powerpoint/lean. BG removal Manual->Keep Changes: pic frame unchanged (no crop), XML backgroundRemoval t=10000 b=90000 l=10000 r=90000 (fixed 10% marquee inset, not ink), processed png replaces blip
+11:33:10 Save As Picture UI driven (sp.py/sap.py; dialog types PNG JPG GIF TIF BMP SVG EMF WMF) -> sap3/. NOTE earlier runs saved other stream's shape because ActiveWindow; fixed by Activate+Select in-process
+11:34:55 Save As Picture: fixed 330 dpi (registry ExportBitmapResolution no effect on any route; restored: unset). pixel frame = A_px + ~5px for all rasters (pad shrinks as 1/dpi); alpha bbox=ink +-2px. big 600x360 same. Next: SVG convert-to-shape, Word/Excel, crop, XPS, video
+11:37:00 SVG paste+Convert to Shape: becomes picture with custGeom rect(frame), raster PNG remains. Word PasteSpecial(DataType) ignores type (native 200x120 shape); Excel PasteSpecial reproduces PPT frames (EMF 200.4x130.2). PDF/XPS next
+11:37:43 XPS (SaveCopyAs 33): Path rect = frame (375.48,201.6,202.86x132.66) filled with 600dpi PNG ImageBrush -> frame as vector rect only, same frame as PDF. ExportAsFixedFormat unusable via late-bound COM; SaveCopyAs(…,32) writes nothing
+11:40:52 closed Presentation136; registry restored (unset); writing note

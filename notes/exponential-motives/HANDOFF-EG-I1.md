@@ -1,0 +1,22 @@
+# HANDOFF EG-I1 (progress log, one line per source examined)
+
+- arXiv 2211.17247 (Exponentiation of coefficient systems and exponential motives): search result seen; PDF fetch returned binary, no text.
+- javier.fresan.perso.math.cnrs.fr/expmot.pdf (Fresán–Jossen book draft): cert mismatch via WebFetch; alternate 404. Not accessed.
+- legacy.slmath.org/workshops/826/schedules/22047 and events.dm.unipi.it/event/202: Fresán talk abstracts, search snippet only.
+- arXiv 2007.08280 abs (Commelin–Habegger–Huber): accessed, no γ statement.
+- arXiv html 2007.08280v4 (Commelin–Habegger–Huber): accessed; Sec 0.2 e^e remark; Thm 0.3 volume statement.
+- arXiv 2007.08290 html (Part II): 404, not accessed.
+- arXiv 1303.1856 abs (Lagarias): accessed, abstract only.
+- ar5iv 1303.1856 (Lagarias): accessed, first 200k chars read; Conj 1.0.1–1.0.2, Sec 2.2, 2.5, 3.1 quoted; Bessel/L'(1,χ) not confirmed.
+- arXiv 1303.1856 pdf / AMS listing: search snippet only.
+- ihes.fr/~maxim/TEXTS/Periods.pdf (Kontsevich–Zagier): binary PDF, not readable. Conjecture via search snippets and Lagarias quote.
+- repo-archives.ihes.fr M_01_22.pdf (K–Z): search result only, not fetched.
+- arXiv math/9805045 pdf (Chow): binary PDF, not readable.
+- ar5iv math/9805045 (Chow): accessed; EL definition Sec 2; no γ mention found.
+- arXiv math/9805045 abs (Chow): search snippet, Schanuel consequence.
+- ar5iv 2402.02660 (Muñoz–Pérez-Marco, Stirling–Ramanujan constants are exponential periods): accessed; γ = S₋₁ as exponential period over Q(t,e^{-t}); extraction only.
+- imj-prg Waldschmidt PeriodesVI.pdf: redirect to webusers, not followed.
+- webusers.imj-prg.fr Waldschmidt EulerConstant.pdf: binary, not readable.
+- mathnet.ru/rus/present21382 (Fresán talk): connection refused, not accessed.
+- Search: "exponential period conjecture γ not in algebra": no conjecture found explicitly excluding γ.
+- Output written: C:\dev\Powerpoint\lean\impress\notes\EG-I1-literature.md

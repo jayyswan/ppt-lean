@@ -1,0 +1,3 @@
+Z2 step0: read plan, N4, N2, H1, G2, SUMMARY, NOTES-general head; starting Wolfram (conditions e1,e3,e6,e8)
+Z2 step1: Task1 conditions e1,e3,e6,e8 (deg 1,3,6,8 -> CI deg 144 vs odd 105); p6=(6p2p4-p2^3)/8, p8=(-p2^4+4p2^2p4+4p4^2)/16 given p1=p3=0; 9-real-root C polys found (FindRoot). Task2 brute force: only full-C realisation = power_law(5/2) x (y-y0)(x-x0)^2=a (box 2,1), rank 3 (4 w/ shift), <=7 real roots. graph/conic/L-shapes give <=5 of 6 terms with gap 4.
+Z2 step2: note written to notes/algebraic/Z2.md (box(2,1) realisation rank3/4, sheared C+{6} rank 4/5, Bezier x a/x^2 rank 7 deg>=28, n=10..13 classes, overshoot no). Done.

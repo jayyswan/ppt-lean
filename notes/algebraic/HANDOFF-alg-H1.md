@@ -1,0 +1,5 @@
+- [H1 step 0] read PLAN, N2, N4, G1, G2, NOTES-general. Framework: I is a K-twist of fibre-product variety; dim = M indep of n; trinomial deg/genus derived by hand, to verify in Wolfram.
+- [H1 step 1] Wolfram: trinomial identity sum_k S(n,k)(m-2)^{falling k-2}=(m^{n-1}-1)/(m-1) true for 44 (n,m); deg Gamma=(m-2)^{falling n-2}; genus formula gives n=9,m=9: deg 5040 genus 47881 (table computed).
+- [H1 step 2] Wolfram: main-component degree d_E(n) by Stirling inversion of Porteous h_{n-F+1}(e). odd13: n=9..13 = 210,1260,4725,10395,10395 (n=13 =1*3*5*7*9*11 check); sextic+x^13: 30,120,360,720,720 (n=13: 6! = CI 1..6 check); tri m=13: 1663200...
+- [H1 step 3] Wolfram: Fano expected dim of lines in CI(1..n-7), n=9..14: 9,7,4,0,-5,-11 (n<=12 ok); P-quartic CI(1..n-5): 0,-4,.. ; odd overshoot real points rank 7 for n=9..13 (roots of T13-1/3).
+- [H1 step 4] Bezier x x^m rank r=7 for m=3..8. Note written: notes/algebraic/H1.md. Done.

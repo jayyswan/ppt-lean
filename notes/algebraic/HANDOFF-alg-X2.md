@@ -1,0 +1,5 @@
+- step 1: read PLAN, SUMMARY, X1, H1, H2, heads of W1/W2/H3/H5
+- step 1 (fresh run 2026-11-05): re-read PLAN, SUMMARY, X1, H1, H2, W1/W2/H3/H5 summaries
+- step 2: Wooley 1501.01789 statements fetched (Thm1.1, 4.1, Cor4.3/4.5/4.6, Lemmas 3.1-3.5); Birch fields (Lampert-Snowden 2406.18498); Frei-Madritsch Mathematika 63 (2017) verified
+- step 3: Wolfram: bound table (n=9,10,12; dim/deg/Wooley/Cor4.3/Cor4.6/BHB); odd exact CIs n=10..13 have smooth totally-real points (T_n+t/10, T_n-1/3); Newton parity check n=10; minor degree 49; c=1 needs n>=19, c=2 n>=260
+- step 4: wrote notes/algebraic/X2.md (RW theorem, Prop D, Lemma N, Lemma W, Theorem O n=9..13, Theorem D, dim-invariance, bound table, verdict); fixed X' nondegeneracy caveat. DONE
