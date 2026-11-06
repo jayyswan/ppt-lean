@@ -616,3 +616,8 @@ decic (MI-2) surface per A2.
 - (4) A uniform low-gonality curve on V_τ is very unlikely for this route [Heuristic].
 - (5) PSL(2,8)/PΓL(2,8): same structure as A₉ over F; no shortcut.
 - Not done: the general genus-3 model (3K − D₄), genus 4–7 searches, line-lattice saturation.
+
+**B3 launched (2026-11-06, Opus), widened:** both line families. (N) the Fano surface of good lines
+for totally real nonics (Z8/A2); (D) the Fano 3-fold of lines in Y₀ for totally real decics (B2).
+Find P-points via Theorem G / Lemma A (curves cut by Schubert conditions, fibrations), or explain
+why none works. Recoverable notes: `notes/algebraic/B3.md`, log `HANDOFF-alg-B3.md`.
