@@ -598,3 +598,21 @@ decic (MI-2) surface per A2.
 - Lemma N over F [Proof]: holds when β's orbit over F is primitive; imprimitive or size ≤ 8 puts β
   in P by a tower. One leftover case (orbit size 9).
 - n = 11 [Proof sketch]: no single-F-line reduction; leftover forms have degree 9 or 12 > 8.
+
+**B1 done (2026-11-05): no curve on V_τ; Lemma N gap closed.** See `notes/algebraic/B1.md`.
+- (0) [Proof + Wolfram] For totally real nonics, H = Gal(Ω/F∩Ω) has no subgroup of index ≤ 8 and
+  is perfect: H = 1 (β ∈ P), A₉, or PSL(2,8) on 9 points (sharply 3-transitive, so Lemma N, (ND2)
+  and "ℓ_τ is the only line" still hold). The mod-2 heart is irreducible for PSL(2,8) (Steinberg)
+  and for A₉, closing Z5's open item.
+- (1) Expected dimension of {(τ, C)} is g + 5 − 3e ≤ −16 for all 28 Class A pairs; the genus-3
+  octic is Z5's equality case.
+- (2) [Proof] Curves with a deck stabiliser, and special τ, can't be F-rational; F-hyperplane
+  residuals at best (124, 63). Over F̄, special V_τ do carry (5, 8) curves, so the obstruction is
+  F-rationality, not geometry. The line lattice (rank 220, invariant rank 4) has no window class
+  [Wolfram; Heuristic]. Uniform family A(x,y)² − m(x)m(y)B needs about 102 extra nodes. Fermat
+  images have genus ≥ 321.
+- (3) LM search for genus-3 octics: no hit (residual 0.006–0.016, about 11 starts, no positive
+  control) [Heuristic].
+- (4) A uniform low-gonality curve on V_τ is very unlikely for this route [Heuristic].
+- (5) PSL(2,8)/PΓL(2,8): same structure as A₉ over F; no shortcut.
+- Not done: the general genus-3 model (3K − D₄), genus 4–7 searches, line-lattice saturation.
