@@ -578,3 +578,23 @@ See `notes/algebraic/A1.md`.
 construction, PSL(2,8)/PΓL(2,8) side task) and B2 (Opus), with recoverable notes
 (`notes/algebraic/B1.md`, `B2.md`; logs `HANDOFF-alg-B1.md`, `HANDOFF-alg-B2.md`). B3 drops the
 decic (MI-2) surface per A2.
+
+**B2 done (2026-11-05): n = 10 reduced to one F-line; not closed.** See `notes/algebraic/B2.md`.
+- Set-up confirmed: the condition is I = b₂²/b₃³ ∈ ℙ¹(ℚ); need an F-point on some fibre
+  W_r = O₄ ∩ {B₂² = r·B₃³}, defined over ℚ, general type, degree 1260 (630 at r = 0). r = ∞ has no
+  good totally real points (b₃ ≤ 0).
+- **Engine C [Proof + Wolfram]:** affine image H of a rational quintic graph × an axis-aligned
+  P-conic y² = −q(x); crossings are the roots of H² + q. Theorem O at n = 10 is its case σ = τ².
+  One condition fewer (dimension 5), all equations of degree ≤ 7. Special orbit r = 0:
+  W^C₀ = {p₁ = p₃ = 0, p₆ = (3/8)p₂p₄ − p₂³/32, p₇ = (7/20)p₂p₅}, degree 126. (Check: the conic must
+  be drawable — ellipse, or hyperbola as an affine image of power_law x⁻¹.)
+- **Reduction [Proof; existence Open]:** one F-line in Y₀ = {p₁ = p₃ = 0, S₆ = 0} closes totally
+  real S₁₀/A₁₀ decics (last step a binary septic, so a real root in F). Smooth non-degenerate real
+  lines exist in Y₀'s 3-dimensional Fano scheme [Wolfram, numerical]; unlike MI-2, not vacuous.
+- No structure for Lemma A / Theorem G: W_r, W^C_r and the Fano schemes are general type
+  [Heuristic]; the 945 degenerate pairing ℙ⁴'s have no F-points.
+- End-to-end engine test on χ = T₅(x)²/256 − (x² + x/7 + 1/3)/10⁴ (S₁₀, 10 real roots) [Wolfram];
+  it tests the engine only, not the F-point problem.
+- Lemma N over F [Proof]: holds when β's orbit over F is primitive; imprimitive or size ≤ 8 puts β
+  in P by a tower. One leftover case (orbit size 9).
+- n = 11 [Proof sketch]: no single-F-line reduction; leftover forms have degree 9 or 12 > 8.
