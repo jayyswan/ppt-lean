@@ -497,3 +497,47 @@ Every route so far shares built-in assumptions. These streams drop them.
 - Genus 1 over F with a real point already has dense F-points; elliptic functions add nothing.
   Z5's argument extends to every subfield of P.
 - Open: the Fano surface of lines in X₃ ∩ X₅ (degree, Kodaira dimension, fibrations).
+
+## Follow-up sequence after Z8 (2026-11-05, planned, nothing launched)
+
+### Guiding principle: Criterion G (to be verified in A1)
+
+P is closed under real roots of degree ≤ 8 polynomials with P-coefficients. So the question for
+every route is no longer "does this variety have rational points?" but:
+
+> **(G)** Does the needed variety V (over F) contain a curve C, defined over F, with a real point
+> and an F-rational map C → ℙ¹ of degree ≤ 8 whose fibre over some F-point contains a real point
+> that satisfies the route's nondegeneracy conditions?
+
+If yes, V has (dense) F-points on C. Genus is not the obstruction; F-rational gonality ≤ 8 is.
+Brill–Noether gives geometric gonality ≤ ⌊(g+3)/2⌋, which is ≤ 8 for g ≤ 13, but an F-rational
+pencil is not automatic. Z5's inequality (n−8)e ≤ 4g−4 does not exclude genus 6–13 at n = 9.
+
+### Phase A: gatekeeping checks (parallel, cheap)
+
+| id | model | question |
+|---|---|---|
+| A1 | Opus | **Verify Criterion G.** (a) When does a curve C over F with a real point carry an F-rational g¹_d, d ≤ 8, with a real point in some F-fibre? Cases: W¹_d positive-dimensional (needs F-points on W¹_d — recursive, degree?), finite W¹_d (Galois may permute the pencils), canonical / Castelnuovo models, projection from F-points of C. (b) Give the exact genus/degree window on V_τ (n = 9, primitive group) left open by Z5's inequality and Z8's Castelnuovo results. (c) GAP check of Z7's Dixon–Mortimer step (orbit sizes n, 2n, ≥ C(n,2) for n ≥ 9) and the n ≤ 8 exceptions. |
+| A2 | Sonnet | **Adversarial check of Z8's positives.** (a) The rank count: a rational poly_graph of degree d under its P-valued freedom leaves exactly d − 4 rationality conditions (Theorem O, n = 10–13). (b) The two new reductions: totally real nonics ⇐ one F-line in {p₁ = p₃ = p₅ = 0} ⊂ ℙ⁷ off the pairing ℙ³'s; MI-2 decics ⇐ one F-line in {p₂ = p₃ = p₄ = 0}. (c) The 10-real-root example T₅(t²−2)/16 − t/1000 is actually usable by the route. |
+
+### Phase B: main unconditional pushes (after A; B1 and B3 use A1's window)
+
+| id | model | depends on | question |
+|---|---|---|---|
+| B1 (Z10) | Opus | A1 | **Low-gonality curves on V_τ, n = 9 totally real S₉.** Within A1's window, hunt for F-curves on V_τ (τ free): residual curves of quadric/hyperplane sections containing ℓ_τ or the ℓ_ε; curves with a ℤ/2 deck stabiliser (Z5 open); images of curves on the Fermat-type cover; degree-8 genus-3 and genus 4–13 candidates. Dimension counts with τ free (6 effective parameters). A hit closes totally real nonics unconditionally via Theorem R. |
+| B2 (Z11) | Opus | A2 | **Theorem O at n = 10, 11: an F-point on O_m plus one rationality condition.** Describe the combined variety (does the condition fibre O_m over a curve/line? what are the fibres?). Apply Criterion G. Explicit Wolfram search on a totally real S₁₀ decic. |
+| B3 (Z12) | Sonnet | A1, A2 | **The two line surfaces.** Fano surface of lines in X₃ ∩ X₅ (nonics) and in {p₂ = p₃ = p₄ = 0} (decics): degree, Kodaira dimension, fibrations, low-gonality F-curves (Criterion G), numerical search for F-lines on an explicit totally real nonic. |
+
+### Phase C: hyperelliptic audit
+
+Z9 as planned, once the user supplies the external results on hyperelliptic functions in P.
+
+### Phase D: consolidation
+
+Whatever B returns, update `notes/algebraic/SUMMARY.md`: status by degree, the conditional
+(SR)/Taylor result (sufficient, not necessary), Criterion G, and the map of obstructions (Z4–Z8).
+
+### Order and cost
+
+A1 ∥ A2 → B1 ∥ B2 → B3 → D. Z9 slots in whenever its input arrives. Five agents in total
+(three Opus). Each launches only on the user's go-ahead.
