@@ -33,3 +33,4 @@ foreground; do not run it while someone else is using the screen.
 Results of the UI-input probe are in `ui_inputs.json`.
 
 The spec XML is downloaded once from the LibreOffice repository into `%TEMP%`.
+| `probe_equalize.py`, `probe_equalize2.py` | Equalize Character Height and baseline offset: per-glyph maps, band, 2/3 size, warp of equalized rows (`../EQUALIZE-AND-OFFSET.md`) |
