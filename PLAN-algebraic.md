@@ -554,3 +554,22 @@ A1 ∥ A2 → B1 ∥ B2 → B3 → D. Z9 slots in whenever its input arrives. Fi
   reduction is vacuous for s = 2, 3.
 - (c) T₅(t²−2)/16 − t/1000: 10 real roots, Galois group S₁₀, a smooth real point of O₄ ∩ {b₂ = 0}.
   A realness witness only, not an F-point for a given K.
+
+**A1 done (2026-11-05): Criterion G proved in a corrected form; the window for B1 is mapped.**
+See `notes/algebraic/A1.md`.
+- **Theorem G [Proof].** A curve C over a subfield of P with a real point has P-points dense in
+  its real points, if a chain C → D₁ → … → ℙ¹ (or a conic) is defined over a subfield of P with every
+  step of degree ≤ 8 or solvable. The real-fibre condition is automatic.
+- Unconditional cases [Proof]: genus 0, genus 2–5, hyperelliptic, trigonal, degree ≤ 8 curves,
+  general genus 6 (5 tetragonal pencils, odd, so one is real; also whenever 5 ∤ index). Genus 7 if
+  the index divides 8. Any genus ≤ 8 with one P-point (project from the osculating (g−3)-plane).
+- **Correction:** "genus ≤ 13 suffices" is false. Brill–Noether pencils are only geometric.
+  Open: genus ≥ 8 without a P-point; genus 7 with 3 | index; bielliptic genus 6 with 10 | index.
+- **Window on V_τ (n = 9)** [Proof sketch]: no curve spans a ℙ⁴; in ℙ⁵ Castelnuovo excludes
+  degree ≥ 11; (6, 10) excluded.
+  - Class A, 28 (g, e) pairs that would give P-points: g = 3: e = 8; g = 4: 9–12; g = 5: 10–16;
+    g = 6: 12–19; g = 7: e ∈ {13, 14, 16, 17, 19, 20, 22, 23}.
+  - Class B, needing extra structure: (6, 20) bielliptic; g = 7 with 3 | e; g = 8–13.
+- (c) Z7's conclusion stands [Wolfram + maximal-subgroup classification; GAP not installed]: for
+  n ≥ 9 the transitive degrees below C(n,2) are 1, 2, n, 2n. Exceptions for 5 ≤ n ≤ 8: A₅/S₅ on 6;
+  A₆/S₆ on 6 and 10; A₇ on 15; A₈ on 15. Z7 erred at n = 7 (missed A₇ on 15); small-n only.
