@@ -92,7 +92,7 @@ the preset's two guide paths, each traced at constant speed, into the box `[0, w
 Coordinates are the spec's, `y` pointing down. PowerPoint then refits the image with fresh
 Béziers, within about 0.5 pt rms on a 4 in box; the exact image is the idealization.
 
-All 30 modelled presets were checked at every reachable handle stop (125 cases, two box
+All 36 modelled presets were checked at every reachable handle stop (149 cases, two box
 sizes; `probe_presets_model.py`). PowerPoint's outline lies within about 0.7 pt of the
 model's, and the model's within about 2 pt of PowerPoint's, which is the error of treating
 the font's glyphs as true circles. The exceptions all have one cause
@@ -111,10 +111,11 @@ box size and check it with `probe_presets_model.py`.
 
 Modelled: the 12 straight presets, written at constant speed or traced by `arcTrace`; the 4
 ellipse-arc presets (Warp Up/Down, Ring: Inside/Outside); the 4 Warped presets, one row of
-text; and the 8 cubic Bézier presets (the 4 waves, Inflate, Deflate, Curve: Up/Down). Their
-curved guides are traced by `arcTrace`, by true arc length. Not yet modelled: the 6 mixed
-Inflate/Deflate presets (Top, Bottom, and the combinations), and the 4 Follow Path presets,
-which place glyphs rigidly rather than warping them.
+text; the 8 cubic Bézier presets (the 4 waves, Inflate, Deflate, Curve: Up/Down); and the 6
+presets with one straight and one quadratic guide (Inflate/Deflate: Top/Bottom and the two
+combinations, one row of text). Their curved guides are traced by `arcTrace`, by true arc
+length. Not yet modelled: the 4 Follow Path presets, which place glyphs rigidly rather than
+warping them.
 -/
 
 namespace Pconstructible
@@ -303,6 +304,12 @@ noncomputable def ellArcVisualGuide (c : ℝ × ℝ) (wR hR θ₀ Δ t : ℝ) : 
   let ρ := wR * hR / √((hR * Real.cos θ) ^ 2 + (wR * Real.sin θ) ^ 2)
   (c.1 + ρ * Real.cos θ, c.2 + ρ * Real.sin θ)
 
+/-- The quadratic Bézier with ends `p`, `q` and control point `c`, written as the cubic with
+the same parametrization (degree elevation: handles `(p + 2c)/3` and `(q + 2c)/3`). -/
+noncomputable def quadBezierParam (p c q : ℝ × ℝ) : ℝ → ℝ × ℝ :=
+  bezierParam p ((p.1 + 2 * c.1) / 3, (p.2 + 2 * c.2) / 3)
+    ((q.1 + 2 * c.1) / 3, (q.2 + 2 * c.2) / 3) q
+
 /-- Two cubic Béziers end to end, `p₁ p₂ p₃ p₄` then `p₄ q₂ q₃ q₄`, half the parameter each.
 -/
 noncomputable def bezier2Guide (p₁ p₂ p₃ p₄ q₂ q₃ q₄ : ℝ × ℝ) (t : ℝ) : ℝ × ℝ :=
@@ -407,6 +414,26 @@ inductive WarpPreset
   /-- "Curve: Down" (`textCurveDown`): top `(l, t), (w/3, 3ah/4), (2w/3, 5ah/4), (r, ah)`,
   the mirror image of Curve: Up's; the same bottom guide. -/
   | curveDown
+  /-- "Inflate: Bottom" (`textInflateBottom`): top straight; bottom the quadratic
+  `(l, ah) → (r, ah)` with control point `(hc, b)`. -/
+  | inflateBottom
+  /-- "Deflate: Bottom" (`textDeflateBottom`): top straight; bottom the quadratic
+  `(l, b) → (r, b)` with control point `(hc, 2d - h)`, `d = a · min w h`. -/
+  | deflateBottom
+  /-- "Inflate: Top" (`textInflateTop`): top the quadratic `(l, ah) → (r, ah)` with control
+  point `(hc, t)`; bottom straight. -/
+  | inflateTop
+  /-- "Deflate: Top" (`textDeflateTop`): top the quadratic `(l, t) → (r, t)` with control
+  point `(hc, 2ah)`; bottom straight. -/
+  | deflateTop
+  /-- "Deflate: Top, Inflate: Bottom" (`textDeflateInflate`), one row of text: of its four
+  guides, the first two (the row's band), the top edge and the quadratic
+  `(l, 0.45h) → (r, 0.45h)` with control point `(hc, 2ah - 0.55h)`. -/
+  | deflateTopInflateBottom
+  /-- "Inflate: Middle, Deflate: Top and Bottom" (`textDeflateInflateDeflate`), one row: of
+  its six guides, the first two, the top edge and the quadratic `(l, 0.3h) → (r, 0.3h)` with
+  control point `(hc, 2ah - 0.36h)`. -/
+  | inflateMiddle
 
 /-- Where a handle is: as applied, or dragged past one end of its range. -/
 inductive HandleSetting
@@ -447,6 +474,12 @@ def WarpPreset.stops : WarpPreset → ℕ → Option ℤ × ℤ × Option ℤ
   | .inflate, 0 => (some 0, 18750, some 20000)
   | .deflate, 0 => (some 0, 18750, some 37500)
   | .curveUp, 0 | .curveDown, 0 => (some 0, 45977, some 56338)
+  | .inflateBottom, 0 => (some 60000, 60000, some 100000)
+  | .deflateBottom, 0 => (some 6250, 50000, some 100000)
+  | .inflateTop, 0 => (some 0, 40000, some 50000)
+  | .deflateTop, 0 => (some 0, 50000, some 93750)
+  | .deflateTopInflateBottom, 0 => (some 5000, 35000, some 95000)
+  | .inflateMiddle, 0 => (some 3000, 25000, some 47000)
   | _, _ => (none, 0, none)
 
 /-- The value of handle `i` at a setting, as a fraction `adj / 100000`, if a drag reaches
@@ -540,6 +573,26 @@ noncomputable def WarpPreset.map (k : WarpPreset) (a b w h : ℝ) : ℝ × ℝ �
       ruledWarp (arcTrace (bezierParam (0, 0) (w / 3, 3 * d / 4) (2 * w / 3, 5 * d / 4) (w, d)))
         (arcTrace (bezierParam (0, h - 3 * d / 8) (w / 3, h + d / 8) (2 * w / 3, h + d / 8)
           (w, h - 3 * d / 8)))
+  | .inflateBottom =>
+      ruledWarp (segGuide (0, 0) (w, 0))
+        (arcTrace (quadBezierParam (0, a * h) (w / 2, h) (w, a * h)))
+  | .deflateBottom =>
+      ruledWarp (segGuide (0, 0) (w, 0))
+        (arcTrace (quadBezierParam (0, h) (w / 2, 2 * a * min w h - h) (w, h)))
+  | .inflateTop =>
+      ruledWarp (arcTrace (quadBezierParam (0, a * h) (w / 2, 0) (w, a * h)))
+        (segGuide (0, h) (w, h))
+  | .deflateTop =>
+      ruledWarp (arcTrace (quadBezierParam (0, 0) (w / 2, 2 * a * h) (w, 0)))
+        (segGuide (0, h) (w, h))
+  | .deflateTopInflateBottom =>
+      ruledWarp (segGuide (0, 0) (w, 0))
+        (arcTrace (quadBezierParam (0, 9 / 20 * h) (w / 2, 2 * a * h - 11 / 20 * h)
+          (w, 9 / 20 * h)))
+  | .inflateMiddle =>
+      ruledWarp (segGuide (0, 0) (w, 0))
+        (arcTrace (quadBezierParam (0, 3 / 10 * h) (w / 2, 2 * a * h - 9 / 25 * h)
+          (w, 3 / 10 * h)))
 
 /-- The Transform setting of a text box: none, or one preset with its handles (the second
 setting matters only for a preset with two handles). -/
