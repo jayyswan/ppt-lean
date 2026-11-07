@@ -2,7 +2,7 @@
   shear  : each point keeps its x and is lifted by the guide, x^3 - x shaped (guide traced by
            its Bezier parameter, which is linear in x here);
   arclen : the guide traced at constant speed, s = k*u, k fitted (PowerPoint's fill factor).
-Usage: py probe_wave_overlay.py [TEXT] [PRESET] [WxH]"""
+Usage: py probe_wave_overlay.py [TEXT] [PRESET] [WxH] [FONT]"""
 import sys
 import numpy as np
 from scipy.spatial import cKDTree
@@ -13,7 +13,8 @@ text = sys.argv[1] if len(sys.argv) > 1 else "WAVES"; pr = sys.argv[2] if len(sy
 BOX = (100, 100) + tuple(float(x) for x in (sys.argv[3].split("x") if len(sys.argv) > 3 else ("504", "144")))
 lab = Lab(visible=True)
 try:
-    tb = lab.textbox(text, font="Arial", size=72, box=BOX); tb.TextFrame2.WarpFormat = WARP_ID[pr]
+    FONT = sys.argv[4] if len(sys.argv) > 4 else "Arial"
+    tb = lab.textbox(text, font=FONT, size=72, box=BOX); tb.TextFrame2.WarpFormat = WARP_ID[pr]
     flat, warped = lab.bake(tb, flat=True), lab.bake(tb)
 finally:
     lab.close()
@@ -52,5 +53,5 @@ for ax, curves, col, title in ((axes[0], shear, "#1f6fd1", f"shear model (x³ �
         G = np.array([g.at(s, "param") for s in np.linspace(0, 1, 200)]); ax.plot(G[:, 0], G[:, 1], ":", color="gray", lw=0.8)
     ax.set_aspect("equal"); ax.invert_yaxis(); ax.set_title(title, fontsize=11); ax.set_xticks([]); ax.set_yticks([])
 fig.suptitle(f"“{text}” in Wave: Down — grey: PowerPoint, colour: model, dotted: guides", fontsize=12)
-fig.tight_layout(); fn = f"wave_overlay_{text}_{int(W)}x{int(H)}.png"; fig.savefig(fn, dpi=110)
+fig.tight_layout(); fn = f"wave_overlay_{text if text.isascii() else 'U%04X' % ord(text[0])}_{int(W)}x{int(H)}.png"; fig.savefig(fn, dpi=110)
 print("saved", fn)
