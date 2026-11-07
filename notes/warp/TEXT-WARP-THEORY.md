@@ -473,3 +473,30 @@ characterized.
 **Measurement artifact:** Merge Shapes splits curves at approximate extrema. The top edge of
 ■ appeared as two cubics, which are one cubic split at τ = 7/32. Harmless, but don't read
 structure into such splits.
+
+### 8.3 Where L_est comes from (partly identified)
+
+`L_est` is the total guide length PowerPoint assumes when it spaces text along a curved guide
+(the text spans `u·L_est`). It was fitted against the exact `L_est` implied by the warped ■'s
+corner, for 11 box shapes (`fit_lest.py`, `fit_lest2.py` and inline fits). The fitted
+quantity is accurate to about 0.001 pt.
+
+**Typical sizes.** Split the guide into **6 equal parameter pieces** and take per piece
+`chord + w·(control polygon − chord)`, with w = 0.328, close to ⅓. That is nearly the classic
+`(2·chord + polygon)/3` estimate, and it matches all 9 typical boxes to 0.026 pt. It is very
+close but not bit-exact, so the precise rule is still open. These were ruled out:
+- equal-step polylines: between 10 and 11 chords, 0.21 pt at best;
+- adaptive subdivision in real space: 0.8 pt;
+- adaptive subdivision in the normalized box: 0.27 pt;
+- Gauss–Legendre, Simpson, trapezoid and midpoint rules: these converge to the true length
+  from above, while `L_est` is below it.
+
+**Exceptional sizes** (square boxes of 144, 156, 288, 312, 324 and 576 pt; 288 × 144;
+576 × 288). The fraction is about 0.976, and the estimate is structurally different. No
+piece count and weight of the same family fits both exceptional aspects (5.4 pt at best). The
+trigger is an irregular set of sizes. Unknown.
+
+**Conclusion for the model.** `L_est` is a numerical approximation, not a design parameter.
+The recommended idealization is `L_est = L`, the true arc length. The difference is a 0.4 %
+compression along the text at typical sizes and 2.4 % at the exceptional ones. Where
+PowerPoint fidelity matters, the 6-piece estimate reproduces typical sizes to about 0.03 pt.
