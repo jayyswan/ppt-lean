@@ -196,7 +196,8 @@ shape might also give numbers the class does not reach yet. None is established.
 - **T6. Arc length of a warped edge (§13).** The `arc_length` of the image of a slanted glyph
   edge between two P-constructible corners is a number in the class whose integrand has a
   nested radical. For ◢ under Warp Up in a 4 × 4 box it is 5.5122674859237737761…, a period of
-  a genus-5 cover with an elliptic quotient. Candidate new number, newness unproved.
+  half a period of a second-kind differential on a genus-2 curve with no extra symmetry.
+  Candidate new number, newness unproved.
 - **T5. Algebraic engines.** The straight-guide families (egg quartics, piriform, Gerono lobe)
   are one-parameter families of rational quartics. Each could be a new rational-coefficient
   engine for the open degree 9–10 cases in `../algebraic/SUMMARY.md`. That is unlikely to help
@@ -907,15 +908,40 @@ the ellipse already gives.
 a square root inside a square root. In `c = cos ψ`: `P + Q√R` with `P = (1+κ²)(4 − 3c²)`,
 `Q = −2κc`, `R = 4 − 3c²`. It would denest only if `P² − Q²R` were a square, and
 
-    P² − Q²R = (3c² − 4)·(3c² − 4 − 8κ² + 10c²κ² − 4κ⁴ + 3c²κ⁴),
+    P² − Q²R = (3c² − 4)·(3c² − 4 − 8κ² + 10c²κ² − 4κ⁴ + 3c²κ⁴).
 
 The second factor is `(3κ² + 1)(κ² + 3)·c² − 4(1 + κ²)²`, linear in `c²` with a non-square
 coefficient product, and `3c² − 4` is a different factor, so `P² − Q²R` is not a square and the
-radical is genuinely nested. A hand Riemann–Hurwitz count (not machine-checked): the curve `u² = 1 − c²`, `v² = 4 − 3c²` has genus 1; `w² = v·((1+κ²)v − 2κc)`
-adds a double cover branched over the 4 zeros of `v` and the 4 zeros of `(1+κ²)v − 2κc`, so the
-cover has genus `2·1 − 1 + 8/2 = 5` for generic κ. The involution `u ↦ −u` has an elliptic
-quotient (genus 1: branched at 4 points), and the differential `w·dc/u` is anti-invariant, so it
-lives on the 4-dimensional Prym part, not on an elliptic curve.
+radical is genuinely nested.
+
+**The curve is of genus 2 (checked numerically).** Put `c = cos ψ = (2/√3)·cos α`, so
+`v = √(4 − 3c²) = 2 sin α`, with `α` running from `π/6` to `5π/6` as `ψ` runs from 0 to `π`.
+Then `w² = v((1+κ²)v − 2κc) = 4R·sin α·sin(α − δ)` with `R = √((1+κ²)² + 4κ²/3)` and
+`tan δ = 2κ/(√3(1+κ²))`, and `1 − c² = (1 − 2cos 2α)/3`. All three radicals now depend on
+`θ = 2α` through `cos θ` and `sin α`, and with `t = tan α` the squared integrand is a rational
+function of `t`. The result is
+
+    N₁ = ∫ 4√R · t²(t cos δ − sin δ) / ((1 + t²)·Z) dt,    Z² = t(t cos δ − sin δ)(1 + t²)(3t² − 1),
+
+taken over `t` from `1/√3` through `∞` to `−1/√3`: a hyperelliptic integral on the genus-2 curve
+`Z² = t(t − t₀)(t² + 1)(3t² − 1)`, `t₀ = tan δ`. Numerically the two forms agree to 29 digits
+(`5.51226748592377377613798025361` against `…362`). The earlier count of a genus-5 cover
+(three independent radicals) was of a larger curve that maps onto this one; the integrand only
+needs the genus-2 quotient.
+
+Two structural facts follow:
+- The path's endpoints `t = ±1/√3` are branch points (roots of `3t² − 1`), so `N₁` is an integral
+  between two Weierstrass points: half of a period.
+- The differential has double poles at the branch points `t = ±i` with zero residue: it is of the
+  second kind, like `E`'s integrand, and the complete `L = 2E(−3)` is the one-dimension-lower
+  analogue (an elliptic curve, a period of a second-kind differential).
+
+**No elliptic involution (checked numerically).** A genus-2 Jacobian splits (up to isogeny of
+degree 2) into two elliptic curves iff a Möbius involution permutes the six branch points
+`{0, t₀, i, −i, 1/√3, −1/√3}` in three pairs. Of the 15 pairings of the six points, none admits
+one: the involution fixed by the first two pairs always fails the third (residuals 0.5–1.2). So
+the Jacobian has no degree-2 elliptic factor. A splitting of higher degree (a Humbert surface)
+is not excluded by this test.
 
 **Control.** If the guide is a circle (`A = B`), `sp` is constant, the nested radical
 disappears, and the length is an ordinary elliptic integral: for semi-axes (1, 1) and
@@ -923,13 +949,19 @@ disappears, and the length is an ordinary elliptic integral: for semi-axes (1, 1
 3.91469832138551893821403649496…`, the numeric integral and closed form agreeing to 30 digits.
 So the new structure comes from the guide being a genuine ellipse.
 
-**Status.** This is a candidate, not a proof of newness. The old class already holds hyperelliptic
-arc lengths (a `poly_graph` of degree 6 has `√(1 + p′²)` with a degree-10 radicand, genus up to 4),
-so the genus alone does not separate them: a genus-5 cover's Prym could still split into
-curves whose periods the old class has. What would decide it:
-1. Compute the Prym of the genus-5 cover and test whether it is isogenous to a product of
-   elliptic curves, and if so which ones; compare with the periods of the old curves.
-2. Search for a closed form for `N₁` (e.g. integer relations among `N₁` and `E`, `K` at the
-   moduli of the quotient curve).
+**Status.** This is a candidate, not a proof of newness. The old class holds hyperelliptic arc
+lengths too: a `poly_graph` of degree 4 has `√(1 + q²)` with `q = p′` a cubic, a genus-2 curve
+`Z² = 1 + q(x)²` whose six branch points are the roots of `q = ±i`, and degree 6 gives genus up
+to 4. A genus-2 curve alone is therefore not new. Two things count against a coincidence:
+the old genus-2 curves have rational `q` up to `scale_x`/`scale_y`/`translate` by class numbers
+(a countable, thin family in the 3-dimensional moduli space of genus-2 curves), while our
+curve's moduli depend on `κ = 3/L`; and its differential is of the second kind with poles at
+`t = ±i`, unlike the arc-length differential `√(1 + q²) dx`, which has a pole only at ∞.
+What would decide it:
+1. Compute the Igusa invariants of `Z² = t(t − t₀)(t² + 1)(3t² − 1)` and ask whether any
+   `Z² = 1 + q²` (`q` a cubic with class-number coefficients) has the same invariants; and test
+   for splitting of higher degree.
+2. Search for integer relations between `N₁` and the periods of the associated curve,
+   e.g. the other independent periods of the same differential.
 3. A proof of newness would need transcendence results for such periods and is out of reach;
    a reduction to old constructors is the only outcome that can be proved.
