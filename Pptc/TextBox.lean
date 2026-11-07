@@ -139,9 +139,10 @@ def GlyphPiece.toSet : GlyphPiece → Set (ℝ × ℝ)
         (lo.1 : ℝ) ≤ z.1 ∧ z.1 ≤ hi.1 ∧ (lo.2 : ℝ) ≤ z.2 ∧ z.2 ≤ hi.2}
 
 /-- The catalogued glyphs, all from Segoe UI Symbol (2048 units per em, `y` up). A glyph is
-idealized only where its outline shows clear intent: these three are an ellipse and its two
-halves, with centre and semi-axes read off the integer bounding box of the font's own
-outline. -/
+used only where its outline is clearly a geometric figure, and then it is that figure:
+three are an ellipse and its two halves, with centre and semi-axes read off the integer
+bounding box of the font's own outline, and one is a rectangle, whose four corners are the
+font's own integer points (the font stores no curves for it, so nothing is idealized). -/
 inductive Glyph
   /-- ● U+25CF BLACK CIRCLE: bounding box `(140, -25)–(1624, 1458)`, within 0.15 %. -/
   | blackCircle
@@ -151,6 +152,10 @@ inductive Glyph
   /-- ◖ U+25D6 LEFT HALF BLACK CIRCLE: the left half, flat side on `x = 882`, within
   0.06 %. -/
   | leftHalfBlackCircle
+  /-- █ U+2588 FULL BLOCK: the rectangle `(-10, -440)–(1931, 1501)`, a square of side 1941.
+  It is one four-point contour in the font. It is 20 units wider than its advance, so
+  neighbouring blocks overlap by 20 units. -/
+  | fullBlock
 
 /-- Units per em of the font the glyphs come from. -/
 def Glyph.unitsPerEm (_ : Glyph) : ℚ := 2048
@@ -161,26 +166,35 @@ def Glyph.winAscent (_ : Glyph) : ℚ := 2210
 /-- The font's Windows descent (`OS/2.usWinDescent`), in font units. -/
 def Glyph.winDescent (_ : Glyph) : ℚ := 514
 
-/-- The bottom and top of a glyph's ink, in font units (`glyf` bounding box). -/
-def Glyph.inkBottom (_ : Glyph) : ℚ := -25
+/-- The bottom of a glyph's ink, in font units (`glyf` bounding box). -/
+def Glyph.inkBottom : Glyph → ℚ
+  | .fullBlock => -440
+  | _ => -25
 
-/-- See `Glyph.inkBottom`. -/
-def Glyph.inkTop (_ : Glyph) : ℚ := 1458
+/-- The top of a glyph's ink, in font units (`glyf` bounding box). -/
+def Glyph.inkTop : Glyph → ℚ
+  | .fullBlock => 1501
+  | _ => 1458
 
 /-- The advance width of a glyph, in font units (`hmtx`). -/
 def Glyph.advance : Glyph → ℚ
   | .blackCircle => 1764
   | .rightHalfBlackCircle => 1764
   | .leftHalfBlackCircle => 1764
+  | .fullBlock => 1921
 
-/-- The idealized outline of a glyph, in font units with `y` up. All three share the centre
-`(882, 1433/2)` and semi-axes `742` and `1483/2`. -/
+/-- The idealized outline of a glyph, in font units with `y` up. The three circular glyphs
+share the centre `(882, 1433/2)` and semi-axes `742` and `1483/2`; the block is its
+rectangle's four edges. -/
 def Glyph.pieces : Glyph → List GlyphPiece
   | .blackCircle => [.ellArc (882, 1433 / 2) 742 (1483 / 2) (140, -25) (1624, 1458)]
   | .rightHalfBlackCircle =>
       [.ellArc (882, 1433 / 2) 742 (1483 / 2) (882, -25) (1624, 1458), .seg (882, -25) (882, 1458)]
   | .leftHalfBlackCircle =>
       [.ellArc (882, 1433 / 2) 742 (1483 / 2) (140, -25) (882, 1458), .seg (882, -25) (882, 1458)]
+  | .fullBlock =>
+      [.seg (-10, -440) (1931, -440), .seg (1931, -440) (1931, 1501),
+        .seg (1931, 1501) (-10, 1501), .seg (-10, 1501) (-10, -440)]
 
 /-! ### Rows -/
 

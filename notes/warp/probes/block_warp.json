@@ -1,0 +1,512 @@
+[
+ {
+  "test": "two touching blocks",
+  "contours": 1,
+  "width": 135.7383464566929,
+  "pred": 135.73828125
+ },
+ {
+  "preset": "triangleUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "triangleUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "square",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "square",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "stop",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "stop",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "fadeRight",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "fadeRight",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "slantUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "slantUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "warpUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.4,
+   0.4
+  ],
+  "max": 0.4
+ },
+ {
+  "preset": "warpUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   7.56,
+   0.0
+  ],
+  "max": 7.56
+ },
+ {
+  "preset": "warpDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.4,
+   0.4
+  ],
+  "max": 0.4
+ },
+ {
+  "preset": "warpDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   7.56,
+   0.0
+  ],
+  "max": 7.56
+ },
+ {
+  "preset": "ringInside",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "ringInside",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "archWarped",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.06,
+   0.03
+  ],
+  "max": 0.06
+ },
+ {
+  "preset": "archWarped",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.05,
+   0.02
+  ],
+  "max": 0.05
+ },
+ {
+  "preset": "archWarpedDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.02,
+   9.29
+  ],
+  "max": 9.29
+ },
+ {
+  "preset": "archWarpedDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.01,
+   0.05
+  ],
+  "max": 0.05
+ },
+ {
+  "preset": "warpedCircle",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "warpedCircle",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "max": 0.0
+ },
+ {
+  "preset": "waveDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   7.98,
+   7.98
+  ],
+  "max": 7.98
+ },
+ {
+  "preset": "waveDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.78,
+   0.78
+  ],
+  "max": 0.78
+ },
+ {
+  "preset": "doubleWaveUpDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   7.19,
+   7.19
+  ],
+  "max": 7.19
+ },
+ {
+  "preset": "doubleWaveUpDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.34,
+   0.34
+  ],
+  "max": 0.34
+ },
+ {
+  "preset": "inflate",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.21,
+   0.21
+  ],
+  "max": 0.21
+ },
+ {
+  "preset": "inflate",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.11,
+   0.11
+  ],
+  "max": 0.11
+ },
+ {
+  "preset": "deflate",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.21,
+   0.21
+  ],
+  "max": 0.21
+ },
+ {
+  "preset": "deflate",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.11,
+   0.11
+  ],
+  "max": 0.11
+ },
+ {
+  "preset": "curveUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.16,
+   0.18
+  ],
+  "max": 0.18
+ },
+ {
+  "preset": "curveUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   7.89,
+   0.09
+  ],
+  "max": 7.89
+ },
+ {
+  "preset": "inflateTop",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.23,
+   0.0
+  ],
+  "max": 0.23
+ },
+ {
+  "preset": "inflateTop",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.12,
+   0.0
+  ],
+  "max": 0.12
+ },
+ {
+  "preset": "deflateTopInflateBottom",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.14
+  ],
+  "max": 0.14
+ },
+ {
+  "preset": "deflateTopInflateBottom",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corner_err": [
+   0.0,
+   0.0,
+   0.0,
+   0.07
+  ],
+  "max": 0.07
+ }
+]

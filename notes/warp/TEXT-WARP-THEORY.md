@@ -753,3 +753,30 @@ The control point sits at `x = w/2`, so a curved guide is `y = p + q·X(1−X)`:
 presets except Stop, Square, Slant. Elliptic integrals: Warp, Ring and the Warped presets, and
 the cubic guides of the waves and Curve. Arsinh: every parabolic guide (Inflate, Deflate,
 Curve's bottom, the quadratic presets), which is thread T2.
+
+## 11. Which glyphs go in the Lean model, and the Full Block (probes 34–35)
+
+**Policy (user, 2026-11-07).** A glyph enters `Glyph` only if it is *clearly* a geometric
+figure, and then it is that figure. Whether a font stores a clean outline for it is not the
+test: the letter A is not clearly any figure, even though its outline can be read from the
+font file. The circles and half circles qualify because they are clearly meant to be circles
+and half circles. Their shape is idealized (a true ellipse), and the dimensions are what the
+font stores (integer bounding box), which is also what PowerPoint draws.
+
+**█ U+2588 FULL BLOCK** qualifies (clearly a filled rectangle). Segoe UI Symbol stores it as
+one four-point contour, `(-10, -440)–(1931, 1501)` in 2048 units per em: a square of side 1941,
+advance 1921. The corners are stored integers, so there is nothing to idealize. The block is
+20 units wider than its advance, so neighbouring blocks overlap by 20 units and Merge Shapes
+unions them into one contour (two 72 pt blocks: one contour, 135.7383 pt wide, as predicted).
+
+Validation against PowerPoint:
+- **Layout** (`probe_row_block.py`, predictions from `RowCheckBlock.lean`): a row of blocks
+  and circles with sizes 10.7–100 pt, spacing, a superscript, a subscript and a 2 % offset,
+  plain and with Equalize Character Height. Every ink box agrees to 0.0001 pt.
+- **Warps** (`probe_block_warp.py`): a lone block's four corners are (u, v) ∈ {0,1}², so the
+  ruled map predicts them exactly. 36 preset/box cases: 29 are within 0.4 pt (most 0.0), one
+  is at 0.78 pt (Wave: Down in 360 × 216, the waves' usual length shortfall), and 6 miss by
+  7–9 pt. Those 6 are exactly the preset and box combinations where the 48/49 slip already
+  appeared (Warp Up and Warp Down at 360 × 216, Arch: Warped Down, Wave: Down and Double
+  Wave: Up-Down at 288², Curve: Up at 360 × 216), with errors of the same size. Only corners
+  are tested: PowerPoint under-subdivides a block's long edges (§8.1).
