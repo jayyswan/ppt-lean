@@ -494,7 +494,9 @@ close but not bit-exact, so the precise rule is still open. These were ruled out
 **Exceptional sizes** (square boxes of 144, 156, 288, 312, 324 and 576 pt; 288 × 144;
 576 × 288). The fraction is about 0.976, and the estimate is structurally different. No
 piece count and weight of the same family fits both exceptional aspects (5.4 pt at best). The
-trigger is an irregular set of sizes. Unknown.
+trigger is an irregular set of sizes. **Explained in §9.2:** 0.976 ≈ 0.99589 · 48/49, the
+typical estimate with one of 49 pieces dropped, the same slip that shortens straight and
+elliptic guides at some sizes. The trigger is still unknown.
 
 **Conclusion for the model.** `L_est` is a numerical approximation, not a design parameter.
 The recommended idealization is `L_est = L`, the true arc length. The difference is a 0.4 %
@@ -526,3 +528,68 @@ preset. It models the first handle (default, 0 or 20000) with the second handle 
 0. The measured fills (§8.2) and the 6-piece estimate (§8.3) remain the reference for anyone
 comparing a construction with PowerPoint's literal output. For straight edges, rows of short
 glyph edges (§8.4) make PowerPoint's output approach the idealized curve.
+
+## 9. All straight, elliptic and polar presets in Lean (probes 32–33)
+
+`Pptc/TextBox.lean` now models 23 of the 40 gallery presets: the 12 straight ones (Square,
+Stop, Triangle ×2, Chevron ×2, Fade ×4, Slant ×2, Cascade ×2), the 4 elliptic ones (Warp
+Up/Down, Ring: Inside/Outside), the 4 Warped ones (one row of text), and Wave: Down. Left: 7
+Bézier presets, 6 mixed Inflate/Deflate presets, 4 Follow Path presets.
+
+### 9.1 Handles
+
+Each handle may sit at its default or at a stop reached by dragging past the end of its
+range (`WarpPreset.stops`). Measured with real mouse drags (`probe_handle.py`):
+- **Straight handles** store their bound exactly at both ends (Stop: 14286 and 50000; earlier
+  Triangle).
+- **Polar handles** (the Warped presets). Dragged straight outward, a polar handle keeps its
+  default angle exactly (10800000, or 0 for Arch: Warped Down) and stores radius 100000,
+  which the spec pins to 99000. Dragged inward there is no stop. A drop at the centre stored
+  `adj1 = 0, adj2 = 1`, and just past it flips the angle to 0. Short of the centre the radius
+  is wherever the pointer lands (9770 and 20115 at two drops). So the minimum is
+  unreachable, except on **Warped Button**, whose spec pins every radius below 40000 up to
+  40000 (a drop short of the centre stored 0).
+- **Wave: Down's sideways handle** (`adj2`, ±10000) shortens both guides to `(1 − 2|b|)·w` and
+  shifts them `2|b|·w` apart, top and bottom in opposite directions.
+
+### 9.2 Validation (`probes/probe_presets_model.py`, `probe_presets_fill.py`)
+
+`probe_presets_model.py` re-implements `WarpPreset.map` from the Lean text. It agrees with the
+spec-parser guides of `warplab` at every stop to under 0.05 pt. The two exceptions are Warp
+Up at max and Warp Down at min, where the ellipse height is 0. There `warplab`'s angle
+conversion degenerates, the Lean guide is flat, and PowerPoint agrees with Lean (1.8 pt, the
+floor). The probe then compares the model with PowerPoint's baked outline of "◗●◖" (Segoe UI
+Symbol, glyphs idealized): 91 cases, every reachable stop in a 288 pt square box and every
+default in 360 × 216.
+
+- **Floor.** Ring: Outside is checked by the PowerPoint-to-model distance only, because its
+  two ends meet and the seam edges vanish from the merged outline. In the 71 non-Wave cases
+  outside the table below, PowerPoint's outline lies within 0.7 pt of the model and the model
+  within 2.0 pt of PowerPoint's (rms ≤ 0.52). The 2 pt is the font's ◗/◖ not being exact half
+  discs: it is the same at the identity-like Square default. Wave: Down's other 5 cases are
+  within 1.9 / 2.4 pt, the typical `k ≈ 0.995` of §8.3.
+- **Every miss has one cause: 48/49.** In the other 15 cases, fitting a fill fraction per
+  guide (the text spans `k·L` from the start) gives `k = 0.9795 ± 0.0002`, against
+  48/49 = 0.97959, on one guide or both. The other guide fits 1.000. With that fraction every
+  case drops back to the floor (≤ 0.9 pt max, ≤ 0.24 rms):
+
+  | case | guides short | unfitted max (pt) | fitted max (pt) |
+  |---|---|---|---|
+  | Chevron: Up / Down, 360 × 216 | both | 7.35 | 0.21 |
+  | Warp Up min, 288²; Warp Down max, 288² | bottom | 3.9; 5.7 | 0.24; 0.25 |
+  | Warp Up / Down default, 360 × 216 | top | 4.5; 3.9 | 0.55; 0.57 |
+  | Ring: Inside default, 288² and 360 × 216 | top | 6.3; 6.9 | 0.40; 0.86 |
+  | Ring: Outside min 288²; default 360 × 216 | bottom; both | 6.3; 13.2 | 0.36; 0.92 |
+  | Arch: Warped Down default and max, 288² | bottom (outer) | 8.5; 3.8 | 0.19; 0.18 |
+  | Warped Circle default 360 × 216; max 288² | both; bottom | 16.7; 7.5 | 0.37; 0.37 |
+  | Wave: Down default, 288² | both, k = 0.9758 | 6.5 | 0.28 |
+
+  This is F1 §e's span artifact (176.30° = 180° · 48/49), now seen on straight guides, on
+  ellipses and on the waves. Wave: Down's exceptional 0.976 is that slip times the typical
+  Bézier underestimate (0.99589 · 48/49 = 0.9756). Its other stops fit `k ≈ 0.995`, the
+  typical class. Which box sizes trigger the slip is still unknown, and it is per guide.
+- **Idealization.** The model spans the whole guide (`k = 1`), consistent with §8.3. A
+  construction must name its box size and be checked by `probe_presets_model.py`.
+
+New number threads: none. New curve families enter through the elliptic (trochoid, T1) and
+polar (spiral, T3) presets, which are now in the Lean model with all their handle stops.
