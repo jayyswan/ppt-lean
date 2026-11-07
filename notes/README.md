@@ -14,6 +14,7 @@ One folder per topic, named for the construction or investigation it belongs to:
 | `algebraic/` | the `PLAN-algebraic` programme (whole/non-total-real, Theorem H/W) |
 | `exponential-motives/` | literature search on exponentiation of coefficient systems |
 | `hypergeometric/` | hypergeometric / Gauss, Kummer, Pfaff route |
+| `lambert/` | Lambert W: plan for the lower branch `W₋₁` |
 | `octic/` | octic resolvent, trace form, root extraction |
 | `offset-inversion/` | offset curves, offinverse, Whewell/tangent angle, soundness defects |
 | `ppt-curves/` | PowerPoint curve primitives (tan curves, Béziers, `restrict`) |
