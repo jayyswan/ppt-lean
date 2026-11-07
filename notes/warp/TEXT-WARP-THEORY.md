@@ -423,3 +423,15 @@ reduced amplitude.) For ■ alone, scaling the guide's offset by λ ≈ 0.58 bri
 2 pt rms. For ●, the best squish is **λ = 1.000** under arc-length tracing, at 0.13 pt rms. The
 shear model stays at 1.7 pt rms whatever λ is. So the warp is not squished, and the flattening
 is specific to how PowerPoint draws long straight edges.
+
+**The calibrated "squashed cubic" model** (`probe_friend_model.py`). The model is
+`y = chord + λ·(guide's x³ − c·x)`, with λ calibrated on ■ (0.607, at c = 0.95) and then
+applied elsewhere:
+
+| Shape | λ from ■ | Best λ, c for that shape | Arc length |
+|---|---|---|---|
+| ● | 8.5 rms / 15.7 max | λ = 0.99, c = 1.00: 2.4 / 5.8 | 0.13 / 0.38 |
+| "WAVE" (Arial) | 5.6 / 15.5 | λ = 0.99, c = 1.01: 2.9 / 7.4 | 0.38 / 2.0 |
+
+The squash calibrated on the square makes every other shape worse. Each shape's own best fit
+is no squash and `x³ − x`. Arc-length spacing is 5–20× closer.
