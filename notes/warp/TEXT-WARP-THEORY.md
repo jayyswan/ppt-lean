@@ -1110,7 +1110,46 @@ the second-kind part and an algebraic boundary term `tan φ·Δ(φ)` removed, al
 For the guide `y = x³`, `J(x) = x√(1 + 9x⁴)/3 + (2/3)∫dx/√(1 + 9x⁴)`: pure first kind plus an
 algebraic boundary term, and a slide preset's trochoid carries `J(x)` in its height. The crossing
 of that trochoid with a `poly_graph` inverts `J(x) − (polynomial)`, but the boundary term is
-`x√(1 + 9x⁴)/3`, not a polynomial. Open routes, none yet tried: (i) a drawn curve supplying
+`x√(1 + 9x⁴)/3`, not a polynomial. Open routes (route (i)'s pure-cubic form was tried in §14.6 and closed): (i) a drawn curve supplying
 that algebraic term (offsets give `1/√Q` terms); (ii) a mismatch preset (cubic over parabola)
 that puts two different arc-length inversions in one image; (iii) a numerical search over
 presets and glyph edges for a trochoid height of the form `F + polynomial`.
+
+### 14.6 Route 1 tried: the pure cubic guide (`probes/t_route1.wl`)
+
+**Result: closed in this form.** Four findings.
+
+1. **The boundary term is a tangent segment.** For `y = x³`, `J(T) = (T/3)√(1 + 9T⁴) + (2/3)Φ(T)`
+   with `Φ(T) = ∫₀^T dx/√(1 + 9x⁴)` (checked to 29 digits at `T = 0.8`). The tangent at
+   `(T, T³)` meets the x-axis at `x = 2T/3`, at distance exactly `(T/3)√(1 + 9T⁴)` from the point:
+   the boundary term *is* the tangent length to the x-axis. The involute point of the cubic,
+   with the string unwound from the origin, lies on the same tangent at distance `J(T)` from the
+   point, so the first-kind quantity is the distance between the involute point and the tangent's
+   x-axis intercept: `J − B = (2/3)Φ(T)`. This is a geometric picture of exactly what the
+   library's obstruction says laying out a length cannot do. Whether an involute-type operation
+   can be drawn, and used to invert `Φ`, is open; I have not shown that it can.
+
+2. **No preset has a pure cubic guide.** For an even quartic `Q = aZ⁴ + bZ² + c`,
+   `∫√Q dZ = Z√Q/3 + (1/3)∫(bZ² + 2c)/√Q dZ` (checked numerically). The second-kind part
+   `∫Z²/√Q` carries the coefficient `b/3`, which no algebraic term can cancel, and `b = 0` exactly
+   when the guide is a pure cubic, `g′ = k(Z − z₀)²`. The Wave guides have `g′ = k(3Z² − 1)`,
+   `b = −6k² ≠ 0`; Curve: Up/Down's top cubic has two distinct critical points (discriminant
+   `63/4 > 0`); every other preset has a line, conic or parabola. So the heights of the
+   trochoids available carry both a first-kind and a second-kind part, in addition to a boundary term.
+
+3. **The correction a glyph can supply is the wrong shape (proved).** A circle (or ellipse) glyph
+   with centre `(u₀, v₀)` and radius `r`, crossed with a drawn `poly_graph` `y = P(x)`, gives
+   `J(X) = L·u₀ ± (L/τ)·√(τ²r² − p(X)²)`, with `p(X) = P(X) − g(X) − τv₀` a polynomial. To
+   match the boundary term `(X/3)√(1 + 9c²X⁴)` one needs the identity
+   `p² + (κ₀X)² + (3cκ₀X³)² = (τr)²`, `κ₀ = τ/(3L)`: a sum of squares of three real polynomials,
+   two of them non-constant, equal to a constant. That is impossible over ℝ (the leading
+   coefficient of a sum of squares of real polynomials is positive). The box-extreme version gives
+   (derived by hand, not machine-checked) `J(X) = L·u₀ + ρL²g′/√(τ² + (τ² + L²)g′²)`, which is
+   not of the boundary form either.
+
+4. **What this leaves.** The natural next steps are not preset choices. They are either (a) a
+   source of a pure cubic guide together with a way to read off its tangent length (an involute
+   or similar new operation), or (b) routes 2 and 3 of §14.5: a mismatch preset, which brings
+   two different arc-length inversions into one image, and a numerical search for a trochoid height
+   of the form `F + polynomial`. The base curve `y = a·x³` (a `power_law`) already exists in
+   the class, so the pure cubic itself is available as a drawn curve but not as a text guide.
