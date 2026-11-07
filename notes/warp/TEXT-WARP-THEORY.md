@@ -193,6 +193,10 @@ shape might also give numbers the class does not reach yet. None is established.
   - Check against what `rotate` with P-constructible angles already provides.
 - **T4. Arc-length-sheared Bézier.** Hyperelliptic arc length inside a curve. Same question
   as T1, with a Bézier arc length in place of `E`.
+- **T6. Arc length of a warped edge (§13).** The `arc_length` of the image of a slanted glyph
+  edge between two P-constructible corners is a number in the class whose integrand has a
+  nested radical. For ◢ under Warp Up in a 4 × 4 box it is 5.5122674859237737761…, a period of
+  a genus-5 cover with an elliptic quotient. Candidate new number, newness unproved.
 - **T5. Algebraic engines.** The straight-guide families (egg quartics, piriform, Gerono lobe)
   are one-parameter families of rational quartics. Each could be a new rational-coefficient
   engine for the open degree 9–10 cases in `../algebraic/SUMMARY.md`. That is unlikely to help
@@ -873,3 +877,59 @@ Validation against PowerPoint:
   1.77, Warp Down 1.78, Ring: Outside 0.99, Arch: Warped 0.52, Wave: Down 1.30, Inflate 1.82,
   Deflate 1.81, Curve: Up 1.63, Inflate: Top 1.47; Square itself 1.82). PowerPoint-to-model:
   ≤ 0.9 pt. So the elliptic trochoid pieces of Warp Up/Down are what PowerPoint draws.
+
+## 13. Thread T6: the arc length of a warped edge (`probes/t6_warped_edge_length.wl`)
+
+T1 (§12) asks whether a *root* of a Kepler-type equation is already reachable. T6 is a more
+direct source of a candidate new number, and it needs no equation solving. It uses the
+`arc_length` constructor on a curve that only `text` provides.
+
+**The number.** Warp Up, 4 × 4 box, handle 3/4 (ellipse centre (2, 1), semi-axes (2, 1), shear
+`(0, 3)`). The image of ◢'s hypotenuse `v = 1 − u` (or ◣'s, `v = u`) runs from the corner
+`(0, 4)` to the corner `(4, 1)`, both rational. By `ψ → π − ψ` both hypotenuses have the same
+length:
+
+    N₁ = ∫₀^π √( 4 sin²ψ + (cos ψ + κ·√(1 + 3 sin²ψ))² ) dψ     (◢; ◣ has − in place of +)
+       = 5.51226748592377377613798025362061525306584914294369037519499…
+
+with `κ = 3/L`, `L = 2E(−3)`. The straight chord between the corners is 5. `arc_length`
+accepts this arc: it is an injective, differentiable, integrable tracing of a piece of the
+outline of `text` with P-constructible plane endpoints. So `N₁` is in the class. Inverting it
+by `arc_of_length` on the same edge gives, for a P-constructible length, a point on the warped
+edge: an inverse of this integral, the analogue for T6 of the inverse elliptic integral that
+the ellipse already gives.
+
+**Why it is not an elliptic integral.** Write `sp(ψ) = √(1 + 3 sin²ψ)`, the ellipse's own speed
+(the integrand of `L`). The warped edge's speed satisfies (checked to 10⁻¹⁰)
+
+    speed² = sp·((1 + κ²)·sp − 2κ cos ψ),
+
+a square root inside a square root. In `c = cos ψ`: `P + Q√R` with `P = (1+κ²)(4 − 3c²)`,
+`Q = −2κc`, `R = 4 − 3c²`. It would denest only if `P² − Q²R` were a square, and
+
+    P² − Q²R = (3c² − 4)·(3c² − 4 − 8κ² + 10c²κ² − 4κ⁴ + 3c²κ⁴),
+
+The second factor is `(3κ² + 1)(κ² + 3)·c² − 4(1 + κ²)²`, linear in `c²` with a non-square
+coefficient product, and `3c² − 4` is a different factor, so `P² − Q²R` is not a square and the
+radical is genuinely nested. A hand Riemann–Hurwitz count (not machine-checked): the curve `u² = 1 − c²`, `v² = 4 − 3c²` has genus 1; `w² = v·((1+κ²)v − 2κc)`
+adds a double cover branched over the 4 zeros of `v` and the 4 zeros of `(1+κ²)v − 2κc`, so the
+cover has genus `2·1 − 1 + 8/2 = 5` for generic κ. The involution `u ↦ −u` has an elliptic
+quotient (genus 1: branched at 4 points), and the differential `w·dc/u` is anti-invariant, so it
+lives on the 4-dimensional Prym part, not on an elliptic curve.
+
+**Control.** If the guide is a circle (`A = B`), `sp` is constant, the nested radical
+disappears, and the length is an ordinary elliptic integral: for semi-axes (1, 1) and
+`κ = 3/π`, `∫₀^π √(1 + κ² − 2κ cos ψ) dψ = 2√(1 + κ² + 2κ)·E(4κ/(1 + κ² + 2κ)) =
+3.91469832138551893821403649496…`, the numeric integral and closed form agreeing to 30 digits.
+So the new structure comes from the guide being a genuine ellipse.
+
+**Status.** This is a candidate, not a proof of newness. The old class already holds hyperelliptic
+arc lengths (a `poly_graph` of degree 6 has `√(1 + p′²)` with a degree-10 radicand, genus up to 4),
+so the genus alone does not separate them: a genus-5 cover's Prym could still split into
+curves whose periods the old class has. What would decide it:
+1. Compute the Prym of the genus-5 cover and test whether it is isogenous to a product of
+   elliptic curves, and if so which ones; compare with the periods of the old curves.
+2. Search for a closed form for `N₁` (e.g. integer relations among `N₁` and `E`, `K` at the
+   moduli of the quotient curve).
+3. A proof of newness would need transcendence results for such periods and is out of reach;
+   a reduction to old constructors is the only outcome that can be proved.
