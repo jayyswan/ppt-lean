@@ -193,6 +193,9 @@ shape might also give numbers the class does not reach yet. None is established.
   - Check against what `rotate` with P-constructible angles already provides.
 - **T4. Arc-length-sheared Bézier.** Hyperelliptic arc length inside a curve. Same question
   as T1, with a Bézier arc length in place of `E`.
+- **Targets (§14).** Inverse elliptic integrals and a new operation: the first-kind inverse is the
+  open one; algebraic text curves provably cannot supply it; the elliptic Kepler inverse and the
+  Warp Up diagonal constant `δ_W = 0.46027847…` are constructed there.
 - **T6. Arc length of a warped edge (§13).** The `arc_length` of the image of a slanted glyph
   edge between two P-constructible corners is a number in the class whose integrand has a
   nested radical. For ◢ under Warp Up in a 4 × 4 box it is 5.5122674859237737761…, a period of
@@ -1004,3 +1007,110 @@ harder. (2) Search for integer relations between `N₁` and the other periods of
 differential (the curve has four independent periods).
 (If the comparison above is not enough:) a proof of newness would need transcendence results for such periods and is out of reach;
    a reduction to old constructors is the only outcome that can be proved.
+
+## 14. Targets: a new operation, a named constant, and the inverse elliptic integral (2026-11-07)
+
+User's definition of a target: **a new operation or named constant that we can P-construct;
+the inverse elliptic integral is also a target.** This section records what the library already
+has, what the warp machinery can and cannot supply, and the operation and constant constructed.
+
+### 14.1 Where the inverse elliptic integrals stand in Lean
+
+From `Pptc/Jacobi.lean` (section Outlook) and `Pptc/JacobiAddition.lean`:
+- Forward integrals `F`, `E`, `Π` at P-constructible arguments: done.
+- Inverse of the second kind, the amplitude `ellipticEAm`: done (`arc_of_length` along the
+  ellipse, then the box).
+- Inverse of the first kind, the Jacobi amplitude `jacobiAm`, hence `sn`, `cn`, `dn` at an
+  arbitrary P-constructible argument `u`: **missing**. They are P-constructible exactly when
+  the amplitude is, at every `u` presented as `F(φ)` for a P-constructible `φ`, and it
+  suffices to fill a neighbourhood of 0.
+- The recorded obstruction: `F` is not the arc length of any drawable curve. It is the integral
+  of a differential with *no poles*, while an unbounded or elliptic drawn curve has a pole at
+  infinity (a boundary term or a second-kind part). The most economical fix named there is a
+  base curve with first-kind arc length, e.g. Serret's curves (the lemniscate moves at speed
+  `√2/√(1 + t⁴)`).
+
+### 14.2 The algebraic text curves cannot supply it (proved)
+
+**Claim.** Let `γ(θ) = (x(θ), y(θ))` have `x, y` real trigonometric polynomials and
+non-constant speed. Then its arc-length differential is never holomorphic, so its arc length is
+never a first-kind integral and cannot be inverted to give `am`.
+
+**Proof.** `speed² = T(θ)` is a real trigonometric polynomial of exact degree `d ≥ 1`. With
+`z = e^{iθ}`, `T = z⁻ᵈ R(z)`, `R` of degree `2d`, `R(0) = c₋d = c̄_d ≠ 0`. Then
+`√T dθ = √R · z^{−d/2 − 1} dz / i`: at `z = 0` this has a pole (order `d/2 + 1` on the curve
+`w² = R`), so it is not holomorphic. By contrast the first-kind differential is
+`dθ/√(1 − m sin²θ) = dz/(i√R)`: its speed is `1/√T`, the *reciprocal* shape. ∎
+
+Checked in Wolfram (`degInfo`): the ellipse has `d = 2` (leading coefficient `(B² − A²)/4`,
+nonzero off a circle), a glyph circle under Fade: Right has `d = 4` (`a²h²r⁴`), the Gerono
+lobe has `d = 4` (`1/4`). A circle has `d = 0` (constant speed, linear arc length).
+
+**Consequence.** Every text curve from a straight-guide preset (Square, Stop, Triangle, Chevron,
+Fade, Slant, Cascade) with an ellipse or circle glyph has trigonometric-polynomial speed², so
+none gives a first-kind arc length; a straight polygon edge goes to a parabola arc whose length
+is elementary. Serret's curves are rational with denominators such as `1 + t⁴`, not images of
+these under bilinear maps. Only the part of the machinery that places points by arc length on
+a *curved* guide (`arcTrace`) can matter for `F`.
+
+### 14.3 The new operation: the elliptic Kepler inverse
+
+Take Warp Up (top guide the upper half of the ellipse with centre `(A, y_c)`, `y_c = d`, semi-axes
+`A = w/2` and `B = d = (1 − a)h`; `B_guide = T + (0, τ_y)` with `τ_y = h − d`), `L` the half-length and
+`s(ψ) = ∫₀^ψ √(A² sin²θ + B² cos²θ) dθ = B·E(ψ | μ)`, `μ = −(A² − B²)/B²`. A glyph edge
+`v = σu + c` goes to
+
+    x(ψ) = A(1 − cos ψ),    y(ψ) = y_c − B sin ψ + τ_y·(σ·s(ψ)/L + c),
+
+the elliptic trochoid. Meeting the line `y = λx + μ₀` (`μ₀` an intercept) gives
+
+    Φ(ψ) := κ·E(ψ | μ) − B sin ψ + λA cos ψ = c₀,
+    κ = τ_y σ B / L,    c₀ = μ₀ + λA − y_c − τ_y c.
+
+**Definition (elliptic Kepler inverse).** `Kep(κ, B, λA, μ; c₀)` is the unique `ψ ∈ [0, π]` with
+`Φ(ψ) = c₀`, when `Φ` crosses `c₀` exactly once. (For a circle, `μ = 0`, `E(ψ) = ψ`, and this is the
+classical Kepler equation `ψ − e sin ψ = M` up to constants, solved by the `sine` constructor.)
+
+**P-constructibility (paper argument).** The warped edge is a piece of `T.outline` for the
+`text` constructor, so it is a `PConstructibleCurve`; the line is a `poly_graph`; `restrict` to a
+rational window around the crossing leaves exactly one point; `inter_x`/`inter_y` give `x*`, `y*`;
+and `cos ψ* = 1 − x*/A`, `sin ψ*` follow by field operations and `sqrt`. The coefficient `κ`
+contains `1/L`, which is `arc_length` of the half-ellipse between rational endpoints. So `Kep` at
+P-constructible arguments is P-constructible.
+
+**Not in Lean.** The statement needs the analytic facts about the `text` outline (the
+intersection is a single point; `arcTrace` is the inverse of a strictly increasing arc length),
+which have not been written. Whether `Kep` reduces to the old constructors is open (T1, §12).
+
+### 14.4 The named constant: the Warp Up diagonal constant
+
+**Definition.** Put ◢ (U+25E2, Segoe UI Symbol) in a square text box (any square size on the
+0.1 in grid), apply Transform ▸ Warp Up at its default handle (stored `85714`), and draw the
+box's diagonal from the top-left corner to the bottom-right corner. The hypotenuse of the warped
+triangle crosses that diagonal exactly once (one sign change on a 2001-point grid). Let `δ_W` be
+the crossing's horizontal position as a fraction of the box width.
+
+    ψ*  = 1.49126947866372197223069719860257988051778674…   (ellipse angle at the crossing)
+    δ_W = 0.460278476774386745602319370729…
+
+At 288 pt the crossing is `x = y = 132.560201311023382733467978770088…` pt, and `L = 313.7335155363…`.
+`δ_W` is the same to 30 digits for boxes of 72, 288 and 1000 pt, as scaling requires (everything
+scales with the box). It is solved from `Kep` with all inputs UI-valid (default handle,
+square box, one glyph). At the min handle stop (66667) the constant is `0.3943289301622131448248201…`.
+Integer-relation search on `cos ψ*` finds no polynomial relation of degree ≤ 8 with coefficients
+≤ 10⁵ (consistent with a transcendental value, not evidence of newness). Script:
+`probes/t_kepler_constant.wl`.
+
+### 14.5 What this does and does not do for the first-kind inverse
+
+It gives an inversion of the type the library says is missing, **`E`-type arc length minus an
+algebraic correction**, but for the *second* kind on an ellipse, where `E` was already invertible.
+The first-kind amplitude needs the arc length `J` of a Bézier or polynomial graph together with
+the second-kind part and an algebraic boundary term `tan φ·Δ(φ)` removed, all in one variable.
+For the guide `y = x³`, `J(x) = x√(1 + 9x⁴)/3 + (2/3)∫dx/√(1 + 9x⁴)`: pure first kind plus an
+algebraic boundary term, and a slide preset's trochoid carries `J(x)` in its height. The crossing
+of that trochoid with a `poly_graph` inverts `J(x) − (polynomial)`, but the boundary term is
+`x√(1 + 9x⁴)/3`, not a polynomial. Open routes, none yet tried: (i) a drawn curve supplying
+that algebraic term (offsets give `1/√Q` terms); (ii) a mismatch preset (cubic over parabola)
+that puts two different arc-length inversions in one image; (iii) a numerical search over
+presets and glyph edges for a trochoid height of the form `F + polynomial`.
