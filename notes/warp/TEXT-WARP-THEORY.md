@@ -1153,3 +1153,51 @@ presets and glyph edges for a trochoid height of the form `F + polynomial`.
    two different arc-length inversions into one image, and a numerical search for a trochoid height
    of the form `F + polynomial`. The base curve `y = a·x³` (a `power_law`) already exists in
    the class, so the pure cubic itself is available as a drawn curve but not as a text guide.
+
+### 14.7 Route 3 tried: which trochoid heights are "first kind plus algebraic" (`probes/t_route3.wl`)
+
+**Result: none. A theorem settles every preset at once.**
+
+**Reduction (verified to 24 digits on two random quartics).** For `Q = q₀ + q₁X + q₂X² + q₃X³ + q₄X⁴`,
+
+    ∫√Q dX = [(X/3 + q₃/(12 q₄))·√Q] + ∫ (c₀ + c₁X + c₂X²)/√Q dX,
+    c₂ = (q₂ − 3q₃²/(8q₄))/3,  c₁ = (3q₁/2 − q₂q₃/(4q₄))/3,  c₀ = (2q₀ − q₁q₃/(8q₄))/3.
+
+The three integrands are the three classes on the elliptic curve `w² = Q`: `dX/√Q` is first
+kind, `X dX/√Q` third kind (poles at the two points at infinity), `X² dX/√Q` second kind.
+
+**Theorem.** For a cubic guide `y = g(x)` with `Q = 1 + g′²`, the arc length `J` is a multiple of
+a first-kind integral plus an algebraic function iff `c₁ = c₂ = 0`, and (solved in Wolfram, with
+`g′ = αx² + βx + γ`) that holds iff `γ = β²/(4α)`, i.e. iff **`g′` is a perfect square
+`α(x − x₀)²`**: the pure, possibly shifted, cubic. Otherwise `J` carries a second-kind part
+(`c₂ ≠ 0`) and, if `Q` is not even about its centre, a third-kind part as well.
+
+**Applied to the presets.** `g′` is a perfect square iff the discriminant of the quadratic `g′`
+vanishes. The Wave guide has `g′ ∝ 3Z² − 1` (`Z = 2x/w − 1`), discriminant `12 ≠ 0` in every
+box and handle setting; the Curve top cubic has `g′ ∝ 3/4 − (9/2)X + (3/2)X²`, discriminant
+`63/4 ≠ 0`; these are shape constants, unaffected by the handle, the box ratio, or the Wave's
+sideways handle. Every other preset has a line, conic or parabola for a guide. So:
+
+> **No crossing or extreme of any slide-preset trochoid with any algebraic correction can invert
+> a first-kind integral.** This covers poly_graph crossings (§14.6), glyph-circle crossings and
+> extremes, and any other drawn algebraic curve.
+
+For the Wave guide in a square box at the default handle (`K = 5ah/w = 0.625`) the height is
+`g + κ·J` with `J = boundary + (2c/3)F + (b/3)Ê` on the even quartic `9K²Z⁴ − 6K²Z² + 1 + K²`;
+the ratio of the second-kind to first-kind coefficient is `b/(2c) = −3K²/(1 + K²) = −0.8427`,
+never 0 for `K ≠ 0`.
+
+**Why combining two guides does not rescue it.** The even quartics of Wave and Curve have
+shape invariant `b²/(ac)` ranging over `(0, 4)` in both families, so with a continuum of
+parameters one could put both on the same elliptic curve (the UI grid gives only isolated values), with the heights both linear in `x` after a translation
+and scaling. But the reduction coefficients of one quartic are proportional to `(2c, b)`, so the
+two heights carry the same combination `2c·F + b·Ê` (up to a constant) and no linear
+combination eliminates `Ê`. Ellipse guides sit on a different real form of the curve (two real
+branch points when `A > B`, four when `A < B`, against none for the cubic guides), so they cannot
+share its variable without an imaginary scaling.
+
+**What this leaves.** The first-kind inverse is not reachable from a slide-preset trochoid by
+crossings or extremes. Still open: route 2 (a mismatch preset, with two different arc-length
+inversions in one image, which is not a slide preset and is not covered by the theorem), a
+construction that supplies a pure cubic guide or an involute (§14.6), or a non-text source of a
+first-kind curve (Serret's curve) as a new base curve.
