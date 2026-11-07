@@ -39,6 +39,8 @@ foreground; do not run it while someone else is using the screen.
 | `probe_row_model.py LEAN_EVAL` | end-to-end: Lean row model (`#eval`) vs PowerPoint, sizes/offsets/spacing/Equalize |
 | `probe_presets_model.py [PRESET ...]` | probe 32: Lean `WarpPreset.map` of every modelled preset at every reachable handle stop vs PowerPoint (`presets_model.json`: first 23 presets; `presets_model2.json`: the 7 further Bézier presets; `presets_model3.json`: the 6 quadratic presets; set `PRESETS_OUT` to name a new run's file) |
 | `probe_presets_fill.py PRESET H1 H2 W H ...` | probe 33: per-guide fill fraction for the misses of probe 32; all fit 48/49 (`presets_fill.json`, `presets_fill2.json`) |
+| `probe_row_block.py rowcheck_block_out.txt` | probe 34: Full Block in a mixed row (size, spacing, offset, Equalize) vs `RowCheckBlock.lean` predictions |
+| `probe_block_warp.py` | probe 35: a lone Full Block's corners through 18 presets in two boxes, plus the two-block overlap (`block_warp.json`) |
 
 Results of the UI-input probe are in `ui_inputs.json`.
 
