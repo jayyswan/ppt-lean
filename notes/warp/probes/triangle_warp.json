@@ -1,0 +1,534 @@
+[
+ {
+  "preset": "triangleUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 2.46,
+  "edge_rms": 1.3
+ },
+ {
+  "preset": "triangleUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.32,
+  "edge_rms": 0.65
+ },
+ {
+  "preset": "square",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.68,
+  "edge_rms": 0.99
+ },
+ {
+  "preset": "square",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.73,
+  "edge_rms": 1.02
+ },
+ {
+  "preset": "stop",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 2.25,
+  "edge_rms": 1.28
+ },
+ {
+  "preset": "stop",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 0.95,
+  "edge_rms": 0.53
+ },
+ {
+  "preset": "fadeRight",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 2.58,
+  "edge_rms": 1.6
+ },
+ {
+  "preset": "fadeRight",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.97,
+  "edge_rms": 1.18
+ },
+ {
+  "preset": "slantUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.68,
+  "edge_rms": 0.98
+ },
+ {
+  "preset": "slantUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.73,
+  "edge_rms": 1.02
+ },
+ {
+  "preset": "warpUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.4,
+   0.4,
+   0.0
+  ],
+  "edge_model_to_ppt": 8.04,
+  "edge_rms": 4.67
+ },
+ {
+  "preset": "warpUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   7.56,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 9.7,
+  "edge_rms": 6.06
+ },
+ {
+  "preset": "warpDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.4,
+   0.4,
+   0.0
+  ],
+  "edge_model_to_ppt": 7.98,
+  "edge_rms": 4.7
+ },
+ {
+  "preset": "warpDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   7.56,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 7.59,
+  "edge_rms": 3.95
+ },
+ {
+  "preset": "ringInside",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   14.98,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 14.98,
+  "edge_rms": 1.98
+ },
+ {
+  "preset": "ringInside",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   16.59,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 16.59,
+  "edge_rms": 1.68
+ },
+ {
+  "preset": "ringOutside",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 3.53,
+  "edge_rms": 1.7
+ },
+ {
+  "preset": "ringOutside",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   16.59,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 5.33,
+  "edge_rms": 2.18
+ },
+ {
+  "preset": "archWarped",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.06,
+   0.03,
+   0.0
+  ],
+  "edge_model_to_ppt": 3.88,
+  "edge_rms": 2.21
+ },
+ {
+  "preset": "archWarped",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.05,
+   0.02,
+   0.0
+  ],
+  "edge_model_to_ppt": 3.68,
+  "edge_rms": 1.85
+ },
+ {
+  "preset": "archWarpedDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.02,
+   9.29,
+   0.0
+  ],
+  "edge_model_to_ppt": 4.36,
+  "edge_rms": 2.79
+ },
+ {
+  "preset": "archWarpedDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.01,
+   0.05,
+   0.0
+  ],
+  "edge_model_to_ppt": 5.33,
+  "edge_rms": 2.52
+ },
+ {
+  "preset": "warpedCircle",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.03,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 3.89,
+  "edge_rms": 2.03
+ },
+ {
+  "preset": "warpedCircle",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   18.72,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 18.72,
+  "edge_rms": 2.1
+ },
+ {
+  "preset": "waveDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   7.98,
+   7.98,
+   0.0
+  ],
+  "edge_model_to_ppt": 13.45,
+  "edge_rms": 8.45
+ },
+ {
+  "preset": "waveDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.78,
+   0.78,
+   0.0
+  ],
+  "edge_model_to_ppt": 7.51,
+  "edge_rms": 4.97
+ },
+ {
+  "preset": "doubleWaveUpDown",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   7.19,
+   7.19,
+   0.0
+  ],
+  "edge_model_to_ppt": 6.26,
+  "edge_rms": 3.42
+ },
+ {
+  "preset": "doubleWaveUpDown",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.34,
+   0.34,
+   0.0
+  ],
+  "edge_model_to_ppt": 2.05,
+  "edge_rms": 1.3
+ },
+ {
+  "preset": "inflate",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.21,
+   0.21,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.66,
+  "edge_rms": 0.87
+ },
+ {
+  "preset": "inflate",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.11,
+   0.11,
+   0.0
+  ],
+  "edge_model_to_ppt": 1.7,
+  "edge_rms": 0.91
+ },
+ {
+  "preset": "deflate",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.21,
+   0.21,
+   0.0
+  ],
+  "edge_model_to_ppt": 5.9,
+  "edge_rms": 3.89
+ },
+ {
+  "preset": "deflate",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.11,
+   0.11,
+   0.0
+  ],
+  "edge_model_to_ppt": 3.44,
+  "edge_rms": 2.25
+ },
+ {
+  "preset": "curveUp",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.16,
+   0.18,
+   0.0
+  ],
+  "edge_model_to_ppt": 11.11,
+  "edge_rms": 6.98
+ },
+ {
+  "preset": "curveUp",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   7.89,
+   0.09,
+   0.0
+  ],
+  "edge_model_to_ppt": 7.89,
+  "edge_rms": 4.7
+ },
+ {
+  "preset": "inflateTop",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.23,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 4.86,
+  "edge_rms": 2.89
+ },
+ {
+  "preset": "inflateTop",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.12,
+   0.0,
+   0.0
+  ],
+  "edge_model_to_ppt": 2.44,
+  "edge_rms": 1.44
+ },
+ {
+  "preset": "deflateTopInflateBottom",
+  "box": [
+   288.0,
+   288.0
+  ],
+  "corners": [
+   0.0,
+   0.14,
+   0.0
+  ],
+  "edge_model_to_ppt": 4.03,
+  "edge_rms": 2.35
+ },
+ {
+  "preset": "deflateTopInflateBottom",
+  "box": [
+   360.0,
+   216.0
+  ],
+  "corners": [
+   0.0,
+   0.07,
+   0.0
+  ],
+  "edge_model_to_ppt": 2.2,
+  "edge_rms": 1.3
+ }
+]

@@ -1,0 +1,11 @@
+{'preset': 'warpUp', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.77, 'slant_rms': 0.97, 'vert_max': 1.65, 'base_max': 0.55, 'ppt_to_model_max': 0.89}
+{'preset': 'warpDown', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.78, 'slant_rms': 0.98, 'vert_max': 1.65, 'base_max': 0.55, 'ppt_to_model_max': 0.89}
+{'preset': 'ringOutside', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 10, 'slant_max': 0.99, 'slant_rms': 0.48, 'vert_max': 0.75, 'base_max': 0.64, 'ppt_to_model_max': 0.86}
+{'preset': 'archWarped', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 0.52, 'slant_rms': 0.28, 'vert_max': 0.46, 'base_max': 0.15, 'ppt_to_model_max': 0.22}
+{'preset': 'waveDown', 'box': (360.0, 216.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.3, 'slant_rms': 0.72, 'vert_max': 1.21, 'base_max': 0.78, 'ppt_to_model_max': 0.76}
+{'preset': 'inflate', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.82, 'slant_rms': 0.92, 'vert_max': 1.81, 'base_max': 0.21, 'ppt_to_model_max': 0.72}
+{'preset': 'deflate', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.81, 'slant_rms': 0.82, 'vert_max': 1.82, 'base_max': 0.21, 'ppt_to_model_max': 0.74}
+{'preset': 'curveUp', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.63, 'slant_rms': 0.71, 'vert_max': 1.51, 'base_max': 0.21, 'ppt_to_model_max': 0.63}
+{'preset': 'inflateTop', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.47, 'slant_rms': 0.77, 'vert_max': 1.45, 'base_max': 0.19, 'ppt_to_model_max': 0.59}
+{'preset': 'triangleUp', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.87, 'slant_rms': 0.8, 'vert_max': 1.79, 'base_max': 0.19, 'ppt_to_model_max': 0.74}
+{'preset': 'square', 'box': (288.0, 288.0), 'N': 8, 'size': 36.0, 'ncontours': 8, 'slant_max': 1.82, 'slant_rms': 1.06, 'vert_max': 1.81, 'base_max': 0.19, 'ppt_to_model_max': 0.72}

@@ -41,6 +41,9 @@ foreground; do not run it while someone else is using the screen.
 | `probe_presets_fill.py PRESET H1 H2 W H ...` | probe 33: per-guide fill fraction for the misses of probe 32; all fit 48/49 (`presets_fill.json`, `presets_fill2.json`) |
 | `probe_row_block.py rowcheck_block_out.txt` | probe 34: Full Block in a mixed row (size, spacing, offset, Equalize) vs `RowCheckBlock.lean` predictions |
 | `probe_block_warp.py` | probe 35: a lone Full Block's corners through 18 presets in two boxes, plus the two-block overlap (`block_warp.json`) |
+| `probe_row_triangle.py rowcheck_triangle_out.txt` | probe 36: Lower Right Triangle in a mixed row vs `RowCheckTriangle.lean` predictions |
+| `probe_triangle_warp.py` | probe 37: a lone triangle's corners and slanted edge through 19 presets in two boxes (`triangle_warp.json`) |
+| `probe_triangle_row.py [N] [size]` | probe 38: a row of N triangles (short slanted edges) through 11 presets (`triangle_row.json`) |
 
 Results of the UI-input probe are in `ui_inputs.json`.
 
