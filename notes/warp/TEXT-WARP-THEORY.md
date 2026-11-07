@@ -361,3 +361,28 @@ user-facing. In particular, "Pour" corresponds to the gallery's *Warped* items a
 
 COM's `WarpFormat` reads back 0 for the four Follow Path items, although the file stores
 the presets above.
+
+## 8. Wave: Down vs the "x³ − x shear" model (`probes/probe_wave_overlay.py`)
+
+At the default handles the Wave: Down guide is exactly an affine copy of `x³ − x`. Its
+control points are evenly spaced in x and offset (0, −d, +d, 0). The question is how text
+follows it. The word "WAVE" (Arial 72 pt) was baked and compared with two models, each with
+its own fitted fill factor `k`:
+
+| Box (pt) | Shear (lift by the guide, x kept), rms / max | Arc length, rms / max | k (arc length) |
+|---|---|---|---|
+| 288 × 288 | 1.96 / 5.6 | **0.51 / 3.0** | 0.976 |
+| 288 × 432 | 2.64 / 10.3 | **0.76 / 4.5** | 0.995 |
+| 504 × 144 | 0.52 / 1.6 | **0.30 / 1.6** | 0.999 |
+
+Arc-length tracing wins everywhere, and by a factor of 3–4 when the wave is steep relative to
+the box. In a wide, shallow box the two nearly coincide. Figures: `probes/wave_overlay_WAVE_*.png`.
+
+New, and open:
+- **The fill factor depends on the box** (0.976 square, 0.995 tall, 0.999 wide). It is not a
+  constant property of the preset.
+- **The arc-length model's residual is still 3–4.5 pt max** in the steep boxes, larger than
+  for the straight and polar presets.
+
+So Wave's exact rule is not pinned down yet. The likeliest explanation is that PowerPoint
+estimates the Bézier's length approximately, but that is untested.
