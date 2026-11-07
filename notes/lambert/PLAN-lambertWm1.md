@@ -1,6 +1,7 @@
 # Plan: the lower branch `W₋₁` of the Lambert W function is P-constructible
 
 Written 2026-11-07. Target: a named operation the library does not yet have.
+Tracked in GitHub issue #9.
 `Pptc/Basic.lean` (section `LambertW`, line ~1962) proves the principal branch
 (`lambertW_Pconstructible`) and says "The lower branch `W₋₁` is not reachable this way and is
 not defined here". It *is* reachable, with the same two curves; only the cropping window changes.
