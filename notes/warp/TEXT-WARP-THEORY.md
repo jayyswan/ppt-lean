@@ -435,3 +435,41 @@ applied elsewhere:
 
 The squash calibrated on the square makes every other shape worse. Each shape's own best fit
 is no squash and `x³ − x`. Arc-length spacing is 5–20× closer.
+
+### 8.2 What PowerPoint actually does in Wave: Down (probes 28–30)
+
+**Positions follow exact arc length, scaled to an underestimated total.** A row of 24 thin
+bars gives `t(u)` at 48 points (`probe_wave_tmap.py`; x = W·t on this guide). The true arc
+length `s(t(u))` is linear in `u` to within 0.11 pt; polyline lookup tables fit worse. The
+slope is the total length PowerPoint assumes, which is below the true length. That is the
+fill factor.
+
+**The fill factor takes one of two values, and the usual one is near 1.** For square boxes
+from 144 to 576 pt (`wave_t1_scan.json`), the end of the text lands at guide parameter
+t₁ = 0.997065, a length fraction of 0.99589. The exceptions are 144, 156, 288, 312, 324 and
+576 pt, where t₁ = 0.982126 (fraction 0.97565).
+- The original sweep box, 288 × 288, is one of the exceptions. The "k ≈ 0.976" quoted
+  earlier is therefore atypical.
+- Within each class the result does not depend on scale: 144², 288² and 576² are
+  identical, and so are 576 × 288 and 288 × 144. That points to a scale-free length
+  estimate whose branch flips at particular sizes.
+- No equal-step polyline or Gauss–Legendre rule reproduces either value exactly. The
+  typical class lies between 10 and 11 chords, the exceptional between 4 and 5. An adaptive
+  subdivision search is in progress.
+
+**Each source segment becomes one cubic** (`probe_wave_edges.py`, `probe_wave_span.py`).
+- Its end points are the exact warped points.
+- Its end tangents are exactly along the warp's derivative (perpendicular error ≤ 0.002 pt).
+- Its handle lengths are close to the exact Hermite value, `(1/3)·Δu·L_est`, for short
+  segments: ratio 0.97–1.00 for Δu ≤ 0.3. They fall well short for long ones: 0.73 for a
+  full-width edge in the square box, 0.59–0.96 depending on aspect.
+- That shortfall is the "squish" seen on ■. Glyphs made of short segments (letters, ●)
+  barely show it. The handle-length rule is still open.
+
+**The screen rendering is also flattened**, but it differs from the Merge Shapes output by up
+to 3 pt (slide exported at 10×). That suggests a dependence on output resolution, not yet
+characterized.
+
+**Measurement artifact:** Merge Shapes splits curves at approximate extrema. The top edge of
+■ appeared as two cubics, which are one cubic split at τ = 7/32. Harmless, but don't read
+structure into such splits.
