@@ -1,6 +1,7 @@
 # Plan: Gauss's AGM theorem, and `agm` is P-constructible
 
 Written 2026-11-07. **Not started.** First step of the theta programme (see "Afterwards").
+Tracked in GitHub issue #10; the theta follow-up is #11.
 Earlier sketch: `notes/archive/PLAN-hypergeometric-00-overview.md`, item B4. That sketch moved the
 AGM out of the hypergeometric programme as "`Pptc/AGM.lean`", but the file was never written.
 
