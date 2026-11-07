@@ -306,3 +306,58 @@ Soundness checklist for any of these:
 - `probes/probe_handle.py` — the UI handle drag (§5 item 1).
 - `probes/plotcase.py` — debug plots. `plot_*.png`, `pinned_*.png`, `follow_*.png` and
   `sweep_25A6_288x288.json` are outputs.
+
+## 7. Preset names: the UI's and the file format's
+
+The notes above use the file format's preset names (`textCanUp`, `textCirclePour`, …).
+PowerPoint's Transform gallery (Shape Format ▸ Text Effects ▸ Transform) shows different
+names. This table was read from the gallery itself by `probes/probe_ui_warpnames.py`, which
+applies each item and records the preset it stores. **Prefer the UI names** in anything
+user-facing. In particular, "Pour" corresponds to the gallery's *Warped* items and "Can" to
+*Warp Up / Warp Down*.
+
+| Gallery name | Preset in the file | Family (§3) |
+|---|---|---|
+| Arch | `textArchUp` | Follow Path (rigid) |
+| Arch: Down | `textArchDown` | Follow Path (rigid) |
+| Circle | `textCircle` | Follow Path (rigid) |
+| Button | `textButton` | Follow Path (rigid) |
+| Square | `textPlain` | affine |
+| Stop | `textStop` | straight |
+| Triangle: Up | `textTriangle` | straight |
+| Triangle: Down | `textTriangleInverted` | straight |
+| Chevron: Up | `textChevron` | straight |
+| Chevron: Down | `textChevronInverted` | straight |
+| Ring: Inside | `textRingInside` | ellipse arcs |
+| Ring: Outside | `textRingOutside` | ellipse arcs |
+| Arch: Warped | `textArchUpPour` | polar |
+| Arch: Warped Down | `textArchDownPour` | polar |
+| Warped Circle | `textCirclePour` | polar |
+| Warped Button | `textButtonPour` | polar |
+| Curve: Up | `textCurveUp` | mismatched |
+| Curve: Down | `textCurveDown` | mismatched |
+| Warp Up | `textCanUp` | ellipse arcs |
+| Warp Down | `textCanDown` | ellipse arcs |
+| Wave: Down | `textWave1` | Bézier (wave) |
+| Wave: Up | `textWave2` | Bézier (wave) |
+| Double Wave: Down-Up | `textDoubleWave1` | Bézier (wave) |
+| Double Wave: Up-Down | `textWave4` | Bézier (wave) |
+| Inflate | `textInflate` | mirror Bézier |
+| Deflate | `textDeflate` | mirror Bézier |
+| Inflate: Bottom | `textInflateBottom` | mismatched |
+| Deflate: Bottom | `textDeflateBottom` | mismatched |
+| Inflate: Top | `textInflateTop` | mismatched |
+| Deflate: Top | `textDeflateTop` | mismatched |
+| Deflate: Top, Inflate: Bottom | `textDeflateInflate` | mismatched |
+| Inflate: Middle, Deflate: Top and Bottom | `textDeflateInflateDeflate` | mismatched |
+| Fade: Right | `textFadeRight` | straight |
+| Fade: Left | `textFadeLeft` | straight |
+| Fade: Up | `textFadeUp` | straight |
+| Fade: Down | `textFadeDown` | straight |
+| Slant: Up | `textSlantUp` | affine |
+| Slant: Down | `textSlantDown` | affine |
+| Cascade: Up | `textCascadeUp` | straight |
+| Cascade: Down | `textCascadeDown` | straight |
+
+COM's `WarpFormat` reads back 0 for the four Follow Path items, although the file stores
+the presets above.
