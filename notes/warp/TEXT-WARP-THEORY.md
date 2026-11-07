@@ -517,3 +517,12 @@ Eight or more blocks approach ●-level fidelity. A 1.7 pt local maximum that do
 on N is not yet located. Other seamless full blocks: Consolas, Cascadia Code/Mono, Courier New,
 Lucida Console, Segoe UI Variable, Yu Gothic and MS Gothic. Their advances need a size that
 keeps the pen step on the 0.75 pt grid.
+
+**Decision (2026-11-06): idealize `L_est = L`.** Curved guides are traced by true arc length.
+In Lean this is `arcTrace` in `Pptc/TextBox.lean`, built on `arcLengthOf`. `speed`,
+`arcLengthOf` and `bezierParam` moved unchanged from `Defs.lean` to the new `Pptc/Curves.lean`
+so that `TextBox` can use them. Wave: Down (`WarpPreset.waveDown`) is the first curved-guide
+preset. It models the first handle (default, 0 or 20000) with the second handle at its default
+0. The measured fills (§8.2) and the 6-piece estimate (§8.3) remain the reference for anyone
+comparing a construction with PowerPoint's literal output. For straight edges, rows of short
+glyph edges (§8.4) make PowerPoint's output approach the idealized curve.

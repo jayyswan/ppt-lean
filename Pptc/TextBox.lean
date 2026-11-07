@@ -17,6 +17,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 
 import Mathlib.Algebra.Order.Round
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Pptc.Curves
 
 /-! # Pptc.TextBox
 
@@ -93,10 +94,10 @@ One anomaly is unexplained: at a few box sizes (6 in × 3 in among them) PowerPo
 the top guide off by up to 6 pt, while neighbouring sizes fit. A construction should name its
 box size and have it checked by `probe_textbox_model.py`.
 
-Only Triangle: Up and Triangle: Down are listed so far: their guides are polylines with equal
-pieces, so constant speed has a closed form. Other straight-guide presets follow the same
-pattern. The curved-guide ones (Warp Up/Down, Ring: Inside/Outside, the Waves, the Warped
-Arch/Circle/Button items) need their arc-length maps first.
+Listed so far: Triangle: Up and Triangle: Down, whose guides are polylines with equal pieces,
+so constant speed has a closed form; and Wave: Down, the first curved-guide preset, whose
+Bézier guides are traced by `arcTrace`, by true arc length (the idealization `L_est = L`).
+The other presets follow one of these two patterns.
 -/
 
 namespace Pconstructible
@@ -246,6 +247,19 @@ form, with `T` and `B` traced at constant speed (`TEXT-WARP-THEORY.md` §2). -/
 def ruledWarp (T B : ℝ → ℝ × ℝ) (p : ℝ × ℝ) : ℝ × ℝ :=
   ((1 - p.2) * (T p.1).1 + p.2 * (B p.1).1, (1 - p.2) * (T p.1).2 + p.2 * (B p.1).2)
 
+/-- The point a fraction `u` of the way along the curve `γ` (traced over `[0, 1]`), measured
+by arc length: `γ τ` for the least `τ ∈ [0, 1]` with
+`arcLengthOf γ 0 τ ≥ u · arcLengthOf γ 0 1`.
+
+This is the idealized tracing of a curved guide. PowerPoint places text by exact arc length
+but scales it to its own estimate `L_est` of the guide's total length. For a Bézier guide that
+estimate is a little short: 0.4 % at typical box sizes and 2.4 % at a few exceptional ones
+(`notes/warp/TEXT-WARP-THEORY.md` §8.2–8.3). It is a numerical approximation, not a design
+choice, so the model uses the true length `arcLengthOf γ 0 1` (decision of 2026-11-06).
+PowerPoint measures straight and circular guides exactly, so for those nothing is idealized. -/
+noncomputable def arcTrace (γ : ℝ → ℝ × ℝ) (u : ℝ) : ℝ × ℝ :=
+  γ (sInf {τ ∈ Set.Icc (0 : ℝ) 1 | u * arcLengthOf γ 0 1 ≤ arcLengthOf γ 0 τ})
+
 /-- The Transform presets modelled so far, named as in PowerPoint's Transform gallery
 (`notes/warp/TEXT-WARP-THEORY.md` §7 maps them to the file format's names). -/
 inductive WarpPreset
@@ -255,27 +269,41 @@ inductive WarpPreset
   /-- Gallery "Triangle: Down" (`textTriangleInverted`): top `(l, t) → (r, t)`, bottom
   `(l, y) → (hc, b) → (r, y)`. -/
   | triangleDown
+  /-- Gallery "Wave: Down" (`textWave1`): two cubic Bézier guides, the bottom one the top one
+  moved down by `h − 2 y₁`. At the default second handle (`adj2 = 0`, the only value modelled)
+  each guide is an affine copy of `x³ − x`: control points at `x = 0, w/3, 2w/3, w` with
+  heights `y₁, y₁ − d, y₁ + d, y₁`, where `y₁ = a·h` and `d = 10 y₁ / 3`. -/
+  | waveDown
 
 /-- The handle range of a preset, from the `pin` guide of its spec, in 1/100000 units.
-Both Triangles have `a = pin 0 adj 100000`. -/
+Both Triangles have `a = pin 0 adj 100000`; Wave: Down has `a1 = pin 0 adj1 20000`. -/
 def WarpPreset.adjRange : WarpPreset → ℤ × ℤ
   | .triangleUp => (0, 100000)
   | .triangleDown => (0, 100000)
+  | .waveDown => (0, 20000)
 
 /-- The handle value a preset is applied with (`avLst` of its spec). -/
 def WarpPreset.adjDefault : WarpPreset → ℤ
   | .triangleUp => 50000
   | .triangleDown => 50000
+  | .waveDown => 12500
 
 /-- The warp of a preset with handle fraction `a = adj / 100000`, sending the unit square to
 the box `[0, w] × [0, h]`. Both guides of a Triangle are polylines whose two pieces have
-equal length, so the constant-speed tracing is the piecewise-linear `|2u - 1|`. -/
+equal length, so the constant-speed tracing is the piecewise-linear `|2u - 1|`. Curved
+guides are traced by `arcTrace`. -/
 noncomputable def WarpPreset.map (k : WarpPreset) (a w h : ℝ) : ℝ × ℝ → ℝ × ℝ :=
   match k with
   | .triangleUp =>
       ruledWarp (fun u => (u * w, a * h * |2 * u - 1|)) (fun u => (u * w, h))
   | .triangleDown =>
       ruledWarp (fun u => (u * w, 0)) (fun u => (u * w, h - (1 - a) * h * |2 * u - 1|))
+  | .waveDown =>
+      let y₁ := a * h
+      let d := 10 / 3 * y₁
+      let y₄ := h - y₁
+      ruledWarp (arcTrace (bezierParam (0, y₁) (w / 3, y₁ - d) (2 * w / 3, y₁ + d) (w, y₁)))
+        (arcTrace (bezierParam (0, y₄) (w / 3, y₄ - d) (2 * w / 3, y₄ + d) (w, y₄)))
 
 /-- Where the handle is: as applied, or dragged past one end of its range. -/
 inductive HandleSetting
