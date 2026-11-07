@@ -630,3 +630,126 @@ appeared.
 
 All 36 warping presets are now in the Lean model (149 cases validated). Remaining: the 4
 Follow Path presets (rigid placement, a separate constructor).
+
+## 10. Reference: the exact map of every warping preset
+
+Everything below is what `WarpPreset.map` in `Pptc/TextBox.lean` computes (the 36 presets
+that warp; the 4 Follow Path presets are not modelled). Each closed form was checked
+numerically against the validated guides of `probe_presets_model.py` (error ≤ 1e-9).
+
+### 10.1 The common map
+
+1. Normalize: the ink box of the whole row goes to the unit square, `u` across (0 → 1) and `v`
+   from the top (0 → 1).
+2. Map: `F(u, v) = (1 − v)·T(u) + v·B(u)`, into the box `[0, w] × [0, h]`, `y` pointing down.
+3. `T(u)`, `B(u)` are the preset's top and bottom guides at the fraction `u` of their arc
+   length (`arcTrace`; the true length, §8.3).
+
+`a` is the first handle (stored value / 100000), `b` the waves' sideways handle in
+`{−0.1, 0, 0.1}`. Handles are listed min / default / max; "—" is not reachable by a drag.
+
+**Slide presets.** If `B = T + τ` for a constant vector `τ`, then `F(u, v) = T(u) + v·τ`: the
+text slides along one curve and is sheared by `τ`. Straight vertical edges stay vertical.
+
+### 10.2 Straight guides (12)
+
+| Preset | T | B | a |
+|---|---|---|---|
+| Square | (0,0)→(w,0), shrunk to `[max(0, w−2aw), min(w, 2(1−a)w)]` | (0,h)→(w,h), shrunk to `[max(0, (2a−1)w), min(w, 2aw)]` | .3 / .5 / .7 |
+| Stop | (0,ah)→(w/3,0)→(2w/3,0)→(w,ah) | (0,h−ah)→(w/3,h)→(2w/3,h)→(w,h−ah) | .14286 / .25 / .5 |
+| Triangle: Up | (uw, ah·\|2u−1\|) | (uw, h) | 0 / .5 / 1 |
+| Triangle: Down | (uw, 0) | (uw, h − (1−a)h·\|2u−1\|) | 0 / .5 / 1 |
+| Chevron: Up | (uw, ah·\|2u−1\|) | T + (0, (1−a)h) | 0 / .25 / .5 |
+| Chevron: Down | (uw, (1−a)h·(1−\|2u−1\|)) | T + (0, ah) | .5 / .75 / 1 |
+| Fade: Right | (0,0)→(w,ah) | (0,h)→(w,h−ah) | 0 / .33333 / .49999 |
+| Fade: Left | (0,ah)→(w,0) | (0,h−ah)→(w,h) | same |
+| Fade: Up | (aw,0)→(w−aw,0) | (0,h)→(w,h) | same |
+| Fade: Down | (0,0)→(w,0) | (aw,h)→(w−aw,h) | same |
+| Slant: Up | (0,ah)→(w,0) | T + (0, (1−a)h) | 0 / .55555 / .71431 |
+| Slant: Down | (0,0)→(w,(1−a)h) | T + (0, ah) | .28569 / .44445 / 1 |
+| Cascade: Up | (0,(1−a)h/4)→(w,0) | (0,h)→(w,ah) | .2857 / .44444 / 1 |
+| Cascade: Down | (0,0)→(w,(1−a)h/4) | (0,ah)→(w,h) | same |
+
+Single-segment pairs give a bilinear map; Square at its default is the plain stretch
+`(uw, vh)`. Slant: Up is the affine map `(uw, ah(1−u) + (1−a)h·v)`, Slant: Down
+`(uw, (1−a)h·u + ah·v)`. Only Square, Fade: Up/Down move points sideways. Stop's three pieces
+have unequal lengths, so it needs `arcTrace`; the Triangles' and Chevrons' two pieces are equal.
+
+### 10.3 Ellipse arcs (4): slide presets
+
+| Preset | T | τ | a |
+|---|---|---|---|
+| Warp Up | `d = (1−a)h`: upper half of the ellipse with centre `(w/2, d)`, semi-axes `(w/2, d)`, from the left end | (0, h − d) | .66667 / .85714 / 1 |
+| Warp Down | `d = ah`: lower half, centre `(w/2, 0)`, semi-axes `(w/2, d)` | (0, h − d) | 0 / .14286 / .33333 |
+| Ring: Inside | `r = ah/2`: whole ellipse, centre `(w/2, r)`, semi-axes `(w/2, r)`, from the left end, sweeping +(360° − 1/60000°) | (0, h − 2r) | .5 / .6 / .99 |
+| Ring: Outside | same, sweeping −(360° − 1/60000°) | (0, h − 2r) | same |
+
+Ring's sweep is by the spec's visual angle `θ`: the point is `c + ρ(θ)(cos θ, sin θ)` with
+`ρ = (w/2)·r / √((r cos θ)² + ((w/2) sin θ)²)`. At Warp Up max and Warp Down min the ellipse
+height is 0, the guides are flat, and the map is the plain stretch. Vertical edges stay vertical
+and slanted ones become elliptic trochoids (thread T1).
+
+### 10.4 Warped (4): radial between similar ellipses
+
+With `c = (w/2, h/2)` and `E(φ) = ((w/2) cos φ, (h/2) sin φ)`, the inner guide is the outer one
+scaled by `a` about `c`. A homothety preserves arc-length fractions, so both guides use the same
+angle `φ(u)` (the arc-length parametrization of the outer arc) and the map is radial:
+
+| Preset | F(u, v) | arc | a |
+|---|---|---|---|
+| Arch: Warped | `c + (1 − (1−a)v)·E(φ(u))` | upper half, φ from π to 2π | — / .5 / .99 |
+| Arch: Warped Down | `c + (a + (1−a)v)·E(φ(u))` | lower half, φ from π to 0 | — / .25 / .99 |
+| Warped Circle | `c + (1 − (1−a)v)·E(θ(u))` | whole ellipse from the left, 360° − 2/60000° | — / .5 / .99 |
+| Warped Button (one row) | as Arch: Warped | upper half | .4 / .5 / .99 |
+
+In a square box `φ(u)` is linear in `u`: a true polar map (Archimedean spirals, thread T3). The
+polar handle keeps its default angle; only the radius moves.
+
+### 10.5 Cubic Béziers (8)
+
+All control points are equally spaced in `x`, so each guide is a polynomial graph in `X = x/w`.
+
+**The four waves** are slide presets with `τ = (2bw, h − 2ah)`. The top guide starts at
+`x = max(0, −2bw)` and spans `s = (1 − 2|b|)w`. With `y₀ = ah` and `Z = 2X − 1 ∈ [−1, 1]`
+across one cubic, the top guide is `y = y₀ − ε·(5/2)y₀·(Z³ − Z)` and the bottom guide is
+`y = (h − y₀) − ε·(5/2)y₀·(Z³ − Z)`: the *same* wiggle, set by the top's height, not the
+bottom's. This is the x³ − x curve of §8, placed by arc length rather than by `x`.
+
+| Preset | ε | cubics per guide | a |
+|---|---|---|---|
+| Wave: Down | +1 | 1 | 0 / .125 / .2 |
+| Wave: Up | −1 | 1 | same |
+| Double Wave: Down-Up | +1 | 2, each spanning s/2 | 0 / .0625 / .125 |
+| Double Wave: Up-Down | −1 | 2 | same |
+
+**The other four**, with `X = x/w`:
+
+| Preset | T: y(X) | B: y(X) | a |
+|---|---|---|---|
+| Inflate | parabola `d(1−2X)²`, `d = ah` | `h − d(1−2X)²` | 0 / .1875 / .2 |
+| Deflate | parabola `4δX(1−X)`, `δ = a·min(w,h)` | `h − 4δX(1−X)` | 0 / .1875 / .375 |
+| Curve: Up | true cubic `ah(1 + ¾X − (9/4)X² + ½X³)` | parabola `h − 3ah/8 + (3/2)ah·X(1−X)` | 0 / .45977 / .56338 |
+| Curve: Down | the same cubic at `1 − X` | same as Curve: Up | same |
+
+The spec writes Inflate and Deflate as cubics, but their control points make the cubic
+terms cancel: they are parabolas.
+
+### 10.6 Quadratic Béziers (6): one straight guide each
+
+The control point sits at `x = w/2`, so a curved guide is `y = p + q·X(1−X)`:
+
+| Preset | T | B | extreme point | a |
+|---|---|---|---|---|
+| Inflate: Bottom | `y = 0` | `ah + 2(1−a)h·X(1−X)` | `(1+a)h/2` | .6 / .6 / 1 |
+| Deflate: Bottom | `y = 0` | `h − 4(h−δ)·X(1−X)`, `δ = a·min(w,h)` | `δ` | .0625 / .5 / 1 |
+| Inflate: Top | `ah(1 − 2X(1−X))` | `y = h` | `ah/2` | 0 / .4 / .5 |
+| Deflate: Top | `4ah·X(1−X)` | `y = h` | `ah` | 0 / .5 / .9375 |
+| Deflate: Top, Inflate: Bottom (one row) | `y = 0` | `0.45h + 2(2a−1)h·X(1−X)` | `(a − 0.05)h` | .05 / .35 / .95 |
+| Inflate: Middle, Deflate: Top and Bottom (one row) | `y = 0` | `0.3h + 2(2a − 0.66)h·X(1−X)` | `(a − 0.03)h` | .03 / .25 / .47 |
+
+### 10.7 Where arc length is not elementary
+
+`arcTrace` is the only non-algebraic step. Exact closed forms (no integral): the straight
+presets except Stop, Square, Slant. Elliptic integrals: Warp, Ring and the Warped presets, and
+the cubic guides of the waves and Curve. Arsinh: every parabolic guide (Inflate, Deflate,
+Curve's bottom, the quadratic presets), which is thread T2.
