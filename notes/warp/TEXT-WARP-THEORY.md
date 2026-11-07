@@ -416,3 +416,10 @@ glyph's own outline segments are short relative to the warp's bending. That hold
 lettering, and for every straight-guide preset, where a cubic represents the image exactly.
 It does **not** hold for long straight edges under curved guides. Whether to idealize those
 to the exact image is a modelling decision. PowerPoint's segment-fitting rule is open.
+
+**Is the warp itself "squished"?** (A suggestion that PowerPoint's ■ is the x³ − x shear with
+reduced amplitude.) For ■ alone, scaling the guide's offset by λ ≈ 0.58 brings the edges from
+18 pt to 2.6 pt rms / 5 pt max. Allowing a horizontal stretch and shift as well, it stays above
+2 pt rms. For ●, the best squish is **λ = 1.000** under arc-length tracing, at 0.13 pt rms. The
+shear model stays at 1.7 pt rms whatever λ is. So the warp is not squished, and the flattening
+is specific to how PowerPoint draws long straight edges.
