@@ -764,6 +764,8 @@ font file. The circles and half circles qualify because they are clearly meant t
 and half circles. Their shape is idealized (a true ellipse), and the dimensions are what the
 font stores (integer bounding box), which is also what PowerPoint draws.
 
+**Glyphs so far:** ● ◗ ◖ (§1), █ (below) and ◢ (§12.1).
+
 **█ U+2588 FULL BLOCK** qualifies (clearly a filled rectangle). Segoe UI Symbol stores it as
 one four-point contour, `(-10, -440)–(1931, 1501)` in 2048 units per em: a square of side 1941,
 advance 1921. The corners are stored integers, so there is nothing to idealize. The block is
@@ -795,10 +797,10 @@ diagonal `v = u`:
 This is the elliptic trochoid: the circle case (`E(ψ) = ψ`) is the ordinary trochoid, and the
 elliptic integral replaces the angle.
 
-**Current Lean glyphs cannot produce it.** The circle, half circles and Full Block have no
-slanted straight edge. The trochoid needs one, e.g. ◢ U+25E2, which is clearly a right
-triangle and so would pass the §11 policy. A ● under Warp Up gives a different new curve
-(its circle is pulled back through `u(ψ) ∝ E(ψ)`, so `E` sits inside a square root).
+**The glyph for it is now in Lean (§12.1).** The circle, half circles and Full Block have no
+slanted straight edge, so ◢ U+25E2, clearly a right triangle, was added (2026-11-07). A ●
+under Warp Up gives a different new curve (its circle is pulled back through
+`u(ψ) ∝ E(ψ)`, so `E` sits inside a square root).
 
 **Result 1: the extremes are not new (proved, informal).** `dy/dψ = −cos ψ + κ·√(1 + 3 sin²ψ)`.
 Setting it to 0 and squaring gives a quadratic in `cos²ψ`; in general (semi-axes `A, B`,
@@ -846,7 +848,28 @@ evidence of newness: `κ` already contains the complete integral `E(−3)`.
   Schanuel-type, so a proof of newness is not realistic, and a constructive reduction is the
   only decidable outcome.
 - Either way the `text` constructor now includes these curves in the class, so these roots are
-  reachable once a slanted-edge glyph is added. Newness is a separate question.
+  reachable (◢ is in Lean). Newness is a separate question.
 
 Result 1 could be formalized in Lean now (it needs only `arc_length`, `sqrt` and the
-algebra above); results 2–3 need the slanted-edge glyph first.
+algebra above), and so could 2–3, now that ◢ exists.
+
+### 12.1 The Lower Right Triangle ◢ (probes 36–38)
+
+◢ U+25E2 in Segoe UI Symbol is stored as three points, `(1599, 1434)`, `(1599, 0)`, `(165, 0)`
+(advance 1764, as for the circles), so nothing is idealized. It passes the §11 policy.
+Validation against PowerPoint:
+- **Layout** (`probe_row_triangle.py`, `RowCheckTriangle.lean`): triangles and circles, sizes
+  10.7–100 pt, spacing, superscript, subscript, a 2 % offset, plain and Equalize: every ink
+  box agrees to 0.0000 pt.
+- **A lone triangle** (`probe_triangle_warp.py`, 38 preset/box cases): corners are exact except
+  at the box sizes of the 48/49 slip. The slanted edge, though, is 2–13 pt off under the curved
+  presets, slip cases aside (about 1.7 pt even under Square, where the true image is a straight
+  line). The
+  hypotenuse stretches to the whole box, about 290 pt, and PowerPoint refits it with one Bézier:
+  the one-cubic-per-segment effect of §8.2, which the model idealizes away (§8.3).
+- **A row of triangles** (`probe_triangle_row.py`, 8 triangles at 36 pt, 11 preset/box cases):
+  with every slanted edge short, the Lean layout plus the preset formulas match PowerPoint at
+  the same floor as the plain Square case. Slanted edges: ≤ 1.9 pt max, 0.3–1.1 rms (Warp Up
+  1.77, Warp Down 1.78, Ring: Outside 0.99, Arch: Warped 0.52, Wave: Down 1.30, Inflate 1.82,
+  Deflate 1.81, Curve: Up 1.63, Inflate: Top 1.47; Square itself 1.82). PowerPoint-to-model:
+  ≤ 0.9 pt. So the elliptic trochoid pieces of Warp Up/Down are what PowerPoint draws.
