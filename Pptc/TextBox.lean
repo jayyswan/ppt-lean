@@ -17,6 +17,7 @@ This file is part of the Pptc (PowerPoint Constructibility) project.
 
 import Mathlib.Algebra.Order.Round
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Pptc.Curves
 
 /-! # Pptc.TextBox
@@ -77,9 +78,10 @@ preset menu items, never a typed value. Measured in PowerPoint
 * **Box size.** The Height and Width spinners step by 0.1 in = 7.2 pt. The warp fills the
   whole shape box: the text insets do not enter.
 * **Handle.** A drag stores whatever value the pointer lands on, which is not a clear
-  choice, except when it is dragged past an end of the range: then the stored value is the
-  `pin` bound exactly (`val 100000` for Triangle: Up, `val 0` for Triangle: Down). So the
-  handle takes its spec default or one of its two bounds.
+  choice, except when it is dragged past an end of its range: then the stored value is the
+  bound exactly (Stop: `val 14286` and `val 50000`). So a handle takes its spec default or
+  one of its two bounds. The polar handle of the Warped presets reaches only its outer stop,
+  except on Warped Button; see `WarpPreset.stops`.
 
 ## The warp
 
@@ -90,14 +92,25 @@ the preset's two guide paths, each traced at constant speed, into the box `[0, w
 Coordinates are the spec's, `y` pointing down. PowerPoint then refits the image with fresh
 Béziers, within about 0.5 pt rms on a 4 in box; the exact image is the idealization.
 
-One anomaly is unexplained: at a few box sizes (6 in × 3 in among them) PowerPoint traces
-the top guide off by up to 6 pt, while neighbouring sizes fit. A construction should name its
-box size and have it checked by `probe_textbox_model.py`.
+All 23 modelled presets were checked at every reachable handle stop (91 cases, two box
+sizes; `probe_presets_model.py`). PowerPoint's outline lies within about 0.7 pt of the
+model's, and the model's within about 2 pt of PowerPoint's, which is the error of treating
+the font's glyphs as true circles. The exceptions all have one cause
+(`probe_presets_fill.py`). At some box sizes, with no pattern found, PowerPoint spreads the
+text over only 48/49 of a guide's length, on one guide or on both. The fitted fractions are
+0.9795 ± 0.0002, and with them the misses fall back to the ≤ 0.9 pt floor. Chevron (straight
+guides) shows it at 5 in × 3 in, the curved presets at various sizes, and Wave: Down at 4 in
+square, where it explains the "exceptional" fill 0.976 ≈ 0.99589 · 48/49. This is the span
+artifact of `notes/spiral/F1.md` (e), now seen on straight guides too. It is a numerical
+slip, not a different map, so the model spans the whole guide. A construction should name its
+box size and check it with `probe_presets_model.py`.
 
-Listed so far: Triangle: Up and Triangle: Down, whose guides are polylines with equal pieces,
-so constant speed has a closed form; and Wave: Down, the first curved-guide preset, whose
-Bézier guides are traced by `arcTrace`, by true arc length (the idealization `L_est = L`).
-The other presets follow one of these two patterns.
+Modelled: the 12 straight presets, written at constant speed or traced by `arcTrace`; the 4
+ellipse-arc presets (Warp Up/Down, Ring: Inside/Outside); the 4 Warped presets, one row of
+text; and Wave: Down. Their curved guides are traced by `arcTrace`, by true arc length (the
+idealization `L_est = L`). Not yet modelled: the other 7 Bézier presets (waves, bulges,
+curves), the 6 mixed Inflate/Deflate presets, and the 4 Follow Path presets, which place
+glyphs rigidly rather than warping them.
 -/
 
 namespace Pconstructible
@@ -260,67 +273,222 @@ PowerPoint measures straight and circular guides exactly, so for those nothing i
 noncomputable def arcTrace (γ : ℝ → ℝ × ℝ) (u : ℝ) : ℝ × ℝ :=
   γ (sInf {τ ∈ Set.Icc (0 : ℝ) 1 | u * arcLengthOf γ 0 1 ≤ arcLengthOf γ 0 τ})
 
+/-- The straight guide from `p` to `q`, traced at constant speed. -/
+def segGuide (p q : ℝ × ℝ) (u : ℝ) : ℝ × ℝ :=
+  ((1 - u) * p.1 + u * q.1, (1 - u) * p.2 + u * q.2)
+
+/-- The three-piece polyline `p₀ → p₁ → p₂ → p₃`, a third of the parameter per piece. The
+pieces need not have equal lengths; a warp traces it with `arcTrace`. -/
+noncomputable def poly3Guide (p₀ p₁ p₂ p₃ : ℝ × ℝ) (t : ℝ) : ℝ × ℝ :=
+  if t ≤ 1 / 3 then segGuide p₀ p₁ (3 * t)
+  else if t ≤ 2 / 3 then segGuide p₁ p₂ (3 * t - 1) else segGuide p₂ p₃ (3 * t - 2)
+
+/-- The arc of the axis-aligned ellipse with centre `c` and semi-axes `wR`, `hR`, by its
+parametric angle `φ₀ + t Δ`. Used where an `arcTo` starts and ends at multiples of 90°, where
+the spec's visual angles and the parametric ones agree; it stays a valid tracing when
+`hR = 0` (a flat guide). -/
+noncomputable def ellArcGuide (c : ℝ × ℝ) (wR hR φ₀ Δ t : ℝ) : ℝ × ℝ :=
+  (c.1 + wR * Real.cos (φ₀ + t * Δ), c.2 + hR * Real.sin (φ₀ + t * Δ))
+
+/-- The arc of the same ellipse by the spec's *visual* angle `θ = θ₀ + t Δ`: the point of the
+ellipse on the ray from `c` at angle `θ` (`y` down, so positive angles turn clockwise on
+screen). This is the literal meaning of an `arcTo` with `stAng = θ₀`, `swAng = Δ`; it is
+used for the sweeps that do not end at a multiple of 90° (Ring, Warped Circle). -/
+noncomputable def ellArcVisualGuide (c : ℝ × ℝ) (wR hR θ₀ Δ t : ℝ) : ℝ × ℝ :=
+  let θ := θ₀ + t * Δ
+  let ρ := wR * hR / √((hR * Real.cos θ) ^ 2 + (wR * Real.sin θ) ^ 2)
+  (c.1 + ρ * Real.cos θ, c.2 + ρ * Real.sin θ)
+
 /-- The Transform presets modelled so far, named as in PowerPoint's Transform gallery
-(`notes/warp/TEXT-WARP-THEORY.md` §7 maps them to the file format's names). -/
+(`notes/warp/TEXT-WARP-THEORY.md` §7 maps them to the file format's names). Every guide is
+the spec's path (`presetTextWarpDefinitions.xml`) with `l = t = 0`; `WarpPreset.map` gives
+the formulas, and `notes/warp/probes/probe_presets_model.py` checks each one, at every
+handle stop, against PowerPoint. -/
 inductive WarpPreset
-  /-- Gallery "Triangle: Up" (`textTriangle`): top guide `(l, y) → (hc, t) → (r, y)`, bottom
-  `(l, b) → (r, b)`. -/
+  /-- "Square" (`textPlain`). The handle slides the guides sideways: the top guide covers
+  `[max 0 (w - 2aw), min w (2(1-a)w)]` and the bottom one `[max 0 ((2a-1)w), min w (2aw)]`,
+  both all of `[0, w]` at the default `a = 1/2`. -/
+  | square
+  /-- "Stop" (`textStop`): top `(l, ah) → (w/3, t) → (2w/3, t) → (r, ah)`, and its mirror
+  image at the bottom. -/
+  | stop
+  /-- "Triangle: Up" (`textTriangle`): top `(l, ah) → (hc, t) → (r, ah)`, bottom straight. -/
   | triangleUp
-  /-- Gallery "Triangle: Down" (`textTriangleInverted`): top `(l, t) → (r, t)`, bottom
-  `(l, y) → (hc, b) → (r, y)`. -/
+  /-- "Triangle: Down" (`textTriangleInverted`): top straight, bottom
+  `(l, ah) → (hc, b) → (r, ah)`. -/
   | triangleDown
-  /-- Gallery "Wave: Down" (`textWave1`): two cubic Bézier guides, the bottom one the top one
-  moved down by `h − 2 y₁`. At the default second handle (`adj2 = 0`, the only value modelled)
-  each guide is an affine copy of `x³ − x`: control points at `x = 0, w/3, 2w/3, w` with
-  heights `y₁, y₁ − d, y₁ + d, y₁`, where `y₁ = a·h` and `d = 10 y₁ / 3`. -/
+  /-- "Chevron: Up" (`textChevron`): both guides bent up at the centre by `ah`. -/
+  | chevronUp
+  /-- "Chevron: Down" (`textChevronInverted`): both guides bent down at the centre by
+  `(1 - a) h`. -/
+  | chevronDown
+  /-- "Fade: Right" (`textFadeRight`): the right end pinched to `[ah, h - ah]`. -/
+  | fadeRight
+  /-- "Fade: Left" (`textFadeLeft`): the left end pinched to `[ah, h - ah]`. -/
+  | fadeLeft
+  /-- "Fade: Up" (`textFadeUp`): the top guide shortened to `[aw, w - aw]`. -/
+  | fadeUp
+  /-- "Fade: Down" (`textFadeDown`): the bottom guide shortened to `[aw, w - aw]`. -/
+  | fadeDown
+  /-- "Slant: Up" (`textSlantUp`): parallel guides rising by `ah` to the right. -/
+  | slantUp
+  /-- "Slant: Down" (`textSlantDown`): parallel guides falling by `h - ah` to the right. -/
+  | slantDown
+  /-- "Cascade: Up" (`textCascadeUp`): the top guide rises by `(1-a)h/4`, the bottom one
+  by `(1-a)h`. -/
+  | cascadeUp
+  /-- "Cascade: Down" (`textCascadeDown`): the mirror image of Cascade: Up. -/
+  | cascadeDown
+  /-- "Warp Up" (`textCanUp`): two upper half-ellipses of height `(1 - a) h`. -/
+  | warpUp
+  /-- "Warp Down" (`textCanDown`): two lower half-ellipses of height `ah`. -/
+  | warpDown
+  /-- "Ring: Inside" (`textRingInside`): two whole ellipses of height `ah`, swept clockwise
+  on screen from the left end by `21599999` units (1/60000°), just short of a full turn. -/
+  | ringInside
+  /-- "Ring: Outside" (`textRingOutside`): as Ring: Inside, swept the other way. -/
+  | ringOutside
+  /-- "Arch: Warped" (`textArchUpPour`): the upper half of the box's inscribed ellipse, and
+  the same arc scaled by `a` about the centre. The polar handle keeps its default angle. -/
+  | archWarped
+  /-- "Arch: Warped Down" (`textArchDownPour`): the lower half of the inscribed ellipse
+  scaled by `a` on top, the lower half itself below. -/
+  | archWarpedDown
+  /-- "Warped Circle" (`textCirclePour`): the inscribed ellipse and its copy scaled by `a`,
+  each swept from the left end by `21599998` units, just short of a full turn. -/
+  | warpedCircle
+  /-- "Warped Button" (`textButtonPour`), one row of text: its first two guides, which are
+  those of Arch: Warped. Its handle range differs. -/
+  | warpedButton
+  /-- "Wave: Down" (`textWave1`): two cubic Bézier guides, each an affine copy of `x³ - x`,
+  with a height handle `a` and a sideways handle `b`; see `WarpPreset.map`. -/
   | waveDown
 
-/-- The handle range of a preset, from the `pin` guide of its spec, in 1/100000 units.
-Both Triangles have `a = pin 0 adj 100000`; Wave: Down has `a1 = pin 0 adj1 20000`. -/
-def WarpPreset.adjRange : WarpPreset → ℤ × ℤ
-  | .triangleUp => (0, 100000)
-  | .triangleDown => (0, 100000)
-  | .waveDown => (0, 20000)
-
-/-- The handle value a preset is applied with (`avLst` of its spec). -/
-def WarpPreset.adjDefault : WarpPreset → ℤ
-  | .triangleUp => 50000
-  | .triangleDown => 50000
-  | .waveDown => 12500
-
-/-- The warp of a preset with handle fraction `a = adj / 100000`, sending the unit square to
-the box `[0, w] × [0, h]`. Both guides of a Triangle are polylines whose two pieces have
-equal length, so the constant-speed tracing is the piecewise-linear `|2u - 1|`. Curved
-guides are traced by `arcTrace`. -/
-noncomputable def WarpPreset.map (k : WarpPreset) (a w h : ℝ) : ℝ × ℝ → ℝ × ℝ :=
-  match k with
-  | .triangleUp =>
-      ruledWarp (fun u => (u * w, a * h * |2 * u - 1|)) (fun u => (u * w, h))
-  | .triangleDown =>
-      ruledWarp (fun u => (u * w, 0)) (fun u => (u * w, h - (1 - a) * h * |2 * u - 1|))
-  | .waveDown =>
-      let y₁ := a * h
-      let d := 10 / 3 * y₁
-      let y₄ := h - y₁
-      ruledWarp (arcTrace (bezierParam (0, y₁) (w / 3, y₁ - d) (2 * w / 3, y₁ + d) (w, y₁)))
-        (arcTrace (bezierParam (0, y₄) (w / 3, y₄ - d) (2 * w / 3, y₄ + d) (w, y₄)))
-
-/-- Where the handle is: as applied, or dragged past one end of its range. -/
+/-- Where a handle is: as applied, or dragged past one end of its range. -/
 inductive HandleSetting
   | default
   | min
   | max
 
-/-- The stored handle value of a setting. -/
-def WarpPreset.adj (k : WarpPreset) : HandleSetting → ℤ
-  | .default => k.adjDefault
-  | .min => k.adjRange.1
-  | .max => k.adjRange.2
+/-- The stops of handle `i` (`0` or `1`) of a preset, `(min, default, max)` in the spec's
+1/100000 units, after the spec's `pin`. A stop is `none` when no drag reaches it exactly.
 
-/-- The Transform setting of a text box: none, or one preset with its handle. -/
+Measured with real drags (`probe_handle.py`): a straight handle dragged past either end
+stores that bound exactly. The Warped presets have one polar handle carrying an angle and a
+radius. Dragged straight out, it keeps its default angle exactly and stores radius `100000`,
+which the spec pins to `99000`. Dragged inwards it has no stop: crossing the centre flips
+the angle, and short of the centre the radius is wherever the pointer lands. Warped Button
+is the exception, because its spec pins every radius below `40000` up to `40000`. Wave:
+Down's second handle is the sideways one; every other preset has one handle. -/
+def WarpPreset.stops : WarpPreset → ℕ → Option ℤ × ℤ × Option ℤ
+  | .square, 0 => (some 30000, 50000, some 70000)
+  | .stop, 0 => (some 14286, 25000, some 50000)
+  | .triangleUp, 0 | .triangleDown, 0 => (some 0, 50000, some 100000)
+  | .chevronUp, 0 => (some 0, 25000, some 50000)
+  | .chevronDown, 0 => (some 50000, 75000, some 100000)
+  | .fadeRight, 0 | .fadeLeft, 0 | .fadeUp, 0 | .fadeDown, 0 => (some 0, 33333, some 49999)
+  | .slantUp, 0 => (some 0, 55555, some 71431)
+  | .slantDown, 0 => (some 28569, 44445, some 100000)
+  | .cascadeUp, 0 | .cascadeDown, 0 => (some 28570, 44444, some 100000)
+  | .warpUp, 0 => (some 66667, 85714, some 100000)
+  | .warpDown, 0 => (some 0, 14286, some 33333)
+  | .ringInside, 0 | .ringOutside, 0 => (some 50000, 60000, some 99000)
+  | .archWarped, 0 | .warpedCircle, 0 => (none, 50000, some 99000)
+  | .archWarpedDown, 0 => (none, 25000, some 99000)
+  | .warpedButton, 0 => (some 40000, 50000, some 99000)
+  | .waveDown, 0 => (some 0, 12500, some 20000)
+  | .waveDown, 1 => (some (-10000), 0, some 10000)
+  | _, _ => (none, 0, none)
+
+/-- The value of handle `i` at a setting, as a fraction `adj / 100000`, if a drag reaches
+it. -/
+def WarpPreset.handleValue (k : WarpPreset) (i : ℕ) : HandleSetting → Option ℚ
+  | .default => some ((k.stops i).2.1 / 100000)
+  | .min => (k.stops i).1.map (fun x => (x : ℚ) / 100000)
+  | .max => (k.stops i).2.2.map (fun x => (x : ℚ) / 100000)
+
+/-- The warp of a preset with handle fractions `a` (first handle) and `b` (second; Wave: Down
+only), sending the unit square to the box `[0, w] × [0, h]` by `ruledWarp` between its two
+guides. Straight guides, and polylines of two equal pieces, are written at constant speed;
+the others are traced by `arcTrace`. -/
+noncomputable def WarpPreset.map (k : WarpPreset) (a b w h : ℝ) : ℝ × ℝ → ℝ × ℝ :=
+  let c : ℝ × ℝ := (w / 2, h / 2)
+  match k with
+  | .square =>
+      ruledWarp (segGuide (max 0 (w - 2 * a * w), 0) (min w (2 * (1 - a) * w), 0))
+        (segGuide (max 0 ((2 * a - 1) * w), h) (min w (2 * a * w), h))
+  | .stop =>
+      ruledWarp (arcTrace (poly3Guide (0, a * h) (w / 3, 0) (2 * w / 3, 0) (w, a * h)))
+        (arcTrace (poly3Guide (0, h - a * h) (w / 3, h) (2 * w / 3, h) (w, h - a * h)))
+  | .triangleUp =>
+      ruledWarp (fun u => (u * w, a * h * |2 * u - 1|)) (segGuide (0, h) (w, h))
+  | .triangleDown =>
+      ruledWarp (segGuide (0, 0) (w, 0)) (fun u => (u * w, h - (1 - a) * h * |2 * u - 1|))
+  | .chevronUp =>
+      ruledWarp (fun u => (u * w, a * h * |2 * u - 1|))
+        (fun u => (u * w, h - a * h * (1 - |2 * u - 1|)))
+  | .chevronDown =>
+      ruledWarp (fun u => (u * w, (1 - a) * h * (1 - |2 * u - 1|)))
+        (fun u => (u * w, h - (1 - a) * h * |2 * u - 1|))
+  | .fadeRight => ruledWarp (segGuide (0, 0) (w, a * h)) (segGuide (0, h) (w, h - a * h))
+  | .fadeLeft => ruledWarp (segGuide (0, a * h) (w, 0)) (segGuide (0, h - a * h) (w, h))
+  | .fadeUp => ruledWarp (segGuide (a * w, 0) (w - a * w, 0)) (segGuide (0, h) (w, h))
+  | .fadeDown => ruledWarp (segGuide (0, 0) (w, 0)) (segGuide (a * w, h) (w - a * w, h))
+  | .slantUp => ruledWarp (segGuide (0, a * h) (w, 0)) (segGuide (0, h) (w, h - a * h))
+  | .slantDown => ruledWarp (segGuide (0, 0) (w, h - a * h)) (segGuide (0, a * h) (w, h))
+  | .cascadeUp =>
+      ruledWarp (segGuide (0, (1 - a) * h / 4) (w, 0)) (segGuide (0, h) (w, a * h))
+  | .cascadeDown =>
+      ruledWarp (segGuide (0, 0) (w, (1 - a) * h / 4)) (segGuide (0, a * h) (w, h))
+  | .warpUp =>
+      let d := (1 - a) * h
+      ruledWarp (arcTrace (ellArcGuide (w / 2, d) (w / 2) d Real.pi Real.pi))
+        (arcTrace (ellArcGuide (w / 2, h) (w / 2) d Real.pi Real.pi))
+  | .warpDown =>
+      let d := a * h
+      ruledWarp (arcTrace (ellArcGuide (w / 2, 0) (w / 2) d Real.pi (-Real.pi)))
+        (arcTrace (ellArcGuide (w / 2, h - d) (w / 2) d Real.pi (-Real.pi)))
+  | .ringInside =>
+      let r := a * h / 2
+      let Δ := 21599999 / 10800000 * Real.pi
+      ruledWarp (arcTrace (ellArcVisualGuide (w / 2, r) (w / 2) r Real.pi Δ))
+        (arcTrace (ellArcVisualGuide (w / 2, h - r) (w / 2) r Real.pi Δ))
+  | .ringOutside =>
+      let r := a * h / 2
+      let Δ := -(21599999 / 10800000 * Real.pi)
+      ruledWarp (arcTrace (ellArcVisualGuide (w / 2, r) (w / 2) r Real.pi Δ))
+        (arcTrace (ellArcVisualGuide (w / 2, h - r) (w / 2) r Real.pi Δ))
+  | .archWarped | .warpedButton =>
+      ruledWarp (arcTrace (ellArcGuide c (w / 2) (h / 2) Real.pi Real.pi))
+        (arcTrace (ellArcGuide c (a * w / 2) (a * h / 2) Real.pi Real.pi))
+  | .archWarpedDown =>
+      ruledWarp (arcTrace (ellArcGuide c (a * w / 2) (a * h / 2) Real.pi (-Real.pi)))
+        (arcTrace (ellArcGuide c (w / 2) (h / 2) Real.pi (-Real.pi)))
+  | .warpedCircle =>
+      let Δ := 21599998 / 10800000 * Real.pi
+      ruledWarp (arcTrace (ellArcVisualGuide c (w / 2) (h / 2) Real.pi Δ))
+        (arcTrace (ellArcVisualGuide c (a * w / 2) (a * h / 2) Real.pi Δ))
+  | .waveDown =>
+      -- heights `y₁` (top) and `y₄` (bottom) and bulge `d`; the sideways handle `b` shortens
+      -- both guides to `(1 - 2|b|) w` and shifts them `2|b| w` apart
+      let y₁ := a * h
+      let d := 10 / 3 * y₁
+      let y₄ := h - y₁
+      let s := (1 - 2 * |b|) * w
+      let guide (x y : ℝ) :=
+        arcTrace (bezierParam (x, y) (x + s / 3, y - d) (x + 2 * s / 3, y + d) (x + s, y))
+      ruledWarp (guide (max 0 (-2 * b * w)) y₁) (guide (max 0 (2 * b * w)) y₄)
+
+/-- The Transform setting of a text box: none, or one preset with its handles (the second
+setting matters only for a preset with two handles). -/
 inductive TextWarp
   | none
-  | preset (k : WarpPreset) (s : HandleSetting)
+  | preset (k : WarpPreset) (s₁ : HandleSetting) (s₂ : HandleSetting := .default)
+
+/-- Every handle of the warp sits at a stop a drag reaches exactly. -/
+def TextWarp.Reachable : TextWarp → Prop
+  | .none => True
+  | .preset k s₁ s₂ => (k.handleValue 0 s₁).isSome ∧ (k.handleValue 1 s₂).isSome
 
 /-! ### Text boxes -/
 
@@ -356,7 +524,9 @@ through the preset's map. -/
 noncomputable def TextBox.outline (T : TextBox) : Set (ℝ × ℝ) :=
   match T.warp with
   | .none => T.ink
-  | .preset k s => k.map ((k.adj s : ℝ) / 100000) T.w T.h '' (inkNormalize T.ink '' T.ink)
+  | .preset k s₁ s₂ =>
+      k.map ((k.handleValue 0 s₁).getD 0 : ℚ) ((k.handleValue 1 s₂).getD 0 : ℚ) T.w T.h ''
+        (inkNormalize T.ink '' T.ink)
 
 /-- The side conditions for a text box to be drawable: at least one glyph, each stored at a
 size in `[1, 4000]` pt with a baseline offset the UI can set (an even percentage in
@@ -368,6 +538,7 @@ structure TextBox.WellFormed (T : TextBox) : Prop where
   spacing_mem : ∀ g ∈ T.glyphs, -10000 ≤ g.spacingTenths ∧ g.spacingTenths ≤ 10000
   offset_mem : ∀ g ∈ T.glyphs, (Even g.offsetPercent ∨ g.offsetPercent = -25) ∧
     -100 ≤ g.offsetPercent ∧ g.offsetPercent ≤ 100
+  warp_ok : T.warp.Reachable
   w_pos : 0 < T.wSteps
   h_pos : 0 < T.hSteps
 
