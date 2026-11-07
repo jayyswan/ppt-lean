@@ -196,8 +196,9 @@ shape might also give numbers the class does not reach yet. None is established.
 - **T6. Arc length of a warped edge (§13).** The `arc_length` of the image of a slanted glyph
   edge between two P-constructible corners is a number in the class whose integrand has a
   nested radical. For ◢ under Warp Up in a 4 × 4 box it is 5.5122674859237737761…, a period of
-  half a period of a second-kind differential on a genus-2 curve with no extra symmetry.
-  Candidate new number, newness unproved.
+  half a period of a second-kind differential on a genus-2 curve with no extra symmetry that
+  is not the arc-length curve of any degree-4 polynomial graph (§13.1). Candidate new number,
+  newness unproved.
 - **T5. Algebraic engines.** The straight-guide families (egg quartics, piriform, Gerono lobe)
   are one-parameter families of rational quartics. Each could be a new rational-coefficient
   engine for the open degree 9–10 cases in `../algebraic/SUMMARY.md`. That is unlikely to help
@@ -957,11 +958,49 @@ the old genus-2 curves have rational `q` up to `scale_x`/`scale_y`/`translate` b
 (a countable, thin family in the 3-dimensional moduli space of genus-2 curves), while our
 curve's moduli depend on `κ = 3/L`; and its differential is of the second kind with poles at
 `t = ±i`, unlike the arc-length differential `√(1 + q²) dx`, which has a pole only at ∞.
-What would decide it:
-1. Compute the Igusa invariants of `Z² = t(t − t₀)(t² + 1)(3t² − 1)` and ask whether any
-   `Z² = 1 + q²` (`q` a cubic with class-number coefficients) has the same invariants; and test
-   for splitting of higher degree.
-2. Search for integer relations between `N₁` and the periods of the associated curve,
-   e.g. the other independent periods of the same differential.
-3. A proof of newness would need transcendence results for such periods and is out of reach;
+### 13.1 Comparison with the old genus-2 curves (`probes/t6_curve_tests.wl`)
+
+**The test.** `Z² = 1 + q(x)²` with `q` a cubic (any complex coefficients) holds iff the six
+branch points split into two triples `T₁, T₂` and, in some coordinate (the pole `p` of `q`
+moved to ∞ by `x ↦ 1/(x − p)`), the monic cubics with roots `T₁` and `T₂` differ by a constant:
+equal sums of roots and equal sums of pairwise products. That is two equations in the unknown
+`p`, so it holds on a hypersurface of the moduli space. The test returns exactly 0 on the
+control `q = x³ − 2x`, both with the pole at ∞ and moved to `p = 3`.
+
+**Results for `Z² = t(t − t₀)(t² + 1)(3t² − 1)`:**
+1. *No symmetry.* At our `t₀` no Möbius map other than the identity permutes the six branch
+   points (0 of 719 permutations; the control of sixth roots of unity has 11). So the curve is
+   not a binomial curve `w² = 1 + c·xⁿ` either (genus 2 needs `n = 5, 6`, which have an
+   order-5 or order-6 symmetry).
+2. *A finite list of coincidences.* Eliminating `p` gives, for each of the 10 splittings, a
+   polynomial in `t₀` with algebraic coefficients. After discarding degenerate roots (branch
+   points colliding), 32 values of `t₀` remain, 6 of them real: `±2/√3`, `±3√3/7` and
+   `±0.335657855782…` (a root of `73s³ + 3√3·s² + 9s + 3√3`). Only at those values is the curve
+   of the form `1 + q²`. Ours is `t₀ = 0.516867565868…`, at distance 0.111 from the nearest.
+   Directly at our `t₀`, the closest approach of the `1 + q²` conditions is a 1.5 % miss,
+   identical at 60 and 120 digits.
+3. *Transcendence closes it.* `t₀ = 2κ/(√3(1 + κ²))`, so `t₀` is algebraic iff `κ = 3/L` is,
+   iff `L = 4E(3/4)` is. `L` is transcendental: the curve for modulus `k² = 3/4` has
+   `j = 35152/9`, not an integer, so no complex multiplication, and by Chudnovsky a period and
+   a quasi-period are algebraically independent, while `E(k)` is a nonzero algebraic
+   combination of the two (the dictionary from `E` to `ω, η` is not re-derived here, so this
+   step rests on the literature). Hence `t₀` is never one of the 32 values.
+
+**Conclusion.** The curve `Z² = t(t − t₀)(t² + 1)(3t² − 1)` is not isomorphic over ℂ to the
+arc-length curve of any polynomial graph of degree 4, however scaled or with whatever
+coefficients, nor to a binomial curve. So `N₁` is not one of those old arc lengths, and its
+curve is genuinely a different genus-2 curve. The same argument applies to any box with rational
+data (the set of coincidences is recomputed for that ellipse's eccentricity; `κ` stays a
+rational multiple of `1/L`).
+
+**Not excluded.** The Jacobian of our curve could still be isogenous to a factor of the
+Jacobian of a higher-genus old curve (a degree-5 or 6 polynomial graph has genus 3 or 4), or
+split at a degree above 2, or `N₁` could still coincide numerically with some other old number.
+So this settles the comparison with genus-2 old curves, not newness in general.
+
+**Next.** (1) Test the higher-genus old families (degree-5 and degree-6 graphs): does their
+Jacobian contain a factor isogenous to ours? That needs the Jacobian's decomposition and is
+harder. (2) Search for integer relations between `N₁` and the other periods of the same
+differential (the curve has four independent periods).
+(If the comparison above is not enough:) a proof of newness would need transcendence results for such periods and is out of reach;
    a reduction to old constructors is the only outcome that can be proved.
