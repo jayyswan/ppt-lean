@@ -593,3 +593,25 @@ default in 360 × 216.
 
 New number threads: none. New curve families enter through the elliptic (trochoid, T1) and
 polar (spiral, T3) presets, which are now in the Lean model with all their handle stops.
+
+### 9.3 The 7 other cubic Bézier presets (probe 32 second run, `presets_model2.json`)
+
+Added: Wave: Up, Double Wave: Down-Up, Double Wave: Up-Down, Inflate, Deflate, Curve: Up,
+Curve: Down. All 30 modelled presets are now validated (125 cases). The four waves share
+`waveMap`: one cubic per guide (or two for the Double Waves) with control heights
+`y, y − d, y + d, y`, `d = ±10y₁/3`, and the same sideways handle. Deflate's handle scales
+with `min w h`, not `h`; the spec-parser cross-check passes in a tall 216 × 360 box too.
+
+- **At the floor** (≤ 0.54 pt PowerPoint-to-model, ≤ 1.84 pt model-to-PowerPoint): every
+  Inflate and Deflate case, Curve: Up/Down at 288², and every handle-minimum (flat) case.
+- **The waves' usual fill.** Away from the slip, a wave spans 0.994–0.996 of each guide with
+  one cubic, and 0.998 with two, from PowerPoint's length estimate (§8.3). That puts them at
+  up to 1.9 pt; the model uses the true length.
+- **The 48/49 slip, set aside** (user decision, 2026-11-06: some size always works and a
+  result can be scaled). Wave: Up at 288² fits 0.9757 on both guides (= 0.99589 · 48/49, as
+  for Wave: Down). The Double Waves at 288² fit 0.9784 ≈ 0.9984 · 48/49 on both guides at the
+  default, and on one guide at each sideways stop. Curve: Up/Down at 360 × 216 fit 0.979 on
+  the top guide. With those fractions every case drops to ≤ 0.66 pt.
+
+Remaining: the 6 mixed Inflate/Deflate presets (quadratic Bézier + line guides, 2–6 paths)
+and the 4 Follow Path presets (rigid placement, a separate constructor).

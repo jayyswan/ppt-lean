@@ -37,8 +37,8 @@ foreground; do not run it while someone else is using the screen.
 | `gdi_metrics.py` | Windows' integer font metrics per pixel size |
 | `probe_kern.py` | kerning threshold and pair adjustment |
 | `probe_row_model.py LEAN_EVAL` | end-to-end: Lean row model (`#eval`) vs PowerPoint, sizes/offsets/spacing/Equalize |
-| `probe_presets_model.py [PRESET ...]` | probe 32: Lean `WarpPreset.map` of all 23 modelled presets at every reachable handle stop vs PowerPoint (`presets_model.json`) |
-| `probe_presets_fill.py PRESET H1 H2 W H ...` | probe 33: per-guide fill fraction for the misses of probe 32; all fit 48/49 (`presets_fill.json`) |
+| `probe_presets_model.py [PRESET ...]` | probe 32: Lean `WarpPreset.map` of every modelled preset at every reachable handle stop vs PowerPoint (`presets_model.json`: first 23 presets; `presets_model2.json`: the 7 further Bézier presets) |
+| `probe_presets_fill.py PRESET H1 H2 W H ...` | probe 33: per-guide fill fraction for the misses of probe 32; all fit 48/49 (`presets_fill.json`, `presets_fill2.json`) |
 
 Results of the UI-input probe are in `ui_inputs.json`.
 

@@ -92,25 +92,29 @@ the preset's two guide paths, each traced at constant speed, into the box `[0, w
 Coordinates are the spec's, `y` pointing down. PowerPoint then refits the image with fresh
 Béziers, within about 0.5 pt rms on a 4 in box; the exact image is the idealization.
 
-All 23 modelled presets were checked at every reachable handle stop (91 cases, two box
+All 30 modelled presets were checked at every reachable handle stop (125 cases, two box
 sizes; `probe_presets_model.py`). PowerPoint's outline lies within about 0.7 pt of the
 model's, and the model's within about 2 pt of PowerPoint's, which is the error of treating
 the font's glyphs as true circles. The exceptions all have one cause
 (`probe_presets_fill.py`). At some box sizes, with no pattern found, PowerPoint spreads the
 text over only 48/49 of a guide's length, on one guide or on both. The fitted fractions are
-0.9795 ± 0.0002, and with them the misses fall back to the ≤ 0.9 pt floor. Chevron (straight
-guides) shows it at 5 in × 3 in, the curved presets at various sizes, and Wave: Down at 4 in
-square, where it explains the "exceptional" fill 0.976 ≈ 0.99589 · 48/49. This is the span
+0.9795 ± 0.0002 (times the waves' usual underestimate, below), and with them the misses fall
+back to the ≤ 0.9 pt floor. Chevron (straight guides) shows it at 5 in × 3 in, the curved
+presets at various sizes, and the waves at 4 in square, where it explains the "exceptional"
+fill 0.976 ≈ 0.99589 · 48/49. Some size always avoids it, and a result can be scaled, so it
+is set aside. The waves also fill a little short at every size, by PowerPoint's length
+estimate: 0.996 for one cubic per guide, 0.998 for two (the idealization `L_est = L`,
+`arcTrace`). This is the span
 artifact of `notes/spiral/F1.md` (e), now seen on straight guides too. It is a numerical
 slip, not a different map, so the model spans the whole guide. A construction should name its
 box size and check it with `probe_presets_model.py`.
 
 Modelled: the 12 straight presets, written at constant speed or traced by `arcTrace`; the 4
 ellipse-arc presets (Warp Up/Down, Ring: Inside/Outside); the 4 Warped presets, one row of
-text; and Wave: Down. Their curved guides are traced by `arcTrace`, by true arc length (the
-idealization `L_est = L`). Not yet modelled: the other 7 Bézier presets (waves, bulges,
-curves), the 6 mixed Inflate/Deflate presets, and the 4 Follow Path presets, which place
-glyphs rigidly rather than warping them.
+text; and the 8 cubic Bézier presets (the 4 waves, Inflate, Deflate, Curve: Up/Down). Their
+curved guides are traced by `arcTrace`, by true arc length. Not yet modelled: the 6 mixed
+Inflate/Deflate presets (Top, Bottom, and the combinations), and the 4 Follow Path presets,
+which place glyphs rigidly rather than warping them.
 -/
 
 namespace Pconstructible
@@ -299,6 +303,28 @@ noncomputable def ellArcVisualGuide (c : ℝ × ℝ) (wR hR θ₀ Δ t : ℝ) : 
   let ρ := wR * hR / √((hR * Real.cos θ) ^ 2 + (wR * Real.sin θ) ^ 2)
   (c.1 + ρ * Real.cos θ, c.2 + ρ * Real.sin θ)
 
+/-- Two cubic Béziers end to end, `p₁ p₂ p₃ p₄` then `p₄ q₂ q₃ q₄`, half the parameter each.
+-/
+noncomputable def bezier2Guide (p₁ p₂ p₃ p₄ q₂ q₃ q₄ : ℝ × ℝ) (t : ℝ) : ℝ × ℝ :=
+  if t ≤ 1 / 2 then bezierParam p₁ p₂ p₃ p₄ (2 * t) else bezierParam p₄ q₂ q₃ q₄ (2 * t - 1)
+
+/-- The four wave presets share one shape. Each guide is one cubic (`double = false`) or two
+(`double = true`) with control heights `y, y - d, y + d, y` per cubic, where `y` is `y₁ = ah`
+on top and `y₄ = h - y₁` below, and the bulge is `d = e · 10 y₁ / 3` with `e = 1` (Wave:
+Down, Double Wave: Down-Up) or `e = -1` (Wave: Up, Double Wave: Up-Down). The control
+points are equally spaced across each cubic. The sideways handle `b` shortens both guides to
+`(1 - 2|b|) w` and starts them at `max 0 (-2bw)` (top) and `max 0 (2bw)` (bottom). -/
+noncomputable def waveMap (double : Bool) (e a b w h : ℝ) : ℝ × ℝ → ℝ × ℝ :=
+  let y₁ := a * h
+  let d := e * (10 / 3 * y₁)
+  let s := (1 - 2 * |b|) * w
+  let guide (x y : ℝ) : ℝ → ℝ × ℝ :=
+    if double then
+      arcTrace (bezier2Guide (x, y) (x + s / 6, y - d) (x + s / 3, y + d) (x + s / 2, y)
+        (x + 2 * s / 3, y - d) (x + 5 * s / 6, y + d) (x + s, y))
+    else arcTrace (bezierParam (x, y) (x + s / 3, y - d) (x + 2 * s / 3, y + d) (x + s, y))
+  ruledWarp (guide (max 0 (-2 * b * w)) y₁) (guide (max 0 (2 * b * w)) (h - y₁))
+
 /-- The Transform presets modelled so far, named as in PowerPoint's Transform gallery
 (`notes/warp/TEXT-WARP-THEORY.md` §7 maps them to the file format's names). Every guide is
 the spec's path (`presetTextWarpDefinitions.xml`) with `l = t = 0`; `WarpPreset.map` gives
@@ -361,8 +387,26 @@ inductive WarpPreset
   those of Arch: Warped. Its handle range differs. -/
   | warpedButton
   /-- "Wave: Down" (`textWave1`): two cubic Bézier guides, each an affine copy of `x³ - x`,
-  with a height handle `a` and a sideways handle `b`; see `WarpPreset.map`. -/
+  with a height handle `a` and a sideways handle `b`; see `waveMap`. -/
   | waveDown
+  /-- "Wave: Up" (`textWave2`): Wave: Down with the bulge reversed. -/
+  | waveUp
+  /-- "Double Wave: Down-Up" (`textDoubleWave1`): two periods of Wave: Down per guide. -/
+  | doubleWaveDownUp
+  /-- "Double Wave: Up-Down" (`textWave4`): two periods of Wave: Up per guide. -/
+  | doubleWaveUpDown
+  /-- "Inflate" (`textInflate`): top cubic `(l, ah), (w/3, -ah/3), (2w/3, -ah/3), (r, ah)`
+  bulging out of the box, and its mirror image at the bottom. -/
+  | inflate
+  /-- "Deflate" (`textDeflate`): top cubic `(l, t), (w/3, 4d/3), (2w/3, 4d/3), (r, t)` with
+  `d = a · min w h`, bulging in, and its mirror image at the bottom. -/
+  | deflate
+  /-- "Curve: Up" (`textCurveUp`): top cubic `(l, ah), (w/3, 5ah/4), (2w/3, 3ah/4), (r, t)`;
+  bottom `(l, h - 3ah/8), (w/3, h + ah/8), (2w/3, h + ah/8), (r, h - 3ah/8)`. -/
+  | curveUp
+  /-- "Curve: Down" (`textCurveDown`): top `(l, t), (w/3, 3ah/4), (2w/3, 5ah/4), (r, ah)`,
+  the mirror image of Curve: Up's; the same bottom guide. -/
+  | curveDown
 
 /-- Where a handle is: as applied, or dragged past one end of its range. -/
 inductive HandleSetting
@@ -378,8 +422,8 @@ stores that bound exactly. The Warped presets have one polar handle carrying an 
 radius. Dragged straight out, it keeps its default angle exactly and stores radius `100000`,
 which the spec pins to `99000`. Dragged inwards it has no stop: crossing the centre flips
 the angle, and short of the centre the radius is wherever the pointer lands. Warped Button
-is the exception, because its spec pins every radius below `40000` up to `40000`. Wave:
-Down's second handle is the sideways one; every other preset has one handle. -/
+is the exception, because its spec pins every radius below `40000` up to `40000`. The four
+waves have a second, sideways handle; every other preset has one handle. -/
 def WarpPreset.stops : WarpPreset → ℕ → Option ℤ × ℤ × Option ℤ
   | .square, 0 => (some 30000, 50000, some 70000)
   | .stop, 0 => (some 14286, 25000, some 50000)
@@ -396,8 +440,13 @@ def WarpPreset.stops : WarpPreset → ℕ → Option ℤ × ℤ × Option ℤ
   | .archWarped, 0 | .warpedCircle, 0 => (none, 50000, some 99000)
   | .archWarpedDown, 0 => (none, 25000, some 99000)
   | .warpedButton, 0 => (some 40000, 50000, some 99000)
-  | .waveDown, 0 => (some 0, 12500, some 20000)
-  | .waveDown, 1 => (some (-10000), 0, some 10000)
+  | .waveDown, 0 | .waveUp, 0 => (some 0, 12500, some 20000)
+  | .doubleWaveDownUp, 0 | .doubleWaveUpDown, 0 => (some 0, 6250, some 12500)
+  | .waveDown, 1 | .waveUp, 1 | .doubleWaveDownUp, 1 | .doubleWaveUpDown, 1 =>
+      (some (-10000), 0, some 10000)
+  | .inflate, 0 => (some 0, 18750, some 20000)
+  | .deflate, 0 => (some 0, 18750, some 37500)
+  | .curveUp, 0 | .curveDown, 0 => (some 0, 45977, some 56338)
   | _, _ => (none, 0, none)
 
 /-- The value of handle `i` at a setting, as a fraction `adj / 100000`, if a drag reaches
@@ -407,7 +456,7 @@ def WarpPreset.handleValue (k : WarpPreset) (i : ℕ) : HandleSetting → Option
   | .min => (k.stops i).1.map (fun x => (x : ℚ) / 100000)
   | .max => (k.stops i).2.2.map (fun x => (x : ℚ) / 100000)
 
-/-- The warp of a preset with handle fractions `a` (first handle) and `b` (second; Wave: Down
+/-- The warp of a preset with handle fractions `a` (first handle) and `b` (second; the waves
 only), sending the unit square to the box `[0, w] × [0, h]` by `ruledWarp` between its two
 guides. Straight guides, and polylines of two equal pieces, are written at constant speed;
 the others are traced by `arcTrace`. -/
@@ -468,16 +517,29 @@ noncomputable def WarpPreset.map (k : WarpPreset) (a b w h : ℝ) : ℝ × ℝ �
       let Δ := 21599998 / 10800000 * Real.pi
       ruledWarp (arcTrace (ellArcVisualGuide c (w / 2) (h / 2) Real.pi Δ))
         (arcTrace (ellArcVisualGuide c (a * w / 2) (a * h / 2) Real.pi Δ))
-  | .waveDown =>
-      -- heights `y₁` (top) and `y₄` (bottom) and bulge `d`; the sideways handle `b` shortens
-      -- both guides to `(1 - 2|b|) w` and shifts them `2|b| w` apart
-      let y₁ := a * h
-      let d := 10 / 3 * y₁
-      let y₄ := h - y₁
-      let s := (1 - 2 * |b|) * w
-      let guide (x y : ℝ) :=
-        arcTrace (bezierParam (x, y) (x + s / 3, y - d) (x + 2 * s / 3, y + d) (x + s, y))
-      ruledWarp (guide (max 0 (-2 * b * w)) y₁) (guide (max 0 (2 * b * w)) y₄)
+  | .waveDown => waveMap false 1 a b w h
+  | .waveUp => waveMap false (-1) a b w h
+  | .doubleWaveDownUp => waveMap true 1 a b w h
+  | .doubleWaveUpDown => waveMap true (-1) a b w h
+  | .inflate =>
+      let d := a * h
+      ruledWarp (arcTrace (bezierParam (0, d) (w / 3, -d / 3) (2 * w / 3, -d / 3) (w, d)))
+        (arcTrace (bezierParam (0, h - d) (w / 3, h + d / 3) (2 * w / 3, h + d / 3) (w, h - d)))
+  | .deflate =>
+      let d := a * min w h
+      ruledWarp (arcTrace (bezierParam (0, 0) (w / 3, 4 * d / 3) (2 * w / 3, 4 * d / 3) (w, 0)))
+        (arcTrace
+          (bezierParam (0, h) (w / 3, h - 4 * d / 3) (2 * w / 3, h - 4 * d / 3) (w, h)))
+  | .curveUp =>
+      let d := a * h
+      ruledWarp (arcTrace (bezierParam (0, d) (w / 3, 5 * d / 4) (2 * w / 3, 3 * d / 4) (w, 0)))
+        (arcTrace (bezierParam (0, h - 3 * d / 8) (w / 3, h + d / 8) (2 * w / 3, h + d / 8)
+          (w, h - 3 * d / 8)))
+  | .curveDown =>
+      let d := a * h
+      ruledWarp (arcTrace (bezierParam (0, 0) (w / 3, 3 * d / 4) (2 * w / 3, 5 * d / 4) (w, d)))
+        (arcTrace (bezierParam (0, h - 3 * d / 8) (w / 3, h + d / 8) (2 * w / 3, h + d / 8)
+          (w, h - 3 * d / 8)))
 
 /-- The Transform setting of a text box: none, or one preset with its handles (the second
 setting matters only for a preset with two handles). -/

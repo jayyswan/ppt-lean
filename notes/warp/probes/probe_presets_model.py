@@ -127,11 +127,33 @@ def guides(k, a, b, w, h):
     if k == "warpedCircle":
         sw = 21599998 / DEG
         return trace(ell_vis(c, w / 2, h / 2, PI, sw)), trace(ell_vis(c, a * w / 2, a * h / 2, PI, sw))
-    if k == "waveDown":
-        y1 = a * h; d = 10 / 3 * y1; y4 = h - y1; sp = (1 - 2 * abs(b)) * w
+    if k in ("waveDown", "waveUp", "doubleWaveDownUp", "doubleWaveUpDown"):
+        e = 1 if k in ("waveDown", "doubleWaveDownUp") else -1
+        y1 = a * h; d = e * 10 / 3 * y1; y4 = h - y1; sp = (1 - 2 * abs(b)) * w
         xt, xb = max(0, -2 * b * w), max(0, 2 * b * w)
-        G = lambda x, y: trace(bez((x, y), (x + sp / 3, y - d), (x + 2 * sp / 3, y + d), (x + sp, y)))
+        if k.startswith("wave"):
+            G = lambda x, y: trace(bez((x, y), (x + sp / 3, y - d), (x + 2 * sp / 3, y + d), (x + sp, y)))
+        else:
+            def G(x, y):
+                g1 = bez((x, y), (x + sp / 6, y - d), (x + sp / 3, y + d), (x + sp / 2, y))
+                g2 = bez((x + sp / 2, y), (x + 2 * sp / 3, y - d), (x + 5 * sp / 6, y + d), (x + sp, y))
+                return trace(lambda t: np.where((t <= .5)[:, None], g1(np.minimum(2 * t, 1)),
+                                                g2(np.maximum(2 * t - 1, 0))))
         return G(xt, y1), G(xb, y4)
+    if k == "inflate":
+        d = a * h
+        return (trace(bez((0, d), (w / 3, -d / 3), (2 * w / 3, -d / 3), (w, d))),
+                trace(bez((0, h - d), (w / 3, h + d / 3), (2 * w / 3, h + d / 3), (w, h - d))))
+    if k == "deflate":
+        d = a * min(w, h)
+        return (trace(bez((0, 0), (w / 3, 4 * d / 3), (2 * w / 3, 4 * d / 3), (w, 0))),
+                trace(bez((0, h), (w / 3, h - 4 * d / 3), (2 * w / 3, h - 4 * d / 3), (w, h))))
+    if k in ("curveUp", "curveDown"):
+        d = a * h
+        top = (bez((0, d), (w / 3, 5 * d / 4), (2 * w / 3, 3 * d / 4), (w, 0)) if k == "curveUp" else
+               bez((0, 0), (w / 3, 3 * d / 4), (2 * w / 3, 5 * d / 4), (w, d)))
+        return (trace(top),
+                trace(bez((0, h - 3 * d / 8), (w / 3, h + d / 8), (2 * w / 3, h + d / 8), (w, h - 3 * d / 8))))
     raise KeyError(k)
 
 
@@ -160,6 +182,13 @@ PRESETS = {
     "warpedCircle": ("textCirclePour", (None, 50000, 99000)),
     "warpedButton": ("textButtonPour", (40000, 50000, 99000)),
     "waveDown": ("textWave1", (0, 12500, 20000), (-10000, 0, 10000)),
+    "waveUp": ("textWave2", (0, 12500, 20000), (-10000, 0, 10000)),
+    "doubleWaveDownUp": ("textDoubleWave1", (0, 6250, 12500), (-10000, 0, 10000)),
+    "doubleWaveUpDown": ("textWave4", (0, 6250, 12500), (-10000, 0, 10000)),
+    "inflate": ("textInflate", (0, 18750, 20000)),
+    "deflate": ("textDeflate", (0, 18750, 37500)),
+    "curveUp": ("textCurveUp", (0, 45977, 56338)),
+    "curveDown": ("textCurveDown", (0, 45977, 56338)),
 }
 POLAR_DEFAULT_ANGLE = {"textArchUpPour": 10800000, "textArchDownPour": 0,
                        "textCirclePour": 10800000, "textButtonPour": 10800000}
@@ -180,7 +209,7 @@ def cases(names):
 def stored_adj(spec, v1, v2):
     if spec in POLAR_DEFAULT_ANGLE:
         return {"adj1": POLAR_DEFAULT_ANGLE[spec], "adj2": v1}
-    if spec == "textWave1":
+    if spec in ("textWave1", "textWave2", "textDoubleWave1", "textWave4"):
         return {"adj1": v1, "adj2": v2}
     return {"adj": v1}
 
