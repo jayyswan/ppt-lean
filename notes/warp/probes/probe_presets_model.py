@@ -7,7 +7,7 @@ Symbol) is idealized glyph by glyph (true circle / half discs), normalized to it
 sent through the map. Handle values other than the default are written into the XML; probe 4
 (`probe_handle.py`) showed the UI drags that store exactly these values.
 Usage: py probe_presets_model.py [preset ...]    -> presets_model.json, presets_model_*.png"""
-import sys, json, math
+import os, sys, json, math
 import numpy as np
 from scipy.spatial import cKDTree
 from warplab import *
@@ -154,6 +154,17 @@ def guides(k, a, b, w, h):
                bez((0, 0), (w / 3, 3 * d / 4), (2 * w / 3, 5 * d / 4), (w, d)))
         return (trace(top),
                 trace(bez((0, h - 3 * d / 8), (w / 3, h + d / 8), (2 * w / 3, h + d / 8), (w, h - 3 * d / 8))))
+    Q = lambda p, c, q: trace(bez(p, ((p[0] + 2 * c[0]) / 3, (p[1] + 2 * c[1]) / 3),
+                                  ((q[0] + 2 * c[0]) / 3, (q[1] + 2 * c[1]) / 3), q))
+    top, bot = seg((0, 0), (w, 0)), seg((0, h), (w, h))
+    if k == "inflateBottom": return top, Q((0, a * h), (w / 2, h), (w, a * h))
+    if k == "deflateBottom": return top, Q((0, h), (w / 2, 2 * a * min(w, h) - h), (w, h))
+    if k == "inflateTop": return Q((0, a * h), (w / 2, 0), (w, a * h)), bot
+    if k == "deflateTop": return Q((0, 0), (w / 2, 2 * a * h), (w, 0)), bot
+    if k == "deflateTopInflateBottom":
+        return top, Q((0, .45 * h), (w / 2, 2 * a * h - .55 * h), (w, .45 * h))
+    if k == "inflateMiddle":
+        return top, Q((0, .3 * h), (w / 2, 2 * a * h - .36 * h), (w, .3 * h))
     raise KeyError(k)
 
 
@@ -189,6 +200,12 @@ PRESETS = {
     "deflate": ("textDeflate", (0, 18750, 37500)),
     "curveUp": ("textCurveUp", (0, 45977, 56338)),
     "curveDown": ("textCurveDown", (0, 45977, 56338)),
+    "inflateBottom": ("textInflateBottom", (60000, 60000, 100000)),
+    "deflateBottom": ("textDeflateBottom", (6250, 50000, 100000)),
+    "inflateTop": ("textInflateTop", (0, 40000, 50000)),
+    "deflateTop": ("textDeflateTop", (0, 50000, 93750)),
+    "deflateTopInflateBottom": ("textDeflateInflate", (5000, 35000, 95000)),
+    "inflateMiddle": ("textDeflateInflateDeflate", (3000, 25000, 47000)),
 }
 POLAR_DEFAULT_ANGLE = {"textArchUpPour": 10800000, "textArchDownPour": 0,
                        "textCirclePour": 10800000, "textButtonPour": 10800000}
@@ -218,6 +235,7 @@ if __name__ == "__main__":
     names = sys.argv[1:] or list(PRESETS)
     boxes = [(100, 100, 288, 288), (100, 100, 360, 216)]
     out = []
+    OUT = os.environ.get("PRESETS_OUT", "presets_model_run.json")
     for k, spec, s1, v1, s2, v2 in cases(names):
         for box in boxes:
             if box != boxes[0] and (s1, s2) != ("default", "default"): continue
@@ -251,5 +269,4 @@ if __name__ == "__main__":
             ax.plot(M[:, 0], M[:, 1], "r.", ms=0.6); ax.set_aspect("equal"); ax.invert_yaxis()
             ax.set_title(f"{k} {s1}/{s2} {int(W)}x{int(H)}", fontsize=9)
             fig.savefig(f"presets_model_{k}_{s1}_{s2}_{int(W)}x{int(H)}.png", dpi=60); plt.close(fig)
-            json.dump(out, open("presets_model.json" if len(names) > 3 else
-                                f"presets_model_{'_'.join(names)}.json", "w"), indent=1)
+            json.dump(out, open(OUT, "w"), indent=1)

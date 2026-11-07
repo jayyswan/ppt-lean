@@ -613,5 +613,20 @@ with `min w h`, not `h`; the spec-parser cross-check passes in a tall 216 × 360
   default, and on one guide at each sideways stop. Curve: Up/Down at 360 × 216 fit 0.979 on
   the top guide. With those fractions every case drops to ≤ 0.66 pt.
 
-Remaining: the 6 mixed Inflate/Deflate presets (quadratic Bézier + line guides, 2–6 paths)
-and the 4 Follow Path presets (rigid placement, a separate constructor).
+### 9.4 The 6 quadratic presets (`presets_model3.json`)
+
+Added: Inflate: Bottom, Deflate: Bottom, Inflate: Top, Deflate: Top, "Deflate: Top, Inflate:
+Bottom" and "Inflate: Middle, Deflate: Top and Bottom". Each guide pair is one straight edge
+and one quadratic Bézier, written in Lean as the degree-elevated cubic (`quadBezierParam`).
+The last two presets have 4 and 6 guides. A single row of text uses the first two: the sweep
+(`sweep_25A6_288x288.json`) fits pair (0, 1) to 0.02–0.07 pt and every other pair is tens of
+points off. Their middle bands are for further rows, which the one-row model does not have.
+Deflate: Bottom, like Deflate, scales its handle by `min w h`. Inflate: Bottom's default
+(60000) is also its minimum.
+
+All 24 cases (every stop in 288², every default in 360 × 216) are at the floor:
+≤ 0.59 pt PowerPoint-to-model, ≤ 1.84 pt model-to-PowerPoint, rms ≤ 0.50. No 48/49 slip
+appeared.
+
+All 36 warping presets are now in the Lean model (149 cases validated). Remaining: the 4
+Follow Path presets (rigid placement, a separate constructor).
