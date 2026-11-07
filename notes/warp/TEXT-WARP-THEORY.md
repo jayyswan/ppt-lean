@@ -500,3 +500,20 @@ trigger is an irregular set of sizes. Unknown.
 The recommended idealization is `L_est = L`, the true arc length. The difference is a 0.4 %
 compression along the text at typical sizes and 2.4 % at the exceptional ones. Where
 PowerPoint fidelity matters, the 6-piece estimate reproduces typical sizes to about 0.03 pt.
+
+### 8.4 Getting the idealized warp from straight edges: rows of blocks (`probe_block_rows.py`)
+
+No installed font has a straight-edged square glyph with extra points along its edges; all
+were scanned. A row of N touching full blocks (█, U+2588) in **Lucida Sans Unicode** works
+instead. Each block is exactly 1 em wide, so at 72 pt the pen steps are exact and the blocks
+touch. The row then has edges made of N short segments. Wave: Down, 360 × 360 pt, deviation
+from the exact arc-length image with PowerPoint's own fill:
+
+| N | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| rms / max (pt) | 10.0 / 21.8 | 5.2 / 10.5 | 0.65 / 1.7 | 0.25 / 1.7 | 0.17 / 1.7 |
+
+Eight or more blocks approach ●-level fidelity. A 1.7 pt local maximum that does not depend
+on N is not yet located. Other seamless full blocks: Consolas, Cascadia Code/Mono, Courier New,
+Lucida Console, Segoe UI Variable, Yu Gothic and MS Gothic. Their advances need a size that
+keeps the pen step on the 0.75 pt grid.
