@@ -386,3 +386,33 @@ New, and open:
 
 So Wave's exact rule is not pinned down yet. The likeliest explanation is that PowerPoint
 estimates the Bézier's length approximately, but that is untested.
+
+### 8.1 Single solid glyphs: PowerPoint approximates long edges (`probe_wave_ctrl.py`)
+
+The same comparison on single glyphs (Segoe UI Symbol 72 pt, Wave: Down):
+
+| Glyph, box | Shear rms / max | Arc length rms / max |
+|---|---|---|
+| ● 288×288 | 1.76 / 5.4 | **0.17 / 0.57** |
+| ● 504×144 | 0.27 / 0.87 | 0.23 / 0.86 |
+| ■ 288×288 | 7.9 / 18.1 | 7.7 / 18.2 |
+| ■ 504×144 | 1.8 / 6.6 | 1.7 / 6.7 |
+
+**● follows the arc-length law.** **■ follows neither model**, because PowerPoint does not draw
+the warped image of a long straight edge. The unwarped ■ is `M L L L Z`, four edges. The
+warped one is `M C C C C C Z`:
+- Each edge's end points land on the guide at the arc-length positions, for example
+  (382.852, 358.094) at Bézier parameter 0.98213.
+- The end tangents follow the guide's tangent.
+- The handle lengths, however, are about 0.17–0.18 of the guide's derivative. Exact
+  subdivision would give `t₁/3 = 0.327`, and the arc-length Hermite estimate is about 0.24.
+- So the edge is a cubic of PowerPoint's own fitting, up to 18 pt off the guide.
+- The top edge is split into two cubics at a point partway along. The reason is not known.
+- Mapping the control points (lines treated as cubics with handles at thirds) does not fit
+  either: 10 pt max.
+
+Consequence for the idealization: "the exact warped image" matches PowerPoint well when the
+glyph's own outline segments are short relative to the warp's bending. That holds for ●, for
+lettering, and for every straight-guide preset, where a cubic represents the image exactly.
+It does **not** hold for long straight edges under curved guides. Whether to idealize those
+to the exact image is a modelling decision. PowerPoint's segment-fitting rule is open.
