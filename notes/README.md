@@ -19,6 +19,7 @@ One folder per topic, named for the construction or investigation it belongs to:
 | `offset-inversion/` | offset curves, offinverse, Whewell/tangent angle, soundness defects |
 | `ppt-curves/` | PowerPoint curve primitives (tan curves, Béziers, `restrict`) |
 | `spiral/` | spiral and arc-length constructions |
+| `theta/` | AGM (Gauss's theorem) and theta-function values |
 | `third-kind/` | third-kind integrals at arbitrary `n` |
 | `trendline/` | PowerPoint trendline origin (COM, XML, UI, registry) |
 | `warp/` | sheared/warped sine curves; Unicode glyph catalogue (`GLYPH-CATALOGUE.md`) |
