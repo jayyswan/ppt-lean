@@ -77,7 +77,7 @@ preset menu items, never a typed value. Measured in PowerPoint
   whole shape box: the text insets do not enter.
 * **Handle.** A drag stores whatever value the pointer lands on, which is not a clear
   choice, except when it is dragged past an end of the range: then the stored value is the
-  `pin` bound exactly (`val 100000` for Triangle, `val 0` for Triangle Inverted). So the
+  `pin` bound exactly (`val 100000` for Triangle: Up, `val 0` for Triangle: Down). So the
   handle takes its spec default or one of its two bounds.
 
 ## The warp
@@ -93,9 +93,10 @@ One anomaly is unexplained: at a few box sizes (6 in × 3 in among them) PowerPo
 the top guide off by up to 6 pt, while neighbouring sizes fit. A construction should name its
 box size and have it checked by `probe_textbox_model.py`.
 
-Only the Triangle pair is listed so far: their guides are polylines with equal pieces, so
-constant speed has a closed form. Other straight-guide presets follow the same pattern. The
-curved-guide families (Can, Ring, Wave, the Pours) need their arc-length maps first.
+Only Triangle: Up and Triangle: Down are listed so far: their guides are polylines with equal
+pieces, so constant speed has a closed form. Other straight-guide presets follow the same
+pattern. The curved-guide ones (Warp Up/Down, Ring: Inside/Outside, the Waves, the Warped
+Arch/Circle/Button items) need their arc-length maps first.
 -/
 
 namespace Pconstructible
@@ -245,32 +246,35 @@ form, with `T` and `B` traced at constant speed (`TEXT-WARP-THEORY.md` §2). -/
 def ruledWarp (T B : ℝ → ℝ × ℝ) (p : ℝ × ℝ) : ℝ × ℝ :=
   ((1 - p.2) * (T p.1).1 + p.2 * (B p.1).1, (1 - p.2) * (T p.1).2 + p.2 * (B p.1).2)
 
-/-- The Transform presets modelled so far. -/
+/-- The Transform presets modelled so far, named as in PowerPoint's Transform gallery
+(`notes/warp/TEXT-WARP-THEORY.md` §7 maps them to the file format's names). -/
 inductive WarpPreset
-  /-- `textTriangle`: top guide `(l, y) → (hc, t) → (r, y)`, bottom `(l, b) → (r, b)`. -/
-  | triangle
-  /-- `textTriangleInverted`: top `(l, t) → (r, t)`, bottom `(l, y) → (hc, b) → (r, y)`. -/
-  | triangleInverted
+  /-- Gallery "Triangle: Up" (`textTriangle`): top guide `(l, y) → (hc, t) → (r, y)`, bottom
+  `(l, b) → (r, b)`. -/
+  | triangleUp
+  /-- Gallery "Triangle: Down" (`textTriangleInverted`): top `(l, t) → (r, t)`, bottom
+  `(l, y) → (hc, b) → (r, y)`. -/
+  | triangleDown
 
 /-- The handle range of a preset, from the `pin` guide of its spec, in 1/100000 units.
 Both Triangles have `a = pin 0 adj 100000`. -/
 def WarpPreset.adjRange : WarpPreset → ℤ × ℤ
-  | .triangle => (0, 100000)
-  | .triangleInverted => (0, 100000)
+  | .triangleUp => (0, 100000)
+  | .triangleDown => (0, 100000)
 
 /-- The handle value a preset is applied with (`avLst` of its spec). -/
 def WarpPreset.adjDefault : WarpPreset → ℤ
-  | .triangle => 50000
-  | .triangleInverted => 50000
+  | .triangleUp => 50000
+  | .triangleDown => 50000
 
 /-- The warp of a preset with handle fraction `a = adj / 100000`, sending the unit square to
 the box `[0, w] × [0, h]`. Both guides of a Triangle are polylines whose two pieces have
 equal length, so the constant-speed tracing is the piecewise-linear `|2u - 1|`. -/
 noncomputable def WarpPreset.map (k : WarpPreset) (a w h : ℝ) : ℝ × ℝ → ℝ × ℝ :=
   match k with
-  | .triangle =>
+  | .triangleUp =>
       ruledWarp (fun u => (u * w, a * h * |2 * u - 1|)) (fun u => (u * w, h))
-  | .triangleInverted =>
+  | .triangleDown =>
       ruledWarp (fun u => (u * w, 0)) (fun u => (u * w, h - (1 - a) * h * |2 * u - 1|))
 
 /-- Where the handle is: as applied, or dragged past one end of its range. -/
