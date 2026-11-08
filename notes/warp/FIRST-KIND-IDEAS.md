@@ -142,3 +142,29 @@ the coordinatewise `(ln x, ln y)`, not `(ln |z|, arg z)`. No route found.
 4. If 1 or 2 fails, record 2.1–2.3 and 3.1 as the reduction: *`am` is P-constructible if the curve
    `cosh x = c cos y` (or an equivalent Serret curve) is, by the abutting-arcs argument of
    `ellipticEAm_Pconstructible_of_mem_Icc`*. The converse is not claimed.
+
+## 7. Scan of the Pour/Warped (polar) family at every handle value (2026-11-08)
+
+Square box, so `z = (α + βv)·e^{iΘu}` with `α + βv` linear in `v` (handle in `α, β`). Script: sympy,
+exact. A glyph curve `(u(t), v(t))` has image speed² `β²v′² + (α+βv)²Θ²u′²`.
+
+* **Segments** (polygon edges, slanted edges): quadratic under the root, so `arsinh`: elementary
+  (the Archimedean spiral). Nothing to find.
+* **Circle glyph** (ellipse in the normalized `(u,v)` box, semi-axes `r_u, r_v`, centre height `v₀`).
+  With `s = sin t`, `κ = Θ²r_u²`, `λ = (α+βv₀)/(β r_v)`: `w² = (1−s²)P(s)`,
+  `P = (1−s²) + κ s²(λ+s)²`, sextic, **genus 2 for generic handle**. The handle moves `λ`
+  continuously, so it can reach the two degenerate loci:
+  * `λ = 0` (circle centred on the pole): even in `s`, genus 1 in `q = s²`. Numerator
+    `(1 − q + κq²)/2`: third-kind coefficient `−1/2`, never 0. **Not first kind.**
+  * `λ = 1` (circle tangent to the pole, a P-constructible handle value): `w² = (1−s)(κs³ + κs² − s + 1)`,
+    `ν = (κs³+κs²−s+1) ds/w`. After removing `d(−w/2)` the class is
+    `(1/2) ω + ((κ−1)/2) s ds/w + κ s² ds/w`. Third-kind part vanishes at `κ = 1`; second-kind part
+    `κ` never vanishes. **No handle value gives pure first kind.** At `κ = 1` the arc is pure
+    first + second kind with no residue (a genuine elliptic-E-type arc from a text glyph, same curve
+    for every box).
+* **Not covered:** the generic genus-2 case (T6-style: needs a Jacobian-splitting check) and
+  non-square boxes (arc-fraction on an ellipse brings in `E⁻¹`).
+
+Conclusion: the polar family at all handle values adds no first-kind arc. Combined with §14.7 (slide
+presets) and §14.2 (straight guides), the exact maps of the text presets give no pole-free arc; the
+remaining routes are the linking problem (§4) and the missing `Log` curve (§3).
