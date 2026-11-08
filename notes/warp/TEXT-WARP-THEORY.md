@@ -1201,3 +1201,36 @@ crossings or extremes. Still open: route 2 (a mismatch preset, with two differen
 inversions in one image, which is not a slide preset and is not covered by the theorem), a
 construction that supplies a pure cubic guide or an involute (§14.6), or a non-text source of a
 first-kind curve (Serret's curve) as a new base curve.
+
+### 14.8 Route 2 tried: the mismatch preset Curve: Up/Down (`probes/t_route2.py`)
+
+**Result: closed for every existing preset pair.** Curve: Up/Down is the real "cubic over parabola"
+preset: top guide `T(X) = ah(1 + ¾X − (9/4)X² + ½X³)`, bottom guide `B(X) = h − 3ah/8 + (3/2)ah·X(1−X)`
+(§10.5), matched by equal arc fraction. A horizontal glyph edge at height `c` is the blend
+`(1−c)·T(x_T) + c·B(x_B)` with `J_T(x_T)/L_T = J_B(x_B)/L_B`. Crossing it with a drawn curve gives an
+algebraic link `x_B = r(x_T)` (affine for a vertical line), so the crossing equation is
+
+    J_T(x)/L_T − J_B(r(x))/L_B = 0.
+
+**Decomposition (checked to 30 digits at handle a = 0.45977, 0.56338, 0.2, 0.05; box 1 × 1).**
+
+* Cubic: `Z = X − 3/2`, `g′ = (3a/2)(Z² − 7/4)`, so `Q = 1 + g′²` is an even quartic and
+  `J_T = (Z/3)√Q + c₀ F + c₂ Ê`, `c₂ = −21a²/8`, `c₀ = (2/3)(1 + 441a²/64)`. `c₂ ≠ 0` for every
+  `a ≠ 0` (the handle only rescales it); no third-kind part, since `Q` is even in `Z`.
+* Parabola: `J_B = [k√(1+k²) + arsinh k]/(2k)`, `k = 3a/2`: algebraic plus a logarithm with coefficient
+  `1/(2k) ≠ 0`.
+
+So the crossing equation has the form `A·F + c₂·Ê + λ·log(algebraic) + algebraic = const`. It is not a
+first-kind inversion: the `Ê` term is not cancelled (the parabola supplies only a log), and the log is
+not an elliptic class. [Proof for the decomposition; the independence of `F`, `Ê` and `log(alg)` over
+the algebraic functions is the Ostrowski/Kolchin argument, **paper only, not checked**.]
+
+**Other mismatched presets.** Inflate/Deflate Top/Bottom and Deflate-Inflate(-Deflate) pair a parabola
+with a line (logs only, no elliptic class). Warped Circle/Arch/Button and Ring pair homothetic ellipses,
+which share one angle, so they are matched, not mismatched.
+
+**What would still cancel `Ê`.** Only a degree-2 (Landen/isogeny) link between two elliptic arcs, which
+needs a bidegree-(2,1) relation (`tan(φ₁ − φ) = k′ tan φ`). A line crossing gives bidegree (1,1). No preset
+has two elliptic guides on isogenous curves. Route 2 is therefore closed unless a new base curve is
+allowed. By-product: the vertical-line crossing defines a mixed `F + Ê + log` constant that may or may
+not be new [Open].
