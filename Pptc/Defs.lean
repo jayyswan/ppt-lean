@@ -63,9 +63,9 @@ a fixed signed distance along the
 that parametrization to be regular (nonvanishing `speed`) for the normal to exist at all.
 
 Text enters through the single constructor `PConstructibleCurve.text`, which draws the
-outline of a `TextBox` (`Pptc.TextBox`). A text box is plain rational data, not a third
-mutual inductive: it never depends on `PConstructible`, and nothing turns a curve back
-into text.
+outline of a `TextBox` (`Pptc.TextBox`). A text box stores plain rational data, not a third
+mutual inductive; the constructor additionally takes the current handle positions and drawn
+box size, which are `PConstructible` reals. Nothing turns a curve back into text.
 -/
 
 namespace Pconstructible
@@ -456,12 +456,22 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
   -- pinned at its stop the Triangle collapses the flat side of ◗ to a point and draws a
   -- lobe of the lemniscate of Gerono (`notes/warp/TEXT-WARP-THEORY.md`).
   --
-  -- A `TextBox` is made of UI choices only, never typed values: font sizes and box sizes as
-  -- spinner step counts, character spacing in its 0.1 pt steps, and the handle at its
-  -- default or dragged past either stop, which stores the `pin` bound exactly. Its
+  -- The box's stored data is made of UI choices only, never typed values: font sizes and
+  -- spinner box sizes as step counts, character spacing in its 0.1 pt steps, and the handle
+  -- at its default or dragged past either stop, which stores the `pin` bound exactly. Its
   -- `WellFormed` hypotheses are the ranges of those choices.
-  | text (T : TextBox) (hT : T.WellFormed) :
-      PConstructibleCurve T.outline
+  --
+  -- The constructor additionally accepts the continuous values a drag can set: the two
+  -- fill-handle fractions `a`, `b` and the box size `w`, `h` as drawn. These are idealized to
+  -- `PConstructible` reals; the handles must lie in the preset's reachable
+  -- ranges, and the box size must be positive. `T.WellFormed` still checks the stored rational
+  -- data, including the stop settings that `TextBox.outline` uses as its special case.
+  | text (T : TextBox) (a b w h : ℝ)
+      (ha : PConstructible a) (hb : PConstructible b)
+      (hw : PConstructible w) (hh : PConstructible h)
+      (hw_pos : 0 < w) (hh_pos : 0 < h)
+      (hrange : T.warp.HandleInRange a b) (hT : T.WellFormed) :
+      PConstructibleCurve (T.outlineAt a b w h)
 end
 
 end Pconstructible

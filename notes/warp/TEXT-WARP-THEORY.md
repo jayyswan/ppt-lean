@@ -47,13 +47,15 @@ are in `probes/` (see `probes/README.md`). Labels: [Measured] = PowerPoint obser
 | Arc-length fill fraction `k` | **idealized: 1** | Exactly 1.0000 on Stop, Triangle, Fade and Circle Pour. 0.976 on the waves and up to 2 % drift on Ring Inside, where PowerPoint underestimates the guide length. The intent is "the text spans the guide". |
 | PowerPoint's rendering between nodes | **idealized: the exact map** | Long straight edges are under-subdivided (Inflate plot: the outer edge sags about 8 pt); short edges are within 0.4 pt. Same category as the spiral notes. |
 | Box sizes with short arc spans (F1 §e) | **use only full-span sizes** | Arch Down Pour at 4 in fits at 1.85 pt instead of ~0.05 pt: that is F1's span artifact, not a different map. |
-| A handle dragged to an arbitrary position | **rational, but no intent** | Dragging always stores a rational, so it is harmless for constructibility. Results should still be stated for *every* rational handle value, not a measured one. |
+| A box resized to an arbitrary size | **P-constructible reals** | A resize can land anywhere, so the `text` constructor takes `w, h : ℝ` with `PConstructible w, h`; the spinner size `T.w, T.h` is the rational special case. For constant-speed straight guides, changing `w, h` is exactly `scale_x`/`scale_y` of a fixed-size outline. For arc-traced guides it is not: anisotropic scaling changes the arc-length parametrization (§9.1). |
+| A handle dragged to an arbitrary position | **P-constructible, but no intent** | Dragging stores a rational, so it is harmless for constructibility. The constructor accepts every `PConstructible` value in the measured reachable range, and the three stop settings are recovered as special cases. Results should be stated for every such value, not a measured one. |
 | A handle dragged **past its stop** | **exact bound, if confirmed** | `pin 0 adj 100000` clamps exactly. Whether a UI drag stores `100000` is [Open] (§5). |
 
 **The practical rule this gives.** Because ℚ ⊆ P-constructible, the "is 0.457 really 0.457?"
 worry only bites for a number known *solely* by measuring an approximation (a fitted radius,
 a sampled curve). Anything PowerPoint stores or computes from stored integers is exact. State
-theorems for arbitrary rational parameters and the question disappears.
+theorems for arbitrary P-constructible parameters; every stored rational is then a special
+case and the question disappears.
 
 ## 2. The measured warp law (probes 1–3)
 
@@ -546,10 +548,13 @@ Stop, Triangle ×2, Chevron ×2, Fade ×4, Slant ×2, Cascade ×2), the 4 ellipt
 Up/Down, Ring: Inside/Outside), the 4 Warped ones (one row of text), and Wave: Down. Left: 7
 Bézier presets, 6 mixed Inflate/Deflate presets, 4 Follow Path presets.
 
-### 9.1 Handles
+### 9.1 Handles and box size
 
-Each handle may sit at its default or at a stop reached by dragging past the end of its
-range (`WarpPreset.stops`). Measured with real mouse drags (`probe_handle.py`):
+Each handle may sit anywhere a drag can land, not only at the default or a stop reached by
+dragging past the end of its range (`WarpPreset.stops`). The `text` constructor therefore
+takes `a, b : ℝ` with `PConstructible a, b`, constrained by `WarpPreset.HandleInRange`; the
+three-stop table remains the measured special case (`handleValue_mem_handleRange`). Measured
+with real mouse drags (`probe_handle.py`):
 - **Straight handles** store their bound exactly at both ends (Stop: 14286 and 50000; earlier
   Triangle).
 - **Polar handles** (the Warped presets). Dragged straight outward, a polar handle keeps its
@@ -561,6 +566,44 @@ range (`WarpPreset.stops`). Measured with real mouse drags (`probe_handle.py`):
   40000 (a drop short of the centre stored 0).
 - **Wave: Down's sideways handle** (`adj2`, ±10000) shortens both guides to `(1 − 2|b|)·w` and
   shifts them `2|b|·w` apart, top and bottom in opposite directions.
+
+The box size is likewise a `PConstructible` pair. Up to affine equivalence only the aspect
+ratio `w/h` is new: scaling both dimensions by the same factor is a homothety. When the aspect
+ratio changes, the question is whether the new outline is merely an affine image of the old
+one. For the 13 presets whose guides are straight segments written at constant speed (Square,
+Triangle ×2, Chevron ×2, Fade ×4, Slant ×2, Cascade ×2), the map is bilinear in `(w, h)` and
+`(u, v)`, so `F_{w,h} = diag(w/w₀, h/h₀) ∘ F_{w₀,h₀}`: arbitrary sizes add only
+`scale_x`/`scale_y`. The other presets trace a curved or unequal-length guide by `arcTrace`.
+Under anisotropic scaling the speed becomes `√(λ²x′² + μ²y′²)`, which is a constant multiple
+of the original speed exactly when `λ = μ` or the guide's tangent direction is constant.
+Triangle and Chevron have corners but are written directly at constant speed, so their
+corner breakpoints are fixed in `u` and they are still affine. Stop passes its polyline
+through `arcTrace`, so its unequal piece lengths move the breakpoints with the aspect ratio:
+with `r = w/h`, `L₁ = h√((r/3)² + a²)`, `L₂ = h r/3`, and the first breakpoint is
+`u₁(r) = L₁/(2L₁ + L₂)`. Curved ellipse/Bézier guides fail the speed condition as well.
+Deflate and Deflate Bottom scale their handles by `h`, not by `min w h` (measured in tall
+boxes; §9.3), so they have no `min` branch at all. A numerical check of the validated model
+at 288² and 360 × 216 gives a nonzero affine-fit residual for every such preset
+(≈0.5–13 pt, largest on Ring and the Warped presets; uniform scaling gives zero to machine
+precision). Probes 39a/39b test this directly. 39a is the pure model at `k = 1`; 39b bakes
+PowerPoint's own outlines and
+fits the per-guide spans `kT, kB` at each size, marking the 48/49 slip with `*` so it is not
+mistaken for an aspect-ratio effect. Arch: Warped at its default handle is clean at
+288² → 360 × 216: model residual 9.1 pt, PowerPoint residual 9.2 pt, model-to-PowerPoint
+match under 0.6 pt. In the default 288² → 360 × 216 run, 14 of the 36 presets are flagged
+for 48/49 (including the waves' 0.9756 variant); Arch: Warped Down is flagged because its
+bottom guide spans 48/49, and Ring: Inside is flagged at both sizes on its top guide. The
+clean curved rows still show the effect: Stop 4.4 pt, Arch: Warped 9.2 pt, Inflate 2.6 pt,
+Deflate 3.1 pt. Those are the rows to use as PowerPoint evidence for the aspect-ratio
+change.
+
+So the capability answer is: for the 13 constant-speed straight presets, arbitrary `w, h`
+adds nothing beyond `scale_x`/`scale_y` and is redundant. For the other presets it adds a
+genuine aspect-ratio parameter to the warped-text family; the non-square outline is not an
+affine image of the square-box outline. That does not by itself prove that no *other*
+constructor can produce the same set: it rules out the affine route, not every route. The
+safe formal statement is “new warp family”, and a new-number claim would need a separate
+invariant for a specific preset and glyph.
 
 ### 9.2 Validation (`probes/probe_presets_model.py`, `probe_presets_fill.py`)
 
@@ -610,7 +653,8 @@ Added: Wave: Up, Double Wave: Down-Up, Double Wave: Up-Down, Inflate, Deflate, C
 Curve: Down. All 30 modelled presets are now validated (125 cases). The four waves share
 `waveMap`: one cubic per guide (or two for the Double Waves) with control heights
 `y, y − d, y + d, y`, `d = ±10y₁/3`, and the same sideways handle. Deflate's handle scales
-with `min w h`, not `h`; the spec-parser cross-check passes in a tall 216 × 360 box too.
+with `h`, not `min w h`: the spec XML writes `ss`, but PowerPoint in a tall 216 × 360 box
+matches `d = a·h` to 2.3 pt and `d = a·min(w,h)` to 27 pt.
 
 - **At the floor** (≤ 0.54 pt PowerPoint-to-model, ≤ 1.84 pt model-to-PowerPoint): every
   Inflate and Deflate case, Curve: Up/Down at 288², and every handle-minimum (flat) case.
@@ -631,7 +675,7 @@ and one quadratic Bézier, written in Lean as the degree-elevated cubic (`quadBe
 The last two presets have 4 and 6 guides. A single row of text uses the first two: the sweep
 (`sweep_25A6_288x288.json`) fits pair (0, 1) to 0.02–0.07 pt and every other pair is tens of
 points off. Their middle bands are for further rows, which the one-row model does not have.
-Deflate: Bottom, like Deflate, scales its handle by `min w h`. Inflate: Bottom's default
+Deflate: Bottom, like Deflate, scales its handle by `h`. Inflate: Bottom's default
 (60000) is also its minimum.
 
 All 24 cases (every stop in 288², every default in 360 × 216) are at the floor:
@@ -737,7 +781,7 @@ bottom's. This is the x³ − x curve of §8, placed by arc length rather than b
 | Preset | T: y(X) | B: y(X) | a |
 |---|---|---|---|
 | Inflate | parabola `d(1−2X)²`, `d = ah` | `h − d(1−2X)²` | 0 / .1875 / .2 |
-| Deflate | parabola `4δX(1−X)`, `δ = a·min(w,h)` | `h − 4δX(1−X)` | 0 / .1875 / .375 |
+| Deflate | parabola `4δX(1−X)`, `δ = ah` | `h − 4δX(1−X)` | 0 / .1875 / .375 |
 | Curve: Up | true cubic `ah(1 + ¾X − (9/4)X² + ½X³)` | parabola `h − 3ah/8 + (3/2)ah·X(1−X)` | 0 / .45977 / .56338 |
 | Curve: Down | the same cubic at `1 − X` | same as Curve: Up | same |
 
@@ -751,7 +795,7 @@ The control point sits at `x = w/2`, so a curved guide is `y = p + q·X(1−X)`:
 | Preset | T | B | extreme point | a |
 |---|---|---|---|---|
 | Inflate: Bottom | `y = 0` | `ah + 2(1−a)h·X(1−X)` | `(1+a)h/2` | .6 / .6 / 1 |
-| Deflate: Bottom | `y = 0` | `h − 4(h−δ)·X(1−X)`, `δ = a·min(w,h)` | `δ` | .0625 / .5 / 1 |
+| Deflate: Bottom | `y = 0` | `h − 4(h−δ)·X(1−X)`, `δ = ah` | `δ` | .0625 / .5 / 1 |
 | Inflate: Top | `ah(1 − 2X(1−X))` | `y = h` | `ah/2` | 0 / .4 / .5 |
 | Deflate: Top | `4ah·X(1−X)` | `y = h` | `ah` | 0 / .5 / .9375 |
 | Deflate: Top, Inflate: Bottom (one row) | `y = 0` | `0.45h + 2(2a−1)h·X(1−X)` | `(a − 0.05)h` | .05 / .35 / .95 |
