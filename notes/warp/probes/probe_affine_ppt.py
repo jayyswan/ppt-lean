@@ -98,9 +98,11 @@ def bake_sample(preset, spec, v1, v2, box, uv=None):
                 gt=gt, gb=gb, WD=WD, L=L, T=T, W=W, H=H, n=len(U))
 
 
-def fit_fill(sample):
+def fit_fill(sample, mask=None):
     """Fit how much of each guide PowerPoint actually spans (probe 33's kT, kB)."""
     U, V = sample["ownU"], sample["ownV"]
+    if mask is not None:
+        U, V = U[mask], V[mask]
     gt, gb, WD = sample["gt"], sample["gb"], sample["WD"]
     offset = np.array([sample["L"], sample["T"]])
     tree = cKDTree(WD)

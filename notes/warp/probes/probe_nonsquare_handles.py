@@ -20,8 +20,8 @@ BOXES = {
     "archWarpedDown": [(240, 320), (384, 288)],
     "warpedCircle": [(320, 240), (240, 320)],
     "warpedButton": [(320, 240), (240, 320)],
-    "ringInside": [(320, 240), (384, 288)],
-    "ringOutside": [(320, 240), (384, 288)],
+    "ringInside": [(320, 240), (240, 320)],
+    "ringOutside": [(320, 240), (240, 320)],
     "warpUp": [(320, 240), (288, 384)],
     "warpDown": [(320, 240), (240, 320)],
     "waveDown": [(320, 240), (240, 320)],
@@ -32,8 +32,15 @@ BOXES = {
 NAMES = list(BOXES)
 
 
-def fit_residual(S, kT, kB):
-    U, V = S["ownU"], S["ownV"]
+def seam_mask(k, S):
+    """Ring's closed outline loses its seam edge in the Merge Shapes bake."""
+    if k in ("ringInside", "ringOutside"):
+        return (S["ownU"] > 0.02) & (S["ownU"] < 0.98)
+    return np.ones_like(S["ownU"], dtype=bool)
+
+
+def fit_residual(S, kT, kB, mask):
+    U, V = S["ownU"][mask], S["ownV"][mask]
     M = ((1 - V)[:, None] * S["gt"](np.clip(kT * U, 0, 1))
          + V[:, None] * S["gb"](np.clip(kB * U, 0, 1)) + np.array([S["L"], S["T"]]))
     d = cKDTree(S["WD"]).query(M)[0]
@@ -50,11 +57,13 @@ def main():
             for w, h in BOXES.get(k, [(320, 240), (240, 320)]):
                 try:
                     S = pa.bake_sample(kk, spec2, v1, v2, (100, 100, w, h))
-                    kT, kB = pa.fit_fill(S)
-                    fmx, frms = fit_residual(S, kT, kB)
+                    mask = seam_mask(k, S)
+                    kT, kB = pa.fit_fill(S, mask=mask)
+                    fmx, frms = fit_residual(S, kT, kB, mask)
                     slip = pa.has_48_49(k, kT, kB)
+                    k1 = float(S["match"][mask].max())
                     print(f"{k:18s} {s1 + '/' + s2:13s} {w}x{h:<5d} "
-                          f"{kT:8.5f} {kB:8.5f} {S['match'].max():8.4f} "
+                          f"{kT:8.5f} {kB:8.5f} {k1:8.4f} "
                           f"{fmx:8.4f} {frms:8.4f} {str(slip):>5s}")
                 except Exception as exc:
                     print(f"{k:18s} {s1 + '/' + s2:13s} {w}x{h:<5d} ERROR {exc!r}")

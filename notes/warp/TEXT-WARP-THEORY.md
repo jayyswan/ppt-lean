@@ -298,10 +298,11 @@ Soundness checklist for any of these:
 3. **Wave fill shortfall** (k = 0.976): does it vary with box size or text length? Either way
    the ideal is k = 1, but a size-independent constant would mean PowerPoint uses a fixed
    flattening.
-4. **Non-square Circle Pour**: confirm that arc length on the elliptic guide (not angle) is
-   used. That would make it family X, not P.
-5. **Ring Inside drift** (6 pt on the back half of the loop): length estimation, or a
-   different seam convention?
+4. ~~**Non-square Circle Pour**: confirm arc length on the elliptic guide.~~ Resolved by
+   probe 40b: `arclen` reaches the floor; `param` and `visual` do not.
+5. ~~**Ring Inside drift** (6 pt on the back half of the loop).~~ Resolved: the back-half
+   drift is the 48/49 top-guide slip; the separate portrait 19.7 pt reading is the omitted
+   seam edge (probe 40c).
 6. **Stacking**: Transform followed by 3-D Rotation (see `../3d/`) or by shape flip/rotate.
    F1 found flips and rotations rigid; 3-D perspective is not.
 
@@ -615,10 +616,12 @@ floor). The probe then compares the model with PowerPoint's baked outline of "�
 Symbol, glyphs idealized): 91 cases, every reachable stop in a 288 pt square box and every
 default in 360 × 216.
 
-- **Floor.** Ring: Outside is checked by the PowerPoint-to-model distance only, because its
-  two ends meet and the seam edges vanish from the merged outline. In the 71 non-Wave cases
-  outside the table below, PowerPoint's outline lies within 0.7 pt of the model and the model
-  within 2.0 pt of PowerPoint's (rms ≤ 0.52). The 2 pt is the font's ◗/◖ not being exact half
+- **Floor.** Ring: Inside and Outside have closed outlines; their two ends meet and the seam
+  edges vanish from the merged outline. Excluding the seam (`u < 0.02` or `u > 0.98`), the
+  portrait `240 × 320` model-to-PowerPoint maxima are 0.27 pt (Inside) and 0.25 pt (Outside);
+  including the missing seam they read 19.7 pt. In the 71 non-Wave cases outside the table
+  below, PowerPoint's outline lies within 0.7 pt of the model and the model within 2.0 pt of
+  PowerPoint's (rms ≤ 0.52). The 2 pt is the font's ◗/◖ not being exact half
   discs: it is the same at the identity-like Square default. Wave: Down's other 5 cases are
   within 1.9 / 2.4 pt, the typical `k ≈ 0.995` of §8.3.
 - **Every miss has one cause: 48/49.** In the other 15 cases, fitting a fill fraction per
