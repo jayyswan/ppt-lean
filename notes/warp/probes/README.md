@@ -44,6 +44,12 @@ foreground; do not run it while someone else is using the screen.
 | `probe_row_triangle.py rowcheck_triangle_out.txt` | probe 36: Lower Right Triangle in a mixed row vs `RowCheckTriangle.lean` predictions |
 | `probe_triangle_warp.py` | probe 37: a lone triangle's corners and slanted edge through 19 presets in two boxes (`triangle_warp.json`) |
 | `probe_triangle_row.py [N] [size]` | probe 38: a row of N triangles (short slanted edges) through 11 presets (`triangle_row.json`) |
+| `probe_affine_model.py [PRESET ...]` | probe 39a: pure-model affine-equivalence test for box-size changes at `k = 1` (`affine_box_model.json`; `--all-stops`, repeated `--pair`) |
+| `probe_affine_ppt.py [PRESET ...]` | probe 39b: PowerPoint outlines at two box sizes, model-guided point correspondence, best affine fit (`affine_box_ppt.json`); fits `kT, kB` and flags 48/49 slips with `*` |
+| `probe_nonsquare_layout.py` | probe 40a: unwarped ink frame vs box aspect ratio |
+| `probe_nonsquare_ellipse.py` | probe 40b: `param` vs `visual` vs `arclen` on non-square ellipse guides |
+| `probe_nonsquare_handles.py [PRESET ...]` | probe 40c: handle stops in landscape and portrait boxes, before/after fitting `kT, kB` |
+| `probe_nonsquare_scan.py [PRESET ...]` | probe 40d: find non-square boxes with `kT, kB` near 1 |
 
 Results of the UI-input probe are in `ui_inputs.json`.
 

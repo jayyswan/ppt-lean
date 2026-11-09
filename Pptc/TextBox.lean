@@ -25,13 +25,16 @@ import Pptc.Curves
 The data side of text: what a single PowerPoint text box holds, and the outline it draws.
 `Pptc.Defs` imports this file for its one constructor `PConstructibleCurve.text`, which turns
 a well-formed `TextBox` into a curve (Merge Shapes ▸ Fragment on the box). Nothing here
-mentions `PConstructible`, and nothing needs to: every input is a step count or a menu choice,
-so every number below is rational. Text needs no third mutual inductive.
+mentions `PConstructible`: the box itself is a step count or a menu choice, so every number
+stored below is rational. The *constructor* is the exception: a drag can store an arbitrary
+pointer position and a resize an arbitrary size, idealized to `PConstructible` real values
+(the handles in their reachable ranges and the size positive), and `Pptc.Defs` passes them to
+`TextBox.outlineAt`. Text needs no third mutual inductive.
 
 Text is a structure, not an inductive, because it has no construction history. A box holds
 one row of glyphs with one Transform setting, and no operation turns a curve back into text.
 That gives the two restrictions on warps for free:
-* warps act only on text, since `WarpPreset.map` appears only inside `TextBox.outline`;
+* warps act only on text, since `WarpPreset.map` appears only inside `TextBox.outlineAt`;
 * each box is warped once, since `TextBox.warp` is a single field.
 
 ## What the UI can set
@@ -79,9 +82,12 @@ preset menu items, never a typed value. Measured in PowerPoint
   whole shape box: the text insets do not enter.
 * **Handle.** A drag stores whatever value the pointer lands on, which is not a clear
   choice, except when it is dragged past an end of its range: then the stored value is the
-  bound exactly (Stop: `val 14286` and `val 50000`). So a handle takes its spec default or
-  one of its two bounds. The polar handle of the Warped presets reaches only its outer stop,
-  except on Warped Button; see `WarpPreset.stops`.
+  bound exactly (Stop: `val 14286` and `val 50000`). The stored pointer position is a
+  rational, but it has no preferred value, so the Lean model idealizes it as *any*
+  `PConstructible` real in the handle's reachable range (`WarpPreset.handleRange`). The spec
+  default and the two stops remain special cases (`WarpPreset.stops`,
+  `WarpPreset.handleValue`). The polar handle of the Warped presets has no inner stop, except
+  on Warped Button; its outer stop is pinned to `99000`.
 
 ## The warp
 
@@ -430,7 +436,8 @@ inductive WarpPreset
   bulging out of the box, and its mirror image at the bottom. -/
   | inflate
   /-- "Deflate" (`textDeflate`): top cubic `(l, t), (w/3, 4d/3), (2w/3, 4d/3), (r, t)` with
-  `d = a · min w h`, bulging in, and its mirror image at the bottom. -/
+  `d = a · h`, bulging in, and its mirror image at the bottom. The spec writes `ss` (the
+  shorter side), but probes in tall boxes show PowerPoint using the height `h`. -/
   | deflate
   /-- "Curve: Up" (`textCurveUp`): top cubic `(l, ah), (w/3, 5ah/4), (2w/3, 3ah/4), (r, t)`;
   bottom `(l, h - 3ah/8), (w/3, h + ah/8), (2w/3, h + ah/8), (r, h - 3ah/8)`. -/
@@ -442,7 +449,8 @@ inductive WarpPreset
   `(l, ah) → (r, ah)` with control point `(hc, b)`. -/
   | inflateBottom
   /-- "Deflate: Bottom" (`textDeflateBottom`): top straight; bottom the quadratic
-  `(l, b) → (r, b)` with control point `(hc, 2d - h)`, `d = a · min w h`. -/
+  `(l, b) → (r, b)` with control point `(hc, 2d - h)`, `d = a · h`. The spec writes `ss`,
+  but probes in tall boxes show PowerPoint using the height `h`. -/
   | deflateBottom
   /-- "Inflate: Top" (`textInflateTop`): top the quadratic `(l, ah) → (r, ah)` with control
   point `(hc, t)`; bottom straight. -/
@@ -512,6 +520,66 @@ def WarpPreset.handleValue (k : WarpPreset) (i : ℕ) : HandleSetting → Option
   | .default => some ((k.stops i).2.1 / 100000)
   | .min => (k.stops i).1.map (fun x => (x : ℚ) / 100000)
   | .max => (k.stops i).2.2.map (fun x => (x : ℚ) / 100000)
+
+/-- The interval between the two stops of handle `i`, as a fraction of the box dimension.
+This is the whole reachable range for a straight handle; the polar handles need
+`WarpPreset.handleRange` instead because their inner stop is not reachable. -/
+def WarpPreset.stopRange (k : WarpPreset) (i : ℕ) : Set ℝ :=
+  Set.Icc (((k.stops i).1.getD 0 : ℚ) / 100000 : ℝ)
+    (((k.stops i).2.2.getD 0 : ℚ) / 100000 : ℝ)
+
+/-- The values a drag can give handle `i`, as fractions of the box dimension.
+
+For straight handles this is the closed interval between the two stops in `WarpPreset.stops`.
+The polar handles of the Warped presets have no reachable inner stop: dragging short of the
+centre stores whatever radius the pointer lands on, and the spec's `pin` keeps the outer
+radius at `99000 / 100000`, so their range is `(0, 99/100]`. Warped Button is the exception,
+because its spec pins every radius below `40000` up to `40000`, giving `[2/5, 99/100]`.
+The waves' sideways handle is in `[-1/10, 1/10]`; presets with one handle ignore the second
+handle entirely (as `handleValue 1` does). -/
+def WarpPreset.handleRange (k : WarpPreset) (i : ℕ) : Set ℝ :=
+  match i with
+  | 0 =>
+      match k with
+      | .archWarped | .archWarpedDown | .warpedCircle => Set.Ioc 0 (99 / 100)
+      | .warpedButton => Set.Icc (2 / 5) (99 / 100)
+      | _ => k.stopRange 0
+  | 1 =>
+      match k with
+      | .waveDown | .waveUp | .doubleWaveDownUp | .doubleWaveUpDown =>
+          k.stopRange 1
+      | _ => Set.univ
+  | _ => Set.univ
+
+/-- The handle fractions `a` (first handle) and `b` (second; the waves only) lie in their
+reachable ranges. -/
+def WarpPreset.HandleInRange (k : WarpPreset) (a b : ℝ) : Prop :=
+  a ∈ k.handleRange 0 ∧ b ∈ k.handleRange 1
+
+set_option maxHeartbeats 1000000 in
+-- Finite case split over all 32 presets and their three settings; the default limit is not
+-- enough for the `simp_all` normalization below. This raises the budget for this lookup only.
+/-- Every value a three-stop setting can select lies in the handle's reachable range. This is
+what lets the old `HandleSetting` outlines be recovered as special cases of `outlineAt`. -/
+theorem WarpPreset.handleValue_mem_handleRange {k : WarpPreset} {i : ℕ} {s : HandleSetting}
+    (h : (k.handleValue i s).isSome) :
+    ((k.handleValue i s).getD 0 : ℝ) ∈ k.handleRange i := by
+  cases i with
+  | zero =>
+      cases k <;> cases s <;>
+        simp_all [WarpPreset.handleValue, WarpPreset.stops, WarpPreset.handleRange,
+          WarpPreset.stopRange] <;>
+        norm_num
+  | succ i =>
+      cases i with
+      | zero =>
+          cases k <;> cases s <;>
+            simp_all [WarpPreset.handleValue, WarpPreset.stops, WarpPreset.handleRange,
+              WarpPreset.stopRange] <;>
+            norm_num
+      | succ i =>
+          cases s <;>
+            simp_all [WarpPreset.handleValue, WarpPreset.stops, WarpPreset.handleRange]
 
 /-- The warp of a preset with handle fractions `a` (first handle) and `b` (second; the waves
 only), sending the unit square to the box `[0, w] × [0, h]` by `ruledWarp` between its two
@@ -583,7 +651,7 @@ noncomputable def WarpPreset.map (k : WarpPreset) (a b w h : ℝ) : ℝ × ℝ �
       ruledWarp (arcTrace (bezierParam (0, d) (w / 3, -d / 3) (2 * w / 3, -d / 3) (w, d)))
         (arcTrace (bezierParam (0, h - d) (w / 3, h + d / 3) (2 * w / 3, h + d / 3) (w, h - d)))
   | .deflate =>
-      let d := a * min w h
+      let d := a * h
       ruledWarp (arcTrace (bezierParam (0, 0) (w / 3, 4 * d / 3) (2 * w / 3, 4 * d / 3) (w, 0)))
         (arcTrace
           (bezierParam (0, h) (w / 3, h - 4 * d / 3) (2 * w / 3, h - 4 * d / 3) (w, h)))
@@ -602,7 +670,7 @@ noncomputable def WarpPreset.map (k : WarpPreset) (a b w h : ℝ) : ℝ × ℝ �
         (arcTrace (quadBezierParam (0, a * h) (w / 2, h) (w, a * h)))
   | .deflateBottom =>
       ruledWarp (segGuide (0, 0) (w, 0))
-        (arcTrace (quadBezierParam (0, h) (w / 2, 2 * a * min w h - h) (w, h)))
+        (arcTrace (quadBezierParam (0, h) (w / 2, 2 * a * h - h) (w, h)))
   | .inflateTop =>
       ruledWarp (arcTrace (quadBezierParam (0, a * h) (w / 2, 0) (w, a * h)))
         (segGuide (0, h) (w, h))
@@ -628,6 +696,27 @@ inductive TextWarp
 def TextWarp.Reachable : TextWarp → Prop
   | .none => True
   | .preset k s₁ s₂ => (k.handleValue 0 s₁).isSome ∧ (k.handleValue 1 s₂).isSome
+
+/-- The two handle fractions selected by a warp's stop settings. They are `(0, 0)` for an
+unwarped box, whose outline does not read them. -/
+def TextWarp.handleValues : TextWarp → ℚ × ℚ
+  | .none => (0, 0)
+  | .preset k s₁ s₂ => ((k.handleValue 0 s₁).getD 0, (k.handleValue 1 s₂).getD 0)
+
+/-- The handle fractions `a`, `b` lie in the ranges a drag reaches on this warp's preset. An
+unwarped box has no handles, so every pair qualifies. -/
+def TextWarp.HandleInRange : TextWarp → ℝ → ℝ → Prop
+  | .none, _, _ => True
+  | .preset k _ _, a, b => k.HandleInRange a b
+
+/-- The handle values selected by a reachable warp setting lie in its reachable ranges. -/
+theorem TextWarp.handleValues_mem_handleRange {W : TextWarp} (h : W.Reachable) :
+    W.HandleInRange (W.handleValues.1 : ℝ) (W.handleValues.2 : ℝ) := by
+  cases W with
+  | none => exact trivial
+  | preset k s₁ s₂ =>
+      exact ⟨WarpPreset.handleValue_mem_handleRange h.1,
+        WarpPreset.handleValue_mem_handleRange h.2⟩
 
 /-! ### Text boxes -/
 
@@ -658,14 +747,29 @@ noncomputable def inkNormalize (S : Set (ℝ × ℝ)) (z : ℝ × ℝ) : ℝ × 
   let y₀ := sInf (Prod.snd '' S)
   ((z.1 - x₀) / (sSup (Prod.fst '' S) - x₀), (z.2 - y₀) / (sSup (Prod.snd '' S) - y₀))
 
-/-- The outline a text box draws: its ink as typed, or, when warped, its normalized ink sent
-through the preset's map. -/
-noncomputable def TextBox.outline (T : TextBox) : Set (ℝ × ℝ) :=
+/-- The outline a text box draws with its first fill handle at `a`, its second at `b`, and
+box size `w × h`: its ink as typed, or, when warped, its normalized ink sent through the
+preset's map. The handles and the box size are real numbers because a drag can land anywhere;
+`PConstructibleCurve.text` requires them to be `PConstructible`, the handles to lie in
+`T.warp.HandleInRange`, and the box size to be positive. The stored spinner size `T.w × T.h`
+is the rational special case used by `TextBox.outline`. -/
+noncomputable def TextBox.outlineAt (T : TextBox) (a b w h : ℝ) : Set (ℝ × ℝ) :=
   match T.warp with
   | .none => T.ink
-  | .preset k s₁ s₂ =>
-      k.map ((k.handleValue 0 s₁).getD 0 : ℚ) ((k.handleValue 1 s₂).getD 0 : ℚ) T.w T.h ''
-        (inkNormalize T.ink '' T.ink)
+  | .preset k _ _ =>
+      k.map a b w h '' (inkNormalize T.ink '' T.ink)
+
+/-- The outline a text box draws at the handle values selected by its stored settings and at
+its stored spinner size. This is the old three-stop model, kept as the special case
+`a, b = T.warp.handleValues` and `w, h = T.w, T.h`. -/
+noncomputable def TextBox.outline (T : TextBox) : Set (ℝ × ℝ) :=
+  T.outlineAt (T.warp.handleValues.1 : ℝ) (T.warp.handleValues.2 : ℝ) (T.w : ℝ) (T.h : ℝ)
+
+/-- `TextBox.outline` is `TextBox.outlineAt` at the handle values of the warp's settings and
+the stored box size. -/
+theorem TextBox.outline_eq_outlineAt_handleValues (T : TextBox) :
+    T.outline = T.outlineAt (T.warp.handleValues.1 : ℝ) (T.warp.handleValues.2 : ℝ)
+      (T.w : ℝ) (T.h : ℝ) := rfl
 
 /-- The side conditions for a text box to be drawable: at least one glyph, each stored at a
 size in `[1, 4000]` pt with a baseline offset the UI can set (an even percentage in
