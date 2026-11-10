@@ -1,6 +1,7 @@
 # HANDOFF: WARP
 
-Status: **research note done** (`WARP.md`); Lean bridge partial, scratch only.
+Status: **research note done** (`WARP.md`); planned as stream **W4** in
+`PLAN-algebraic.md`; Lean bridge partial, scratch only.
 
 ## Findings
 

@@ -130,6 +130,7 @@ polynomials of degree ≤ 8 over itself. The question is whether `F = ℝ_alg`.
 | G3 | math | **General-n engine search.** Using G2, look for an engine family whose number of conditions stays bounded, or grows slower than the Tschirnhaus capacity, as n grows. Candidates: offset towers, crossings of two rotated power laws, power law × Bézier, iterated box/extremum constructions. Test versality numerically for n = 9…13 (Jacobian rank of the crossing-polynomial map modulo Tschirnhaus), and count real crossings for totally real targets. | G2 |
 | G4 | math | **Route constraints, scoped.** Make the Aₙ filter, the Descartes realness bounds and the parameter-count bounds precise as statements about *classes of routes*. The aim is to know exactly what an all-n route must look like. These are not conclusions about the target. | G1, G2 |
 | G5 | math (low priority) | **Transcendental routes to algebraic numbers.** Can P evaluate the special functions in G1's general-equation formulas: hypergeometric pFq at algebraic arguments for trinomials (Mellin), or theta constants (Umemura)? Gamma at rationals and closed-form ₂F₁ are already available. NOTES argued that `arc_of_length` inverts one integral at a time; test that argument. | G1 |
+| W4 | math + Lean | **Text-warp engines (added 2026-11-10).** The new `PConstructibleCurve.text` constructor gives new algebraic curve families (egg, piriform, offset egg) with P parameters. Measure them as engine components: crossing degrees, condition varieties, F-points, and whether they close or relax an open n = 9–12 case. See `WARP.md`. | N4, G2, H3 |
 
 ## 5. Order
 
@@ -772,3 +773,45 @@ real embedding); false for arbitrary real k.** See `notes/algebraic/Q1.md`.
   [Proof sketch].
 - What would close it: ≥ ~9n P-parameters per K-condition at bounded degree, i.e. a Minkowski-sum or
   two-curve constructor (no UI route known).
+
+### W4: text-warp engines (2026-11-10, proposed)
+
+The new `PConstructibleCurve.text` constructor (`Pptc/Defs.lean`) makes every warped glyph outline
+drawable, including the algebraic egg quartic, the piriform and the Gerono lobe. `WARP.md` assesses
+them against the algebraic goals. This stream turns that assessment into a decision procedure: can
+a warped curve, alone or as an engine component, close or relax an open case?
+
+**What is already settled (see `WARP.md`).**
+- A single warped curve adds no new numbers: line/conic intersections are degree ≤ 4/≤ 8 over F, and
+  `root_Pconstructible_deg8_coeffs` already covers them. No stream is needed for that.
+- The useful objects are **engines**: egg × quintic graph (degree 10, rank F = 9; one more parameter
+  than the MI-1 sextic engine) and egg × sextic graph (degree 12, F = 10; still below H5's F ≥ 11
+  for totally real decics).
+- Nonsquare boxes add **no new algebraic modulus** for the egg family: straight/polyline presets are
+  affine or reparameterize the same universal egg; curved guides are transcendental. Closed, no stream.
+- A free yellow handle is already a `PConstructible` parameter in `text`; the Lean theorem should
+  quantify P handles, not the old rational stops. This is part of W4d, not a separate investigation.
+- The one follow-up that can reach H5's threshold is **offset egg × general conic**: F = 11, viable
+  whenever the real offset component has degree D ≤ 10 (crossing degree 2D, cofactor 2D − 10 < 11
+  at n = 10). The offset's exact real degree is [Open].
+
+**Tasks.**
+
+| id | model | question / deliverable |
+|---|---|---|
+| W4a | math/computation (Opus or Wolfram-heavy) | **Decide the offset egg.** Implicitize the offset of a representative egg (`a = 1/2`, `D = 1 + 2x`, distance 1 and a generic distance), find the real components and their degrees. If the real degree D ≤ 10, compute the offset egg × general conic condition variety and rank (expected F = 11); if D ≥ 11, close offsets of warps as an engine route, scoped to this construction. Deliverable: `W4-offset.md`. |
+| W4b | math (H3 protocol) | **Egg engines at n = 9–12.** For egg × quintic/sextic graph, compute the condition variety `χ_τ ∣ N_m`: dimension, defining equations, degree, singularities, real points, and the Jacobian rank on monic nonics/decics. The decisive question is whether its degree is < 9 (then H2 Lemma A applies over F) and whether it has a smooth real point. Compare against the F = 8 sextic engine and H3's F = 13 two-graph engine. Deliverable: `W4-engines.md`. |
+| W4c | arithmetic | **Explicit targets.** Test the explicit totally real S₉ nonic `q = ∏_{i=-4}^{4}(x − i) + 1` against egg × sextic, and a totally real S₁₀ decic against egg × quintic. Seek F-points, not just real solutions; a numerical real solution is not enough. Reuse B1/B2's search machinery. Deliverable: a scoped positive or an [Open] with the search box recorded. |
+| W4d | Lean | **Finish the `text` → egg/piriform bridge.** In a real file (`Pptc/Warp/Text.lean`), prove the two-`●` row's left disc normalizes to `glyphCircle a`, isolate it by `restrict`, and derive unconditional `PConstructibleCurve (eggCurve a d₀ d₁)` and the piriform. State the handle over P, not ℚ. Then import from `Pptc.lean`. Deliverable: the Lean file plus the replacement of `TriangleCircleRule` by a theorem for the catalogued row. |
+
+**Order.** W4a first: it is one computation and decides whether the only F = 11 candidate is real.
+W4b runs in parallel; W4c after W4b (it needs the engine shapes); W4d is independent of all three.
+
+**Kill criteria (scoped).** If the offset real degree is ≥ 11, close the offset-of-warps route and
+say so. If the egg engines' condition varieties have degree ≥ 9 or no F-point in the tested boxes,
+record a scoped [Open]/[Heuristic] and do not conclude anything about the target. No negative about
+`algebraic_Pconstructible` follows from W4.
+
+**Cost.** W4a: one focused Wolfram/elimination computation (hours). W4b: one Opus stream. W4c: one
+Sonnet/Opus search stream. W4d: one `lean-prover` task (the scratch lemmas in
+`Pptc/Scratch/WarpText.lean` and `WarpTwo.lean` already cover the normalization and bounding box).
