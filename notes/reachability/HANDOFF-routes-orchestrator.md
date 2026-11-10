@@ -17,6 +17,10 @@ Progress log for `notes/reachability/PLAN-routes.md`. One line per step.
   coefficient; no `1/log`, no `ζ log ζ`, no finite essential singularity. Consequences under B:
   `tan x = λx` excluded on Route I (`1/log`); `l=0` excluded on Route I (`δlogδ`); Route O untouched.
   The exclusions are B-only (A resolves the two types).
-- Decisions pending from the user: none for the convention. Next: R10 (decomposition dictionary,
-  positive) and the `tan` B1 necessity; the A-closure / non-log global question is an open thread
-  that can be delegated.
+- 2026-11-10: **R10 landed** (`R10-decomposition-dictionary.md`, delegated then reviewed). Nine
+  graph-function entries; five depth-1 constructions: H1 (R7's `d=0` parabola), H2 (one/two
+  exponential rates), H3 (trig degree ≤2), H4 (`√(1+u²)`), H5 (`a u^b`). Negative list from
+  R3/R8/R9; three-rate and degree-3 trig are catalogue misses by atom count (`[Heuristic]`).
+- Decisions pending from the user: none for the convention. Next: the `tan` B1 necessity (the main
+  Route-O open item), R11 (discrete spectra), R13 (goat legality). The A-closure / non-log global
+  question is an open thread.
