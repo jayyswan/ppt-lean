@@ -21,10 +21,24 @@ Status: **research note done** (`WARP.md`); Lean bridge partial, scratch only.
   `inkNormalize_two_formula`. Missing: normalized left disc = `glyphCircle a`, and the
   `restrict` separation at `x = w/2`.
 
+## Follow-up (offsets, nonsquare, free handle)
+
+- The free yellow handle is already `PConstructible` in `text`; keep the final theorem
+  over P handles, not rational ones. It is one parameter (shape of the egg), not a second.
+- Nonsquare boxes: no new algebraic modulus. Straight/polyline guides are affine or
+  reparameterize the same universal egg family; curved guides are transcendental.
+- Offsets: one extra P parameter, but degree/gonality grows. Calibration: parabola offset
+  is a sextic exactly. Egg offset implicitization gives a degree-28 factor with extraneous
+  parts and a possible degree-6 real component [Open]. Offset egg × general conic has
+  F = 11 and is dimensionally viable whenever the real offset degree is ≤ 10 — a candidate
+  for totally real decics.
+
 ## Next
 
-1. Finish the two-disc bridge in a real file (`Pptc/Warp/Text.lean`), import it from
+1. Implicitize the offset of a representative egg; identify the real components and their
+   degrees. If degree 6, compute offset egg × general conic rank (expected F = 11).
+2. Finish the two-disc bridge in a real file (`Pptc/Warp/Text.lean`), import it from
    `Pptc.lean`, and replace `TriangleCircleRule` by a theorem for the `●●` row.
-2. H3-protocol computation for egg × graph: degree and equations of the condition variety
+3. H3-protocol computation for egg × graph: degree and equations of the condition variety
    `χ_τ | N_m`; check whether its degree is < 9 (Lemma A over F).
-3. Test the totally real S₉ nonic `∏_{i=-4}^{4}(x-i)+1` against egg × sextic.
+4. Test the totally real S₉ nonic `∏_{i=-4}^{4}(x-i)+1` against egg × sextic.

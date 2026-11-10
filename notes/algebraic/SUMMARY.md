@@ -310,4 +310,7 @@ piriform, Gerono). A single warp adds no new numbers (line/conic intersections a
 ≤ 8 with P coefficients). The useful content is as an engine component: egg × quintic graph
 is a degree-10 engine with F = 9 (one more than the MI-1 sextic engine), and egg × sextic
 graph is a degree-12 engine with F = 10 (still below H5's F ≥ 11 for totally real decics).
-No goal is closed; the F-point problem is unchanged. See `WARP.md`.
+No goal is closed; the F-point problem is unchanged. Follow-up: a free P handle is already
+in `text`; nonsquare boxes add no new algebraic modulus; an offset adds one P parameter but
+a degree cost, and offset egg × conic is a possible F ≈ 11 candidate if the offset's real
+component is a sextic. See `WARP.md` §8.
