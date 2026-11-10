@@ -1,68 +1,47 @@
-# HANDOFF: Y1b (square descent and variable-affine offset towers)
+# HANDOFF: Y1b (rank-one square deformation) — DONE
 
-Status: **proposed, not started** (2026-11-10). Plan section `Y1b` in
-`PLAN-algebraic.md`; background in `Y1a.md` and `SUMMARY.md` §8.
+Status: **done (2026-11-10); scoped negative.** Deliverable: `notes/algebraic/Y1b.md`.
+No Lean edits, no new task is required from this stream.
 
-## Why this is the general-method attack
+## What was asked
 
-`Y1a` proves Theorem R: if there are \(J\ge n-1\) pairwise non-homothetic positive-definite
-binary forms \(Q_j\) over \(L\) with every \(Q_j(\tau)\) a square in \(K_L\), then \(\beta\in P\).
-The geometry of the needed variety
-\(V_\tau=\{\rho:\rho^2\in\langle1,\tau,\tau^2\rangle\}\) is understood: a smooth complete
-intersection of \(n-3\) diagonal quadrics, K3 at \(n=6\), general type for \(n\ge7\).
+Y1b.1 asked whether the conic \(Q_{B_0+tB_1}(\tau)=r^2\) (with \(B_0=\ell\ell^T\) rank one) has a
+point with \(t\in L\), \(r\in K_L\), \(B_t\) positive definite, and to identify the Kummer/descent
+obstruction. Background: `Y1a.md` (Theorem R, \(V_\tau\)), `Z5.md` (no genus 0/1 curves on
+\(V_\tau\)), `A1.md` (Theorem G).
 
-The open problem is **arithmetic**: find the forms. Fixed engines (egg, piriform, offset egg,
-text warp) add a constant number of parameters and cannot change the asymptotics. Y1b attacks
-the square condition directly.
+## What was found
 
-## First computation (Y1b.1)
+1. **The conic is split.** \(r^2 - Q_{B_1}(\tau)ts = \ell(\tau)^2s^2\) is smooth and already has the
+   point \((0:\ell:1)\) with \(t=0\in L\), \(r\in K_L\). The \(H^1(L,\mu_2)\) class is **zero**;
+   there is no descent obstruction to compute. Parametrization:
+   \(t = C/m^2 - 2\ell/m\), \(r = C/m-\ell\).
+2. **The real object is the pencil curve** \(X_C=\{r : r^2-\ell(\tau)^2\in L\cdot Q_{B_1}(\tau)\}
+   \subset V_\tau\): a \((\mathbb Z/2)^n\)-cover of the \(t\)-line, genus
+   \(1+(n-3)2^{n-2}\) (129, 321, 769 at \(n=7,8,9\)).
+3. **Y1b.1 = the first step of SS.** Every positive-definite form is \(B_0+tB_1\) with
+   \(B_0=\ell\ell^T\succeq0\), \(t>0\). So the deformation family is the whole PD cone, and varying
+   \(B_1\) sweeps \(V_\tau\). No weakening.
+4. **The obstruction is the target field.** The cover is the \(K\)-twist of the split
+   \((\mathbb Z/2)^n\)-cover. The fibre at \(t=0\) is the \(S_n\)-resolvent scheme of \(q\): \(n+1\)
+   components of degrees \(\binom{n}{k}\). The \(k=1\) component is \(K\) itself [Proof; Wolfram
+   \(n=5\)]. Hence the arithmetic Galois closure has \(S_n\) as a quotient and is not solvable for
+   \(n\ge5\). A1's Theorem G must be checked on the arithmetic closure, not the geometric monodromy
+   (the geometric group here is the solvable \((\mathbb Z/2)^n\)).
+5. Rational-point searches on \(X_C\) found nothing for \(n=3,4,5,7\) in small height (evidence
+   only).
 
-Fix a generic \(q\) of degree \(7\) (then \(8,9\)) and \(\tau=\beta\). Take a rank-one form
+## Consequences
 
-\[
-B_0=\ell\ell^T,\qquad Q_{B_0}(\tau)=\ell(\tau)^2,
-\]
-
-which is automatically a square. For \(B_1\) positive definite and \(t>0\), set
-\(B_t=B_0+tB_1\); \(B_t\) is positive definite. The condition
-
-\[
-Q_{B_t}(\tau)=r^2
-\]
-
-is a conic over \(K_L\) with the \(K_L\)-point \((t,r)=(0,\ell(\tau))\).
-
-**Question:** does it have a point with
-
-\[
-t\in L,\qquad r\in K_L,
-\]
-
-and \(B_t\) positive definite? This is a Kummer/descent condition. Parameterize the conic
-over \(K_L\), impose \(t\in L\), and compute the obstruction class in \(H^1(L,\mu_2)\).
-Vary \(B_1\) and record whether any direction gives a positive-definite \(L\)-point.
-
-Deliverable: `Y1b.md` with the exact conic, the obstruction, and a positive result or a scoped
-negative.
-
-## If positive
-
-Vary \(B_1\) to get \(J\ge n-1\) non-homothetic positive-definite forms; feed them into
-Theorem R; run the linear system on a totally real \(S_7\) or \(S_9\) polynomial. Then write
-the Lean statement for the resulting unconditional theorem.
-
-## If negative
-
-- Allow **variable affine layers**: two shape parameters per layer in addition to the distance
-  (three per layer). Count \(3J\) parameters against \(J\) square conditions and \(n\) linear
-  equations; test whether the shape parameters absorb the obstruction.
-- Test **overshoot** (crossing degree \(>n\)).
-- Record a scoped obstruction to the distance-only tower; do not conclude anything about
-  `algebraic_Pconstructible`.
+- Y1b.4 **not launched**; Y1b.2 **vacuous** (the shapes were already free; only \(J+2\ge n\)
+  matters, kernel dimension \(J+2-n\)); Y1b.3 **answered negatively** (no \(\mu_2\)-class; the class
+  is the \(S_n\)-torsor \(K/\mathbb Q\)).
+- Untouched: overshoot engines, other bases (rational sextic graphs, power laws with
+  \(b=1\pm1/k\)), the circle partner, and SS itself.
 
 ## Files
 
-- `notes/algebraic/PLAN-algebraic.md` — stream Y1b and the task table.
-- `notes/algebraic/Y1a.md` — Theorem R, \(V_\tau\), simultaneous-squares geometry.
-- `notes/algebraic/SUMMARY.md` §8 — summary bullet.
+- `notes/algebraic/Y1b.md` — new, the deliverable.
+- `notes/algebraic/PLAN-algebraic.md` — Y1b section and table updated to done; wave plan adjusted.
+- `notes/algebraic/SUMMARY.md` — §8 bullet and §10 paragraph updated.
 - `notes/algebraic/HANDOFF-alg-Y1b.md` — this file.

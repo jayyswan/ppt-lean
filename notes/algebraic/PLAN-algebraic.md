@@ -130,15 +130,15 @@ polynomials of degree ≤ 8 over itself. The question is whether `F = ℝ_alg`.
 | G3 | math | **General-n engine search.** Using G2, look for an engine family whose number of conditions stays bounded, or grows slower than the Tschirnhaus capacity, as n grows. Candidates: offset towers, crossings of two rotated power laws, power law × Bézier, iterated box/extremum constructions. Test versality numerically for n = 9…13 (Jacobian rank of the crossing-polynomial map modulo Tschirnhaus), and count real crossings for totally real targets. | G2 |
 | G4 | math | **Route constraints, scoped.** Make the Aₙ filter, the Descartes realness bounds and the parameter-count bounds precise as statements about *classes of routes*. The aim is to know exactly what an all-n route must look like. These are not conclusions about the target. | G1, G2 |
 | G5 | math (low priority) | **Transcendental routes to algebraic numbers.** Can P evaluate the special functions in G1's general-equation formulas: hypergeometric pFq at algebraic arguments for trinomials (Mellin), or theta constants (Umemura)? Gamma at rationals and closed-form ₂F₁ are already available. NOTES argued that `arc_of_length` inverts one integral at a time; test that argument. | G1 |
-| Y1b | math (arithmetic/descent) | **Square descent and variable-affine offset towers (added 2026-11-10).** The general-method attack on Y1a's simultaneous-squares condition: can the rank-one square be deformed to nondegenerate positive-definite forms over L? Compute the Kummer obstruction at n = 7,8,9; test variable affine shapes and overshoot. See the Y1b section. | Y1a, G3 |
+| Y1b | math (arithmetic/descent) | **Square descent and variable-affine offset towers (added 2026-11-10; done 2026-11-10: scoped negative).** The general-method attack on Y1a's simultaneous-squares condition: can the rank-one square be deformed to nondegenerate positive-definite forms over L? Answer: the deformation is the whole PD cone, so Y1b.1 = the first step of SS; there is no H¹(L,μ₂) class; the pencil curve is the K-twist of (ℤ/2)ⁿ with t = 0 the S_n-resolvent scheme. See `Y1b.md`. | Y1a, G3 |
 | W4 | math + Lean | **Text-warp engines (added 2026-11-10).** The new `PConstructibleCurve.text` constructor gives new algebraic curve families (egg, piriform, offset egg) with P parameters. Measure them as engine components: crossing degrees, condition varieties, F-points, and whether they close or relax an open n = 9–12 case. See `WARP.md`. | N4, G2, H3 |
 
 ## 5. Order
 
 - **Wave 1** (all independent): N1 (Lean), N2, N4, G1, G2.
-- **Wave 2:** N3 and N5 (taking N2/N4 results), then G3 (taking G2). **Y1b** starts in parallel:
-  Y1a is done, and Y1b.1 (the \(n=7,8,9\) square-conic computation) does not need G3.
-- **Wave 3:** Y1b.4/Y1b.5 if Y1b.1/Y1b.3 are positive; G4, G5 if warranted. Then the orchestrator
+- **Wave 2:** N3 and N5 (taking N2/N4 results), then G3 (taking G2). **Y1b.1 is done** (2026-11-10):
+  scoped negative, see `Y1b.md`. Y1b.4 is not launched; Y1b.2 is vacuous and Y1b.3 is answered.
+- **Wave 3:** G4, G5 if warranted (Y1b.4/Y1b.5 no longer apply in the planned form). Then the orchestrator
   writes `notes/algebraic/SUMMARY.md`:
   - degree-9 status by case;
   - the best general-n route candidate;
@@ -331,15 +331,38 @@ non-elliptical Minkowski summand.
 - End-to-end test on a totally real S₅ quintic: the parabola tower crossing works.
 - **Open:** the simultaneous squares for n ≥ 7, i.e. L-points off the degenerate line on V_τ. V_τ is
   a smooth complete intersection of n−3 diagonal quadrics: K3 at n = 6, general type for n ≥ 7. τ
-  may vary. **Y1b** (added 2026-11-10) attacks this by deforming the rank-one square and computing
-  the Kummer/descent obstruction.
+  may vary. **Y1b** (added 2026-11-10) attacked this by deforming the rank-one square; done
+  2026-11-10 with a scoped negative (`Y1b.md`, §Y1b below).
 - Searches at n = 9 and 10 found nothing.
 - Leads:
   - n = 6 (K3: elliptic fibrations);
   - genus-0 or genus-1 curves on V_τ;
   - the family over τ.
 
-### Y1b: square descent and variable-affine towers (2026-11-10, proposed)
+### Y1b: square descent and variable-affine towers (2026-11-10, done: Y1b.1 negative)
+
+**Y1b.1 done (2026-11-10).** See `notes/algebraic/Y1b.md`. Verdict: the rank-one deformation is
+not a descent condition and does not weaken SS.
+- The conic \(r^2 - Q_{B_1}(\tau)t = \ell(\tau)^2\) is smooth and has the \(K_L\)-point \((0,\ell)\)
+  with \(t = 0 \in L\) already; the \(H^1(L,\mu_2)\) class is zero. The \(t \in L\) condition is the
+  pencil curve \(X_C \subset V_\tau\), a \((\mathbb{Z}/2)^n\)-cover of the \(t\)-line of genus
+  \(1 + (n-3)2^{n-2}\) (129, 321, 769 at \(n = 7, 8, 9\)).
+- **Equivalence:** every positive-definite form is \(B_0 + tB_1\) with \(B_0 = \ell\ell^T \succeq 0\)
+  and \(t > 0\). So Y1b.1 \(\Leftrightarrow\) \(V_\tau(L)\) meets the positive-definite chamber, the
+  first step of SS. Varying \(B_1\) sweeps \(V_\tau\).
+- **Arithmetic:** the cover is the \(K\)-twist of the split \((\mathbb{Z}/2)^n\)-cover; the fibre at
+  \(t = 0\) is the \(S_n\)-resolvent scheme of \(q\) (components of degrees \(\binom{n}{k}\); the
+  \(k = 1\) component is \(K\) itself [Wolfram \(n = 5\)]). So the arithmetic Galois closure has
+  \(S_n\) as a quotient and is not solvable for \(n \ge 5\); A1's Theorem G (solvable step) does
+  not apply, and no Kummer vanishing produces a point.
+- **Scoped negative:** for \(L = P\) there is no pencil component beyond the trivial one reachable by
+  the free constructions. Y1b.4 not launched; Y1b.2 vacuous (shapes were already free); Y1b.3
+  answered (the obstruction is the \(S_n\)-torsor \(K/\mathbb{Q}\), not a \(\mu_2\)-class).
+- By-products: the exact conic and parametrization; the pencil curve and its genus; the
+  identification with Z5's \(\pi: V_\tau \to \mathbb{P}^2\) picture; the resolvent table; a
+  correction to the applicability clause of A1 Theorem G (check the arithmetic closure, not the
+  geometric monodromy).
+
 
 This is the general-method attack. Y1a's Theorem R reduces all n to two ingredients:
 
@@ -380,11 +403,11 @@ about the base curve, so the warp egg is not a shortcut here.
 
 | id | model | question / deliverable |
 |---|---|---|
-| Y1b.1 | math/computation (Wolfram or Magma) | **The square conic at n = 7, 8, 9.** Fix a generic \(q\), \(\tau=\beta\), a rank-one \(B_0=\ell\ell^T\), and several positive-definite \(B_1\). Parameterize \(Q_{B_0+tB_1}(\tau)=r^2\) over \(K_L\); determine whether there is a point with \(t\in L\), \(r\in K_L\), \(B_t\) positive definite. Vary \(B_1\); identify the obstruction class. Deliverable: `Y1b.md` with the exact conic, the obstruction, and a positive or a scoped negative. |
-| Y1b.2 | math (parameter count) | **Variable affine layers.** Allow each layer's positive-definite form \(B_j\) to vary (two shape parameters) in addition to the distance (one). Count \(3J\) parameters against \(J\) square conditions and \(n\) linear equations; test whether the shape parameters absorb the descent obstruction. Measure rank/versality for \(n=9,\dots,13\). This is the G3-style computation with the shapes free. Deliverable: a rank table and a verdict on whether variable shapes enlarge the square locus. |
-| Y1b.3 | math (arithmetic) | **The descent theorem.** Formulate the condition \(Q_{B_t}(\tau)=r^2\) with \(t\in L\), \(r\in K_L\) as a Kummer/Weil-restriction problem. Compute the obstruction class in \(H^1(L,\mu_2)\); use Hilbert 90 and the \(K_L/L\) structure to decide when it vanishes. If it vanishes under checkable hypotheses, state the resulting unconditional form of Theorem R. Deliverable: a theorem or a scoped obstruction statement. |
-| Y1b.4 | math (end-to-end) | **Construct the forms and run Theorem R.** If Y1b.1/Y1b.3 give nondegenerate square forms, build \(n-1\) non-homothetic forms explicitly and run the Y1a linear system on a totally real \(S_7\) or \(S_9\) polynomial. Deliverable: an end-to-end certificate and the Lean statement to formalize. |
-| Y1b.5 | fallback | **If descent fails.** Test overshoot (degree \(>n\)) and variable-shape layers; determine whether the obstruction is intrinsic to the distance-only tower or can be bypassed. A clean scoped negative is a valid deliverable. |
+| Y1b.1 | math/computation (Wolfram or Magma) | **DONE 2026-11-10: scoped negative.** See `Y1b.md`. The conic is smooth with the \(L\)-point \((0,\ell)\) already; \(t\in L\) defines the pencil curve \(X_C\subset V_\tau\) of genus \(1+(n-3)2^{n-2}\); the deformation family is all positive-definite forms, so Y1b.1 = the first step of SS. The obstruction class is the \(S_n\)-torsor \(K/\mathbb{Q}\): the \(t=0\) fibre is the \(S_n\)-resolvent scheme. |
+| Y1b.2 | math (parameter count) | **DONE 2026-11-10: vacuous.** The shapes were already free (Theorem R quantifies over all \(B_j\)); the square conditions are not equations on \(B_j\). The only constraint is \(J+2\ge n\); kernel dimension \(J+2-n\). Nothing to absorb. |
+| Y1b.3 | math (arithmetic) | **DONE 2026-11-10: negative.** No \(H^1(L,\mu_2)\) class exists (the conic is split at \(t=0\)). The correct statement is \(X_C(L)\); the arithmetic closure has \(S_n\) as a quotient, so no Kummer vanishing applies. Includes a correction to A1 Theorem G's solvability clause. |
+| Y1b.4 | math (end-to-end) | **Not launched** (no input from Y1b.1/Y1b.3). |
+| Y1b.5 | fallback | Overshoot and variable-shape layers are untouched by this negative; a different base or circle partner remains the fallback. No mechanism found from the rank-one pencil. |
 
 **Order.** Y1b.1 first: it is one computation and decides whether the deformation is real.
 Y1b.2 and Y1b.3 can run in parallel; Y1b.4 only after a positive Y1b.1/Y1b.3.
