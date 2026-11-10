@@ -160,12 +160,13 @@ rigidity under the chosen convention, and the filled-in claim template for R5's 
 
 **Success.** Every later stream can say "under convention B/C" and be understood.
 
-**Landed (2026-11-10).** `R12-convention.md`. Recommendation **B + C**, awaiting ratification
-(note §2.5). Key findings: the value coordinate is the only free slot; A is genuinely stronger for
-`1/log`, `δlogδ` and complex-monodromy log points (real `φ` resolve them), but log points with real
-monodromy are A-robust (Lemma 1.2), so R3's log separation survives A. B1 Route-O necessity reduces
-to a 4-function span condition on `R_C`; the catenary is the `tan` solution, the log-cosine is not,
-the base catalogue is excluded by Wronskians, and the rest of the tower is open.
+**Landed (2026-11-10).** `R12-convention.md`. **B + C adopted as the working default** (note §2.5,
+provisional); A is kept open as a research thread. Key findings: the value coordinate is the only
+free slot; A is genuinely stronger for `1/log`, `δlogδ` and complex-monodromy log points (real `φ`
+resolve them), but log points with real monodromy are A-robust (Lemma 1.2), so R3's log separation
+survives A. B1 Route-O necessity reduces to a 4-function span condition on `R_C`; the catenary is the
+`tan` solution, the log-cosine is not, the base catalogue is excluded by Wronskians, and the rest of
+the tower is open.
 
 ### R9: singularity spectrum of tower graph functions
 
@@ -269,11 +270,12 @@ claim template. Update it whenever a stream lands. `R5-named.md`, `SUMMARY.md` �
 
 ## 4. Decisions the user owns
 
-1. **Convention:** A (permissive), B (affine), C (mode-index), or **B+C (recommended; R12 has
-   landed and analysed the alternatives)**. R12's finding: A is genuinely stronger for `tan`,
-   `l=0`, the tractrix and Biot (real value-side `φ` resolve their singularities), but the log rows
-   with real monodromy are A-robust. B+C is the uniform default; A would need a global argument for
-   the non-log rows.
+1. **Convention: B + C adopted as the working default (2026-11-10, provisional).** Negative claims
+   (“no construction solves `X`”) are under B + C; positive claims may use A; A remains an **open
+   research thread** for the non-log rows. R12's finding: A is genuinely stronger for `tan`, `l=0`,
+   the tractrix and Biot (real value-side `φ` resolve their singularities), but the log rows with
+   real monodromy are A-robust. B + C is the uniform default; A would need a global argument for the
+   non-log rows.
 2. **Priority:** R9 first (settle `tan`) or R10 first (find new reachable families). The plan
    recommends R12 → R9, with R10 in parallel if there is a second worker.
 3. **Scope of R11:** start it now as a formulation+scan, or defer until R9/R10 land.

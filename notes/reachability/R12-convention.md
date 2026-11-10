@@ -316,17 +316,23 @@ Reasons:
    genuinely non-affine. A claim made under A is strictly stronger. The log rows can be upgraded to A
    via Lemma 1.2; the non-log rows need a separate global argument.
 
-### 2.5 Ratification
+### 2.5 Decision
 
-```
-[ ] B + C  (recommended)
-[ ] A      (permissive; the 1/log, δlogδ and non-elementarity exclusions become
-             conditional on a global argument; the log rows survive via Lemma 1.2)
-[ ] other: ______________________________________________
-```
+**Adopted (2026-11-10, working and provisional): B + C for negative claims.**
 
-The decision is prose, not a `Defs.lean` change. Until it is ratified, every R12 restatement below is
-written under B + C and tagged.
+- **Negative claims** ("no construction solves `X`") are stated under B + C, with the sub-case
+  (B0/B1/C) named.
+- **Positive claims** ("this construction solves `X`") may be stated under A, and are automatically
+  B-claims when their data are affine.
+- **A remains open** as a research thread. The non-log rows (`tan`, `l = 0`, tractrix, Biot,
+  elastica) are not excluded under A; closing them needs a global argument. That is recorded as an
+  open item, not as a decision against A.
+- The decision is provisional and reversible. It is prose, not a `Defs.lean` change. If a
+  non-affine construction appears, it is a counterexample to a B-claim and the row is relabelled.
+
+The rest of the note is written under this convention and tagged. The decision was taken under
+delegated authority (the user is not adjudicating the mathematics); it is a scoping choice, not a
+claim that A is false.
 
 ---
 
