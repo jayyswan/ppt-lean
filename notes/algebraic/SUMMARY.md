@@ -303,3 +303,11 @@ weak approximation over number fields has dense E-points (Theorem H): hypersurfa
 N ≥ (d−1)2^d, any X with dim ≥ (D−1)2^D − 1. E is Euclidean, which settles many low-dimensional
 quadric-containing CIs (Theorem W). Rational connectedness alone gives nothing unconditional. None
 of it reaches the general-type varieties the routes need. Proof sketches; see P1.md.
+
+**WARP (2026-11-10): text-warp engines.** The new `PConstructibleCurve.text` constructor
+puts warped glyph outlines in the class; the algebraic ones are rational quartics (egg,
+piriform, Gerono). A single warp adds no new numbers (line/conic intersections are degree
+≤ 8 with P coefficients). The useful content is as an engine component: egg × quintic graph
+is a degree-10 engine with F = 9 (one more than the MI-1 sextic engine), and egg × sextic
+graph is a degree-12 engine with F = 10 (still below H5's F ≥ 11 for totally real decics).
+No goal is closed; the F-point problem is unchanged. See `WARP.md`.
