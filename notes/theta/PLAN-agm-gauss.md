@@ -1,9 +1,39 @@
 # Plan: Gauss's AGM theorem, and `agm` is P-constructible
 
-Written 2026-11-07. **Not started.** First step of the theta programme (see "Afterwards").
-Tracked in GitHub issue #10; the theta follow-up is #11.
+Written 2026-11-07. **Done 2026-11-10** — implemented in `Pptc/AGM.lean` (~430 lines,
+about 250 of proof), imported from `Pptc.lean`. Tracked in GitHub issue #10; the theta
+follow-up is #11.
 Earlier sketch: `notes/archive/PLAN-hypergeometric-00-overview.md`, item B4. That sketch moved the
 AGM out of the hypergeometric programme as "`Pptc/AGM.lean`", but the file was never written.
+
+## Status
+
+All targets below are proved, with `lean_verify` reporting only
+`propext`, `Classical.choice`, `Quot.sound`:
+
+| Plan step | Declarations in `Pptc/AGM.lean` |
+|---|---|
+| 1 | `ellipticF_pi_div_two_eq_agmI` |
+| 2 | `agmI_eq_agmJ` (`t = b tan θ`; `integral_image_eq_integral_abs_deriv_smul`) |
+| 3 | `agmJ_newman` (Newman's `x ↦ (x − ab/x)/2`), plus private algebra lemmas `agmJ_alg_g`, `agmJ_alg_m`, `agmJ_deriv`, `agmJ_key`, `agmJ_surj` |
+| — | `agmI_gm_am`: one AGM step leaves `I` fixed (steps 2 + 3 combined) |
+| 4 | `agmSequences_pos`, `agmI_agmSequences` |
+| 5 | `agmI_radicand_bounds`, `agmI_integrand_bounds`, `continuous_agmI_integrand`, `agmI_bounds` |
+| 6 | `agmI_eq_pi_div_two_agm`, `ellipticF_pi_div_two_eq_pi_div_agm` |
+| 7 | `ellipticF_pi_div_two_pos`, `agm_one_eq`, `agm_one_Pconstructible`, `agm_Pconstructible` (tagged `@[pconstructible]`), `gaussConstant_Pconstructible` |
+
+Notes for anyone extending this:
+
+* Evenness in step 3 costs nothing: `MeasureTheory.integral_comp_abs` gives
+  `∫ x, f |x| = 2 ∫_{Ioi 0} f` for *any* `f` — it needs no integrability hypothesis — so
+  for even `f` it is exactly the halving, and the `Integrable` argument the plan budgeted
+  for section 3 is not needed at all.
+* `agm_Pconstructible` is tagged `@[pconstructible]`, not `pconstructible_cond`: every
+  hypothesis is itself a `PConstructible` claim. It fires on symbolic inputs; the tactic
+  still cannot close goals whose inputs are `NNReal` literals such as `NNReal.sqrt 2`,
+  because `↑(2 : ℝ≥0)` is not a syntactic numeral for `Pconstructible.numTac`. The
+  headline theorems are therefore proved explicitly rather than by `pconstructible`.
+
 
 ## Targets
 
