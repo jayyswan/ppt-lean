@@ -380,5 +380,9 @@ offset route (Route O), not impossibility results.
 - The goat is a single target with a legality obstruction, not a separation result; the separatrix
   is pointwise `R`.
 
+The follow-up plan is `notes/reachability/PLAN-routes.md`: streams R12 (convention), R9
+(singularity spectrum / `1/log`), R10 (Route-I decomposition dictionary), R11 (discrete spectra),
+R13 (goat legality), plus a standing claim index.
+
 
 
