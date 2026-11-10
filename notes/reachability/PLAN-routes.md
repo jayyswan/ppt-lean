@@ -121,7 +121,7 @@ mechanical to maintain.
 |---|---|---|---|---|
 | R12 | 1 | foundations | **landed**: `R12-convention.md` — B + C recommended, restatements, template and R5 table | R8, R3 §3.9, R2 Q3.4 |
 | R9 | 1 | math/proof | **landed**: `R9-singularity-spectrum.md` — no `1/log`/`δlogδ` in the tower; `tan` and `l=0` closed on Route I (B) | R8, R3, R7 |
-| R10 | 1–2 | math (positive) | `R10-decomposition-dictionary.md` + `decompose.wl`: a Route-I catalogue | R7, R8 |
+| R10 | 1–2 | math (positive) | **landed**: `R10-decomposition-dictionary.md` — 9 catalogue entries, H1–H5, negative list | R7, R8 |
 | R11 | 2 | math/arithmetic | `R11-discrete-spectra.md`: formulation, scan, partial impossibility | R8, R3, R12 |
 | R13 | 2 | math (small) | `R13-goat-legality.md`: a legal construction or a proof of illegality | R5 §2.11, R0 §3.4 |
 | IDX | continuous | maintenance | update `R5`/`SUMMARY`/`PLAN-ppt-tan-curves` with route labels; keep the claim index | R8, R12 |
@@ -230,6 +230,14 @@ construction and a new `R` entry.
 
 **Risk.** Open-ended; keep the scope bound above. Do not turn this into a general function-fitting
 exercise.
+
+**Landed (2026-11-10).** `R10-decomposition-dictionary.md`. Nine catalogue entries (E1 exp-drift,
+E2 lines, E3 polynomial graphs, E4 power laws including negative exponents, E5 log-drift, E6
+offset-exp, E7 sine shears, E8 conic branches, E9 closure), five explicit constructions (H1 R7's
+`d=0` parabola; H2 one/two exponential rates; H3 trig degree ≤2; H4 the `√(1+u²)` split; H5
+`a u^b`), all at output depth 1. The negative list re-derives the R5 rows from R3/R8/R9 and marks
+three distinct rates / degree-3 trig as catalogue misses (atom count, `[Heuristic]`). H1 is the
+recommended first Lean target. No Route-O claims change.
 
 ### R11: discrete spectra and arithmetic
 
