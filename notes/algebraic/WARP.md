@@ -36,6 +36,12 @@ it blocks; nothing here is a negative about `algebraic_Pconstructible`.
    reachable. The normalization of a single `●` box and the bounding box of a `●●` row are
    proved in scratch; the remaining step is isolating the left disc by a rectangular
    `restrict` and deriving `PConstructibleCurve (eggCurve a d₀ d₁)`.
+6. **Follow-up (offsets, nonsquare, free handle).** The free handle is already a P
+   parameter in `text` and is what makes the egg family an F-family. Nonsquare boxes add
+   no new algebraic modulus (affine for straight guides; the egg shape family is universal;
+   curved guides are transcendental). An offset adds one P parameter but a degree/gonality
+   cost; **offset egg × conic** is a possible F ≈ 11 engine if the offset's real component
+   is a sextic, otherwise the offset route is dominated. See §8.
 
 ## 1. What the new formalization adds
 
@@ -231,6 +237,108 @@ work is set algebra, not new mathematics; it is a good `lean-prover` task.
    F-parameter to an existing engine** where the current engine only has rational
    parameters (e.g., replace a `poly_graph` coefficient by a warp handle). This is the
    only way warps could change the arithmetic, rather than just the shape.
+
+## 8. Follow-up: offsets, nonsquare boxes, free handles
+
+These are the three ways the warp family could gain algebraic parameters. The short
+answer: the free handle is already the right move and is what makes the egg family an
+F-family; nonsquare boxes add no new algebraic modulus; offsets add one P parameter but
+pay a degree/gonality cost, and the only promising combination is offset egg × conic
+(F ≈ 11), which is [Open] until the offset degree is settled.
+
+### 8.1 Offsets of warps
+
+`PConstructibleCurve.offset` applies to any constructible curve with a regular tracing,
+and its distance `d` is a `PConstructible` free parameter. So the offset of an algebraic
+warp is legal, algebraic, and gains **one** P parameter.
+
+The cost is degree and gonality. Calibration [Wolfram, exact resultant]:
+
+- offset of a circle by 1: a circle, degree 2;
+- offset of the parabola `y = x²` by 1: a sextic (the exact resultant has total degree 6);
+- offset of the egg `(1/4)(D-2y)² = D²x(1-x)`, `D = 1+2x`, by 1: the naive implicitization
+  gives a degree-28 factor in `(X,Y)` plus an extraneous degree-4 factor squared. A
+  numerical implicitization of the real offset points finds a low-degree real relation
+  (degree 6 at 81 samples), so the offset may have a sextic real component inside a
+  higher-degree complex equation. **This needs a proper real-component computation; do
+  not quote degree 6 yet.** [Open]
+
+Consequences for the algebraic goals:
+
+- The offset of the egg has 6 parameters (5 egg + 1 distance). **Offset egg × conic** has
+  F = 6 + 5 = 11 (a general conic with P coefficients is drawable via
+  `linearMap_PConstructibleCurve`). Write `D` for the real offset degree; the conic
+  crossing has degree `2D`, and the cofactor at `n = 10` has degree `2D - 10`. The
+  dimension count leaves room as long as `2D - 10 < 11`, i.e. **`D ≤ 10`**. If the real
+  component is a sextic (`D = 6`), the cofactor is quadratic at `n = 10` and cubic at
+  `n = 9`; if `D = 10`, the cofactor is decic and the condition variety is still
+  positive-dimensional. This is the most interesting of the three follow-ups, and it is
+  viable for any real offset degree up to 10. [Open]
+- If the real offset degree is ≥ 11, the conic crossing degree is ≥ 22, the cofactor at
+  `n = 10` has degree ≥ 12, and the parameter gain (1) is dominated by the existing offset
+  towers (`W1`: +3 parameters per layer, degree ~2^j). In that case offsets of warps add
+  shapes, not engine power.
+- Offsetting twice adds another P parameter and raises the degree again; this is the
+  known offset-tower trade-off of `W1`, not a new mechanism. The warp base does not
+  change the accounting.
+
+### 8.2 Nonsquare bounding boxes
+
+For the **algebraic** warps, nonsquare boxes add no new modulus.
+
+- The straight-guide presets (Triangle, Fade, Cascade, Slant, Chevron, …) have a bilinear
+  cell. Changing `(w,h)` is an x/y affine scaling of the square-box cell. The egg's shape
+  ratio `d₀ : d₁` is unchanged, and the two scales are already two of the five egg
+  parameters. Nonsquare is a reparameterization, not a new curve.
+- The Stop preset is a polyline traced by arc length, so changing `w/h` moves the
+  breakpoints genuinely (the notes' §9.1 aspect-ratio effect). But the image of a small
+  circle in the first cell is still an egg: the cell is bilinear and the egg shape ratio
+  is a function of the handle and the cell's two heights. The Triangle egg's handle
+  already ranges over **all** positive ratios `(1-α) : 2α`, so the Stop first-cell egg is
+  in the same five-parameter family. The aspect changes which handle value gives a given
+  shape, not the set of shapes. No new algebraic family.
+- The curved-guide presets (Can, Ring, Wave, the Pours) do have a genuine aspect-ratio
+  parameter [notes §9.1], but their curves are transcendental (arc length, polar angle).
+  They do not feed the algebraic goals.
+
+So nonsquare boxes are [Proof]-level redundant for the algebraic egg family, even though
+they are a genuine parameter of the transcendental warp family.
+
+### 8.3 The yellow handle as a free parameter
+
+The formalization already does the right thing: `PConstructibleCurve.text` takes
+`a b : ℝ` with `PConstructible a, PConstructible b` and `T.warp.HandleInRange a b`, not a
+rational stop value. The old `TriangleCircleRule` was weaker: it quantified rational
+handles only.
+
+- **It is one P parameter, not a second one.** The egg shape ratio is a function of the
+  single Triangle handle. Making it P moves the family from a ℚ-parameterized family to
+  an **F-parameterized** one, which is exactly what Z8's F-point reformulation needs.
+  It can absorb one condition over F; it cannot encode an `n`-dimensional Tschirnhaus
+  element.
+- **It is what makes the offset/conic candidate plausible.** The offset distance and the
+  handle are two independent P parameters; together with the box scales and placement
+  they give the six parameters of the offset egg.
+- **The Lean bridge should state the theorem for every P handle**, not only the rational
+  stops. `Pptc/Scratch/WarpText.lean` already uses an arbitrary `a : ℝ` in
+  `triangleCircleBox_outlineAt`; the final `eggCurve`/`piriform` theorems should quantify
+  `PConstructible α` with `0 ≤ α ≤ 1`, matching the constructor.
+
+### 8.4 Combined verdict
+
+| feature | new algebraic parameter? | effect on the engine table |
+|---|---|---|
+| free yellow handle | yes, 1 P parameter (already in the egg's 5) | moves the family to F; no new shape dimension |
+| nonsquare box, straight/polyline | no (affine/reparameterization) | none |
+| nonsquare box, curved guide | yes, but transcendental | none for algebraic goals |
+| one offset of the egg | yes, 1 P parameter | +1 to F, but degree/gonality grows; offset egg × conic is F ≈ 11 and viable for real offset degree ≤ 10 [Open] |
+
+The only route here that could move the algebraic frontier is **offset egg × conic** at
+F = 11. It is worth one focused computation: implicitize the offset of a representative
+egg, find its real components and degree, and then compute the crossing rank with a
+general conic. If the real offset degree is ≤ 10, this is a new candidate for totally real
+decics; if it is ≥ 11, the offset route is dominated and can be closed scoped to this
+construction.
 
 ## Other things noticed
 
