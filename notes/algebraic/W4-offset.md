@@ -124,7 +124,9 @@ reached H5's F = 11 threshold.
 a cubic Bézier offset has X-degree 10 with 8 control parameters, and `y = x^3` has X-degree
 10. The egg offset has X-degree 16 with only 6 parameters (5 egg + distance). So even as an
 offset-based engine or number source, the warp base is dominated by the offset bases
-already in N4. The warp does not add a new offset engine.
+already in N4. The warp does not add a new offset engine. Whether the cubic Bézier offset ×
+conic actually yields an engine is N4's question, not W4's; the point here is only that the
+egg is not the right offset base.
 
 **Scoped kill.** Offsets of the egg are closed as an engine route for the algebraic goals.
 This does not say anything about offsets of other curves (`W1`'s offset towers), and it does
