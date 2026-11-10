@@ -12,5 +12,11 @@ Progress log for `notes/reachability/PLAN-routes.md`. One line per step.
   monodromy are A-robust (Lemma 1.2); (iii) B1 Route-O necessity reduces to a 4-function span
   condition on `R_C`; the catenary is the `tan` solution, the log-cosine is not, the base catalogue is
   excluded by Wronskians, and the rest of the tower is open.
-- Decisions pending from the user: none for the convention. Next: R9 under B (main line); the
-  A-closure / non-log global question is parked as an open thread and can be delegated.
+- 2026-11-10: **R9 landed** (`R9-singularity-spectrum.md`). Classification: tower graph functions
+  without `arc_of_length` have only Puiseux/pole/log singularities, log as a summand with constant
+  coefficient; no `1/log`, no `ζ log ζ`, no finite essential singularity. Consequences under B:
+  `tan x = λx` excluded on Route I (`1/log`); `l=0` excluded on Route I (`δlogδ`); Route O untouched.
+  The exclusions are B-only (A resolves the two types).
+- Decisions pending from the user: none for the convention. Next: R10 (decomposition dictionary,
+  positive) and the `tan` B1 necessity; the A-closure / non-log global question is an open thread
+  that can be delegated.
