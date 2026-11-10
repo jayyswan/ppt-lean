@@ -130,13 +130,16 @@ polynomials of degree ≤ 8 over itself. The question is whether `F = ℝ_alg`.
 | G3 | math | **General-n engine search.** Using G2, look for an engine family whose number of conditions stays bounded, or grows slower than the Tschirnhaus capacity, as n grows. Candidates: offset towers, crossings of two rotated power laws, power law × Bézier, iterated box/extremum constructions. Test versality numerically for n = 9…13 (Jacobian rank of the crossing-polynomial map modulo Tschirnhaus), and count real crossings for totally real targets. | G2 |
 | G4 | math | **Route constraints, scoped.** Make the Aₙ filter, the Descartes realness bounds and the parameter-count bounds precise as statements about *classes of routes*. The aim is to know exactly what an all-n route must look like. These are not conclusions about the target. | G1, G2 |
 | G5 | math (low priority) | **Transcendental routes to algebraic numbers.** Can P evaluate the special functions in G1's general-equation formulas: hypergeometric pFq at algebraic arguments for trinomials (Mellin), or theta constants (Umemura)? Gamma at rationals and closed-form ₂F₁ are already available. NOTES argued that `arc_of_length` inverts one integral at a time; test that argument. | G1 |
+| Y1b | math (arithmetic/descent) | **Square descent and variable-affine offset towers (added 2026-11-10).** The general-method attack on Y1a's simultaneous-squares condition: can the rank-one square be deformed to nondegenerate positive-definite forms over L? Compute the Kummer obstruction at n = 7,8,9; test variable affine shapes and overshoot. See the Y1b section. | Y1a, G3 |
 | W4 | math + Lean | **Text-warp engines (added 2026-11-10).** The new `PConstructibleCurve.text` constructor gives new algebraic curve families (egg, piriform, offset egg) with P parameters. Measure them as engine components: crossing degrees, condition varieties, F-points, and whether they close or relax an open n = 9–12 case. See `WARP.md`. | N4, G2, H3 |
 
 ## 5. Order
 
 - **Wave 1** (all independent): N1 (Lean), N2, N4, G1, G2.
-- **Wave 2:** N3 and N5 (taking N2/N4 results), then G3 (taking G2).
-- **Wave 3:** G4, G5 if warranted. Then the orchestrator writes `notes/algebraic/SUMMARY.md`:
+- **Wave 2:** N3 and N5 (taking N2/N4 results), then G3 (taking G2). **Y1b** starts in parallel:
+  Y1a is done, and Y1b.1 (the \(n=7,8,9\) square-conic computation) does not need G3.
+- **Wave 3:** Y1b.4/Y1b.5 if Y1b.1/Y1b.3 are positive; G4, G5 if warranted. Then the orchestrator
+  writes `notes/algebraic/SUMMARY.md`:
   - degree-9 status by case;
   - the best general-n route candidate;
   - a Lean roadmap.
@@ -328,12 +331,71 @@ non-elliptical Minkowski summand.
 - End-to-end test on a totally real S₅ quintic: the parabola tower crossing works.
 - **Open:** the simultaneous squares for n ≥ 7, i.e. L-points off the degenerate line on V_τ. V_τ is
   a smooth complete intersection of n−3 diagonal quadrics: K3 at n = 6, general type for n ≥ 7. τ
-  may vary.
+  may vary. **Y1b** (added 2026-11-10) attacks this by deforming the rank-one square and computing
+  the Kummer/descent obstruction.
 - Searches at n = 9 and 10 found nothing.
 - Leads:
   - n = 6 (K3: elliptic fibrations);
   - genus-0 or genus-1 curves on V_τ;
   - the family over τ.
+
+### Y1b: square descent and variable-affine towers (2026-11-10, proposed)
+
+This is the general-method attack. Y1a's Theorem R reduces all n to two ingredients:
+
+1. τ ∈ K_L;
+2. J ≥ n−1 pairwise non-homothetic positive-definite forms Q_j over L with every Q_j(τ) a square
+   in K_L.
+
+The geometry of \(V_\tau\) is already understood: a smooth complete intersection of \(n-3\)
+diagonal quadrics, K3 at \(n=6\), general type for \(n\ge 7\). The open problem is **arithmetic**,
+not geometric. Fixed engines (egg, piriform, offset egg, text warp) add a constant number of
+parameters and cannot change the asymptotics; Y1b is the stream that tries to make the square
+hypothesis constructive.
+
+**Core question.** Can the degenerate (rank-one) square be deformed to nondegenerate
+positive-definite forms over \(L\)?
+
+- Take \(B_0=\ell\ell^T\) with \(\ell(\tau)\neq0\); then \(Q_{B_0}(\tau)=\ell(\tau)^2\) is a
+  square.
+- For \(B_t=B_0+tB_1\), with \(B_1\) positive definite and \(t>0\), \(B_t\) is positive definite.
+  The square condition \(Q_{B_t}(\tau)=r^2\) is a conic over \(K_L\) with the \(K_L\)-point
+  \((t,r)=(0,\ell(\tau))\).
+- Ask whether it has a point with \(t\in L\), \(r\in K_L\), and \(B_t\) positive definite. This is
+  a **Kummer/descent** condition, not a real-geometry condition. The first job is to compute the
+  obstruction for \(n=7,8,9\).
+
+**Why it could work.** The conic has a \(K_L\)-point; the rank-one boundary is a square. If the
+\(t\)-coordinate can be chosen in \(L\), we get one nondegenerate square form. Varying \(B_1\)
+gives non-homothetic forms, and \(J\ge n-1\) of them feed Theorem R. The rank-one line is the
+only obvious source of \(K_L\)-points, so the whole general method may hinge on this deformation.
+
+**Why it could fail.** The conic's \(L\)-points may be obstructed by a nontrivial Kummer class;
+the \(t\)-coordinate may lie in \(K_L\setminus L\) for every \(B_1\). Then the distance-only tower
+has a scoped obstruction, and the fallback is variable affine layers, overshoot, or a new pen.
+The parabolic base remains the right base: the square condition is about the affine ellipses, not
+about the base curve, so the warp egg is not a shortcut here.
+
+**Tasks.**
+
+| id | model | question / deliverable |
+|---|---|---|
+| Y1b.1 | math/computation (Wolfram or Magma) | **The square conic at n = 7, 8, 9.** Fix a generic \(q\), \(\tau=\beta\), a rank-one \(B_0=\ell\ell^T\), and several positive-definite \(B_1\). Parameterize \(Q_{B_0+tB_1}(\tau)=r^2\) over \(K_L\); determine whether there is a point with \(t\in L\), \(r\in K_L\), \(B_t\) positive definite. Vary \(B_1\); identify the obstruction class. Deliverable: `Y1b.md` with the exact conic, the obstruction, and a positive or a scoped negative. |
+| Y1b.2 | math (parameter count) | **Variable affine layers.** Allow each layer's positive-definite form \(B_j\) to vary (two shape parameters) in addition to the distance (one). Count \(3J\) parameters against \(J\) square conditions and \(n\) linear equations; test whether the shape parameters absorb the descent obstruction. Measure rank/versality for \(n=9,\dots,13\). This is the G3-style computation with the shapes free. Deliverable: a rank table and a verdict on whether variable shapes enlarge the square locus. |
+| Y1b.3 | math (arithmetic) | **The descent theorem.** Formulate the condition \(Q_{B_t}(\tau)=r^2\) with \(t\in L\), \(r\in K_L\) as a Kummer/Weil-restriction problem. Compute the obstruction class in \(H^1(L,\mu_2)\); use Hilbert 90 and the \(K_L/L\) structure to decide when it vanishes. If it vanishes under checkable hypotheses, state the resulting unconditional form of Theorem R. Deliverable: a theorem or a scoped obstruction statement. |
+| Y1b.4 | math (end-to-end) | **Construct the forms and run Theorem R.** If Y1b.1/Y1b.3 give nondegenerate square forms, build \(n-1\) non-homothetic forms explicitly and run the Y1a linear system on a totally real \(S_7\) or \(S_9\) polynomial. Deliverable: an end-to-end certificate and the Lean statement to formalize. |
+| Y1b.5 | fallback | **If descent fails.** Test overshoot (degree \(>n\)) and variable-shape layers; determine whether the obstruction is intrinsic to the distance-only tower or can be bypassed. A clean scoped negative is a valid deliverable. |
+
+**Order.** Y1b.1 first: it is one computation and decides whether the deformation is real.
+Y1b.2 and Y1b.3 can run in parallel; Y1b.4 only after a positive Y1b.1/Y1b.3.
+
+**Kill criteria (scoped).** If every tested \(B_1\) gives no positive-definite \(L\)-point and the
+obstruction is nonzero, record a scoped obstruction to the distance-only offset tower; do not
+conclude anything about the target. If the deformation works, proceed to Y1b.4; no negative about
+`algebraic_Pconstructible` follows from Y1b.
+
+**Cost.** Y1b.1: one focused Wolfram/Magma computation for \(n=7,8,9\). Y1b.2: one parameter-count
+stream. Y1b.3: one arithmetic/descent stream. Y1b.4: one end-to-end and Lean stream.
 
 ### Next streams (2026-11-05)
 
