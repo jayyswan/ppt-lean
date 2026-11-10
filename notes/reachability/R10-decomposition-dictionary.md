@@ -1,7 +1,7 @@
 # R10 — the Route-I decomposition dictionary
 
 **Stream:** R10 of `notes/reachability/PLAN-routes.md` (waves 1–2, math positive).
-**Deliverable:** this file. Research only: **no `.lean` edit, no `lake` command, no commit.**
+**Deliverable:** this file. Research only: **no `.lean` edit, no `lake` command.**
 **Status:** first catalogue. Positive constructions are stated under A (R12 §2.5), but every one
 below is B-legal (B0 shape data, affine value), so it is also a B-claim. The negative list is B.
 **Sources read:** `PLAN-routes.md` §0–§3 (R10 section), `R12-convention.md` §0–§3, `R7-dzero.md`,
