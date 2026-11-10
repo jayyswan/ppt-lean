@@ -312,6 +312,7 @@ is a degree-10 engine with F = 9 (one more than the MI-1 sextic engine), and egg
 graph is a degree-12 engine with F = 10 (still below H5's F ≥ 11 for totally real decics).
 No goal is closed; the F-point problem is unchanged. Follow-up: a free P handle is already
 in `text`; nonsquare boxes add no new algebraic modulus; an offset adds one P parameter but
-a degree cost, and offset egg × conic is a possible F = 11 candidate if the offset's real
-component has degree ≤ 10. See `WARP.md` §8. Planned as stream **W4** in
-`PLAN-algebraic.md` (W4a–W4d).
+the egg offset has geometric degree **16** (the elimination polynomial has total degree
+28), so offset egg × conic has crossing degree at least 32 and cofactor at least 22 at
+n = 10, far above F = 11 — that candidate is **closed** (`W4-offset.md`). See
+`WARP.md` §8. Planned as stream **W4** in `PLAN-algebraic.md`; W4a done, W4b–W4d remain.
