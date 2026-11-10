@@ -18,6 +18,7 @@ One folder per topic, named for the construction or investigation it belongs to:
 | `octic/` | octic resolvent, trace form, root extraction |
 | `offset-inversion/` | offset curves, offinverse, Whewell/tangent angle, soundness defects |
 | `ppt-curves/` | PowerPoint curve primitives (tan curves, Béziers, `restrict`) |
+| `reachability/` | route-level reachability plan (Route O vs Route I, singularity invariants, discrete spectra) |
 | `spiral/` | spiral and arc-length constructions |
 | `theta/` | AGM (Gauss's theorem) and theta-function values |
 | `third-kind/` | third-kind integrals at arbitrary `n` |
