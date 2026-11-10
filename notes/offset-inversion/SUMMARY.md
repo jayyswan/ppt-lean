@@ -94,7 +94,8 @@ R4's search found nothing: 288 PSLQ tests at 130 digits found no relation betwee
 
 The `M` column above is a **sufficiency** label: it names the curve that makes the known Route-O
 construction work. It is not an impossibility result. `R8-missing-curve-audit.md` audits the
-intersection route (Route I) row by row; the short version:
+intersection route (Route I) row by row; `notes/reachability/R12-convention.md` fixes the
+convention (B + C recommended) and gives the route-level table. The short version:
 
 - **Rows genuinely outside Route I (affine data, continuous family):** gear involute; rhumb line
   (fixed course); tractrix; Biot. The elastica is outside Route I by non-elementarity rather than log

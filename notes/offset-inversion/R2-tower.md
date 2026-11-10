@@ -581,6 +581,12 @@ curve (it is not a `Defs` constructor). So `exp` is the only *drawable* near-mis
 
 ### Q3.4 Same roots for P-constructible data
 
+> **R12 update.** The case `d` allowed to depend affinely on the family parameter (B1) is now a
+> **4-function span condition** on the Whewell function `R_C`; see
+> `notes/reachability/R12-convention.md` §3.3. For `tan x = λx` the catenary is the solution
+> `(a,b,c,e) = (1,0,kπ,0)`, the log-cosine is not, and the base catalogue is excluded by Wronskians.
+> The rest of the tower is open. This is a functional equation, not a constructibility question.
+
 This is where the argument must stop, and the reason is worth stating precisely.
 
 Under the uniform convention, `d` and `x` may be P-constructible data not depending on the
