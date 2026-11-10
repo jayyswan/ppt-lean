@@ -1,7 +1,8 @@
 # Every real algebraic number is P-constructible: summary
 
 This summarizes `pptc/PLAN-algebraic.md`. First written 2026-11-04 (waves 1–2); §§5–7 added
-2026-11-05; **§§8–10 and the status table updated 2026-11-06 (Phase D: Y1, Z1–Z8, A1–A2, B1–B3)**.
+2026-11-05; **§§8–10 and the status table updated 2026-11-06 (Phase D: Y1, Z1–Z8, A1–A2, B1–B3);
+§8 Y1b and §10 Y1b paragraph added 2026-11-10**.
 The sources are the notes in this folder. Labels follow the notes. Nothing here is a negative about
 the target: every obstruction is scoped to the route it blocks.
 
@@ -215,11 +216,17 @@ explicit surface (totally real nonics) and one P-line on an explicit 3-fold (tot
 - **Theorem R (Y1a) [Proof].** n − 1 non-homothetic positive-definite binary forms Q_j with Q_j(τ)
   a square in K_L give β ∈ P, totally real included. The needed variety V_τ is a complete
   intersection of n − 3 diagonal quadrics: K3 at n = 6, general type for n ≥ 7.
-- **Y1b (2026-11-10, proposed).** The general-method attack on the simultaneous-squares condition:
-  deform the rank-one square `B₀ = ℓℓᵀ`. The conic `Q_{B₀+tB₁}(τ) = r²` has a K_L-point at
-  `t = 0`; ask whether it has `t ∈ L`, `r ∈ K_L`, with `B_t` positive definite. Compute the
-  Kummer/descent obstruction at n = 7,8,9. If the deformation works, Theorem R becomes
-  unconditional; if it fails uniformly, it is a scoped obstruction to the distance-only tower.
+- **Y1b (2026-11-10, done: scoped negative).** The general-method attack on the
+  simultaneous-squares condition was the deformation of the rank-one square `B₀ = ℓℓᵀ`. Result
+  (`Y1b.md`): the conic `Q_{B₀+tB₁}(τ) = r²` is smooth and already has the point `(t,r) = (0,ℓ)`
+  with `t ∈ L`, so there is **no** Kummer/`H¹(L,μ₂)` class. The condition `t ∈ L` is the pencil
+  curve `X_C ⊂ V_τ`, a `(ℤ/2)ⁿ`-cover of the t-line of genus `1 + (n−3)2^{n−2}` (129, 321, 769 at
+  n = 7, 8, 9). Every positive-definite form is `B₀ + tB₁`, so Y1b.1 *is* the first step of SS. The
+  cover is the K-twist: its fibre at `t = 0` is the `S_n`-resolvent scheme of q (degrees
+  `C(n,k)`; the `k = 1` component is K). Hence the arithmetic closure has `S_n` as a quotient and
+  no free construction reaches a point. Corollary: A1's Theorem G must be applied to the
+  arithmetic closure, not the geometric monodromy. Y1b.4 not launched; Y1b.2 vacuous; Y1b.3
+  answered negatively.
 - **No square-root-free addition exists (Z4) [Proof sketch].** Every curve constructor is unary
   with numeric parameters, so curves depend on each other only through P-numbers. Offsets add only
   ellipses. Scale by 0 gives a root-free summand, but it is ±p, constant on each branch, i.e. a
@@ -321,3 +328,13 @@ the egg offset has geometric degree **16** (the elimination polynomial has total
 28), so offset egg × conic has crossing degree at least 32 and cofactor at least 22 at
 n = 10, far above F = 11 — that candidate is **closed** (`W4-offset.md`). See
 `WARP.md` §8. Planned as stream **W4** in `PLAN-algebraic.md`; W4a done, W4b–W4d remain.
+
+**Y1b (2026-11-10): the rank-one square pencil is closed.** The distance-only deformation of the
+rank-one square does not weaken SS and does not give a Kummer class (`Y1b.md`). The exact conic
+`r² − Q_{B₁}(τ)ts = ℓ(τ)²s²` already has `(t,r) = (0,ℓ)`; the `t ∈ L` condition is the pencil
+curve `X_C ⊂ V_τ`, of genus `1 + (n−3)2^{n−2}`, which is the K-twist of the split `(ℤ/2)ⁿ`-cover.
+Its `t = 0` fibre is the `S_n`-resolvent scheme of q, with the `k = 1` component equal to K, so the
+arithmetic closure carries `S_n` and no free construction lands on it. This closes the
+"deform the rank-one square" idea for all n ≥ 5. It leaves untouched: overshoot engines,
+other bases (rational sextic graphs, power laws with `b = 1 ± 1/k`), the circle partner, and SS
+itself.
