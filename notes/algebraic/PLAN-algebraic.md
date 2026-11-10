@@ -791,26 +791,31 @@ a warped curve, alone or as an engine component, close or relax an open case?
   affine or reparameterize the same universal egg; curved guides are transcendental. Closed, no stream.
 - A free yellow handle is already a `PConstructible` parameter in `text`; the Lean theorem should
   quantify P handles, not the old rational stops. This is part of W4d, not a separate investigation.
-- The one follow-up that can reach H5's threshold is **offset egg × general conic**: F = 11, viable
-  whenever the real offset component has degree D ≤ 10 (crossing degree 2D, cofactor 2D − 10 < 11
-  at n = 10). The offset's exact real degree is [Open].
+- The one follow-up that could reach H5's threshold was **offset egg × general conic**: F = 11,
+  viable whenever the offset degree D ≤ 10 (crossing degree 2D, cofactor 2D − 10 < 11 at n = 10).
+  **W4a closes it:** the egg offset has geometric degree 16 (N4's abscissa convention; the
+  elimination polynomial has total degree 28), stable across four parameter choices including the
+  task's `d₀=1,d₁=2` and irreducible over ℚ, so the conic crossing degree is at least 32, the
+  cofactor degree is at least 22 at n = 10, and F = 11 has no room. See
+  `W4-offset.md`. Scoped kill.
 
 **Tasks.**
 
 | id | model | question / deliverable |
 |---|---|---|
-| W4a | math/computation (Opus or Wolfram-heavy) | **Decide the offset egg.** Implicitize the offset of a representative egg (`a = 1/2`, `D = 1 + 2x`, distance 1 and a generic distance), find the real components and their degrees. If the real degree D ≤ 10, compute the offset egg × general conic condition variety and rank (expected F = 11); if D ≥ 11, close offsets of warps as an engine route, scoped to this construction. Deliverable: `W4-offset.md`. |
+| W4a | math/computation (Opus or Wolfram-heavy) | **Done (2026-11-10):** the geometric offset degree is **16** (N4 convention; elimination polynomial total degree 28, Y-degree 12), stable for `(d₀,d₁,r) = (1,2,1), (2,3,1), (1,4,1), (2,5,1/2)` and irreducible over ℚ; a two-sided Groebner elimination factors as `(degree-4 extraneous)² · (degree-28 elimination polynomial)`. Offset egg × general conic has crossing degree at least 32 and cofactor at least 22 at n = 10, far above F = 11; **close offsets of the egg as an engine route**, scoped to this construction. See `W4-offset.md`. |
 | W4b | math (H3 protocol) | **Egg engines at n = 9–12.** For egg × quintic/sextic graph, compute the condition variety `χ_τ ∣ N_m`: dimension, defining equations, degree, singularities, real points, and the Jacobian rank on monic nonics/decics. The decisive question is whether its degree is < 9 (then H2 Lemma A applies over F) and whether it has a smooth real point. Compare against the F = 8 sextic engine and H3's F = 13 two-graph engine. Deliverable: `W4-engines.md`. |
 | W4c | arithmetic | **Explicit targets.** Test the explicit totally real S₉ nonic `q = ∏_{i=-4}^{4}(x − i) + 1` against egg × sextic, and a totally real S₁₀ decic against egg × quintic. Seek F-points, not just real solutions; a numerical real solution is not enough. Reuse B1/B2's search machinery. Deliverable: a scoped positive or an [Open] with the search box recorded. |
 | W4d | Lean | **Finish the `text` → egg/piriform bridge.** In a real file (`Pptc/Warp/Text.lean`), prove the two-`●` row's left disc normalizes to `glyphCircle a`, isolate it by `restrict`, and derive unconditional `PConstructibleCurve (eggCurve a d₀ d₁)` and the piriform. State the handle over P, not ℚ. Then import from `Pptc.lean`. Deliverable: the Lean file plus the replacement of `TriangleCircleRule` by a theorem for the catalogued row. |
 
-**Order.** W4a first: it is one computation and decides whether the only F = 11 candidate is real.
-W4b runs in parallel; W4c after W4b (it needs the engine shapes); W4d is independent of all three.
+**Order.** W4a is done (offset route closed). W4b is now the first open task; W4c after W4b (it needs
+the engine shapes); W4d is independent of both.
 
-**Kill criteria (scoped).** If the offset real degree is ≥ 11, close the offset-of-warps route and
-say so. If the egg engines' condition varieties have degree ≥ 9 or no F-point in the tested boxes,
-record a scoped [Open]/[Heuristic] and do not conclude anything about the target. No negative about
-`algebraic_Pconstructible` follows from W4.
+**Kill criteria (scoped).** The offset kill criterion was met: the geometric offset degree is 16
+(the elimination polynomial has total degree 28, also ≥ 11), so the offset-of-warps route is
+closed and recorded. If the egg engines' condition varieties have degree
+≥ 9 or no F-point in the tested boxes, record a scoped [Open]/[Heuristic] and do not conclude
+anything about the target. No negative about `algebraic_Pconstructible` follows from W4.
 
 **Cost.** W4a: one focused Wolfram/elimination computation (hours). W4b: one Opus stream. W4c: one
 Sonnet/Opus search stream. W4d: one `lean-prover` task (the scratch lemmas in

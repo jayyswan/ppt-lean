@@ -1,7 +1,8 @@
 # HANDOFF: WARP
 
 Status: **research note done** (`WARP.md`); planned as stream **W4** in
-`PLAN-algebraic.md`; Lean bridge partial, scratch only.
+`PLAN-algebraic.md`; **W4a done** (`W4-offset.md`, offset route closed); Lean bridge
+partial, scratch only.
 
 ## Findings
 
@@ -29,17 +30,19 @@ Status: **research note done** (`WARP.md`); planned as stream **W4** in
 - Nonsquare boxes: no new algebraic modulus. Straight/polyline guides are affine or
   reparameterize the same universal egg family; curved guides are transcendental.
 - Offsets: one extra P parameter, but degree/gonality grows. Calibration: parabola offset
-  is a sextic exactly. Egg offset implicitization gives a degree-28 factor with extraneous
-  parts and a possible degree-6 real component [Open]. Offset egg × general conic has
-  F = 11 and is dimensionally viable whenever the real offset degree is ≤ 10 — a candidate
-  for totally real decics.
+  is a sextic exactly; ellipse 8 (N4's X-degree convention). **W4a:** the egg offset has
+  geometric degree 16 (N4 convention; elimination polynomial total degree 28, Y-degree
+  12), stable across four parameter choices (including the task's `d₀=1,d₁=2`) and
+  irreducible over ℚ; the two-sided Groebner elimination factors as `(degree-4
+  extraneous)² · (degree-28 elimination polynomial)`. Offset egg × general conic has F = 11
+  but crossing degree at least 32 (a naive count on the total degree 28 gives 56) and
+  cofactor at least 22 at n = 10, so the route is **closed** scoped to this construction.
+  See `W4-offset.md`.
 
 ## Next
 
-1. Implicitize the offset of a representative egg; identify the real components and their
-   degrees. If degree 6, compute offset egg × general conic rank (expected F = 11).
-2. Finish the two-disc bridge in a real file (`Pptc/Warp/Text.lean`), import it from
+1. W4b: H3-protocol computation for egg × graph — degree and equations of the condition
+   variety `χ_τ | N_m`; check whether its degree is < 9 (Lemma A over F).
+2. W4c: test the totally real S₉ nonic `∏_{i=-4}^{4}(x-i)+1` against egg × sextic.
+3. W4d: finish the two-disc bridge in a real file (`Pptc/Warp/Text.lean`), import it from
    `Pptc.lean`, and replace `TriangleCircleRule` by a theorem for the `●●` row.
-3. H3-protocol computation for egg × graph: degree and equations of the condition variety
-   `χ_τ | N_m`; check whether its degree is < 9 (Lemma A over F).
-4. Test the totally real S₉ nonic `∏_{i=-4}^{4}(x-i)+1` against egg × sextic.

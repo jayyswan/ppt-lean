@@ -39,9 +39,10 @@ it blocks; nothing here is a negative about `algebraic_Pconstructible`.
 6. **Follow-up (offsets, nonsquare, free handle).** The free handle is already a P
    parameter in `text` and is what makes the egg family an F-family. Nonsquare boxes add
    no new algebraic modulus (affine for straight guides; the egg shape family is universal;
-   curved guides are transcendental). An offset adds one P parameter but a degree/gonality
-   cost; **offset egg × conic** is a possible F ≈ 11 engine if the offset's real component
-   is a sextic, otherwise the offset route is dominated. See §8.
+   curved guides are transcendental). An offset adds one P parameter but the egg offset has
+   geometric degree 16 (N4 convention; the elimination polynomial has total degree 28), so
+   **offset egg × conic** has crossing degree at least 32 and is closed; the offset route is
+   dominated. See §8 and `W4-offset.md`.
 
 ## 1. What the new formalization adds
 
@@ -243,8 +244,8 @@ work is set algebra, not new mathematics; it is a good `lean-prover` task.
 These are the three ways the warp family could gain algebraic parameters. The short
 answer: the free handle is already the right move and is what makes the egg family an
 F-family; nonsquare boxes add no new algebraic modulus; offsets add one P parameter but
-pay a degree/gonality cost, and the only promising combination is offset egg × conic
-(F ≈ 11), which is [Open] until the offset degree is settled.
+pay a degree/gonality cost, and the one candidate that reached F = 11 — offset egg ×
+conic — is now **closed** by the degree computation in `W4-offset.md`.
 
 ### 8.1 Offsets of warps
 
@@ -252,32 +253,39 @@ pay a degree/gonality cost, and the only promising combination is offset egg × 
 and its distance `d` is a `PConstructible` free parameter. So the offset of an algebraic
 warp is legal, algebraic, and gains **one** P parameter.
 
-The cost is degree and gonality. Calibration [Wolfram, exact resultant]:
+The cost is degree and gonality. Calibration [Wolfram, exact resultant; details in
+`W4-offset.md`]:
 
 - offset of a circle by 1: a circle, degree 2;
-- offset of the parabola `y = x²` by 1: a sextic (the exact resultant has total degree 6);
-- offset of the egg `(1/4)(D-2y)² = D²x(1-x)`, `D = 1+2x`, by 1: the naive implicitization
-  gives a degree-28 factor in `(X,Y)` plus an extraneous degree-4 factor squared. A
-  numerical implicitization of the real offset points finds a low-degree real relation
-  (degree 6 at 81 samples), so the offset may have a sextic real component inside a
-  higher-degree complex equation. **This needs a proper real-component computation; do
-  not quote degree 6 yet.** [Open]
+- offset of the parabola `y = x²` by 1: a sextic (exact total degree 6);
+- offset of the egg `a²(D-2y)² = D²x(2a-x)`: the **geometric offset degree is 16** (N4's
+  abscissa convention). The elimination polynomial has X-degree 16, Y-degree 12 and total
+  degree 28; the X-degree is the geometric degree, matching the ellipse octic 8 and
+  `y=x⁴` 14, while the total degree is non-minimal (the ellipse analogue is total 16,
+  geometric 8). The count is stable for `(d₀,d₁,r) = (1,2,1), (2,3,1), (1,4,1),
+  (2,5,1/2)`, and a two-sided Groebner elimination factors as `(degree-4 extraneous)² ·
+  (degree-28 elimination polynomial)`, confirming the X-degree 16. A preliminary numerical
+  run suggesting degree 6 came from a mis-typed parametrization; the corrected computation
+  has no low-degree relation.
 
 Consequences for the algebraic goals:
 
-- The offset of the egg has 6 parameters (5 egg + 1 distance). **Offset egg × conic** has
-  F = 6 + 5 = 11 (a general conic with P coefficients is drawable via
-  `linearMap_PConstructibleCurve`). Write `D` for the real offset degree; the conic
-  crossing has degree `2D`, and the cofactor at `n = 10` has degree `2D - 10`. The
-  dimension count leaves room as long as `2D - 10 < 11`, i.e. **`D ≤ 10`**. If the real
-  component is a sextic (`D = 6`), the cofactor is quadratic at `n = 10` and cubic at
-  `n = 9`; if `D = 10`, the cofactor is decic and the condition variety is still
-  positive-dimensional. This is the most interesting of the three follow-ups, and it is
-  viable for any real offset degree up to 10. [Open]
-- If the real offset degree is ≥ 11, the conic crossing degree is ≥ 22, the cofactor at
-  `n = 10` has degree ≥ 12, and the parameter gain (1) is dominated by the existing offset
-  towers (`W1`: +3 parameters per layer, degree ~2^j). In that case offsets of warps add
-  shapes, not engine power.
+- The offset of the egg has 6 parameters (5 egg + 1 distance), and **offset egg × general
+  conic** has F = 6 + 5 = 11. But the geometric degree is 16, so the crossing degree is at
+  least `16 · 2 = 32` and the cofactor has degree at least 22 at `n = 10` (23 at `n = 9`).
+  A naive count on the non-minimal total degree 28 gives 56 and 46, even worse. The
+  condition variety has no dimension. The elimination factor is irreducible over ℚ, so
+  there is no smaller ℚ-factor to exploit. **This closes offset egg × conic as an engine
+  route**, and with it the only warp-based candidate that reached H5's F = 11 threshold.
+- The kill is scoped: it is a Bézout/parameter-count kill for the egg × conic construction,
+  not a statement about offset towers (`W1`) or non-algebraic offsets (Route I, T6). A
+  degenerate condition variety of degree ≤ 10 could in principle evade it, but the
+  geometric degree-16 offset gives no reason to expect one.
+- The existing offset bases in N4 dominate the egg offset: cubic Bézier offset X-degree 10
+  with 8 control parameters, `y=x³` offset X-degree 10, versus the egg's 16 with 6
+  parameters. A single offset egg is a new curve of geometric degree 16 (so a line section
+  is outside the degree-8 closure), but that is a number-source question for W1/N4, not a
+  new warp engine; the cubic Bézier offset already does better.
 - Offsetting twice adds another P parameter and raises the degree again; this is the
   known offset-tower trade-off of `W1`, not a new mechanism. The warp base does not
   change the accounting.
@@ -331,14 +339,13 @@ handles only.
 | free yellow handle | yes, 1 P parameter (already in the egg's 5) | moves the family to F; no new shape dimension |
 | nonsquare box, straight/polyline | no (affine/reparameterization) | none |
 | nonsquare box, curved guide | yes, but transcendental | none for algebraic goals |
-| one offset of the egg | yes, 1 P parameter | +1 to F, but degree/gonality grows; offset egg × conic is F ≈ 11 and viable for real offset degree ≤ 10 [Open] |
+| one offset of the egg | yes, 1 P parameter | +1 to F, but the geometric offset degree is 16; offset egg × conic is **closed** |
 
-The only route here that could move the algebraic frontier is **offset egg × conic** at
-F = 11. It is worth one focused computation: implicitize the offset of a representative
-egg, find its real components and degree, and then compute the crossing rank with a
-general conic. If the real offset degree is ≤ 10, this is a new candidate for totally real
-decics; if it is ≥ 11, the offset route is dominated and can be closed scoped to this
-construction.
+The only route here that could have moved the algebraic frontier was **offset egg ×
+conic** at F = 11. W4a computes the geometric offset degree as 16 (the elimination
+polynomial has total degree 28), so the crossing degree is at least 32 and the cofactor is
+far above F; the route is closed scoped to this construction (`W4-offset.md`). Nonsquare
+boxes and the free handle do not change the conclusion.
 
 ## Other things noticed
 
