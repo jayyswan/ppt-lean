@@ -215,6 +215,11 @@ explicit surface (totally real nonics) and one P-line on an explicit 3-fold (tot
 - **Theorem R (Y1a) [Proof].** n − 1 non-homothetic positive-definite binary forms Q_j with Q_j(τ)
   a square in K_L give β ∈ P, totally real included. The needed variety V_τ is a complete
   intersection of n − 3 diagonal quadrics: K3 at n = 6, general type for n ≥ 7.
+- **Y1b (2026-11-10, proposed).** The general-method attack on the simultaneous-squares condition:
+  deform the rank-one square `B₀ = ℓℓᵀ`. The conic `Q_{B₀+tB₁}(τ) = r²` has a K_L-point at
+  `t = 0`; ask whether it has `t ∈ L`, `r ∈ K_L`, with `B_t` positive definite. Compute the
+  Kummer/descent obstruction at n = 7,8,9. If the deformation works, Theorem R becomes
+  unconditional; if it fails uniformly, it is a scoped obstruction to the distance-only tower.
 - **No square-root-free addition exists (Z4) [Proof sketch].** Every curve constructor is unary
   with numeric parameters, so curves depend on each other only through P-numbers. Offsets add only
   ellipses. Scale by 0 gives a root-free summand, but it is ±p, constant on each branch, i.e. a
