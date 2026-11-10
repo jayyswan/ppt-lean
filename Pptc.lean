@@ -2,6 +2,7 @@ import Pptc.Defs
 import Pptc.Tactic
 import Pptc.Box
 import Pptc.Basic
+import Pptc.AGM
 import Pptc.Offset
 import Pptc.ThirdKind
 import Pptc.ThirdKindAll.Main
