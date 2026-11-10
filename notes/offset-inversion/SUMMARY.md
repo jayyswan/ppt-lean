@@ -69,7 +69,11 @@ General facts:
     solves the family uniformly.
   - Separation survives depth ≤ 2. The construction itself has depth 3
     (`offset → arc_of_length → box`).
-  - The case `d = 0` is [Open].
+  - **The case `d = 0` is resolved: separation fails [Proof, R7].** `F₀(u) = ¼sinh 2u + u/2`
+    decomposes exactly as `(e^{2u}/8 + u/4) − (e^{−2u}/8 − u/4)`, a difference of two graph
+    functions of affine images of `exp_two`; a single `inter_x` (depth 1) solves the family. So the
+    branch-point invariant's silence at `d = 0` is correct, and the `gd` atom is exactly what makes
+    `d ≠ 0` separate. See `notes/offset-inversion/R7-dzero.md`.
 - **`am` stays out of reach [Proof + Wolfram, R4].** `dψ` and every weighted angle form are
   holomorphic at `∞±`, so offsets cannot cancel the residue obstruction.
 - **Rigidity [Proof, R2].** To match the beam spectrum, or `tan x = λx`, for all parameters,
@@ -107,7 +111,9 @@ All three were repaired to the whole-curve `offset` axiom (commit 875a294). None
 
 ## 7. Open
 
-- The `d = 0` separation case.
+- ~~The `d = 0` separation case~~ **Resolved: separation fails (R7).** `F₀` is an exact difference of
+  two `exp_two` graph functions, so a single intersection solves the family at depth 1. The `gd` atom
+  is the whole reason `d ≠ 0` separates. See `notes/offset-inversion/R7-dzero.md`.
 - Separation for the full tower beyond the base catalogue, and in particular whether a catenary
   or log-cosine parallel curve lies in the tower.
 - ~~Chains of two offset inversions~~ **Resolved as a reduction (R6).** Same-word chains collapse to

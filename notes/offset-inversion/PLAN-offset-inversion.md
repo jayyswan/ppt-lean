@@ -345,3 +345,20 @@ Open item 3, "chains of two offset inversions", is taken up in `notes/offset-inv
   data-dependence of one-step equations, i.e. R2 Q3.4 / R3 §3.9(2)–(3). This corrects R4 §2.1's
   depth framing.
 
+## R7 postscript (2026-11-10)
+
+Open item 1, "the `d = 0` separation case", is taken up in `notes/offset-inversion/R7-dzero.md`
+(issue 18). Result: **separation fails at `d = 0`**, constructively.
+
+- `F₀(u) = ¼sinh 2u + u/2 = (e^{2u}/8 + u/4) − (e^{−2u}/8 − u/4)`, an exact difference of two
+  graph functions of affine images of `exp_two` (rates `+2` and `−2`).
+- Intersecting the two curves, with the second translated vertically by `x`, gives the unique
+  abscissa `u = F₀⁻¹(x)`. That is a single `inter_x`, output depth 1.
+- So the branch-point method's silence at `d = 0` is correct, not a gap. The `gd` atom at `d ≠ 0`
+  (infinitely many finite log branch points) is the entire obstruction.
+- The graph of `F₀` is still not a drawable tower curve, but that was a sufficient, not necessary,
+  condition; R3's Lemma 2.3 only needs a difference of graph functions.
+- R3 §3.9(4) and §5.2 item 5 are updated; L2's `d = 0` instance remains true but is subsumed by the
+  single intersection.
+
+
