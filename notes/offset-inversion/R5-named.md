@@ -41,6 +41,12 @@ the whole family, changing only P-constructible data that does not depend on the
 root. Rows marked *uniform* below pass it; where the mode index changes a sign or an integer
 multiple of `π`, that data is still root-independent (the integer is a window label).
 
+**Convention tags.** The claims below are tagged `S` / `B0` / `B1` / `C` / `A` (`B1×C` for
+hybrids); see `notes/reachability/R12-convention.md` §2 and §4.2, which is the reference table.
+In particular, rows 7/10 with real log monodromy are A-robust; rows 6/13/15/16 are B-only, because
+real value-side `φ` resolve their `1/log`, `δlogδ` or complex-monodromy log singularities; row 14 is
+B-only by non-elementarity.
+
 ## 1. Summary table
 
 | # | problem | classical equation | `(u, gd u)` form | curve (`R`) and data | status |

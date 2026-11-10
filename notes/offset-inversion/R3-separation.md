@@ -232,6 +232,11 @@ For R3 I use this in the following explicit form.
 > `u` or on `F`. Algebraic post-processing of the output is allowed through the derived
 > rule `root_Pconstructible_le_six_coeffs` (this is how L2 recovers `w` from the quartic).
 
+> **R12 update.** The value-dependence in (ii) is the convention choice. See
+> `notes/reachability/R12-convention.md` for the B0/B1/C/A classification, the A-analysis
+> (`1/log`/`δlogδ` are B-only; log with real monodromy is A-robust), and the restated theorems.
+> The statements of Theorems 3.4–3.5 below are unchanged; R12 only makes their hypothesis explicit.
+
 Two clarifications matter for the separation.
 
 - **Why `x` may enter at all.** With *fixed* curves, a single intersection is a fixed finite

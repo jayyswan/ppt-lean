@@ -52,6 +52,11 @@ R7 is the first target whose graph is **not** drawable but which is still Route 
    of graph functions can pass through infinitely many prescribed points (e.g. `sin`), so R3 does
    not apply to beam modes or `tan` branches.
 
+R12 refines 1–2: loophole 1 is **value-side** and loophole 2 is **shape-side**. The value-side
+loophole is A-robust for log points with real monodromy (Lemma 1.2 of `R12-convention.md`), but not
+for `1/log`, `δlogδ` or complex-monodromy log points; the shape-side loophole is B0/B1. Loophole 3
+is convention C. See `R12-convention.md` §1.5–1.6.
+
 ### 0.4 The open rows (from R8)
 
 | target | Route O | Route I | status |
@@ -114,7 +119,7 @@ mechanical to maintain.
 
 | id | wave | kind | deliverable | depends on |
 |---|---|---|---|---|
-| R12 | 1 | foundations | `R12-convention.md`: decide the convention, restate the theorems, apply the template | R8, R3 §3.9, R2 Q3.4 |
+| R12 | 1 | foundations | **landed**: `R12-convention.md` — B + C recommended, restatements, template and R5 table | R8, R3 §3.9, R2 Q3.4 |
 | R9 | 1 | math/proof | `R9-singularity-spectrum.md`: the singularity classification and its two applications | R8, R3, R7 |
 | R10 | 1–2 | math (positive) | `R10-decomposition-dictionary.md` + `decompose.wl`: a Route-I catalogue | R7, R8 |
 | R11 | 2 | math/arithmetic | `R11-discrete-spectra.md`: formulation, scan, partial impossibility | R8, R3, R12 |
@@ -154,6 +159,13 @@ not a `Defs` change; the user owns it.
 rigidity under the chosen convention, and the filled-in claim template for R5's table.
 
 **Success.** Every later stream can say "under convention B/C" and be understood.
+
+**Landed (2026-11-10).** `R12-convention.md`. Recommendation **B + C**, awaiting ratification
+(note §2.5). Key findings: the value coordinate is the only free slot; A is genuinely stronger for
+`1/log`, `δlogδ` and complex-monodromy log points (real `φ` resolve them), but log points with real
+monodromy are A-robust (Lemma 1.2), so R3's log separation survives A. B1 Route-O necessity reduces
+to a 4-function span condition on `R_C`; the catenary is the `tan` solution, the log-cosine is not,
+the base catalogue is excluded by Wronskians, and the rest of the tower is open.
 
 ### R9: singularity spectrum of tower graph functions
 
@@ -257,7 +269,11 @@ claim template. Update it whenever a stream lands. `R5-named.md`, `SUMMARY.md` �
 
 ## 4. Decisions the user owns
 
-1. **Convention:** A (permissive), B (affine), C (mode-index), or B+C (recommended).
+1. **Convention:** A (permissive), B (affine), C (mode-index), or **B+C (recommended; R12 has
+   landed and analysed the alternatives)**. R12's finding: A is genuinely stronger for `tan`,
+   `l=0`, the tractrix and Biot (real value-side `φ` resolve their singularities), but the log rows
+   with real monodromy are A-robust. B+C is the uniform default; A would need a global argument for
+   the non-log rows.
 2. **Priority:** R9 first (settle `tan`) or R10 first (find new reachable families). The plan
    recommends R12 → R9, with R10 in parallel if there is a second worker.
 3. **Scope of R11:** start it now as a formulation+scan, or defer until R9/R10 land.
@@ -286,6 +302,8 @@ complex analysis well beyond the current library).
 ## 6. Cross-references
 
 - `notes/offset-inversion/PLAN-offset-inversion.md` — the parent programme.
+- `notes/reachability/R12-convention.md` — the convention (B + C recommended), the A-analysis
+  (`1/log`/`δlogδ` are B-only; log with real monodromy is A-robust), and the filled-in template.
 - `notes/offset-inversion/R6-chains.md` — chains reduce to one-step entries.
 - `notes/offset-inversion/R7-dzero.md` — the first positive Route-I construction.
 - `notes/offset-inversion/R8-missing-curve-audit.md` — the route audit this plan builds on.
