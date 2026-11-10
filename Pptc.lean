@@ -18,3 +18,4 @@ import Pptc.OffsetInversion.Projectile
 import Pptc.OffsetInversion.Speed
 import Pptc.OffsetInversion.Parabola
 import Pptc.Octic.Main
+import Pptc.Solvable.Main

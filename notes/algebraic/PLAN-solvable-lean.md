@@ -11,6 +11,25 @@ questions issue #14 asks before implementation:
    `IsGalois.of_fixedField_normal_subgroup`, `IsGalois.normalAutEquivQuotient`, and
    `exists_root_adjoin_eq_top_of_isCyclic` / `isCyclic_tfae` (both in the root namespace).
 
+**Implementation status (2026-11-09).**
+
+- Milestones 1–5 are implemented and compile under LSP with no `sorry`.
+- `Pptc/Solvable/Basic.lean` and `Pptc/Solvable/Roots.lean` contain
+  `PConstructibleC`, the subfield `PComplex`, `exists_P_angle`,
+  `exists_PComplex_nth_root`, `PComplex.mem_of_pow_mem`, and the unconditional
+  `mem_PComplex_of_mem_solvableByRad`.
+- `Pptc/Solvable/Galois.lean` contains the maximal-normal-prime-quotient group
+  lemma and the solvable tower lemma `le_solvableByRad_of_solvable_tower`.
+- `Pptc/Solvable/AbelRuffini.lean` proves the engine
+  `mem_solvableByRad_of_isSolvable_gal`: a complex algebraic number with solvable
+  minimal-polynomial Galois group lies in `solvableByRad ℚ ℂ`.  The prime
+  divisibility step is proved by restricting `Gal(E/K₀)` injectively to the
+  splitting field of the minimal polynomial, not by a degree bound.
+- `Pptc/Solvable/Main.lean` contains the headline
+  `root_Pconstructible_of_solvable_gal` and its complex counterpart.
+  `Pptc.lean` imports the new module.  `lean_verify` reports only the standard
+  axioms `propext`, `Classical.choice`, and `Quot.sound`.
+
 **Target (paper statement, X1 §2.2 and §4).** Every real algebraic number whose
 Galois closure over `ℚ` has solvable Galois group is `PConstructible`.
 
@@ -314,41 +333,45 @@ The Kummer lemma applies because `K` contains `μ_p`; the degree is `p` because
 Prove `mem_solvableByRad_of_isSolvable_gal`. The proof is a well-founded induction on
 `Nat.card Gal(L/K)` using Milestone 3.
 
-Set `p := minpoly ℚ z`, `m := Nat.card p.Gal`, and
+Set `p := minpoly ℚ z`, `d := Nat.card p.Gal`, `m := d!`, and
 
 ```lean
-q := p * (X ^ m - 1 : ℚ[X])
-L := IntermediateField.adjoin ℚ (q.rootSet ℂ)
+K₀ := IntermediateField.adjoin ℚ ({ζ_m})          -- ζ_m a primitive m-th root of unity in ℂ
+L  := IntermediateField.adjoin K₀ (p.rootSet ℂ)   -- splitting field of p over K₀
 ```
 
 Then:
 
-1. `p ≠ 0` and `p` is separable (char 0), so `q` is separable and splits in `ℂ`.
-2. `L` is a splitting field of `q` (`IntermediateField.adjoin_rootSet_isSplittingField`),
-   finite and Galois over `ℚ` (`IsGalois.of_separable_splitting_field`).
-3. `z ∈ L`, because `z` is a root of `p` and `p ∣ q`.
-4. `Group.IsSolvable (Gal(L/ℚ))`: identify `Gal(L/ℚ)` with `q.Gal`
-   (`Polynomial.IsSplittingField.algEquiv` + `AlgEquiv.autCongr`), and use
-   `gal_mul_isSolvable` with `h : Group.IsSolvable p.Gal` and
-   `gal_X_pow_sub_one_isSolvable m`.
-5. Let `K₀ := IntermediateField.adjoin ℚ ({(X^m - 1).rootSet ℂ})` (equivalently
-   `ℚ(ζ_m)`). Then `K₀ ⊆ L`, and `K₀ ⊆ solvableByRad ℚ ℂ`: pick a primitive `m`-th
-   root `ζ` (`Complex.isPrimitiveRoot_exp`), note `ζ^m = 1`, and apply
-   `solvableByRad.rad_mem`; then use `adjoin_le_iff`.
+1. `p ≠ 0` and `p` is separable (char 0), so `L/K₀` is a separable splitting field,
+   hence finite Galois over `K₀`.
+2. `z ∈ L`, because `z` is a root of `p`.
+3. `Gal(L/K₀)` is solvable: it is a subgroup of `Gal(L/ℚ)`, and `L/ℚ` is the compositum
+   of the splitting field of `p` over `ℚ` with `K₀`; its group embeds in
+   `p.Gal × Gal(K₀/ℚ)`, both solvable.  Equivalently, use
+   `IsGalois.tower_top_of_isGalois` and the subgroup instance.
+4. **Prime divisibility instead of exact divisibility.**  We do not need
+   `Nat.card Gal(L/K₀) ∣ m`; it is enough that every prime dividing
+   `Nat.card Gal(L/K₀)` divides `m`.  Indeed,
+   * `finrank ℚ L ≤ finrank ℚ (p.SplittingField) * finrank ℚ K₀`
+     (`IntermediateField.finrank_sup_le`), and the first factor is `d`
+     (`Polynomial.card_of_separable` plus `IsSplittingField.algEquiv`);
+   * `finrank ℚ K₀ ≤ m` (the minimal polynomial of `ζ_m` divides `X^m - 1`);
+   * so `Nat.card Gal(L/K₀) ∣ Nat.card Gal(L/ℚ) ≤ d * m`;
+   * every prime dividing `d * m` divides `m` because `m = d!` contains every prime
+     `≤ d`.
+   This is why the tower lemma takes the weaker hypothesis
+   `∀ p, p.Prime → p ∣ Nat.card Gal(L/K) → p ∣ m`.
+5. `K₀ ⊆ solvableByRad ℚ ℂ`: `ζ_m^m = 1`, so `ζ_m` is in the radical closure; then use
+   `adjoin_le_iff`.
 6. Apply the induction lemma of Milestone 3 to the extension `L/K₀`:
-   * `Gal(L/K₀)` is a subgroup of `Gal(L/ℚ)`, hence solvable;
-   * `L/K₀` is Galois (`IsGalois.tower_top_of_isGalois`);
-   * `|Gal(L/K₀)|` divides `|Gal(L/ℚ)|`; restriction to the subfield
-     `E = adjoin ℚ (p.rootSet ℂ)` is injective (elements of `L = E·K₀` are determined by
-     their action on `E` when `K₀` is fixed), and `|Gal(E/ℚ)| = m`.
-     Hence every prime occurring in the tower divides `m`, and `K₀` contains the needed
-     roots of unity.
-   * The induction step replaces `K` by an intermediate field `F` with
-     `K ⊆ F ⊆ L`; `F` also contains `K₀`, so the root-of-unity hypothesis persists.
-   * At each step, `F = K(β)` with `β^p ∈ K`; since `K ⊆ solvableByRad` and
+   * every prime occurring in the tower divides `m`, so `K₀` contains the needed roots
+     of unity (`primitiveRoots p K₀` is nonempty for each such `p`);
+   * the induction step replaces `K` by an intermediate field `F` with
+     `K ⊆ F ⊆ L`; `F` also contains `K₀`, so the root-of-unity hypothesis persists;
+   * at each step, `F = K(β)` with `β^p ∈ K`; since `K ⊆ solvableByRad` and
      `solvableByRad` is a field, `β ∈ solvableByRad` by `solvableByRad.rad_mem`, hence
-     `F ⊆ solvableByRad`.
-   * At the end, `L ⊆ solvableByRad`, and `z ∈ L`.
+     `F ⊆ solvableByRad`;
+   * at the end, `L ⊆ solvableByRad`, and `z ∈ L`.
 
 **Formalization note.** The induction is over `IntermediateField`s inside `L`, but the
 statement `F ⊆ solvableByRad` is about the ambient `ℂ`. Use the coercion
@@ -491,7 +514,7 @@ theorem le_solvableByRad_of_solvable_tower
     {K L : IntermediateField ℚ ℂ} (hK : K ≤ solvableByRad ℚ ℂ) (hKL : K ≤ L)
     [FiniteDimensional K L] [IsGalois K L]
     (hsolv : Group.IsSolvable Gal(L/K))
-    (m : ℕ) (hcard : Nat.card Gal(L/K) ∣ m)
+    (m : ℕ) (hprime : ∀ p, p.Prime → p ∣ Nat.card Gal(L/K) → p ∣ m)
     (hmu : ∀ p, p.Prime → p ∣ m → (primitiveRoots p K).Nonempty) :
     L ≤ solvableByRad ℚ ℂ
 ```
