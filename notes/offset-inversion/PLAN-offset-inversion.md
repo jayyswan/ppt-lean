@@ -361,4 +361,24 @@ Open item 1, "the `d = 0` separation case", is taken up in `notes/offset-inversi
 - R3 §3.9(4) and §5.2 item 5 are updated; L2's `d = 0` instance remains true but is subsumed by the
   single intersection.
 
+## R8 postscript (2026-11-10)
+
+Following R7, `notes/offset-inversion/R8-missing-curve-audit.md` re-reads every "needs the missing
+curve `X`" claim by **route**. Result: the `M` labels in R5 are **sufficiency** statements for the
+offset route (Route O), not impossibility results.
+
+- Route O (offset inversion) is depth 3; Route I (single intersection) is depth ≤ 2.
+- Q2 (offset necessity, by R2 Q3.3 rigidity) is proved only for a fixed curve, fixed `d`, and a
+  continuous interval of `x`; varying `d` is R2 Q3.4 [Open].
+- Q3 (intersection status) is excluded by R3's log-monodromy count only for affine data on a
+  continuous family. Discrete spectra (beam modes) are **not** covered; that is item 4.
+- The involute, rhumb (fixed `k`), tractrix and Biot are genuinely outside Route I; the elastica is
+  outside by non-elementarity. The `l = 0` well is **open** on Route I (`δ log δ` singularity).
+- **`tan x = λx` is open on both routes.** Route O uses `d = λ` (Q3.4 open); Route I is not excluded
+  because the target's singularities are `1/log`, not log. A `1/log` invariant is the concrete next
+  question.
+- The goat is a single target with a legality obstruction, not a separation result; the separatrix
+  is pointwise `R`.
+
+
 
