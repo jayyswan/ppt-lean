@@ -329,3 +329,19 @@ S is written: `notes/offset-inversion/SUMMARY.md`.
 - The named payoff is gated on the catenary and the log-cosine curve. That ranking has been
   handed to `PLAN-ppt-tan-curves.md`.
 - Open items are listed in SUMMARY §7.
+
+## R6 postscript (2026-11-10)
+
+Open item 3, "chains of two offset inversions", is taken up in `notes/offset-inversion/R6-chains.md`
+(issue 18). Result: a chain is not a new mechanism.
+
+- Same-word chains collapse to one entry: lengths add, and an offset/affine between the links only
+  adds a P-constructible constant (Props. 2.1–2.3).
+- Re-based chains are one-step entries whose data lie in the field of the first root (Thm 3.1), so
+  they add numbers, not equation shapes (Cor. 3.2).
+- What they genuinely add is a *coupling curve* of data: the first laid arc, traversed at unit
+  speed (Prop. 4.2), algebraic for an algebraic base (§4.3).
+- Consequently there is no depth-6 separation theorem to prove; the remaining question is the
+  data-dependence of one-step equations, i.e. R2 Q3.4 / R3 §3.9(2)–(3). This corrects R4 §2.1's
+  depth framing.
+

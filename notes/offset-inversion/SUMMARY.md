@@ -52,7 +52,12 @@ General facts:
 - **Composition is triangular [Proof, R4].** Feeding outputs back in as `d`, `x`, start points,
   crop bounds or affine data only extends the parameters; no new equation shapes appear.
   - Two offsets add (`d₁ + d₂`).
-  - Chains of two offset inversions remain [Open].
+  - **Chains of two offset inversions are triangular [Proof, R6].** Same-word chains collapse to a
+    single entry (lengths add, or a P-constructible constant shift if an offset or affine sits
+    between the links). Re-based chains are one-step entries whose data lie in the field of the
+    first root, so they add numbers, not equation shapes. No separate depth-6 separation theorem
+    is needed; the remaining question is the data-dependence gap (R2 Q3.4, R3 §3.9(2)–(3)).
+    See `notes/offset-inversion/R6-chains.md`.
 
 ## 3. Separation theorems (R3, R4)
 
@@ -105,7 +110,11 @@ All three were repaired to the whole-curve `offset` axiom (commit 875a294). None
 - The `d = 0` separation case.
 - Separation for the full tower beyond the base catalogue, and in particular whether a catenary
   or log-cosine parallel curve lies in the tower.
-- Chains of two offset inversions.
+- ~~Chains of two offset inversions~~ **Resolved as a reduction (R6).** Same-word chains collapse to
+  a single entry; re-based chains are one-step entries with data in the first link's field. They
+  add numbers, not equation shapes, so no depth-6 separation theorem is needed — only the
+  data-dependence gap (R2 Q3.4, R3 §3.9(2)–(3)), which chains do not close. See
+  `notes/offset-inversion/R6-chains.md`.
 - Arithmetic (non-uniform) coincidences with named roots. These are not excluded; nothing was
   found.
 
