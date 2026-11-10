@@ -120,7 +120,7 @@ mechanical to maintain.
 | id | wave | kind | deliverable | depends on |
 |---|---|---|---|---|
 | R12 | 1 | foundations | **landed**: `R12-convention.md` — B + C recommended, restatements, template and R5 table | R8, R3 §3.9, R2 Q3.4 |
-| R9 | 1 | math/proof | `R9-singularity-spectrum.md`: the singularity classification and its two applications | R8, R3, R7 |
+| R9 | 1 | math/proof | **landed**: `R9-singularity-spectrum.md` — no `1/log`/`δlogδ` in the tower; `tan` and `l=0` closed on Route I (B) | R8, R3, R7 |
 | R10 | 1–2 | math (positive) | `R10-decomposition-dictionary.md` + `decompose.wl`: a Route-I catalogue | R7, R8 |
 | R11 | 2 | math/arithmetic | `R11-discrete-spectra.md`: formulation, scan, partial impossibility | R8, R3, R12 |
 | R13 | 2 | math (small) | `R13-goat-legality.md`: a legal construction or a proof of illegality | R5 §2.11, R0 §3.4 |
@@ -197,6 +197,13 @@ a headline: a `1/log` curve would put `tan` in Route I).
 **Risk.** The classification must handle algebraic branch points and the offset normal; a gap there
 could invalidate the application. The fallback is to prove the result for the specific `h` rather
 than for the whole class.
+
+**Landed (2026-11-10).** `R9-singularity-spectrum.md`. The classification holds: a graph function of
+a tower curve without `arc_of_length` has only Puiseux/pole/log singularities, with the log entering
+as a summand with constant coefficient — no `1/log`, no `ζ log ζ`, no finite essential singularity.
+Consequences under B: `tan x = λx` is Route-I excluded (`1/log` at `iπ(m+½)`), and the `l=0` well is
+Route-I excluded (`δlogδ`). Route O is untouched: `tan`'s catenary necessity is still the open B1
+span condition. The exclusions are B-only; under A, `exp(a/z)` and `z/W(z)` resolve the two types.
 
 ### R10: the Route-I decomposition dictionary (positive)
 
