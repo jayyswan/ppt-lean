@@ -1,7 +1,8 @@
 # Every real algebraic number is P-constructible: summary
 
 This summarizes `pptc/PLAN-algebraic.md`. First written 2026-11-04 (waves 1–2); §§5–7 added
-2026-11-05; **§§8–10 and the status table updated 2026-11-06 (Phase D: Y1, Z1–Z8, A1–A2, B1–B3)**.
+2026-11-05; §§8–10 and the status table updated 2026-11-06 (Phase D: Y1, Z1–Z8, A1–A2, B1–B3);
+**§11 added 2026-11-11 (C1: the sine × sine engine)**.
 The sources are the notes in this folder. Labels follow the notes. Nothing here is a negative about
 the target: every obstruction is scoped to the route it blocks.
 
@@ -27,7 +28,8 @@ explicit surface (totally real nonics) and one P-line on an explicit 3-fold (tot
 | 10 | ℚ, nonreal root, G ⊇ A₁₀ | **route found, one ingredient missing** (MI-1, §2); the MI-2 line reduction is vacuous for s = 2, 3 (A2) |
 | 10 | ℚ totally real, G ⊇ A₁₀ | open. **Reduces to one P-line** in Y₀ = {p₁ = p₃ = 0, S₆ = 0} via Engine C (B2) |
 | 11 | any | open; every transitive group needs a degree-11 engine step; no single-line reduction (B2) |
-| ≥ 9 | all | **conditional on (SR) / Taylor's question** (Theorem X, §6) |
+| ≥ 9 | all | **conditional on (SR) or (SR′) / Taylor's question** (Theorem X, §6; Theorem X′, §11) |
+| any | explicit totally real S_n numbers | in P for every n (Theorem C1, §11) |
 
 ## 2. Degree 10: the first case beyond the frontier (H5)
 
@@ -303,3 +305,28 @@ weak approximation over number fields has dense E-points (Theorem H): hypersurfa
 N ≥ (d−1)2^d, any X with dim ≥ (D−1)2^D − 1. E is Euclidean, which settles many low-dimensional
 quadric-containing CIs (Theorem W). Rational connectedness alone gives nothing unconditional. None
 of it reaches the general-type varieties the routes need. Proof sketches; see P1.md.
+
+## 11. C1: the sine × sine engine (2026-11-11)
+
+See `C1.md`. The target is not closed.
+
+- **Scoping gap in W3 §3.1.** Crossings of `sine` with an algebraic curve are transcendental, but a
+  crossing of two `sine` curves with commensurable frequencies has algebraic cos θ.
+- **Engine S [Proof].** F is closed under roots in [−1, 1] of the Chebyshev trinomial
+  T_p(x) + a·T_q(x) + c, and under cos θ for solutions of
+  A cos pθ + B sin pθ + C cos qθ + D sin qθ + E = 0.
+- **No Descartes barrier [Proof].** |a| + |c| < 1 gives p real roots. The §3 "Realness" bounds
+  (gap ≤ 2, n ≤ 2F − 2) are about monomial supports and do not apply to it.
+- **Theorem C1 [Proof; Python-certified n = 5…30].** P contains totally real numbers of every degree
+  n with Galois group S_n, e.g. cos θ with cos nθ = −cos θ/3 − 1/7.
+- **Theorem X′ [Proof, conditional].** β ∈ P if the K-twisted five-term variety has an F-point:
+  n − 4 conditions on K itself, no square lift. Taylor's question implies it. The conditional
+  hypothesis is now "(SR) or (SR′)".
+- **Limits.** In the monomial basis Engine S is the odd shape with Q pinned, so it does not improve
+  n = 9. It obeys the bookkeeping law (five coefficients). (SR′) is again an F-point on a
+  general-type variety.
+- **Resolvent degree [Proof of the implication].** A construction uniform in K with degree ≤ 8 steps,
+  radicals and engines of ≤ m essential parameters gives RD(n) ≤ max(4, m). So a K-uniform proof of
+  (SR) or (SR′) for all n would bound RD(n) by 4. The remaining gap needs field-specific arithmetic
+  or engines with growing parameter count.
+- **Reformulation.** (SR) ⟺ some u ∈ K_L ∖ L has u and 1 − u multiplicatively dependent modulo L^×.
