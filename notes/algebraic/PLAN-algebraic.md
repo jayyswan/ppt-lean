@@ -772,3 +772,19 @@ real embedding); false for arbitrary real k.** See `notes/algebraic/Q1.md`.
   [Proof sketch].
 - What would close it: ≥ ~9n P-parameters per K-condition at bounded degree, i.e. a Minkowski-sum or
   two-curve constructor (no UI route known).
+
+### C1: sine × sine (2026-11-11)
+
+Brief: look at the whole programme afresh; weaken (SR) or find a new route.
+
+**C1 done (2026-11-11): one new engine, target not closed.** See `notes/algebraic/C1.md`, log
+`HANDOFF-alg-C1.md`, scripts in `notes/algebraic/scripts/`.
+- Engine S (`sine` × `sine`, commensurable frequencies): Chebyshev trinomials T_p + a·T_q + c and the
+  five-term family with phases. All roots real for small a, c; Galois group S_n [Proof for q = 1;
+  Python n = 5…30].
+- Theorem C1: totally real S_n numbers in P for every n.
+- Theorem X′: the conditional theorem without the square lift, n − 4 conditions on K itself.
+- Uniform-in-K routes with bounded engines would bound resolvent degree (C1 §5).
+- Closed, scoped: more than two frequencies, RM period ratios, cubics through the conjugates,
+  product-square for Theorem R, harmonic curves for BR₅.
+- Not done: Lean for Engine S; geometry of the five-term variety; q ≥ 2 Galois groups as a theorem.

@@ -1,0 +1,11 @@
+- step 0: read SUMMARY, PLAN-algebraic (all waves), X1, Z8 verdict, W3 §3, Defs.lean (2026-11-11)
+- step 1: re-derived the bookkeeping law as subspace conditions in K_L; confirmed every algebraic engine is a K-twisted cover of a rational base; no (BD) family in Defs (agrees with Z4)
+- step 2: found the scoping gap in W3 §3.1: sine x sine with commensurable frequencies has transcendental abscissa but algebraic cos(theta). Engine S: T_p + a T_q + c, and the five-term family with phases
+- step 3: Python (python-flint; Wolfram not available): T_n(x) + x/3 + 1/7 has n real roots in (-1,1) and Galois group S_n for n = 5..30 (Sturm + Frobenius cycle types). scripts/C1_chebyshev_trinomial.py
+- step 4: Python: five-term family, degree 2p in tan(theta/2), 2p real roots, S_2p for nine (p,q). scripts/C1_trig_five_term.py
+- step 5: proof for all n: equioscillation (realness), Morse + Hilbert irreducibility (S_n, q = 1)
+- step 6: Theorem X' (no square lift; n-4 conditions); in the monomial basis Engine S is the odd shape with Q pinned, so no gain at n = 9
+- step 7: resolvent-degree proposition: uniform-in-K routes with bounded engines bound RD(n)
+- step 8: literature subagent (Sonnet, web snippets only): nothing on Chebyshev trinomial Galois groups; Taylor's question and "Q^solv PAC" still open in every source found; no source for "RD(n) -> infinity" as a stated conjecture
+- step 9: closed, scoped: >2 frequencies, RM period ratios, cubics through 9 conjugates, product-square for Theorem R, harmonic curves for BR5, arc-length engine Phi_k (dominated)
+- step 10: wrote notes/algebraic/C1.md; SUMMARY and PLAN updated. DONE. Target not closed.
