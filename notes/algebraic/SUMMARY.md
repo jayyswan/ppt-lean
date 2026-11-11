@@ -227,6 +227,12 @@ explicit surface (totally real nonics) and one P-line on an explicit 3-fold (tot
   no free construction reaches a point. Corollary: A1's Theorem G must be applied to the
   arithmetic closure, not the geometric monodromy. Y1b.4 not launched; Y1b.2 vacuous; Y1b.3
   answered negatively.
+- **X1L (2026-11-11, Lean plan).** `PLAN-taylor-lean.md` formalizes the conditional theorem
+  Taylor/trinomial point ⇒ `R_alg ⊆ P`, using the already-proved
+  `root_Pconstructible_of_solvable_gal` and a polynomial-gcd recovery. It collects weaker
+  hypotheses: solvable real point, P-tower, degree ≤ 8, real quadratic, real 0-cycle of
+  degree ≤ 8, and PSC for the specific trinomial surface. The P half does not wait on the
+  open Taylor/PSC geometry.
 - **No square-root-free addition exists (Z4) [Proof sketch].** Every curve constructor is unary
   with numeric parameters, so curves depend on each other only through P-numbers. Offsets add only
   ellipses. Scale by 0 gives a root-free summand, but it is ±p, constant on each branch, i.e. a
