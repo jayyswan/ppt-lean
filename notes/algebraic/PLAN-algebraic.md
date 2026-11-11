@@ -132,6 +132,7 @@ polynomials of degree ≤ 8 over itself. The question is whether `F = ℝ_alg`.
 | G5 | math (low priority) | **Transcendental routes to algebraic numbers.** Can P evaluate the special functions in G1's general-equation formulas: hypergeometric pFq at algebraic arguments for trinomials (Mellin), or theta constants (Umemura)? Gamma at rationals and closed-form ₂F₁ are already available. NOTES argued that `arc_of_length` inverts one integral at a time; test that argument. | G1 |
 | Y1b | math (arithmetic/descent) | **Square descent and variable-affine offset towers (added 2026-11-10; done 2026-11-10: scoped negative).** The general-method attack on Y1a's simultaneous-squares condition: can the rank-one square be deformed to nondegenerate positive-definite forms over L? Answer: the deformation is the whole PD cone, so Y1b.1 = the first step of SS; there is no H¹(L,μ₂) class; the pencil curve is the K-twist of (ℤ/2)ⁿ with t = 0 the S_n-resolvent scheme. See `Y1b.md`. | Y1a, G3 |
 | W4 | math + Lean | **Text-warp engines (added 2026-11-10).** The new `PConstructibleCurve.text` constructor gives new algebraic curve families (egg, piriform, offset egg) with P parameters. Measure them as engine components: crossing degrees, condition varieties, F-points, and whether they close or relax an open n = 9–12 case. See `WARP.md`. | N4, G2, H3 |
+| X1L | Lean | **Formalize Taylor ⇒ R_alg ⊆ P (X1 Theorem X).** Prove the conditional theorem from a trinomial lift, using the already-proved `root_Pconstructible_of_solvable_gal` and a polynomial-gcd recovery; collect weaker point-existence hypotheses (degree ≤ 8, real quadratic, 0-cycle, P-tower). See `PLAN-taylor-lean.md`. | X1, `Pptc/Solvable/Main.lean` |
 
 ## 5. Order
 
@@ -266,7 +267,9 @@ Framing for every stream:
 **X1 done (2026-11-05).** Theorem X: the full target follows from (SR), points of the twisted
 trinomial variety over ℚ^solv ∩ ℝ. (SR) is implied by a positive answer to Taylor's question, which
 is open. Solvable real algebraic numbers ⊆ P [Proof]. The Galois-class base case needs (BR_n). See
-SUMMARY §6.
+SUMMARY §6. **Lean plan:** `PLAN-taylor-lean.md` formalizes the conditional theorem
+Taylor/trinomial point ⇒ `R_alg ⊆ P`; `Pptc/Solvable/Main.lean` already proves the solvable-real
+input. The P half (T0–T2) does not wait on the open geometry.
 
 ### X2 (planned, not run; user is conserving usage)
 
