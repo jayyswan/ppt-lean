@@ -908,3 +908,159 @@ anything about the target. No negative about `algebraic_Pconstructible` follows 
 **Cost.** W4a: one focused Wolfram/elimination computation (hours). W4b: one Opus stream. W4c: one
 Sonnet/Opus search stream. W4d: one `lean-prover` task (the scratch lemmas in
 `Pptc/Scratch/WarpText.lean` and `WarpTwo.lean` already cover the normalization and bounding box).
+
+### C1: sine × sine (2026-11-11)
+
+Brief: look at the whole programme afresh; weaken (SR) or find a new route.
+
+**C1 done (2026-11-11): one new engine, target not closed.** See `notes/algebraic/C1.md`, log
+`HANDOFF-alg-C1.md`, scripts in `notes/algebraic/scripts/`.
+- Engine S (`sine` × `sine`, commensurable frequencies): Chebyshev trinomials T_p + a·T_q + c and the
+  five-term family with phases. All roots real for small a, c; Galois group S_n [Proof for q = 1;
+  Python n = 5…30].
+- Theorem C1: totally real S_n numbers in P for every n.
+- Theorem X′: the conditional theorem without the square lift, n − 4 conditions on K itself.
+- Uniform-in-K routes with bounded engines would bound resolvent degree (C1 §5).
+- Closed, scoped: more than two frequencies, RM period ratios, cubics through the conjugates,
+  product-square for Theorem R, harmonic curves for BR₅.
+- Not done: Lean for Engine S; geometry of the five-term variety; q ≥ 2 Galois groups as a theorem.
+
+## Phase E: two big attempts (planned 2026-11-12, nothing launched)
+
+**Status: plan only. Launch each stream on the user's go-ahead.**
+
+### E.0 Why these two, and what success would mean
+
+After C1 the position is this.
+- Every engine in `Defs` is either a bounded-parameter family, or an offset tower, whose parameters
+  grow with depth but cost one square root each (Z4, Y1a).
+- For a bounded family, reaching a given K is an F-point on a K-twisted Galois cover of a rational
+  base. Every F-curve on such a cover is itself a full twist (B3's component-orbit lemma, C1 §2.3),
+  so Theorem G never applies through the cover map. A construction uniform in K would bound
+  resolvent degree (C1 §5).
+- So inside the current `Defs` exactly two kinds of argument can still close all n:
+  - **E-R**, an engine whose parameter count grows: Theorem R, i.e. the simultaneous squares;
+  - **E-P**, arithmetic that is not uniform in K: a local–global or pseudo-real-closed statement
+    for F, for the specific covers we need.
+
+Honest odds: both are research problems with no known method. The plan is built so that each stream
+ends in a written statement worth keeping, whichever way it goes, and so that dead routes are killed
+early. The ground rule of this plan still holds: obstructions are scoped to their route.
+
+**What counts as success, in decreasing order.**
+1. The target, unconditionally.
+2. The target conditional on a conjecture that experts do hold a view on (replacing Taylor's
+   question, on which Taylor himself had none).
+3. One new unconditional degree (9 totally real, or 10).
+4. A proved obstruction for a whole class of routes, so that effort stops going there.
+
+### E-R: the simultaneous squares (Theorem R)
+
+**Where it stands.** Theorem R (Y1a): n − 1 non-homothetic positive-definite binary forms Q_j over
+L with Q_j(τ) a square in K_L, plus (ND1, ND2), give β ∈ P, totally real included. Then the offset
+distances come from linear algebra. Searches at n = 9, 10 found no points. Z5: no genus 0 or 1
+curves on V_τ. B1: expected dimension of low-gonality curves is ≤ −16.
+
+**Why another look is justified.** Three things were not tried.
+- The problem has a group law that the surface V_τ hides (R1 below).
+- The count n − 1 was never minimised against the other linear parameters available (R2).
+- No search had a positive control, so "nothing found" carries little weight (R3).
+
+| id | kind | question | depends on |
+|---|---|---|---|
+| R1 | math, Opus-level | **The Jacobian formulation.** Write Q_j = (x − ω_j)(x − ω̄_j), ω_j ∈ L(i). Then Q_j(τ) is a square in K_L iff τ − ω_j ∈ K_L^× · (K_L(i)^×)². For H: y² = ∏_{j ≤ J} Q_j (genus J − 1, no real branch points) this says the K_L-point (τ, y) has trivial image under the "x − T" 2-descent map at every factor, i.e. it lies in 2·Jac(H)(K_L) up to the usual normalisation at infinity. Prove this precisely (which class group, which point at infinity, the kernel of x − T when deg is even). Then the problem becomes: **find a curve H over L in this family and R ∈ Jac(H)(K_L) with 2R on H.** Deliverables: the exact statement; a check against Y1a's totally real quintic (J = 4 there); the count of conditions "2R ∈ H" as a function of J (it is (J − 2)·n over L, against J·n − … unknowns plus 2J − 3 moduli). | — |
+| R2 | math | **The true minimum number of squares.** Theorem R uses the line as partner and the parabola as base. Tabulate the linear K-parameters available from every source at once: Bézier base (Q3: n − 2 forms), circle partner (W1: rank +2), conic or quartic-graph partner, the five-term sine family as partner (new), overshoot. State J_min(n) with proof. Each parameter that is not an offset distance removes one square. If J_min(n) ≤ 3 for some n ≥ 9 the problem is a K_L-point on a curve of genus ≤ 5 with free moduli, a different and much better problem. Expected answer [Heuristic]: J_min ≈ n − 6. | — |
+| R3 | computation | **Degree 7 as the control.** n = 6 is K3 (elliptic fibrations give F-points; do this first as a warm-up and to validate code). n = 7 is the first general-type case and is already known to lie in P by other means, so a failed search there is informative. Fix a totally real S₇ septic. Search for (τ, Q₁…Q₆) over ℚ, over real quadratic and cubic fields, and via R1's doubling construction. Record a positive control at n = 5 (Y1a's example) run through the same code. | R1 |
+| R4 | math | **Structured τ.** Look for τ for which W_τ = ⟨1, τ, τ²⟩ contains squares for a structural reason: τ a rational function of an element with a known square root in K_L; τ a value of a Chebyshev or Lattès map; τ in the image of a degree-2 map from a curve with many K_L-points. C1 §6.4 shows only indefinite or rank-1 forms arise from the obvious choices (τ = μ² + μ⁻²), so the question is whether any choice gives **two** definite forms. Two is the first nontrivial case (genus 1). | R1 |
+| R5 | math | **Use elliptic curves through the conjugates.** For n ≤ 9 every K_L-point of the plane lies on an L-rational cubic (C1 §6.3), so genus-1 curves over L with new K_L-points exist rationally. Theorem R's genus-1 curves (two layers) form a 4-dimensional linear system each, too small. Question: is there a tower shape (three layers with one relation, or a non-parabola base) whose genus-1 quotient ranges over a linear system of dimension ≥ n? This is a search over tower shapes, not over points. | R2 |
+
+**Order.** R1 ∥ R2 first (paper only, one session each). R3 after R1. R4, R5 only if R2 does not kill
+the route.
+
+**Kill criteria.**
+- R2 shows J_min(n) ≥ n − c for a fixed c, **and** R3 finds no structured point at n = 7 with the
+  n = 5 control passing. Then write the route up as closed for constructions of this shape.
+- R1 fails to give a usable group-theoretic handle (the doubling locus is as bad as V_τ). Then R3
+  falls back to plain search and the route's odds drop sharply.
+
+**Insight to carry in.**
+- Only the *product* ∏Q_j(τ) can be made a square for free (interpolate y² at τ when 2J ≥ n − 1).
+  The whole difficulty is splitting that one square into J separate ones. That is exactly the
+  gap between a point of H and a point of the multiquadratic cover of H, which is the pull-back of
+  H under multiplication by 2. So the natural objects are Jac(H) and its 2-isogenies, not V_τ.
+- No rational curve parametrises two definite forms at once (a pencil of binary forms with four
+  square members violates Riemann–Hurwitz). So any success is through genus ≥ 1.
+- The moduli of H are free and defined over L, while the point is over K_L. Families of abelian
+  varieties over a rational base can have unirational total space when the family is "small"
+  (the Weierstrass family through two points is 𝔸⁴; Kuga–Sato varieties of level 1 have p_g = 0 up
+  to the 9-fold product). Whether the analogous total space here is unirational for small J is
+  the one place where a genuinely positive surprise is possible. R1 should compute this for J = 2, 3.
+
+### E-P: arithmetic for F (a targeted pseudo-real-closed statement)
+
+**Where it stands.** (PRC₈) is open and unstudied (L1). Theorem H (P1, Q1) gives E-points only in
+the circle-method range, which no route reaches (Q2, Q3). Taylor's question implies (SR) and (SR′).
+
+**Why another look is justified.**
+- We do not need (PRC₈). For each K we need **one** point on **one** of countably many explicit
+  twisted covers: I_{K′,D}, 𝒞_{K,p,q}, 𝒮_{K,p,q}, and the power × power family (C1 §3–4).
+- Local solubility is already free over ℚ^{tr,solv} (Lemma LS). Only the passage from local to
+  global is missing. For curves there is a standard conjecture about exactly that.
+- Nobody has tried to *refute* the statement for F. A week spent on that is cheap either way.
+
+| id | kind | question | depends on |
+|---|---|---|---|
+| P1′ | math | **State the minimal conjecture.** "(T_K): for every number field K with a real place there are a totally real solvable L (or L ⊂ F) and (p, q) such that the twisted cover has an L-point of the required real type." Give it in the three equivalent forms: twisted cover; specialisation ("K_L is the root field of a member of the family over L", the Beckmann–Black / parametric-extension language of Dèbes, König–Legrand); multiplicative ("u and 1 − u dependent modulo L^×", C1 §4). Record exactly which real points are needed. | — |
+| P2′ | math, Opus-level | **Brauer–Manin under solvable base change.** For a curve X over a number field, the conjecture of Poonen and Stoll says X(𝔸)^{Br} = ∅ whenever X has no rational point; for curves the Brauer set equals the finite abelian descent set. Question: for X one of our twisted curves and (x_v) an adelic point, is there a totally real solvable L′ over which the base change of (x_v) survives *every* finite abelian descent? For one covering it is plausible (the obstruction is a class in a Selmer-type set attached to a finite Galois module, and Lemma LS lets us choose L′ with prescribed local behaviour). The difficulty is uniformity: there are infinitely many coverings and L′ must be one number field. Sub-questions: (a) how do Selmer sets of the n-coverings of Jac(X) behave in solvable towers (they can grow; does the obstruction to a *given* adelic point die?); (b) is it enough to control the 2-part or one prime, using that our X have explicit maps to a conic with group A_n; (c) does the answer change if X is allowed to vary over the countable family, so that only one member needs an unobstructed point. Deliverable: either "Stoll's conjecture ⇒ the target" [Proof], or the precise place where base change cannot help. | P1′ |
+| P3′ | math + computation | **Try to refute.** Look for an invariant that could prove some curve over ℚ with real points has no F-point. Already excluded: point degrees (solvable steps give every degree, so no index obstruction); composition factors (engines carry every A_n); Northcott (L1). Still to try: (a) a height or measure argument (the set of fields reachable by bounded-parameter engines of bounded complexity is thin; is there a counting statement that survives towers?); (b) a model-theoretic invariant of the closure (is the theory of F decidable or tame in a way PRC fields are not, or vice versa); (c) a p-adic analogue: for the closure of ℚ_p-points under the same operations, does the analogous statement fail, and if so does the failure globalise. | — |
+| P4′ | computation | **Small models.** Replace 8 by d ∈ {2, 3, 4} and the engines by the trinomials of degree ≤ some bound, so that the closure E_d is computable to a few levels. Ask whether explicit curves of genus above the gonality range (first cases: genus 3 non-hyperelliptic for d = 2; genus 5 or 6 for d = 3, 4) have E_d-points, by exhaustive search over small towers. Evidence of points appearing at low level supports the conjecture; systematic absence at genus just above the gonality range is a warning. | — |
+| P5′ | literature, then math | **Rumely–Moret-Bailly with a shape constraint.** The proof that ℚ^{tr} is PRC builds a function on the curve whose fibres over an interval are totally real (capacity theory). Read the proof for curves with one question: can the construction be steered so that the fibre polynomial has a prescribed sparse shape (trinomial, Chebyshev trinomial, odd)? The Fekete–Szegő side works with Chebyshev polynomials of the real set, which is suggestive given Engine S, but the Galois type of the output is uncontrolled in every version we know. Deliverable: a yes with a sketch, or the precise step where shape control is lost. | — |
+| P6′ | math | **(BD) through the circle method, one more time, with Engine S.** Q3 sharpened (BD) to "about 9n P-parameters per K-condition at bounded degree". Engine S gives real-rooted shapes of unbounded degree with 3 essential parameters, so it does not meet this. Record that explicitly and check the one remaining idea: Weil restriction along a *varying* extension (degree-D points on the condition curve, D large), which raises dimension to about D; C1's working showed the total space is a quotient of a product of two Galois-closure covers, not a complete intersection of low degree. Confirm and close, or find the gap. | — |
+
+**Order.** P1′ first (short). Then P2′ ∥ P3′. P4′ can run at any time on Sonnet. P5′ after P2′ if P2′
+does not close. P6′ is a half-session check.
+
+**Kill criteria.**
+- P2′ shows the obstruction cannot be removed by solvable base change for these curves, **and** P3′
+  finds no refutation mechanism. Then E-P ends with: the target is equivalent in difficulty to
+  Taylor's question for an explicit countable family of curves, stated cleanly, and we stop.
+- P3′ finds a refutation mechanism. Then everything redirects to making it a proof. That would be
+  the first negative result of the programme and needs the user's decision before it is pursued,
+  given the ground rule.
+
+**Insight to carry in.**
+- The object is a twisted Galois cover with group S_n (or S_{2p}) over a rational surface, and the
+  only F-rational intermediate cover is the discriminant conic. So nothing abelian is visible on
+  the cover itself; the abelian descent in P2′ lives on its Jacobian, which is large and whose
+  torsion fields are **not** solvable. A tempting shortcut is false: Jac(X)(ℚ^{solv}) is not
+  divisible, because ℚ(Jac[m]) has group inside GSp_{2g}(ℤ/m). Do not build on it.
+- The freedom that Taylor's question does not use: (i) F ⊋ ℚ^{solv} ∩ ℝ, and F is closed under the
+  engines themselves, so the statement is self-referential and could be proved by an induction on
+  some complexity of K that we have not found; (ii) infinitely many varieties, one point needed;
+  (iii) real, not totally real: only one real place of L is constrained.
+- (i) is the most promising and the least explored. X1 tried induction on Galois class and found
+  the base case blocked by three conjugation configurations. An induction that works would need a
+  measure for which the engine step is *decreasing*. Candidates to test in P1′: the conductor or
+  discriminant of K_L/L after the optimal solvable base change; the minimal height of a point on
+  the twisted cover; the gonality of the cover over F.
+
+### E.1 Resources and order across both
+
+| step | streams | model | sessions |
+|---|---|---|---|
+| 1 | R1 ∥ R2 ∥ P1′ | Opus-level for R1; others Sonnet-capable with review | 1 each |
+| 2 | P2′ ∥ P3′ ∥ R3 | Opus-level for P2′ | 1–2 each |
+| 3 | P4′ (background), P6′ | Sonnet | 1 |
+| 4 | R4, R5, P5′ as warranted | — | — |
+| 5 | consolidation into SUMMARY §12 | orchestrator | 1 |
+
+Rules as in §4: every claim labelled; Wolfram for computations where available, Python labelled as
+the fallback; one note and one handoff log per stream in `notes/algebraic/`; no `Defs` changes; a
+positive control for every search.
+
+### E.2 Not in this phase
+
+- A `Defs` change (a two-curve or multi-frequency operation). It remains the most realistic way to a
+  complete solution and remains the user's decision (SUMMARY §10 item 3; C1 §6.1).
+- Degree 9 totally real through the one-line reduction, the explicit S₁₀ decic, and Lean for the
+  solvable case and Engine S. These are the achievable targets and can run independently.
