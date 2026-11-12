@@ -927,7 +927,8 @@ Brief: look at the whole programme afresh; weaken (SR) or find a new route.
 
 ## Phase E: two big attempts (planned 2026-11-12, nothing launched)
 
-**Status: plan only. Launch each stream on the user's go-ahead.**
+**Status: R1 done (2026-11-12). R2, R3, R4, R5 and all of E-P not launched. Launch each stream on
+the user's go-ahead.**
 
 ### E.0 Why these two, and what success would mean
 
@@ -968,11 +969,33 @@ curves on V_τ. B1: expected dimension of low-gonality curves is ≤ −16.
 
 | id | kind | question | depends on |
 |---|---|---|---|
-| R1 | math, Opus-level | **The Jacobian formulation.** Write Q_j = (x − ω_j)(x − ω̄_j), ω_j ∈ L(i). Then Q_j(τ) is a square in K_L iff τ − ω_j ∈ K_L^× · (K_L(i)^×)². For H: y² = ∏_{j ≤ J} Q_j (genus J − 1, no real branch points) this says the K_L-point (τ, y) has trivial image under the "x − T" 2-descent map at every factor, i.e. it lies in 2·Jac(H)(K_L) up to the usual normalisation at infinity. Prove this precisely (which class group, which point at infinity, the kernel of x − T when deg is even). Then the problem becomes: **find a curve H over L in this family and R ∈ Jac(H)(K_L) with 2R on H.** Deliverables: the exact statement; a check against Y1a's totally real quintic (J = 4 there); the count of conditions "2R ∈ H" as a function of J (it is (J − 2)·n over L, against J·n − … unknowns plus 2J − 3 moduli). | — |
+| R1 | math, Opus-level | **DONE 2026-11-12 (see below).** **The Jacobian formulation.** Write Q_j = (x − ω_j)(x − ω̄_j), ω_j ∈ L(i). Then Q_j(τ) is a square in K_L iff τ − ω_j ∈ K_L^× · (K_L(i)^×)². For H: y² = ∏_{j ≤ J} Q_j (genus J − 1, no real branch points) this says the K_L-point (τ, y) has trivial image under the "x − T" 2-descent map at every factor, i.e. it lies in 2·Jac(H)(K_L) up to the usual normalisation at infinity. Prove this precisely (which class group, which point at infinity, the kernel of x − T when deg is even). Then the problem becomes: **find a curve H over L in this family and R ∈ Jac(H)(K_L) with 2R on H.** Deliverables: the exact statement; a check against Y1a's totally real quintic (J = 4 there); the count of conditions "2R ∈ H" as a function of J (it is (J − 2)·n over L, against J·n − … unknowns plus 2J − 3 moduli). | — |
 | R2 | math | **The true minimum number of squares.** Theorem R uses the line as partner and the parabola as base. Tabulate the linear K-parameters available from every source at once: Bézier base (Q3: n − 2 forms), circle partner (W1: rank +2), conic or quartic-graph partner, the five-term sine family as partner (new), overshoot. State J_min(n) with proof. Each parameter that is not an offset distance removes one square. If J_min(n) ≤ 3 for some n ≥ 9 the problem is a K_L-point on a curve of genus ≤ 5 with free moduli, a different and much better problem. Expected answer [Heuristic]: J_min ≈ n − 6. | — |
 | R3 | computation | **Degree 7 as the control.** n = 6 is K3 (elliptic fibrations give F-points; do this first as a warm-up and to validate code). n = 7 is the first general-type case and is already known to lie in P by other means, so a failed search there is informative. Fix a totally real S₇ septic. Search for (τ, Q₁…Q₆) over ℚ, over real quadratic and cubic fields, and via R1's doubling construction. Record a positive control at n = 5 (Y1a's example) run through the same code. | R1 |
 | R4 | math | **Structured τ.** Look for τ for which W_τ = ⟨1, τ, τ²⟩ contains squares for a structural reason: τ a rational function of an element with a known square root in K_L; τ a value of a Chebyshev or Lattès map; τ in the image of a degree-2 map from a curve with many K_L-points. C1 §6.4 shows only indefinite or rank-1 forms arise from the obvious choices (τ = μ² + μ⁻²), so the question is whether any choice gives **two** definite forms. Two is the first nontrivial case (genus 1). | R1 |
 | R5 | math | **Use elliptic curves through the conjugates.** For n ≤ 9 every K_L-point of the plane lies on an L-rational cubic (C1 §6.3), so genus-1 curves over L with new K_L-points exist rationally. Theorem R's genus-1 curves (two layers) form a 4-dimensional linear system each, too small. Question: is there a tower shape (three layers with one relation, or a non-parabola base) whose genus-1 quotient ranges over a linear system of dimension ≥ n? This is a search over tower shapes, not over points. | R2 |
+
+**R1 done (2026-11-12): the exact statement is an isogeny condition; the plan's `2Jac` is corrected.**
+See `R1.md`, log `HANDOFF-alg-R1.md`.
+- **Theorem R1 [Proof].** For `H: y² = ∏_{j≤J}Q_j` (`g = J−1`, `∞^±` L-rational) and `H̃ = C₁ ×_{ℙ¹} ⋯ ×_{ℙ¹} C_J`,
+  the cover `π: H̃ → H` is unramified Galois with group `(ℤ/2)^{J−1}`, `g(H̃) = 1 + 2^{J−1}(J−2)`, and
+  `Q_j(τ)` square for all `j` ⟺ `P ∈ π(H̃(K_L))` ⟺ `[P−∞⁺] ∈ im(π_*: Jac(H̃)(K_L) → Jac(H)(K_L))`.
+  The obstruction is the tuple `[Q_j(τ)]` in `(K_L^×/K_L^{×2})^{J−1}`.
+- **Correction.** `2Jac(H) ⊂ im(π_*)` with `[im π_* : 2Jac] = 2^{J−1}`. So the plan's "lies in `2Jac`"
+  is strictly too strong: only the `J−1` Kummer classes of Lemma S1 are needed. Writing
+  `τ − ω_j = c_j w_j²` (`c_j ∈ K_L^×`), `SS_J` is the existence of the `c_j`; 2-divisibility is the
+  vanishing of the `J−1` classes `[c_j]`. The even-degree obstruction is that `x − T` is not a square
+  class; the 2-descent goes through the algebra `K_L[x]/(f)`, where the `K_L^×` ambiguity is exactly
+  the gap.
+- **Strong condition** `2R = [P−∞⁺]`: codimension `g−1 = J−2`, i.e. `(J−2)n` equations over L, on `Jn`
+  unknowns (`R`: `(J−1)n`, `τ`: `n`) and `2J−2` moduli (plan `2J−3`, one y-scaling normalization).
+  For fixed `H` the solutions lie on the étale `4^g`-preimage curve of `H`, of genus
+  `1 + 4^{J−1}(J−2)` (`1, 17, 129, …` at `J = 2, 3, 4`).
+- **Y1a check** (`n = 5`, `J = 4`): the four identities `ρ_j² = Q_j(β)` hold exactly; the lift lives on
+  `H̃` of genus 17; `g(H) = 3`, `deg π = 8`, `rank Jac[2](L) = 3`.
+- **Group-law handle.** `J = 2` is trivial (`Jac = H`) and reproduces Y1a §4.6's rank-growth question;
+  `J = 3` is the first nontrivial case. Unirationality of the total space is [Open]. The plan's
+  "pull-back under ×2" should read "preimage under the isogeny `π_*`". Route not closed.
 
 **Order.** R1 ∥ R2 first (paper only, one session each). R3 after R1. R4, R5 only if R2 does not kill
 the route.
