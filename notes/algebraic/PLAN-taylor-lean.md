@@ -493,3 +493,103 @@ already-proved solvable-root theorem, and does not wait on the open geometry. In
 run **T5/T6** searches for low-degree points on `I_{K'}`; a hit gives an unconditional case
 and a concrete test of the lift. Treat **T4** (full Taylor/PSC geometry) as the long-term
 frontier, not as a prerequisite for the Lean conditional theorem.
+
+---
+
+## 11. Implementation status (Lean, `Pptc/Taylor/*`)
+
+Status legend: **[Lean]** done and building, **[Open]** not started.
+
+### T0 — [Lean] `Pptc/Taylor/Field.lean`
+
+`PReal : Subfield ℝ` with carrier `{x | PConstructible x}`, `mem_PReal`, `PReal.Pconstructible`,
+`PConstructible.mem_PReal`, `PReal.coe_algebraMap`, the polynomial lifting lemma
+`Subfield.exists_map_eq_of_forall_coeff_mem`, the coordinate classes `SolvableReal`,
+`DegreeLE8Real`, `DegreeLE2Real`, `PTowerReal` (inductive `rat | root8 | solvable`), the four
+wrappers `SolvableReal.Pconstructible`, `DegreeLE8Real.Pconstructible`,
+`DegreeLE2Real.Pconstructible`, `PTowerReal.Pconstructible`, and `mobius_Pconstructible`.
+No `sorry`; `lake build Pptc.Taylor.Field` green.
+
+### T1 — [Lean] `Pptc/Taylor/Lift.lean`
+
+`TrinomialLift Coord β` and `TrinomialLift.Pconstructible`, plus the reusable core
+`PConstructible.of_unique_common_root`.
+
+Deviations from §3.2, both forced by Lean:
+
+* `TrinomialLift` is **`Type`-valued**, not `Prop`-valued: Lean rejects data-valued
+  projections out of a `Prop`-structure ("field must be a proof").  The `Prop` interface is
+  obtained by wrapping it in `Nonempty` (see `SR` etc. in T2).  This is the same encoding
+  `Exists`/`Nonempty` use.
+* The complex-root distinctness hypothesis `hinj` is stated with `Polynomial.eval` on
+  `q.map (algebraMap ℚ ℂ)` and `T.map (algebraMap ℝ ℂ)` rather than `aeval`; this is the same
+  statement as §3.2 and keeps the recovery proof free of `aeval`/`eval` transports.
+
+The recovery does **not** use `hroot`, `ha`, `hb`: those fields belong to the geometric
+input, not to the algebra.  The algebra is:
+
+1. over `K = PReal`, let `p = minpoly K y₀`; it divides `q.map (algebraMap ℚ K)` and the
+   lifted `TK - C x₀`, so `p` is separable and every complex root of `p` is a common root of
+   `q` and `T - x₀`, hence equals `y₀` by `hinj`;
+2. a separable polynomial with a single complex root has `natDegree ≤ 1` (roots multiset is
+   `replicate _ y₀`, `Nodup` forces at most one element, `Splits.natDegree_eq_card_roots`);
+3. `p` is monic of degree `1`, so `y₀ = -(p.coeff 0)/(p.coeff 1) ∈ K`;
+4. `β = y₀ ^ 2 + c` with `c ∈ ℚ`.
+
+No `sorry`; `lake build Pptc.Taylor.Lift` green.
+
+### T2 — [Lean] `Pptc/Taylor/Statement.lean`, `Pptc/Taylor/Main.lean`
+
+`TaylorTrinomial`, `SR`, `SR_8`, `SR_quad`, `SR_tower`, `FReal`, `SR_F`, `TrinomialReal`,
+`KTrSolvReal`, `SR_tot`; `TrinomialLift.mono`; the class inclusions
+`SolvableReal.toPTowerReal`, `DegreeLE2Real.toDegreeLE8Real`, `DegreeLE8Real.toPTowerReal`,
+`FReal.Pconstructible`; the implication diagram
+`SR_quad → SR_8 → SR_tower → P`, `SR → SR_tower → P`, `SR_tot → SR → P`, `SR_F → P`; the
+conditional main theorem `realAlgebraic_Pconstructible_of_taylorTrinomial` and its five
+`SR_*` analogues.  `Pptc.lean` imports `Pptc.Taylor.Main`.
+
+`Q^tr` is modelled honestly as the inductive closure `TrinomialReal` of `ℚ` under roots of
+`X ^ n + a * X + b` (`a b : ℚ`) and the field operations; `K_tr,solv = Q^tr ∩ Q^solv` is
+`KTrSolvReal`.  The arrow `TaylorTrinomial → SR_tot` is **not** formal (nothing places an
+arbitrary solvable real in `Q^tr`) and is deliberately omitted; only `SR_tot → SR → P` is
+proved.  Likewise `SR_F → SR` is deliberately absent (see §5).
+
+No `sorry`; whole library `lake build` green (3956 jobs).
+
+### T3 — [Lean] `Pptc/Taylor/Engine.lean` (optional strengthening, delivered)
+
+`powGraph D` (`y = x ^ D`), `affineLine a b` (`y = -(a*x) - b`), the curve lemmas
+`powGraph_PConstructibleCurve`, `affineLine_PConstructibleCurve`, and
+
+* `trinomial_root_Pconstructible`: a positive root isolated in `[l, r]` (`0 < l`, P endpoints,
+  uniqueness in the window) is P — via `inter_x` of the cropped power curve and line;
+* `trinomial_root_pos_Pconstructible`: **no isolation needed** — a nondegenerate trinomial
+  has finitely many roots, so `crossing_Pconstructible` isolates the wanted crossing with a
+  rational box.  Hence for `D ≥ 2` (where nondegeneracy is automatic) *every* positive real
+  root of `x ^ D + a * x + b` with `a b ∈ P` is `P`-constructible, with no degree bound.
+  The `D = 1` degeneracy `x - x = 0` is exactly why nondegeneracy must be assumed;
+  `trinomial_root_Pconstructible` excludes it by hypothesis instead;
+* `trinomial_root_Pconstructible_of_lt`: the open-window form.
+
+A negative-root form follows by reflecting `x ↦ -x` (the trinomial becomes
+`-x ^ D - a * x + b`, so for odd `D` it is again a trinomial); not yet added.
+
+### Remaining
+
+* **T4 — [Open]** `Pptc/Taylor/Geometry.lean`: the reduction of Taylor/PSC to a point of
+  `I_{K'}`, i.e. the derivation of `TaylorTrinomial` from a formalized `PSCForI`.
+* **T5 — [Open]** a concrete unconditional `PConstructible β` beyond what the existing
+  degree-`≤ 8` and solvable-Galois theorems already give.  The engine (T3) is the tool, but
+  the point search is arithmetic, not formal.
+* **T6 — [Open]** the search for low-degree points on `I_{K'}`.
+
+### Success criteria (§9), as of this implementation
+
+* Minimum artifact: **complete** (`PReal`, the four wrappers, `TrinomialLift.Pconstructible`,
+  `realAlgebraic_Pconstructible_of_taylorTrinomial`).
+* Stronger artifact: instances for `SR`, `SR_8`, `SR_quad`, `SR_tower` — **complete**;
+  the optional engine — **complete** (and stronger than requested); a concrete T5 instance —
+  **open**.
+* Long-term: `TaylorTrinomial` from `PSCForI` — **open**; documented hierarchy with formal
+  implications — **complete**.
+
