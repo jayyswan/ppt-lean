@@ -927,7 +927,7 @@ Brief: look at the whole programme afresh; weaken (SR) or find a new route.
 
 ## Phase E: two big attempts (planned 2026-11-12, nothing launched)
 
-**Status: R1, R2 done (2026-11-12). R3, R4, R5 and all of E-P not launched. Launch each stream on
+**Status: R1, R2 done and reviewed (2026-11-12): both came back against the route (no group-law handle; `J_min = n − 2`). R3 is the deciding test. R3, R4, R5 and all of E-P not launched. Launch each stream on
 the user's go-ahead.**
 
 ### E.0 Why these two, and what success would mean
@@ -975,63 +975,59 @@ curves on V_τ. B1: expected dimension of low-gonality curves is ≤ −16.
 | R4 | math | **Structured τ.** Look for τ for which W_τ = ⟨1, τ, τ²⟩ contains squares for a structural reason: τ a rational function of an element with a known square root in K_L; τ a value of a Chebyshev or Lattès map; τ in the image of a degree-2 map from a curve with many K_L-points. C1 §6.4 shows only indefinite or rank-1 forms arise from the obvious choices (τ = μ² + μ⁻²), so the question is whether any choice gives **two** definite forms. Two is the first nontrivial case (genus 1). | R1 |
 | R5 | math | **Use elliptic curves through the conjugates.** For n ≤ 9 every K_L-point of the plane lies on an L-rational cubic (C1 §6.3), so genus-1 curves over L with new K_L-points exist rationally. Theorem R's genus-1 curves (two layers) form a 4-dimensional linear system each, too small. Question: is there a tower shape (three layers with one relation, or a non-parabola base) whose genus-1 quotient ranges over a linear system of dimension ≥ n? This is a search over tower shapes, not over points. | R2 |
 
-**R1 done (2026-11-12): the exact statement is an isogeny condition; the plan's `2Jac` is corrected.**
-See `R1.md`, log `HANDOFF-alg-R1.md`.
-- **Theorem R1 [Proof].** For `H: y² = ∏_{j≤J}Q_j` (`g = J−1`, `∞^±` L-rational) and `H̃ = C₁ ×_{ℙ¹} ⋯ ×_{ℙ¹} C_J`,
-  the cover `π: H̃ → H` is unramified Galois with group `(ℤ/2)^{J−1}`, `g(H̃) = 1 + 2^{J−1}(J−2)`, and
-  `Q_j(τ)` square for all `j` ⟺ `P ∈ π(H̃(K_L))` ⟺ `[P−∞⁺] ∈ im(π_*: Jac(H̃)(K_L) → Jac(H)(K_L))`.
-  The obstruction is the tuple `[Q_j(τ)]` in `(K_L^×/K_L^{×2})^{J−1}`.
-- **Correction.** `2Jac(H) ⊂ im(π_*)` with `[im π_* : 2Jac] = 2^{J−1}`. So the plan's "lies in `2Jac`"
-  is strictly too strong: only the `J−1` Kummer classes of Lemma S1 are needed. Writing
-  `τ − ω_j = c_j w_j²` (`c_j ∈ K_L^×`), `SS_J` is the existence of the `c_j`; 2-divisibility is the
-  vanishing of the `J−1` classes `[c_j]`. The even-degree obstruction is that `x − T` is not a square
-  class; the 2-descent goes through the algebra `K_L[x]/(f)`, where the `K_L^×` ambiguity is exactly
-  the gap.
-- **Strong condition** `2R = [P−∞⁺]`: codimension `g−1 = J−2`, i.e. `(J−2)n` equations over L, on `Jn`
-  unknowns (`R`: `(J−1)n`, `τ`: `n`) and `2J−2` moduli (plan `2J−3`, one y-scaling normalization).
-  For fixed `H` the solutions lie on the étale `4^g`-preimage curve of `H`, of genus
-  `1 + 4^{J−1}(J−2)` (`1, 17, 129, …` at `J = 2, 3, 4`).
-- **Y1a check** (`n = 5`, `J = 4`): the four identities `ρ_j² = Q_j(β)` hold exactly; the lift lives on
-  `H̃` of genus 17; `g(H) = 3`, `deg π = 8`, `rank Jac[2](L) = 3`.
-- **Group-law handle.** `J = 2` is trivial (`Jac = H`) and reproduces Y1a §4.6's rank-growth question;
-  `J = 3` is the first nontrivial case. Unirationality of the total space is [Open]. The plan's
-  "pull-back under ×2" should read "preimage under the isogeny `π_*`". Route not closed.
+**R1 done (2026-11-12), reviewed and corrected: the exact condition is lifting to `C_B`; no new handle.**
+See `R1.md` (read its "Review corrections" section first), log `HANDOFF-alg-R1.md`.
+- **Theorem R1 [Proof, repaired in review].** For `H: y² = ∏_{j≤J}Q_j` (`g = J−1`, `∞^±` L-rational)
+  and `H̃ = C₁ ×_{ℙ¹} ⋯ ×_{ℙ¹} C_J`, the cover `π: H̃ → H` is unramified Galois with group
+  `(ℤ/2)^{J−1}`, `g(H̃) = 1 + 2^{J−1}(J−2)`, and `Q_j(τ)` square for all `j` ⟺ `P ∈ π(H̃(K_L))`.
+  `π` is the pull-back of an isogeny `φ: A → Jac(H)` of degree `2^{J−1}`; `π_*: Jac(H̃) → Jac(H)`
+  itself is **not** an isogeny (its kernel has positive dimension for `J ≥ 3`). The obstruction is
+  the tuple `[Q_j(τ)]` in `H¹(K_L, ker φ) = (K_L^×/K_L^{×2})^{J−1}`.
+- **Correction to the plan.** `2·Jac(H)(K_L) ⊂ φ(A(K_L))`, so "lies in `2Jac`" is sufficient but
+  strictly stronger than `SS_J`. No index on rational points is claimed. In even degree the
+  2-descent map lands in `A^×/(K_L^× A^{×2})`: writing `τ − ω_j = c_j w_j²`, 2-divisibility asks
+  the classes `[c_j]` to be **equal** (mod `±` squares, up to a kernel of order ≤ 2), not to vanish.
+- **Strong condition** `2R = [P−∞⁺]`: for fixed `H` the solutions lie on the étale `4^g`-preimage
+  curve of `H`, of genus `1 + 4^{J−1}(J−2)` (`1, 17, 129, …` at `J = 2, 3, 4`).
+- **Y1a check** (`n = 5`, `J = 4`): the four identities `ρ_j² = Q_j(β)` hold exactly (re-verified
+  in review); `g(H) = 3`, `g(H̃) = 17`, `deg π = 8`. `Jac(H)[2](L)` has rank `J` for `J` even and
+  `J − 1` for `J` odd (so 4 here); `ker φ` has rank `J − 1` always.
+- **Not usable as stated in R1.md:** the Faltings remark (our `L` is an infinite extension, so
+  finiteness of `H̃(K_L)` does not follow); the "two different quintics" remark (Y1a's and Y1b's
+  quintics are the same field under `x ↦ 3 − x`).
+- **Assessment.** `H̃` is Y1a's `C_B`: the exact condition is the same curve as before. `J = 2` is
+  trivial (`Jac = H`) and reproduces Y1a §4.6. For `J ≥ 3` the group law gives no new handle, so
+  the kill criterion "R1 fails to give a usable group-theoretic handle" **is met**: R3 falls back
+  to plain search (drop "via R1's doubling construction" from R3's brief).
 
-**R2 done (2026-11-12): the count splits into a strict minimum `n − 2` and a generic bound `n − 7`.**
-See `R2.md`, log `HANDOFF-alg-R2.md`.
+**R2 done (2026-11-12), reviewed and corrected: the only count that gives a theorem is `n − 2`.**
+See `R2.md` (read its "Review corrections" section first), log `HANDOFF-alg-R2.md`.
 - **Two counts [Proof].** *Type I* parameters are jointly linear with the offsets; a nonzero
-  `L`-solution is guaranteed by `U ≥ n + 1` (Lemma 1). *Type II* parameters are only separately
-  linear; they give a determinantal condition of codimension `n − P` (Lemma 2), not free parameters.
-- **Strict minimum [Proof].** `J ≥ n − 2`: the base contributes `B ≤ 2` (only the parabola,
-  power law and cubic Bézier with quadratic `x(t)` have polynomial support functions; `d ≥ 4` is
-  not drawable), and the only uniformly available Type I partner is the fixed-slope line
-  (1 intercept); a special-`K` `exp` partner gives at most 2. Attained by the cubic Bézier base +
-  line. For `n ≥ 9`, `J ≥ 7`, `g(C_B) ≥ 321`. This closes the strict linear class; it is
-  `SS_{n−2}`, a constant improvement over Y1a's `n − 1`.
-- **Dimension bound [Proof + Wolfram].** `J ≤ n − 7` sharp, `≤ n − 6` in the plan's convention. The
-  maximum partner is a conic (`P = 5`) or a quartic graph (`P = 5`); the condition is `rank ≤ 5` on
-  an `n × 6` matrix, codimension `n − 5`. With the cubic Bézier base: `J = n − 7`. At `n = 9`:
-  `J ≤ 2` (genus 1) sharp, `≤ 3` (genus 5) plan; at `n = 10`: `≤ 3` / `≤ 4`. This is an **upper
-  bound** on the minimum, not a lower bound; special towers can lower the codimension.
-- **No conic linearisation [Proof].** A nondegenerate conic's quadratic part cannot vanish on the
-  tower's direction space when that has dimension ≥ 2 (a binary quadratic form has at most a
-  1-dimensional isotropic subspace). The conic route is therefore `SS_J` **plus** a
-  codimension-`(n − 5)` determinantal condition with degree-12 minors; the conic coefficients are
-  over `L` by Speiser's lemma once the rank condition holds for `L`-tower parameters. The plan's
-  hoped-for reduction to a genus-≤5 curve is only one factor of the system.
-- **Sine/exp no-go [Proof].** At an algebraic crossing, Lindemann–Weierstrass forces
-  `sin(ωτ + φ)` transcendental unless `ωτ + φ = 0`, where the sine partner is a horizontal line;
-  it contributes only the line intercept. The `exp` partner is at most a line generically and at
-  most 2 parameters for special `K` (Gelfond–Schneider). Engine S (C1) is a different route
-  (transcendental abscissa, algebraic ordinate), not a Theorem R partner.
-- **Overshoot [Proof].** No linear parameter: the `K`-condition is always `n` `L`-equations; overshoot
-  is a degree/realness device (the partner must meet the tower in `≥ n` points).
-- **Verdict.** The plan's `J_min ≈ n − 6` is a generic upper bound, not a lower bound. The conic route
-  is not killed; its next computation is the determinantal variety at `n = 9`, `J = 2`/`3`, and
-  R3's `n = 7` control should include it. The strict `n − 2` class is closed.
-- **Kill criterion (scoped).** Met for the strict Type I class (`J_min = n − 2`, `c = 2`); **not
-  met** for the conic Type II class, where R2 gives only the upper bound `J_min ≤ n − 7`. R3 is
-  still the deciding test for the conic route.
+  `L`-solution is guaranteed by `U ≥ n + 1`. *Type II* parameters are only separately linear; they
+  give a determinantal condition of codimension `n − P` on the tower, not free parameters. The
+  plan's "each parameter that is not an offset distance removes one square" was wrong: it holds
+  for Type I only.
+- **Strict minimum [Proof modulo G2's catalogue].** `J ≥ n − 2`: the base contributes `B ≤ 2`
+  (parabola, power law, cubic Bézier with quadratic `x(t)`), and the only uniformly available
+  Type I partner parameter is the intercept of a fixed-slope line. Attained by the cubic Bézier
+  base + line (Q3). For `n ≥ 9`, `J ≥ 7`, `g(C_B) ≥ 321`.
+- **Dimension count for a conic or quartic-graph partner: `J = n − 6`.** The rank condition has
+  codimension `n − 5` and the solution set in the `J + 2` tower parameters is a cone, so
+  `J + 1 ≥ n − 5`. (R2.md's "sharp `n − 7`" forgot the scaling and is wrong; `n = 9`, `J = 2` is
+  generically only the zero tower.) At `n = 9`: `J = 3`, genus 5. At `n = 10`: `J = 4`, genus 17.
+- **The Type II condition is the old frontier problem.** It needs an `L`-point on a variety cut
+  out by `n − 5` conditions, the same shape as the bounded-engine conditions; W1 §2 already
+  identified the conic partner with H1's linear-support family. At `n = 9` the conic route is
+  `SS_3` **plus** a 4-condition `L`-point problem: two open problems, not a trade.
+- **No conic linearisation [Proof].** A nonzero binary quadratic form cannot vanish on a
+  direction space of dimension ≥ 2. Same for circles and graphs of degree ≥ 2.
+- **Sine/exp no-go [Proof].** With algebraic parameters, Lindemann–Weierstrass reduces a sine
+  partner to a horizontal line. Engine S (C1) is a separate route, not a Theorem R partner.
+- **Overshoot [Proof].** No linear parameter; it is a degree/realness device.
+- **Kill criterion.** First half **met**: `J_min(n) = n − 2` in the only sense that gives a
+  theorem. The conic variant is not a way round it. R3 (plain search at `n = 7` with the `n = 5`
+  control; the cubic Bézier base with `J = 3` on Y1a's quintic is a good positive control) is the
+  deciding test. R4 and R5 wait on R3.
 
 **Order.** R1 ∥ R2 first (paper only, one session each). R3 after R1. R4, R5 only if R2 does not kill
 the route.
