@@ -927,7 +927,7 @@ Brief: look at the whole programme afresh; weaken (SR) or find a new route.
 
 ## Phase E: two big attempts (planned 2026-11-12, nothing launched)
 
-**Status: R1, R2 done and reviewed (2026-11-12): both came back against the route (no group-law handle; `J_min = n − 2`). R3 is the deciding test. R3, R4, R5 and all of E-P not launched. Launch each stream on
+**Status: R1, R2 done and reviewed (2026-11-12): both came back against the route (no group-law handle; `J_min = n − 2`). R3 is the deciding test. R3 done (see below). P1′ done 2026-11-12 (see below). R4, R5 and P2′–P6′ not launched. Launch each stream on
 the user's go-ahead.**
 
 ### E.0 Why these two, and what success would mean
@@ -1117,12 +1117,39 @@ the circle-method range, which no route reaches (Q2, Q3). Taylor's question impl
 
 | id | kind | question | depends on |
 |---|---|---|---|
-| P1′ | math | **State the minimal conjecture.** "(T_K): for every number field K with a real place there are a totally real solvable L (or L ⊂ F) and (p, q) such that the twisted cover has an L-point of the required real type." Give it in the three equivalent forms: twisted cover; specialisation ("K_L is the root field of a member of the family over L", the Beckmann–Black / parametric-extension language of Dèbes, König–Legrand); multiplicative ("u and 1 − u dependent modulo L^×", C1 §4). Record exactly which real points are needed. | — |
+| P1′ | math | **DONE 2026-11-12 (see below).** **State the minimal conjecture.** "(T_K): for every number field K with a real place there are a totally real solvable L (or L ⊂ F) and (p, q) such that the twisted cover has an L-point of the required real type." Give it in the three equivalent forms: twisted cover; specialisation ("K_L is the root field of a member of the family over L", the Beckmann–Black / parametric-extension language of Dèbes, König–Legrand); multiplicative ("u and 1 − u dependent modulo L^×", C1 §4). Record exactly which real points are needed. | — |
 | P2′ | math, Opus-level | **Brauer–Manin under solvable base change.** For a curve X over a number field, the conjecture of Poonen and Stoll says X(𝔸)^{Br} = ∅ whenever X has no rational point; for curves the Brauer set equals the finite abelian descent set. Question: for X one of our twisted curves and (x_v) an adelic point, is there a totally real solvable L′ over which the base change of (x_v) survives *every* finite abelian descent? For one covering it is plausible (the obstruction is a class in a Selmer-type set attached to a finite Galois module, and Lemma LS lets us choose L′ with prescribed local behaviour). The difficulty is uniformity: there are infinitely many coverings and L′ must be one number field. Sub-questions: (a) how do Selmer sets of the n-coverings of Jac(X) behave in solvable towers (they can grow; does the obstruction to a *given* adelic point die?); (b) is it enough to control the 2-part or one prime, using that our X have explicit maps to a conic with group A_n; (c) does the answer change if X is allowed to vary over the countable family, so that only one member needs an unobstructed point. Deliverable: either "Stoll's conjecture ⇒ the target" [Proof], or the precise place where base change cannot help. | P1′ |
 | P3′ | math + computation | **Try to refute.** Look for an invariant that could prove some curve over ℚ with real points has no F-point. Already excluded: point degrees (solvable steps give every degree, so no index obstruction); composition factors (engines carry every A_n); Northcott (L1). Still to try: (a) a height or measure argument (the set of fields reachable by bounded-parameter engines of bounded complexity is thin; is there a counting statement that survives towers?); (b) a model-theoretic invariant of the closure (is the theory of F decidable or tame in a way PRC fields are not, or vice versa); (c) a p-adic analogue: for the closure of ℚ_p-points under the same operations, does the analogous statement fail, and if so does the failure globalise. | — |
 | P4′ | computation | **Small models.** Replace 8 by d ∈ {2, 3, 4} and the engines by the trinomials of degree ≤ some bound, so that the closure E_d is computable to a few levels. Ask whether explicit curves of genus above the gonality range (first cases: genus 3 non-hyperelliptic for d = 2; genus 5 or 6 for d = 3, 4) have E_d-points, by exhaustive search over small towers. Evidence of points appearing at low level supports the conjecture; systematic absence at genus just above the gonality range is a warning. | — |
 | P5′ | literature, then math | **Rumely–Moret-Bailly with a shape constraint.** The proof that ℚ^{tr} is PRC builds a function on the curve whose fibres over an interval are totally real (capacity theory). Read the proof for curves with one question: can the construction be steered so that the fibre polynomial has a prescribed sparse shape (trinomial, Chebyshev trinomial, odd)? The Fekete–Szegő side works with Chebyshev polynomials of the real set, which is suggestive given Engine S, but the Galois type of the output is uncontrolled in every version we know. Deliverable: a yes with a sketch, or the precise step where shape control is lost. | — |
 | P6′ | math | **(BD) through the circle method, one more time, with Engine S.** Q3 sharpened (BD) to "about 9n P-parameters per K-condition at bounded degree". Engine S gives real-rooted shapes of unbounded degree with 3 essential parameters, so it does not meet this. Record that explicitly and check the one remaining idea: Weil restriction along a *varying* extension (degree-D points on the condition curve, D large), which raises dimension to about D; C1's working showed the total space is a quotient of a product of two Galois-closure covers, not a complete intersection of low degree. Confirm and close, or find the gap. | — |
+
+**P1′ done (2026-11-12): the minimal conjecture, stated; three forms proved equivalent.** See
+`P1prime.md`, log `HANDOFF-alg-P1prime.md`, check script `scripts/P1prime_checks.py` (Python;
+Wolfram unavailable).
+- **"(or L ⊂ F)" is vacuous [Proof].** It is equivalent to β ∈ F (take L = ℚ(β)). The base class
+  must be fixed: TR-solv ⊂ R-solv ⊂ E ⊂ F_{<n}. The headline is (T; R-solv), implied by Taylor's
+  question and weaker in that only the one real place L ⊂ ℝ is constrained.
+- **Lemma D [Proof].** For Gal ⊇ A_n, n ≥ 9, no L ⊂ F_{<n} splits K: L ∩ Ω ⊆ ℚ(√disc). An
+  induction on n only enlarges the base field.
+- **(T_β; 𝓛) [Proof of sufficiency].** There are L ∈ 𝓛, a real M ⊇ L(β) finite over L, and an
+  engine member over L with a real root x₀, M = L(x₀). The engines are tri, power × power (pp),
+  Chebyshev, five-term. Theorem X uses M ⊋ L(β), via the square lift.
+- **Three forms ⟺ [Proof].** (I) the M-twist of the ordered-roots (Galois-closure) variety has an
+  L-point; (II) M is a factor of a specialisation algebra; (III) dependence: 1, τ, τ^D L-dependent;
+  τ, 1 − τ multiplicatively dependent mod L^×; Lissajous collinearity; five-term L-dependence.
+- **Canonical curve [Proof].** pp(p, q) gives the M-twist of the Galois closure Ĉ_{p,q} of the
+  three-point map x^p(1 − x)^q, with monodromy S_d for coprime p, q > 0. The genus formula
+  reproduces H1's 47881 at D = 9. This is the object P2′ should take.
+- **Real points [Proof].** For tri, pp and five any L-point gives a drawable crossing; the real
+  condition is existence only. The capacities are tri 2/3, coprime pp **3** (Python check for
+  |p|, |q| ≤ 7), sine engines all patterns. The lift is needed only when r ≥ 4 at σ₀. Taylor ⇒ (T)
+  needs no density step except for the Chebyshev cosine form.
+- **Lemma U [Proof].** After a totally real solvable base change, K_L/L is unramified at every
+  finite prime.
+- **Induction measures.** Discriminant: trivial by Lemma U. Height: not well-founded on F.
+  Gonality: geometric gonality is constant in β, and F-gonality is circular. All three fail;
+  insight (i) is untested beyond them.
 
 **Order.** P1′ first (short). Then P2′ ∥ P3′. P4′ can run at any time on Sonnet. P5′ after P2′ if P2′
 does not close. P6′ is a half-session check.
