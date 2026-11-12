@@ -971,7 +971,7 @@ curves on V_τ. B1: expected dimension of low-gonality curves is ≤ −16.
 |---|---|---|---|
 | R1 | math, Opus-level | **DONE 2026-11-12 (see below).** **The Jacobian formulation.** Write Q_j = (x − ω_j)(x − ω̄_j), ω_j ∈ L(i). Then Q_j(τ) is a square in K_L iff τ − ω_j ∈ K_L^× · (K_L(i)^×)². For H: y² = ∏_{j ≤ J} Q_j (genus J − 1, no real branch points) this says the K_L-point (τ, y) has trivial image under the "x − T" 2-descent map at every factor, i.e. it lies in 2·Jac(H)(K_L) up to the usual normalisation at infinity. Prove this precisely (which class group, which point at infinity, the kernel of x − T when deg is even). Then the problem becomes: **find a curve H over L in this family and R ∈ Jac(H)(K_L) with 2R on H.** Deliverables: the exact statement; a check against Y1a's totally real quintic (J = 4 there); the count of conditions "2R ∈ H" as a function of J (it is (J − 2)·n over L, against J·n − … unknowns plus 2J − 3 moduli). | — |
 | R2 | math | **DONE 2026-11-12 (see below).** **The true minimum number of squares.** Theorem R uses the line as partner and the parabola as base. Tabulate the linear K-parameters available from every source at once: Bézier base (Q3: n − 2 forms), circle partner (W1: rank +2), conic or quartic-graph partner, the five-term sine family as partner (new), overshoot. State J_min(n) with proof. Each parameter that is not an offset distance removes one square. If J_min(n) ≤ 3 for some n ≥ 9 the problem is a K_L-point on a curve of genus ≤ 5 with free moduli, a different and much better problem. Expected answer [Heuristic]: J_min ≈ n − 6. | — |
-| R3 | computation | **DONE 2026-11-12 (see below).** **Degree 7 as the control.** n = 6 is K3 (elliptic fibrations give F-points; do this first as a warm-up and to validate code). n = 7 is the first general-type case and is already known to lie in P by other means, so a failed search there is informative. Fix a totally real S₇ septic. Search for (τ, Q₁…Q₆) over ℚ, over real quadratic and cubic fields, and via R1's doubling construction. Record a positive control at n = 5 (Y1a's example) run through the same code. | R1 |
+| R3 | computation | **DONE 2026-11-12; revised 2026-11-12 (see below).** **Degree 7 as the control.** Plain search over ℚ (and ℚ(√d) at H = 1 only), not over the infinite field L. n = 5 positive control; n = 6 K3 and n = 7 are line-only over ℚ in the searched boxes. n = 7 is general type, so the null is the expected Bombieri–Lang outcome, not a test of the route. The n = 6 rank-4 net fibrations are defined over non-solvable degree-15 fields and do not descend to the real solvable L. Record a positive control at n = 5 (Y1a's example) run through the same code. | R1 |
 | R4 | math | **Structured τ.** Look for τ for which W_τ = ⟨1, τ, τ²⟩ contains squares for a structural reason: τ a rational function of an element with a known square root in K_L; τ a value of a Chebyshev or Lattès map; τ in the image of a degree-2 map from a curve with many K_L-points. C1 §6.4 shows only indefinite or rank-1 forms arise from the obvious choices (τ = μ² + μ⁻²), so the question is whether any choice gives **two** definite forms. Two is the first nontrivial case (genus 1). | R1 |
 | R5 | math | **Use elliptic curves through the conjugates.** For n ≤ 9 every K_L-point of the plane lies on an L-rational cubic (C1 §6.3), so genus-1 curves over L with new K_L-points exist rationally. Theorem R's genus-1 curves (two layers) form a 4-dimensional linear system each, too small. Question: is there a tower shape (three layers with one relation, or a non-parabola base) whose genus-1 quotient ranges over a linear system of dimension ≥ n? This is a search over tower shapes, not over points. | R2 |
 
@@ -1029,37 +1029,56 @@ See `R2.md` (read its "Review corrections" section first), log `HANDOFF-alg-R2.m
   control; the cubic Bézier base with `J = 3` on Y1a's quintic is a good positive control) is the
   deciding test. R4 and R5 wait on R3.
 
-**R3 done (2026-11-12): the n = 5 control passes; n = 6 and n = 7 are line-only in the searched boxes.**
-See `R3.md` (findings summary first), log `HANDOFF-alg-R3.md`. Plain search; the R1 doubling
-construction was dropped per R1's review.
+**R3 done (2026-11-12; revised 2026-11-12 after review).** **Field actually searched: ℚ**
+(boxes `|ρ| ≤ H`, plus the coefficient box for τ), with `ℚ(√d)` only at `H = 1`; no cubic
+`L` was reached. This is not the infinite field `L` of Theorem R. See `R3.md` (field-scope
+caveat and findings summary first), log `HANDOFF-alg-R3.md`. Plain search; the R1 doubling
+construction was dropped per R1's review. **Outcome: n = 5 control passes; n = 6 and n = 7
+are line-only over ℚ in the searched boxes; kill criterion not established.**
 - **Fields [Wolfram].** `q5 = x⁵ − 5x³ + 4x − 1` (disc 38569), `q6 = ∏_{i=1}^6(x−i)+1`
   (disc `7⁵·23·53²`), `q7 = ∏_{i=1}^7(x−i)+1` (disc `17·3457·15601·669577`), all irreducible,
   totally real, with Galois group `S₅/S₆/S₇` certified by cycle types.
-- **n = 5 control [Wolfram].** With `τ = β`, `H = 6..11` gives `1,2,4,6,7,9` positive-definite
-  classes. `H = 11` recovers all four Y1a forms up to scale plus five new ones; all nine
-  identities `ρ² = Q(β)` and discriminants (`176, 3344, 16, 23, 2159, 4199, 12704, 30448,
-  13648`) verified; the code does find positive-definite forms when they are present in the
-  box, so the n = 6 and n = 7 null results are not a code artifact.
-- **n = 6 K3 [Heuristic].** `τ = β`, `H ≤ 9`: every point is `deg` (the line `ℓ_τ`) or `lin`;
-  totals `8,16,24,40,48,72,88,112`, `pd = 0`. 324 τ-classes at `H = 2,3` and 48 at `H = 4,5`
-  give zero nondegenerate points. The expected elliptic-fibration F-points did not appear.
-- **n = 7 [Heuristic].** `τ = β`, `H ≤ 6`: totals `8,16,24,40,48`, all `deg`/`lin`; 324 τ-classes
-  at `H = 2` and 48 at `H = 3` give zero nondegenerate points. There is no usable `Q` in these
-  boxes, so neither `J = n − 2 = 5` nor `J = n − 1 = 6` is met there.
+- **n = 5 control [Computed, exact; identities Wolfram].** With `τ = β`, `H = 6..11` gives
+  `1,2,4,6,7,9` positive-definite classes. `H = 11` recovers all four Y1a forms up to scale
+  plus five new ones; all nine identities `ρ² = Q(β)` and discriminants (`176, 3344, 16, 23,
+  2159, 4199, 12704, 30448, 13648`) verified. The code does find positive-definite forms when
+  they are present in the box, so the n = 6 and n = 7 null results are not a code artifact;
+  this does not show that ℚ-points are a proxy for `L`-points.
+- **n = 6 K3 [Computed, exact].** `τ = β`, `H ≤ 9`: every ℚ-point is `deg` (the line `ℓ_τ`) or
+  `lin`; totals `8,16,24,40,48,72,88,112`, `pd = 0`. 324 τ-classes at `H = 2,3` and 48 at
+  `H = 4,5` give zero nondegenerate ℚ-points. The expected elliptic-fibration F-points did
+  not appear.
+- **n = 6 fibrations [Proof; discriminant/norm Wolfram].** The 15 rank-4 net members give quadrics `q_{ij}`
+  over degree-15 fields `F_{ij}` (stabilizer `S₂ × S₄`). The ruling discriminant
+  `δ_{ij} = ∏_{k≠i,j} w_k` is a square in `F_{ij}` (the canonical square root is
+  `H_{ij}`-invariant), so both rulings, and hence the two dual genus-1 fibrations, are
+  defined over `F_{ij}`. A single fibration has stabilizer `S₂ × S₄` (index 15), not
+  `S₂ × A₄`; the norm of `δ` is `(7^15·23^3·53^6)²`, a consistency check. `F_{ij}` is
+  non-solvable, so none of these 30 fibrations is defined over the real solvable `L`.
+  Scoped to these 30; not a classification of all elliptic fibrations and not a negative
+  about `algebraic_Pconstructible`.
+- **n = 7 [Computed, exact].** `τ = β`, `H ≤ 6`: totals `8,16,24,40,48`, all `deg`/`lin`; 324
+  τ-classes at `H = 2` and 48 at `H = 3` give zero nondegenerate ℚ-points. So neither
+  `J = n − 2 = 5` nor `J = n − 1 = 6` is met by a ℚ-point there. For `n ≥ 7`, `V_τ` is of
+  general type; Bombieri–Lang makes the null expected, so this is not a test of the route.
+  `[Heuristic]`
 - **Theorem R read-out [Wolfram].** Parabola `J = 4`: kernel dim 1, and `a`, `c′` are exactly
   Y1a's values; the minpoly of `X` has Y1a's roots. Cubic Bézier `J = 3`: for all four triples
   of Y1a's forms the kernel is 1-dimensional, ND1 holds, `X ∉ ℚ`, `[K(X):ℚ] = 5` with an
   irreducible totally real minpoly. R2's `J = 3` control is confirmed.
-- **Real quadratic `L` [Heuristic].** `L = ℚ(√d)`, `H = 1`: `d = 5` with three τ shapes and
-  `d = 2,3` with `τ = β + √d β²` give 18–81 solutions each, all on `ℓ_τ`, none genuine. The
-  brute-force frontier is quadratic `H = 2` (`5¹⁴ ≈ 6.1 × 10⁹` per τ) and cubic `H = 1`
-  (`3²¹ ≈ 1.0 × 10¹⁰` per τ); beyond it is `[Open]`.
-- **Kill criterion [Proof modulo G2's catalogue, given the labeled computations].** **Met in
-  the scoped sense**: R2 gives `J_min = n − 2` and R3 finds no structured n = 7 point while
-  the n = 5 control passes. The strict simultaneous-squares route is closed for the searched
-  boxes and τ-classes. Not closed: R2's Type II conic/determinantal n = 7, `J = 0/1` search
-  and the cubic-Bézier real crossing count, both `[Open]`. R4/R5 stay unlaunched under the
-  plan's order.
+- **Real quadratic `L` [Computed, exact].** `L = ℚ(√d)`, `H = 1`: `d = 5` with three τ shapes
+  and `d = 2,3` with `τ = β + √d β²` give 18–81 solutions each, all on `ℓ_τ`, none genuine.
+  The height-1 box is close to vacuous (coordinates in `{−1,0,1}`) and has no positive control:
+  it also finds nothing at n = 5, where forms are known. The brute-force frontier is quadratic
+  `H = 2` (`5¹⁴ ≈ 6.1 × 10⁹` per τ) and cubic `H = 1` (`3²¹ ≈ 1.0 × 10¹⁰` per τ); beyond it is
+  `[Open]`.
+- **Kill criterion [Heuristic]. Not established by R3.** R2's half holds (`J_min = n − 2`), but
+  R3's half is a bounded-height ℚ-point statement on a general-type surface; it says nothing
+  about `V_τ(L)`. The route is **parked, not closed**: it needs `n − 2` simultaneous `L`-points,
+  with no group-law handle (R1), no way to lower the count (R2), and no computation that can
+  see `L`-points (R3). R4/R5 stay unlaunched under the plan's order. Not closed: R2's Type II
+  conic/determinantal n = 7, `J = 0/1` search and the cubic-Bézier real crossing count, both
+  `[Open]`.
 
 **Order.** R1 ∥ R2 first (paper only, one session each). R3 after R1. R4, R5 only if R2 does not kill
 the route.
@@ -1067,6 +1086,7 @@ the route.
 **Kill criteria.**
 - R2 shows J_min(n) ≥ n − c for a fixed c, **and** R3 finds no structured point at n = 7 with the
   n = 5 control passing. Then write the route up as closed for constructions of this shape.
+  (R3 has run and did **not** establish the second half; see the R3 completion block above.)
 - R1 fails to give a usable group-theoretic handle (the doubling locus is as bad as V_τ). Then R3
   falls back to plain search and the route's odds drop sharply.
 
