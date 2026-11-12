@@ -927,7 +927,7 @@ Brief: look at the whole programme afresh; weaken (SR) or find a new route.
 
 ## Phase E: two big attempts (planned 2026-11-12, nothing launched)
 
-**Status: R1 done (2026-11-12). R2, R3, R4, R5 and all of E-P not launched. Launch each stream on
+**Status: R1, R2 done (2026-11-12). R3, R4, R5 and all of E-P not launched. Launch each stream on
 the user's go-ahead.**
 
 ### E.0 Why these two, and what success would mean
@@ -970,7 +970,7 @@ curves on V_τ. B1: expected dimension of low-gonality curves is ≤ −16.
 | id | kind | question | depends on |
 |---|---|---|---|
 | R1 | math, Opus-level | **DONE 2026-11-12 (see below).** **The Jacobian formulation.** Write Q_j = (x − ω_j)(x − ω̄_j), ω_j ∈ L(i). Then Q_j(τ) is a square in K_L iff τ − ω_j ∈ K_L^× · (K_L(i)^×)². For H: y² = ∏_{j ≤ J} Q_j (genus J − 1, no real branch points) this says the K_L-point (τ, y) has trivial image under the "x − T" 2-descent map at every factor, i.e. it lies in 2·Jac(H)(K_L) up to the usual normalisation at infinity. Prove this precisely (which class group, which point at infinity, the kernel of x − T when deg is even). Then the problem becomes: **find a curve H over L in this family and R ∈ Jac(H)(K_L) with 2R on H.** Deliverables: the exact statement; a check against Y1a's totally real quintic (J = 4 there); the count of conditions "2R ∈ H" as a function of J (it is (J − 2)·n over L, against J·n − … unknowns plus 2J − 3 moduli). | — |
-| R2 | math | **The true minimum number of squares.** Theorem R uses the line as partner and the parabola as base. Tabulate the linear K-parameters available from every source at once: Bézier base (Q3: n − 2 forms), circle partner (W1: rank +2), conic or quartic-graph partner, the five-term sine family as partner (new), overshoot. State J_min(n) with proof. Each parameter that is not an offset distance removes one square. If J_min(n) ≤ 3 for some n ≥ 9 the problem is a K_L-point on a curve of genus ≤ 5 with free moduli, a different and much better problem. Expected answer [Heuristic]: J_min ≈ n − 6. | — |
+| R2 | math | **DONE 2026-11-12 (see below).** **The true minimum number of squares.** Theorem R uses the line as partner and the parabola as base. Tabulate the linear K-parameters available from every source at once: Bézier base (Q3: n − 2 forms), circle partner (W1: rank +2), conic or quartic-graph partner, the five-term sine family as partner (new), overshoot. State J_min(n) with proof. Each parameter that is not an offset distance removes one square. If J_min(n) ≤ 3 for some n ≥ 9 the problem is a K_L-point on a curve of genus ≤ 5 with free moduli, a different and much better problem. Expected answer [Heuristic]: J_min ≈ n − 6. | — |
 | R3 | computation | **Degree 7 as the control.** n = 6 is K3 (elliptic fibrations give F-points; do this first as a warm-up and to validate code). n = 7 is the first general-type case and is already known to lie in P by other means, so a failed search there is informative. Fix a totally real S₇ septic. Search for (τ, Q₁…Q₆) over ℚ, over real quadratic and cubic fields, and via R1's doubling construction. Record a positive control at n = 5 (Y1a's example) run through the same code. | R1 |
 | R4 | math | **Structured τ.** Look for τ for which W_τ = ⟨1, τ, τ²⟩ contains squares for a structural reason: τ a rational function of an element with a known square root in K_L; τ a value of a Chebyshev or Lattès map; τ in the image of a degree-2 map from a curve with many K_L-points. C1 §6.4 shows only indefinite or rank-1 forms arise from the obvious choices (τ = μ² + μ⁻²), so the question is whether any choice gives **two** definite forms. Two is the first nontrivial case (genus 1). | R1 |
 | R5 | math | **Use elliptic curves through the conjugates.** For n ≤ 9 every K_L-point of the plane lies on an L-rational cubic (C1 §6.3), so genus-1 curves over L with new K_L-points exist rationally. Theorem R's genus-1 curves (two layers) form a 4-dimensional linear system each, too small. Question: is there a tower shape (three layers with one relation, or a non-parabola base) whose genus-1 quotient ranges over a linear system of dimension ≥ n? This is a search over tower shapes, not over points. | R2 |
@@ -996,6 +996,42 @@ See `R1.md`, log `HANDOFF-alg-R1.md`.
 - **Group-law handle.** `J = 2` is trivial (`Jac = H`) and reproduces Y1a §4.6's rank-growth question;
   `J = 3` is the first nontrivial case. Unirationality of the total space is [Open]. The plan's
   "pull-back under ×2" should read "preimage under the isogeny `π_*`". Route not closed.
+
+**R2 done (2026-11-12): the count splits into a strict minimum `n − 2` and a generic bound `n − 7`.**
+See `R2.md`, log `HANDOFF-alg-R2.md`.
+- **Two counts [Proof].** *Type I* parameters are jointly linear with the offsets; a nonzero
+  `L`-solution is guaranteed by `U ≥ n + 1` (Lemma 1). *Type II* parameters are only separately
+  linear; they give a determinantal condition of codimension `n − P` (Lemma 2), not free parameters.
+- **Strict minimum [Proof].** `J ≥ n − 2`: the base contributes `B ≤ 2` (only the parabola,
+  power law and cubic Bézier with quadratic `x(t)` have polynomial support functions; `d ≥ 4` is
+  not drawable), and the only uniformly available Type I partner is the fixed-slope line
+  (1 intercept); a special-`K` `exp` partner gives at most 2. Attained by the cubic Bézier base +
+  line. For `n ≥ 9`, `J ≥ 7`, `g(C_B) ≥ 321`. This closes the strict linear class; it is
+  `SS_{n−2}`, a constant improvement over Y1a's `n − 1`.
+- **Dimension bound [Proof + Wolfram].** `J ≤ n − 7` sharp, `≤ n − 6` in the plan's convention. The
+  maximum partner is a conic (`P = 5`) or a quartic graph (`P = 5`); the condition is `rank ≤ 5` on
+  an `n × 6` matrix, codimension `n − 5`. With the cubic Bézier base: `J = n − 7`. At `n = 9`:
+  `J ≤ 2` (genus 1) sharp, `≤ 3` (genus 5) plan; at `n = 10`: `≤ 3` / `≤ 4`. This is an **upper
+  bound** on the minimum, not a lower bound; special towers can lower the codimension.
+- **No conic linearisation [Proof].** A nondegenerate conic's quadratic part cannot vanish on the
+  tower's direction space when that has dimension ≥ 2 (a binary quadratic form has at most a
+  1-dimensional isotropic subspace). The conic route is therefore `SS_J` **plus** a
+  codimension-`(n − 5)` determinantal condition with degree-12 minors; the conic coefficients are
+  over `L` by Speiser's lemma once the rank condition holds for `L`-tower parameters. The plan's
+  hoped-for reduction to a genus-≤5 curve is only one factor of the system.
+- **Sine/exp no-go [Proof].** At an algebraic crossing, Lindemann–Weierstrass forces
+  `sin(ωτ + φ)` transcendental unless `ωτ + φ = 0`, where the sine partner is a horizontal line;
+  it contributes only the line intercept. The `exp` partner is at most a line generically and at
+  most 2 parameters for special `K` (Gelfond–Schneider). Engine S (C1) is a different route
+  (transcendental abscissa, algebraic ordinate), not a Theorem R partner.
+- **Overshoot [Proof].** No linear parameter: the `K`-condition is always `n` `L`-equations; overshoot
+  is a degree/realness device (the partner must meet the tower in `≥ n` points).
+- **Verdict.** The plan's `J_min ≈ n − 6` is a generic upper bound, not a lower bound. The conic route
+  is not killed; its next computation is the determinantal variety at `n = 9`, `J = 2`/`3`, and
+  R3's `n = 7` control should include it. The strict `n − 2` class is closed.
+- **Kill criterion (scoped).** Met for the strict Type I class (`J_min = n − 2`, `c = 2`); **not
+  met** for the conic Type II class, where R2 gives only the upper bound `J_min ≤ n − 7`. R3 is
+  still the deciding test for the conic route.
 
 **Order.** R1 ∥ R2 first (paper only, one session each). R3 after R1. R4, R5 only if R2 does not kill
 the route.
