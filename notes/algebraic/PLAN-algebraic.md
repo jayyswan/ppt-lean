@@ -927,7 +927,7 @@ Brief: look at the whole programme afresh; weaken (SR) or find a new route.
 
 ## Phase E: two big attempts (planned 2026-11-12, nothing launched)
 
-**Status: R1, R2 done and reviewed (2026-11-12): both came back against the route (no group-law handle; `J_min = n − 2`). R3 is the deciding test. R3 done (see below). P1′ done 2026-11-12 (see below). R4, R5 and P2′–P6′ not launched. Launch each stream on
+**Status: R1, R2 done and reviewed (2026-11-12): both came back against the route (no group-law handle; `J_min = n − 2`). R3 is the deciding test. R3 done (see below). P1′ done 2026-11-12 (see below). P2′ done 2026-11-12 (see below). R4, R5 and P3′–P6′ not launched. Launch each stream on
 the user's go-ahead.**
 
 ### E.0 Why these two, and what success would mean
@@ -1118,7 +1118,7 @@ the circle-method range, which no route reaches (Q2, Q3). Taylor's question impl
 | id | kind | question | depends on |
 |---|---|---|---|
 | P1′ | math | **DONE 2026-11-12 (see below).** **State the minimal conjecture.** "(T_K): for every number field K with a real place there are a totally real solvable L (or L ⊂ F) and (p, q) such that the twisted cover has an L-point of the required real type." Give it in the three equivalent forms: twisted cover; specialisation ("K_L is the root field of a member of the family over L", the Beckmann–Black / parametric-extension language of Dèbes, König–Legrand); multiplicative ("u and 1 − u dependent modulo L^×", C1 §4). Record exactly which real points are needed. | — |
-| P2′ | math, Opus-level | **Brauer–Manin under solvable base change.** For a curve X over a number field, the conjecture of Poonen and Stoll says X(𝔸)^{Br} = ∅ whenever X has no rational point; for curves the Brauer set equals the finite abelian descent set. Question: for X one of our twisted curves and (x_v) an adelic point, is there a totally real solvable L′ over which the base change of (x_v) survives *every* finite abelian descent? For one covering it is plausible (the obstruction is a class in a Selmer-type set attached to a finite Galois module, and Lemma LS lets us choose L′ with prescribed local behaviour). The difficulty is uniformity: there are infinitely many coverings and L′ must be one number field. Sub-questions: (a) how do Selmer sets of the n-coverings of Jac(X) behave in solvable towers (they can grow; does the obstruction to a *given* adelic point die?); (b) is it enough to control the 2-part or one prime, using that our X have explicit maps to a conic with group A_n; (c) does the answer change if X is allowed to vary over the countable family, so that only one member needs an unobstructed point. Deliverable: either "Stoll's conjecture ⇒ the target" [Proof], or the precise place where base change cannot help. | P1′ |
+| P2′ | math, Opus-level | **DONE 2026-11-12 (see below).** **Brauer–Manin under solvable base change.** For a curve X over a number field, the conjecture of Poonen and Stoll says X(𝔸)^{Br} = ∅ whenever X has no rational point; for curves the Brauer set equals the finite abelian descent set. Question: for X one of our twisted curves and (x_v) an adelic point, is there a totally real solvable L′ over which the base change of (x_v) survives *every* finite abelian descent? For one covering it is plausible (the obstruction is a class in a Selmer-type set attached to a finite Galois module, and Lemma LS lets us choose L′ with prescribed local behaviour). The difficulty is uniformity: there are infinitely many coverings and L′ must be one number field. Sub-questions: (a) how do Selmer sets of the n-coverings of Jac(X) behave in solvable towers (they can grow; does the obstruction to a *given* adelic point die?); (b) is it enough to control the 2-part or one prime, using that our X have explicit maps to a conic with group A_n; (c) does the answer change if X is allowed to vary over the countable family, so that only one member needs an unobstructed point. Deliverable: either "Stoll's conjecture ⇒ the target" [Proof], or the precise place where base change cannot help. | P1′ |
 | P3′ | math + computation | **Try to refute.** Look for an invariant that could prove some curve over ℚ with real points has no F-point. Already excluded: point degrees (solvable steps give every degree, so no index obstruction); composition factors (engines carry every A_n); Northcott (L1). Still to try: (a) a height or measure argument (the set of fields reachable by bounded-parameter engines of bounded complexity is thin; is there a counting statement that survives towers?); (b) a model-theoretic invariant of the closure (is the theory of F decidable or tame in a way PRC fields are not, or vice versa); (c) a p-adic analogue: for the closure of ℚ_p-points under the same operations, does the analogous statement fail, and if so does the failure globalise. | — |
 | P4′ | computation | **Small models.** Replace 8 by d ∈ {2, 3, 4} and the engines by the trinomials of degree ≤ some bound, so that the closure E_d is computable to a few levels. Ask whether explicit curves of genus above the gonality range (first cases: genus 3 non-hyperelliptic for d = 2; genus 5 or 6 for d = 3, 4) have E_d-points, by exhaustive search over small towers. Evidence of points appearing at low level supports the conjecture; systematic absence at genus just above the gonality range is a warning. | — |
 | P5′ | literature, then math | **Rumely–Moret-Bailly with a shape constraint.** The proof that ℚ^{tr} is PRC builds a function on the curve whose fibres over an interval are totally real (capacity theory). Read the proof for curves with one question: can the construction be steered so that the fibre polynomial has a prescribed sparse shape (trinomial, Chebyshev trinomial, odd)? The Fekete–Szegő side works with Chebyshev polynomials of the real set, which is suggestive given Engine S, but the Galois type of the output is uncontrolled in every version we know. Deliverable: a yes with a sketch, or the precise step where shape control is lost. | — |
@@ -1150,6 +1150,31 @@ Wolfram unavailable).
 - **Induction measures.** Discriminant: trivial by Lemma U. Height: not well-founded on F.
   Gonality: geometric gonality is constant in β, and F-gonality is circular. All three fail;
   insight (i) is untested beyond them.
+
+**P2′ done (2026-11-12): Stoll's conjecture restates the target; base change acts only on the
+cohomological layer.** See `P2prime.md`, log `HANDOFF-alg-P2prime.md`. Paper only, no computation.
+- **Stoll restates, does not imply [Proof].** Under X(𝔸_L)^{f-ab}_• = X(L), (T_β; 𝓛) ⟺ some
+  twisted Belyi curve X_L^{M,p,q} has a non-empty f-ab set off the branch fibres. No unconditional
+  way to show f-ab non-emptiness without a point is known in genus ≥ 2.
+- **Local solubility everywhere [Proof sketch].** Free after totally real solvable base change
+  (Weil bound + Lemma LS/U). **Correction to P1′ §5:** an L-point needs r ≤ 3 at *every* real
+  place of L, not only σ₀; take the lift constant c ∈ ℚ to make this uniform.
+- **Proposition B [Proof].** Base change of a fixed adelic point x is f-ab-unobstructed over L only
+  if [L:k]·c(x) = 0 in ∏J(k_v)_•/\hat{Sel}(J/k) (norm on Selmer groups). Non-torsion obstructions
+  survive every finite extension. This answers the plan's literal question negatively.
+- **Levels [Proof, given a degree-1 class].** f-ab ≠ ∅ iff every level is non-empty over the same L
+  (compactness). Each odd level clears after totally real solvable base change, but the
+  construction needs local degree ≈ 4g·log_p n, unbounded in n: no single number field.
+- **Two layers.** Layer 1, the Pic¹ class in Sha(J/L): cohomological; Ciperiani–Wiles is the
+  genus-1 precedent; [Open]. Layer 2, ι(x) ∈ \overline{J(L)}: the Mordell–Weil sieve. It is
+  non-cohomological, Lemma LS does not reach it, and by Siksek's dimension count plus rank
+  heuristics in solvable towers it gets more rigid up the tower [Heuristic]. **This is the place
+  where solvable base change cannot help.**
+- **Sub-questions.** (a) Selmer growth is irrelevant for fixed points. (b) The conic is ℙ¹ over L and
+  contributes nothing [Proof]; one prime ℓ keeps the full ℓ-adic Chabauty problem. (c) Jac(X) ~
+  ∏_ρ B_ρ ⊗ ρ_c with B_ρ over ℚ fixed (trivial, sign and standard pieces vanish); the family gives
+  structure for P3′, not leverage.
+- **Kill criterion, first half:** met in the scoped sense above (not a claim that no L works).
 
 **Order.** P1′ first (short). Then P2′ ∥ P3′. P4′ can run at any time on Sonnet. P5′ after P2′ if P2′
 does not close. P6′ is a half-session check.

@@ -1,0 +1,8 @@
+- step 0: read PLAN-algebraic Phase E-P, P1prime.md (§4.2 canonical curve, §5 capacities, §6 Lemma U), P1 Lemma LS, L1 (2026-11-12)
+- step 1: §2 Proposition 2.1: under Stoll's strong conjecture, (T_beta; L) is equivalent to a non-empty f-ab set off the branch fibres; a restatement, not an implication
+- step 2: §3 local solubility at all places (Weil bound + Lemma LS/U); real places need r <= 3 at every real place of L, so take the lift constant c in Q (correction to P1prime §5)
+- step 3: §4 Proposition B [Proof]: base change of a fixed adelic point is unobstructed over L only if [L:k]·c(x) = 0 (norm on Selmer groups); non-torsion obstructions are permanent
+- step 4: §5 compactness: f-ab non-empty iff every level non-empty over the same L; odd levels clear by TR-solv base change (untwisted [n]-covering + Weil), but local degree grows like 4g log_p n, so no single L
+- step 5: §6 two layers: Layer 1 = Pic^1 class in Sha (cohomological; Ciperiani-Wiles precedent; Open); Layer 2 = Mordell-Weil sieve (non-cohomological; Lemma LS does not reach it; Siksek dimension count; rank heuristics)
+- step 6: §7 sub-questions: (a) fixed-point growth irrelevant; (b) conic is P^1 over L, contributes nothing; one prime keeps the l-adic Chabauty problem; (c) Jac ~ prod_rho B_rho ⊗ rho_c, trivial/sign/standard pieces vanish
+- step 7: wrote notes/algebraic/P2prime.md; PLAN updated. No computation (Wolfram unavailable; none needed). DONE.
