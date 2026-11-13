@@ -1,6 +1,6 @@
 # PLAN-forward-search: enumerate engine solutions by parameter, not by field
 
-Planned 2026-11-13. **Stages A and B complete (2026-11-12, `F1.md`); stages C–E not started.** This stream replaces
+Planned 2026-11-13. **Stages A and B complete (2026-11-12, `F1.md`); where families can live in `W₂` analysed in `F2.md` (2026-11-13); stages C–E not started.** This stream replaces
 P4′ of `PLAN-algebraic.md` Phase E-P.
 
 Read first: `P1prime.md` (§1 engines, §3 the conjecture, §4.2 the canonical curve), `P2prime.md`
@@ -162,7 +162,9 @@ For each engine and each `m`:
 
 - the list of certified solutions: `h`, `K`, discriminant, signature, Galois group of `K`,
   Galois group of `ℚ(λ)`, real or not, new or redundant;
-- **family detection.** For `m = 2`, plot the solutions in the plane of `(λ + λ', λλ')` and fit
+- **family detection.** (Sharpened by `F2.md` §6: at `d ∈ {8, 9}` a family must lie over an
+  isomorphism correspondence `Γ`, so fit `F(λ, λ′)` with the support (N) of F2 Lemma 5.1, filter
+  by (S), and test Frobenius-type agreement on `F_ℓ`-points of the fit.) For `m = 2`, plot the solutions in the plane of `(λ + λ', λλ')` and fit
   plane curves of degree ≤ 6 through subsets; for `m = 3, 4` fit low-degree hypersurfaces and
   curves. A fitted curve carrying ≥ 3 more solutions than its number of coefficients is a
   candidate family. Count growth of solutions with `H`: bounded count means sporadic, growth

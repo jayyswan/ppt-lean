@@ -1242,3 +1242,12 @@ Stage B: Bring–Jerrard gives proved `tri(5)` solutions for all 20 test quintic
 filter never rejects). Sizes: `m = 6` (32–118-digit `h`) or `m = 12` (186–351 digits, including all
 totally real fields, which admit no real `λ`). So stage C can only find unexpectedly small
 solutions; C4 should enumerate by tower or be dropped.
+
+Families (`F2.md`, 2026-11-13): at `d ∈ {8, 9}` every family of `m = 2` solutions (for `K` with
+group `⊇ A_d`) lies over a curve `Γ ⊂ ℙ¹ × ℙ¹` along which the two fibre covers are isomorphic
+(Goursat plus a computed Riemann–Hurwitz bound). Hecke-type (étale) ones are excluded for `d ≥ 7`,
+because the triangle groups `Δ(2, pq, d)` are non-arithmetic and maximal (Takeuchi, Margulis,
+Singerman). Bidegrees `(1, k)` and `(2, 2)` are excluded by proof, and `(2,3)`, `(3,3)` by an
+exhaustive search over `F_ℓ`. What remains is ramified isomorphism correspondences of higher
+bidegree, with no known construction. At `d = 5` the explicit commensurator correspondence
+is not a family, and could only reach F20 quintics anyway.

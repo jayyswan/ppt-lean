@@ -1,0 +1,12 @@
+validation against Takeuchi's list: ok
+pp(4,1)  d=5  orbifold (2,4,5)  arithmetic=True
+pp(3,2)  d=5  orbifold (2,6,5)  arithmetic=True
+pp(5,1)  d=6  orbifold (2,5,6)  arithmetic=True
+pp(6,1)  d=7  orbifold (2,6,7)  arithmetic=False
+pp(5,2)  d=7  orbifold (2,10,7)  arithmetic=False
+pp(4,3)  d=7  orbifold (2,12,7)  arithmetic=False
+pp(7,1)  d=8  orbifold (2,7,8)  arithmetic=False
+pp(5,3)  d=8  orbifold (2,15,8)  arithmetic=False
+pp(8,1)  d=9  orbifold (2,8,9)  arithmetic=False
+pp(7,2)  d=9  orbifold (2,14,9)  arithmetic=False
+pp(5,4)  d=9  orbifold (2,20,9)  arithmetic=False
