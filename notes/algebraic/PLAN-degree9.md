@@ -141,6 +141,10 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
   Plücker degree ≤ 8.
 - `q(S) = 0` expected (`H³(X) = 0`).
 - Open: does such a pencil exist?
+- Second pass (`D5.md` §8): S meets each of the 945 pairing components along a jump curve
+  (branch probe with controls), so `K_S = 13H − 3R`. The Castelnuovo kill then only forces
+  `R·D ≥ d(16 − d)/3`, and nothing found excludes that. **D5 not finished**: it needs NS(S) or the
+  components of R (Macaulay2/Singular).
 
 ## 3. Stage 1: routes for T9Q
 
