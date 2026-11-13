@@ -98,6 +98,14 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
 - Next: D1 on `q₃`, first checking whether its condition also factors through a few power sums;
   then H.
 
+**D1 result (2026-11-13, `D1.md`).**
+- Over ℚ: dominated by E. The condition has degree 30 (irreducible on `q₃`), i.e. weighted
+  `K = O(19)` against E's `O(1)`. No power-sum reduction.
+- Over F (`g` fixed rational, `X`, `Y` P-valued): `c_τ = 1`, real capacity 18 (attained). It is a
+  new single-condition F-row like M1/G/J, plus a rational 7-parameter choice of `g`.
+- Hypersurface degree not measured; that needs homotopy continuation.
+- Next: H.
+
 ## 3. Stage 1: routes for T9Q
 
 ### D1. Cubic Bézier against a rational sextic graph
