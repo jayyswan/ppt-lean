@@ -1300,3 +1300,9 @@ D1 (2026-11-13, `D1.md`):
 - Over ℚ it is dominated by E (degree 30).
 - Over F with `g` fixed rational it has one condition on the generator and real capacity 18: a
   new single-condition F-row, degree unmeasured.
+
+H (2026-11-13, `H-deg9.md`), dominated:
+- over ℚ the fibre over a generator is a 3-fold of degree 266 in `ℙ⁵`;
+- over F, `c_τ = 3`.
+
+D9 stage 1 (E, D1, H) is done without closing T9Q; open threads are listed in `PLAN-degree9.md`.

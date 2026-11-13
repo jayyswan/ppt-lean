@@ -106,6 +106,17 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
 - Hypersurface degree not measured; that needs homotopy continuation.
 - Next: H.
 
+**H result (2026-11-13, `H-deg9.md`). Dominated.**
+- Over ℚ the fibre over a generator is a 3-fold of degree 266 in `ℙ⁵` (Thom–Porteous); the
+  low-degree special cases are dominated by E.
+- Over F: `c_τ = 3`.
+
+**Stage 1 done; T9Q not closed.** Open threads, in order:
+1. E versality (`D1E.md` §6);
+2. D1-over-F hypersurface degree for special rational `g` (needs homotopy continuation outside
+   the MCP);
+3. D3 (towers), not launched.
+
 ## 3. Stage 1: routes for T9Q
 
 ### D1. Cubic Bézier against a rational sextic graph
