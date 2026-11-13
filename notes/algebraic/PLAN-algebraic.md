@@ -1224,11 +1224,16 @@ positive control for every search.
 - Degree 9 totally real through the one-line reduction, the explicit S₁₀ decic, and Lean for the
   solvable case and Engine S. These are the achievable targets and can run independently.
 
-## Phase F: forward search (planned 2026-11-13, nothing launched)
+## Phase F: forward search (planned 2026-11-13; stage A complete, see `F1.md`)
 
 See `PLAN-forward-search.md`. It replaces P4′. Idea: enumerate the engine parameter `λ` over
 small solvable fields and keep the cases where the fibre field descends to a field `K` over ℚ, so
 that `K` is an output, not an input. Solutions with `[ℚ(λ):ℚ] = m` are rational points of a fixed
 `m`-dimensional variety `W_m`; a family of solutions is a special subvariety of `W_m`, i.e. an
 identity between engine maps, and that is what the search looks for. Degree 5 (Bring–Jerrard) is
-the positive control and the calibration. Launch on the user's go-ahead.
+the positive control and the calibration.
+
+Stage A (`F1.md`): exact FLINT pipeline (no PARI) with 50 passing checks; `W_m = Ĉ^m/(S_d × S_m)`
+(no twist); `tri(D) = pp(D − 1, 1)` up to Möbius, so the engines of degree `d` are the coprime
+`pp(p, q)`, `p > q`; `W₂` is of general type for all 8 engines with `7 ≤ d ≤ 9`, not shown for
+`d = 5, 6` (at `d = 5` rational or general type, open); `Ĉ` for `tri(5)` is Bring's curve.
