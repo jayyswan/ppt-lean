@@ -1275,3 +1275,17 @@ Singerman). Bidegrees `(1, k)` and `(2, 2)` are excluded by proof, and `(2,3)`, 
 exhaustive search over `F_ℓ`. What remains is ramified isomorphism correspondences of higher
 bidegree, with no known construction. At `d = 5` the explicit commensurator correspondence
 is not a family, and could only reach F20 quintics anyway.
+
+## Phase D9: degree 9 and 10 (planned 2026-11-13; D0 done, see `PLAN-degree9.md`, `D0.md`)
+
+The all-n target is set aside; `PLAN-degree9.md` aims at T9Q (every real algebraic number of degree 9).
+D0's census at n = 9:
+
+- No drawable pair has 10 jointly linear dials. The maximum, F = 9, needs a rational sextic.
+- New row **E**: a cubic Bézier `(t², Y(t))` against `y = g(x)` with `g ∈ ℚ[x]` of degree ≤ 6.
+  It works iff `s_{(4,3,2,1)}(τ₁, …, τ₉) = 0` for some `τ ∈ K`.
+  - The condition has degree 10, is linear in `e₇`, and contains `{p₁ = p₃ = p₅ = 0}`.
+  - It solves an explicit totally real S₉ nonic (positive control).
+  - A height-1 search on the non-degenerate field `q₃` found nothing.
+- The test field `∏(x − i) + 1` used so far is an odd-engine field. It is degenerate for these
+  searches; use `q₃`.

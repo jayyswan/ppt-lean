@@ -1,6 +1,7 @@
 # PLAN-degree9: raising the degree bound past 8
 
-Planned 2026-11-13. **Nothing launched.** Launch on the user's go-ahead.
+Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`.** D1–D5 not launched; launch on the
+user's go-ahead.
 
 The all-n target is set aside (user decision, 2026-11-13). This plan aims at specific degrees:
 9 first, then 10, for rational coefficients and for P coefficients.
@@ -69,6 +70,19 @@ towers only. Do it for every pair of drawable families.
   (rank 10).
 
 D0 decides the order of D1–D5. The order below is the default if D0 finds nothing new.
+
+**D0 result (2026-11-13, `D0.md`).**
+- No drawable pair reaches 10 jointly linear dials. The maximum, F = 9 (one condition), needs a
+  rational sextic.
+- New best T9Q row **E**: Bézier `(t², cubic)` × ℚ-sextic graph. Its condition is
+  `s_{4321}(τ) = 0`: degree 10, linear in `e₇`, and it contains `{p₁ = p₃ = p₅ = 0}`.
+  A positive control solves an explicit totally real S₉ nonic.
+- Height-1 box search on the non-degenerate field `q₃`: null.
+- **`q₁` is degenerate** (an odd-engine field). D1 must recount on `q₃`; on `q₁` the curve has
+  degree 20, not 19.
+- D4's count is confirmed.
+- **Revised order:** E (a D1 sub-stream), then D1 on `q₃`, then H (two ℚ-sextics, one rotated:
+  a 3-fold of sextics for each generator).
 
 ## 3. Stage 1: routes for T9Q
 
