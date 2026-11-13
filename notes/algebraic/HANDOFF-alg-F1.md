@@ -1,0 +1,12 @@
+- step 0: pulled (390ce1d, PLAN-forward-search.md); read PLAN-forward-search, P1prime (§1, §3, §4.2), P2prime §0, R3 summary, R1 review corrections (2026-11-12)
+- step 1: tools. python-flint 0.9.0, Python 3.12.2. PARI absent; `pip install cypari2` was refused by the session's permission layer, so polredabs/nfsubfields/polgalois are replaced by exact FLINT routines. No Wolfram. Recorded in F1.md §3.1
+- step 2: scripts/F1_core.py: engines pp/tri, N_h, cycle_table, filter_h (Lemma 3.2), certify (exact: orbitals from Res_x(N(x), N(T-cx)) factored over Q + Arb unique-overlap assignment; transversal block search; K from block power sums with integer-isolating balls), has_root_in / fields_isomorphic (Trager), galois_certificate (Dedekind + Jordan), signature
+- step 3: first positives: pp(2,1) m=2 (H<=10: 4), m=3 (H<=9: 8); pp(3,1), tri(4) m=2 (H<=40: 2 each). All re-checked by Trager. Found lambda=phi makes N_h reducible for pp(5,4) (x=phi in the fibre): certify screens reducible N_h first
+- step 4: found tri(D) = pp(D-1,1) under x->1/x, lam->-1/lam (certified pairs match with isomorphic K); engines of degree d are exactly pp(p,q), p>q>=1 coprime (F1.md §2.4). C1 has 11 engines
+- step 5: scripts/F1_test_core.py: 50 checks pass (output F1_test_core_out.txt), incl. filter soundness on 3 exhaustive unfiltered boxes
+- step 6: §2.1 descent criterion written as Proposition 2.1 (a)-(c) [Proof]; §2.2 W_m = C^m/(S_d x S_m), degree (d!)^(m-1) over P^m, Q-points over h <-> solutions [Proof sketch]; corrects the plan's "twist"
+- step 7: scripts/F1_kodaira.py: p_g (Eichler trace, Lambda^2), e(W_2) orbifold, K_W^2 = (K_X-R)^2/|Gamma|, singular points + reflection removal + HJ; K_S^2 by Noether and by discrepancies agree in all 13 cases. General type for all 8 engines with 7<=d<=9. d=5: tri(5) p_g=q=0, K_S^2=2 (rational or general type, open); pp(3,2) K_S^2=-1; tri(6) p_g=1, K_S^2=-2: not decided
+- step 8: C^ for tri(5) is Bring's curve (ordered roots of x^5+lam x-lam satisfy p1=p2=p3=0; equivariant, generically injective, both genus 4) [Proof sketch]
+- step 9: probe (not stage C): tri(5), pp(3,2) m=2 H<=25 and tri(6) H<=15: every irreducible h rejected by filter. Throughput ~4e4 h/s pure Python; C1 at H=300 needs a vectorised filter
+- step 10: wrote F1.md (findings summary, §1-§3, stage A complete); updated plan status lines
+- files: notes/algebraic/F1.md; HANDOFF-alg-F1.md; scripts/F1_core.py, F1_test_core.py, F1_kodaira.py; outputs F1_test_core_out.txt, F1_kodaira_out_d3to7.txt, F1_kodaira_out_d89.txt. No .lean changes
