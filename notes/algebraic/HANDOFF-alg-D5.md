@@ -13,3 +13,13 @@ Backend: Python (numpy, mpmath), user-approved because the Wolfram MCP times out
 - q(S): the cylinder source H^3(X) = 0, so q = 0 is expected (heuristic).
 - Open: does S have a pencil with fibres of Pluecker degree <= 8? Wrote D5.md; scripts in
   scripts/D5_*.py.
+- Second pass (user: finish D5):
+  - intended a Castelnuovo + adjunction kill of pencils (p_a <= (d-1)(d-2)/2 against 1 + 13d/2);
+  - jump locus on pairing components: a curve J' plus 2-dim special loci; the latter explain B3's
+    -8460;
+  - branch probe with +/- controls: S passes through generic J' points (ratio constant ~1), not
+    through the 2-dim loci;
+  - so K_S = 13H - 3R (R = sum J'_pi), and the kill fails: a pencil would need
+    R.D >= d(16-d)/3, which upper bounds do not exclude;
+  - deg J'_pi >= 52.
+- D5 still open; needs NS(S) or the components of R (Macaulay2/Singular, not installed).
