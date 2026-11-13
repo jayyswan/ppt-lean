@@ -1289,3 +1289,9 @@ D0's census at n = 9:
   - A height-1 search on the non-degenerate field `q₃` found nothing.
 - The test field `∏(x − i) + 1` used so far is an odd-engine field. It is degenerate for these
   searches; use `q₃`.
+
+E (2026-11-13, `D1E.md`), open:
+- The condition is `25 Tr τ³ · Tr τ⁷ = 21 (Tr τ⁵)²` for centred τ.
+- E polynomials are exactly `σ(t)E(t²) + r(t)`, so T9Q-via-E is versality of that 8-parameter
+  family.
+- Height-2 search null with a working control; no local obstruction on `q₃`.

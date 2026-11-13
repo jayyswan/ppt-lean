@@ -1,7 +1,7 @@
 # PLAN-degree9: raising the degree bound past 8
 
-Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`.** D1–D5 not launched; launch on the
-user's go-ahead.
+Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`. E done, open (2026-11-13), see
+`D1E.md`.** D1 (cubic X), D2–D5 not launched.
 
 The all-n target is set aside (user decision, 2026-11-13). This plan aims at specific degrees:
 9 first, then 10, for rational coefficients and for P coefficients.
@@ -83,6 +83,20 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
 - D4's count is confirmed.
 - **Revised order:** E (a D1 sub-stream), then D1 on `q₃`, then H (two ℚ-sextics, one rotated:
   a 3-fold of sextics for each generator).
+
+**E result (2026-11-13, `D1E.md`). Open.**
+- The condition is `H(p₁, p₃, p₅, p₇) = 0`. Centred, it is `25 p₃p₇ = 21 p₅²`; even power sums
+  drop out [Proof].
+- E polynomials are exactly `σ(t)E(t²) + r(t)` (σ, E monic cubics, r linear), a rational
+  8-parameter family birational to the locus [Proof]. So T9Q-via-E is a versality question for
+  that family.
+- Height-2 LLL search on `q₃`, shift free: null. A new integer S₉ control was found by the same
+  code.
+- `X_{q₃}` is locally soluble at ∞, 2, every odd p ≤ 97, and 271.
+- D0 §3.4 corrected: with `g` fixed, `τ, Y` may be P-valued. That gives `c_τ ≥ 3` over F, which
+  M1/G/J dominate.
+- Next: D1 on `q₃`, first checking whether its condition also factors through a few power sums;
+  then H.
 
 ## 3. Stage 1: routes for T9Q
 
