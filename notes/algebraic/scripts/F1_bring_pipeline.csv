@@ -1,0 +1,21 @@
+class,f_low_to_high,m,filter,filter_info,certify,certified_K_iso_input,trager_root_in_B_h,certify_seconds,trager_seconds
+S5,-1 -2 -2 1 2 1,6,pass,12,skipped,,True,0.0,0.1
+S5,-1 -1 -1 0 1 1,6,pass,12,skipped,,True,0.0,0.1
+S5,-1 -3 -1 3 2 1,12,few,5,skipped,,True,0.0,1.7
+S5,-1 -2 -3 -1 1 1,6,pass,12,skipped,,True,0.0,0.0
+S5,-1 -2 -3 -2 0 1,6,pass,12,skipped,,True,0.0,0.1
+S5,-1 -3 -3 0 1 1,12,few,4,skipped,,True,0.0,1.5
+S5,-1 -1 0 0 0 1,4,pass,12,solution,True,True,4.6,0.0
+S5,-1 -3 -3 -1 0 1,6,pass,12,skipped,,True,0.0,0.1
+S5,-1 -3 -3 -2 -1 1,6,pass,12,skipped,,True,0.0,0.1
+S5,-1 -2 -1 0 0 1,6,pass,12,skipped,,True,0.0,0.0
+A5,-2 -2 -2 0 1 1,12,few,2,skipped,,True,0.0,1.0
+A5,-1 1 -1 -2 -1 1,12,few,3,skipped,,True,0.0,1.0
+A5,-2 3 2 -2 0 1,6,pass,12,skipped,,True,0.0,0.1
+A5,-2 -1 -3 -1 2 1,12,few,3,skipped,,True,0.0,1.1
+A5,-1 -3 -2 1 -3 1,12,few,2,skipped,,True,0.0,1.5
+TR,-1 3 1 -5 0 1,12,few,7,skipped,,True,0.0,1.1
+TR,-3 4 5 -5 -1 1,12,few,2,skipped,,True,0.0,1.2
+TR,-1 4 -1 -5 1 1,12,few,2,skipped,,True,0.0,2.0
+TR,-3 5 4 -5 -1 1,12,few,4,skipped,,True,0.0,1.0
+TR,-1 3 2 -5 -1 1,12,few,7,skipped,,True,0.0,1.8

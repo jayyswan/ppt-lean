@@ -10,3 +10,10 @@
 - step 9: probe (not stage C): tri(5), pp(3,2) m=2 H<=25 and tri(6) H<=15: every irreducible h rejected by filter. Throughput ~4e4 h/s pure Python; C1 at H=300 needs a vectorised filter
 - step 10: wrote F1.md (findings summary, §1-§3, stage A complete); updated plan status lines
 - files: notes/algebraic/F1.md; HANDOFF-alg-F1.md; scripts/F1_core.py, F1_test_core.py, F1_kodaira.py; outputs F1_test_core_out.txt, F1_kodaira_out_d3to7.txt, F1_kodaira_out_d89.txt. No .lean changes
+- step 11 (stage B): F1_core: lazy per-residue cycle tables, LONG_PRIMES (to 2e5); unit tests still pass. gp not present in WSL either; stage B on FLINT only
+- step 12: scripts/F1_bring.py: Bring-Jerrard via Tr y = 0, rational/quadratic zero P of Q = Tr y^2, line in tangent plane (quadratic r), cubic C on the line (s); lam = A^5/B^4 for tri(5); h by successive resultants; picked factor by Arb
+- step 13: 20 fields chosen by polynomial disc (10 S5 sig (1,2), 5 A5, 5 totally real S5: 24217, 36497, 38569, 65657, 70601). Results: m=4 (x^5-x-1 only, 18 digits), m=6 for 8 fields (32-118 digits), m=12 for 11 fields incl. all TR (186-351 digits)
+- step 14: pipeline: exact Trager check K has a root in B_h True for all 20 (<=2 s); 40 wrong-field pairings all False; filter pass 9, few 11 (m=12, 2-7 split primes < 2e5), never reject; blind certify only at m=4 (iso to K). Blind certify at n=30, 81-digit h: resultant alone 587 s -> infeasible; LLL-polred needed before C4
+- step 15: realness: TR fields give h of signature (0,6) [Proof: Q positive definite]; 14/15 others have real lam
+- step 16: F1.md stage-B findings + §5; decision after B: known d=5 solutions are m>=4 with heights 1e30-1e350, so stage C tests only unexpectedly small solutions; recommend C4 by tower or dropped
+- files (stage B): scripts/F1_bring.py, F1_bring_run.py, F1_bring_constructions.csv/.log, F1_bring_pipeline.csv/.log, F1_bring_negctl.txt; F1_core.py updated

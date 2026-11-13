@@ -143,18 +143,47 @@ def cycle_table(eng, l):
     return table
 
 
-DEFAULT_PRIMES = [p for p in range(11, 1200) if all(p % q for q in range(2, int(p**0.5) + 1))]
+def primes_between(a, b):
+    sieve = bytearray([1]) * b
+    sieve[0] = sieve[1] = 0
+    for i in range(2, int(b**0.5) + 1):
+        if sieve[i]:
+            sieve[i * i::i] = bytearray(len(sieve[i * i::i]))
+    return [p for p in range(a, b) if sieve[p]]
+
+
+DEFAULT_PRIMES = primes_between(11, 1200)
+LONG_PRIMES = primes_between(11, 200000)
 
 
 class TableCache:
+    """Cycle-type entries computed lazily, one residue at a time (so long
+    prime lists cost only what the filter actually looks up)."""
+
     def __init__(self, eng):
         self.eng = eng
         self._t = {}
+        self._ctx = {}
+
+    def entry(self, l, lam):
+        key = (l, lam)
+        if key in self._t:
+            return self._t[key]
+        if l not in self._ctx:
+            Al = nmod_poly([int(c) % l for c in self.eng.A.coeffs()], l)
+            Bl = nmod_poly([int(c) % l for c in self.eng.B.coeffs()], l)
+            self._ctx[l] = (Al, Bl, _branch_residues(self.eng, l))
+        Al, Bl, bad = self._ctx[l]
+        val = None
+        if lam not in bad:
+            F = Al - lam * Bl
+            if F.degree() == self.eng.d and F.gcd(F.derivative()).degree() == 0:
+                val = tuple(sorted(g.degree() * e for g, e in F.factor()[1]))
+        self._t[key] = val
+        return val
 
     def get(self, l):
-        if l not in self._t:
-            self._t[l] = cycle_table(self.eng, l)
-        return self._t[l]
+        return [self.entry(l, lam) for lam in range(l)]
 
 
 def filter_h(h, eng, primes=None, need=12, cache=None):
@@ -182,8 +211,7 @@ def filter_h(h, eng, primes=None, need=12, cache=None):
         rts = hl.roots()
         if len(rts) != m:
             continue
-        tab = cache.get(l)
-        types = [tab[int(r)] for r, _ in rts]
+        types = [cache.entry(l, int(r)) for r, _ in rts]
         if any(t is None for t in types):
             continue
         used += 1

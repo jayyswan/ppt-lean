@@ -1224,7 +1224,7 @@ positive control for every search.
 - Degree 9 totally real through the one-line reduction, the explicit S₁₀ decic, and Lean for the
   solvable case and Engine S. These are the achievable targets and can run independently.
 
-## Phase F: forward search (planned 2026-11-13; stage A complete, see `F1.md`)
+## Phase F: forward search (planned 2026-11-13; stages A and B complete, see `F1.md`)
 
 See `PLAN-forward-search.md`. It replaces P4′. Idea: enumerate the engine parameter `λ` over
 small solvable fields and keep the cases where the fibre field descends to a field `K` over ℚ, so
@@ -1237,3 +1237,8 @@ Stage A (`F1.md`): exact FLINT pipeline (no PARI) with 50 passing checks; `W_m =
 (no twist); `tri(D) = pp(D − 1, 1)` up to Möbius, so the engines of degree `d` are the coprime
 `pp(p, q)`, `p > q`; `W₂` is of general type for all 8 engines with `7 ≤ d ≤ 9`, not shown for
 `d = 5, 6` (at `d = 5` rational or general type, open); `Ĉ` for `tri(5)` is Bring's curve.
+
+Stage B: Bring–Jerrard gives proved `tri(5)` solutions for all 20 test quintics (exact Trager check;
+filter never rejects). Sizes: `m = 6` (32–118-digit `h`) or `m = 12` (186–351 digits, including all
+totally real fields, which admit no real `λ`). So stage C can only find unexpectedly small
+solutions; C4 should enumerate by tower or be dropped.
