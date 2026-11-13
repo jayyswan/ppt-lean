@@ -1295,3 +1295,8 @@ E (2026-11-13, `D1E.md`), open:
 - E polynomials are exactly `σ(t)E(t²) + r(t)`, so T9Q-via-E is versality of that 8-parameter
   family.
 - Height-2 search null with a working control; no local obstruction on `q₃`.
+
+D1 (2026-11-13, `D1.md`):
+- Over ℚ it is dominated by E (degree 30).
+- Over F with `g` fixed rational it has one condition on the generator and real capacity 18: a
+  new single-condition F-row, degree unmeasured.
