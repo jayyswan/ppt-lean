@@ -1121,7 +1121,7 @@ the circle-method range, which no route reaches (Q2, Q3). Taylor's question impl
 | P2′ | math, Opus-level | **DONE 2026-11-12 (see below).** **Brauer–Manin under solvable base change.** For a curve X over a number field, the conjecture of Poonen and Stoll says X(𝔸)^{Br} = ∅ whenever X has no rational point; for curves the Brauer set equals the finite abelian descent set. Question: for X one of our twisted curves and (x_v) an adelic point, is there a totally real solvable L′ over which the base change of (x_v) survives *every* finite abelian descent? For one covering it is plausible (the obstruction is a class in a Selmer-type set attached to a finite Galois module, and Lemma LS lets us choose L′ with prescribed local behaviour). The difficulty is uniformity: there are infinitely many coverings and L′ must be one number field. Sub-questions: (a) how do Selmer sets of the n-coverings of Jac(X) behave in solvable towers (they can grow; does the obstruction to a *given* adelic point die?); (b) is it enough to control the 2-part or one prime, using that our X have explicit maps to a conic with group A_n; (c) does the answer change if X is allowed to vary over the countable family, so that only one member needs an unobstructed point. Deliverable: either "Stoll's conjecture ⇒ the target" [Proof], or the precise place where base change cannot help. | P1′ |
 | P3′ | math + computation | **Try to refute.** Look for an invariant that could prove some curve over ℚ with real points has no F-point. Already excluded: point degrees (solvable steps give every degree, so no index obstruction); composition factors (engines carry every A_n); Northcott (L1). Still to try: (a) a height or measure argument (the set of fields reachable by bounded-parameter engines of bounded complexity is thin; is there a counting statement that survives towers?); (b) a model-theoretic invariant of the closure (is the theory of F decidable or tame in a way PRC fields are not, or vice versa); (c) a p-adic analogue: for the closure of ℚ_p-points under the same operations, does the analogous statement fail, and if so does the failure globalise. | — |
 | P4′ | computation | **Small models.** Replace 8 by d ∈ {2, 3, 4} and the engines by the trinomials of degree ≤ some bound, so that the closure E_d is computable to a few levels. Ask whether explicit curves of genus above the gonality range (first cases: genus 3 non-hyperelliptic for d = 2; genus 5 or 6 for d = 3, 4) have E_d-points, by exhaustive search over small towers. Evidence of points appearing at low level supports the conjecture; systematic absence at genus just above the gonality range is a warning. | — |
-| P5′ | literature, then math | **Rumely–Moret-Bailly with a shape constraint.** The proof that ℚ^{tr} is PRC builds a function on the curve whose fibres over an interval are totally real (capacity theory). Read the proof for curves with one question: can the construction be steered so that the fibre polynomial has a prescribed sparse shape (trinomial, Chebyshev trinomial, odd)? The Fekete–Szegő side works with Chebyshev polynomials of the real set, which is suggestive given Engine S, but the Galois type of the output is uncontrolled in every version we know. Deliverable: a yes with a sketch, or the precise step where shape control is lost. | — |
+| P5′ | literature, then math | **DONE 2026-11-13 (see below).** **Rumely–Moret-Bailly with a shape constraint.** The proof that ℚ^{tr} is PRC builds a function on the curve whose fibres over an interval are totally real (capacity theory). Read the proof for curves with one question: can the construction be steered so that the fibre polynomial has a prescribed sparse shape (trinomial, Chebyshev trinomial, odd)? The Fekete–Szegő side works with Chebyshev polynomials of the real set, which is suggestive given Engine S, but the Galois type of the output is uncontrolled in every version we know. Deliverable: a yes with a sketch, or the precise step where shape control is lost. | — |
 | P6′ | math | **(BD) through the circle method, one more time, with Engine S.** Q3 sharpened (BD) to "about 9n P-parameters per K-condition at bounded degree". Engine S gives real-rooted shapes of unbounded degree with 3 essential parameters, so it does not meet this. Record that explicitly and check the one remaining idea: Weil restriction along a *varying* extension (degree-D points on the condition curve, D large), which raises dimension to about D; C1's working showed the total space is a quotient of a product of two Galois-closure covers, not a complete intersection of low degree. Confirm and close, or find the gap. | — |
 
 **P1′ done (2026-11-12): the minimal conjecture, stated; three forms proved equivalent.** See
@@ -1175,6 +1175,30 @@ cohomological layer.** See `P2prime.md`, log `HANDOFF-alg-P2prime.md`. Paper onl
   ∏_ρ B_ρ ⊗ ρ_c with B_ρ over ℚ fixed (trivial, sign and standard pieces vanish); the family gives
   structure for P3′, not leverage.
 - **Kill criterion, first half:** met in the scoped sense above (not a claim that no L works).
+
+**P5′ done (2026-11-13): no; shape control is lost at the global step.** See `P5prime.md`, log
+`HANDOFF-alg-P5prime.md`, check script `scripts/P5prime_checks.py` (Python; Wolfram not attached).
+- **Method, for F [Proof sketch].** With no integrality, RMB is local functions (S1), weak
+  approximation in a Riemann–Roch space (S2), optional Hilbert irreducibility (S3). Capacity
+  theory and Fekete–Szegő patching serve only integrality, so they are not the lever.
+- **Steering is the problem [Proof].** Some f has a fibre over an e-field ⟺ X has a point over an
+  e-field. For the canonical curve that is (T_β; one-step engine fields): the target one level up.
+- **Not local once N ≥ 5 [Proof; Python].** "M is a tri(N)-field" is a point on the M-twist of a
+  complete intersection of genus 0, 4, 49, …, 47881 (N = 4, 5, 6, …, 9), equal to H1's Γ and the
+  Ĉ genus. For pp the curve has genus ≥ 4. At N ≤ 4 it is a conic (Hasse–Minkowski), so it is
+  local, but those degrees are solvable. RMB imposes only S-adic open conditions.
+- **Generic shape [Proof].** Every fibre is engine-shaped iff X is a component of a pull-back
+  W_λ. For pp the codimension in the Hurwitz space is 2m(N − 2) − 1. Under Bombieri–Lang,
+  infinitely many good fibres need an isomorphism correspondence between f and the engine (F2's
+  object).
+- **Signature [Proof].** Totally real fields of degree ≥ 4 are never tri- or pp-fields
+  (capacity ≤ 3), so the PRC form is the wrong statement for those engines.
+- **Chebyshev [Proof].** On ℙ¹ the output T_N = t₀ is a cheb member (drawable). For genus ≥ 1,
+  f = h ∘ φ controls only the bottom layer (Lüroth), so the hint does not lift.
+- **Open.** Is the twisted canonical curve *engine-resolvable* (a tower of engine pull-backs) over
+  a real solvable L? The untwisted Ĉ is, by its Galois-closure tower, but that tower does not
+  descend to the twist. Is Sh_cheb(M) (a surface) unirational? Is some degree-5 field with given
+  local data provably not a tri(5)-field (a genus-4 Chabauty problem)?
 
 **Order.** P1′ first (short). Then P2′ ∥ P3′. P4′ can run at any time on Sonnet. P5′ after P2′ if P2′
 does not close. P6′ is a half-session check.
