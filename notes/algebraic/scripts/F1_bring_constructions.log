@@ -1,0 +1,20 @@
+S5 x^5 + 2*x^4 + x^3 + (-2)*x^2 + (-2)*x + (-1)            m=6 digits(H)=88 tower=[('r', 2), ('s', 3)] point=rational real-choice=False Gal(h)=unproved(9 patterns) sig(h)=(4, 1) 0.0s
+S5 x^5 + x^4 + (-1)*x^2 + (-1)*x + (-1)                    m=6 digits(H)=78 tower=[('r', 2), ('s', 3)] point=rational real-choice=True Gal(h)=unproved(9 patterns) sig(h)=(4, 1) 0.0s
+S5 x^5 + 2*x^4 + 3*x^3 + (-1)*x^2 + (-3)*x + (-1)          m=12 digits(H)=320 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=None Gal(h)=unproved(18 patterns) sig(h)=(4, 4) 99.0s
+S5 x^5 + x^4 + (-1)*x^3 + (-3)*x^2 + (-2)*x + (-1)         m=6 digits(H)=46 tower=[('r', 2), ('s', 3)] point=rational real-choice=True Gal(h)=unproved(9 patterns) sig(h)=(2, 2) 0.0s
+S5 x^5 + (-2)*x^3 + (-3)*x^2 + (-2)*x + (-1)               m=6 digits(H)=82 tower=[('r', 2), ('s', 3)] point=rational real-choice=True Gal(h)=unproved(9 patterns) sig(h)=(2, 2) 0.0s
+S5 x^5 + x^4 + (-3)*x^2 + (-3)*x + (-1)                    m=12 digits(H)=286 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=True Gal(h)=unproved(17 patterns) sig(h)=(4, 4) 85.5s
+S5 x^5 + (-1)*x + (-1)                                     m=4 digits(H)=18 tower=[('r', 2), ('s', 2)] point=rational real-choice=True Gal(h)=unproved(4 patterns) sig(h)=(4, 0) 0.0s
+S5 x^5 + (-1)*x^3 + (-3)*x^2 + (-3)*x + (-1)               m=6 digits(H)=63 tower=[('r', 2), ('s', 3)] point=rational real-choice=True Gal(h)=unproved(9 patterns) sig(h)=(6, 0) 0.0s
+S5 x^5 + (-1)*x^4 + (-2)*x^3 + (-3)*x^2 + (-3)*x + (-1)    m=6 digits(H)=118 tower=[('r', 2), ('s', 3)] point=rational real-choice=True Gal(h)=unproved(9 patterns) sig(h)=(2, 2) 0.1s
+S5 x^5 + (-1)*x^2 + (-2)*x + (-1)                          m=6 digits(H)=32 tower=[('r', 2), ('s', 3)] point=rational real-choice=True Gal(h)=unproved(5 patterns) sig(h)=(2, 2) 0.0s
+A5 x^5 + x^4 + (-2)*x^2 + (-2)*x + (-2)                    m=12 digits(H)=223 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=True Gal(h)=unproved(19 patterns) sig(h)=(10, 1) 83.4s
+A5 x^5 + (-1)*x^4 + (-2)*x^3 + (-1)*x^2 + x + (-1)         m=12 digits(H)=222 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=True Gal(h)=unproved(17 patterns) sig(h)=(8, 2) 106.3s
+A5 x^5 + (-2)*x^3 + 2*x^2 + 3*x + (-2)                     m=6 digits(H)=81 tower=[('r', 2), ('s', 3)] point=rational real-choice=True Gal(h)=unproved(9 patterns) sig(h)=(2, 2) 0.0s
+A5 x^5 + 2*x^4 + (-1)*x^3 + (-3)*x^2 + (-1)*x + (-2)       m=12 digits(H)=243 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=False Gal(h)=unproved(18 patterns) sig(h)=(0, 6) 94.6s
+A5 x^5 + (-3)*x^4 + x^3 + (-2)*x^2 + (-3)*x + (-1)         m=12 digits(H)=287 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=None Gal(h)=unproved(18 patterns) sig(h)=(10, 1) 138.8s
+TR x^5 + (-5)*x^3 + x^2 + 3*x + (-1)                       m=12 digits(H)=251 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=False Gal(h)=unproved(18 patterns) sig(h)=(0, 6) 87.7s
+TR x^5 + (-1)*x^4 + (-5)*x^3 + 5*x^2 + 4*x + (-3)          m=12 digits(H)=258 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=False Gal(h)=unproved(17 patterns) sig(h)=(0, 6) 86.8s
+TR x^5 + x^4 + (-5)*x^3 + (-1)*x^2 + 4*x + (-1)            m=12 digits(H)=334 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=None Gal(h)=unproved(20 patterns) sig(h)=(0, 6) 101.0s
+TR x^5 + (-1)*x^4 + (-5)*x^3 + 4*x^2 + 5*x + (-3)          m=12 digits(H)=186 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=False Gal(h)=unproved(18 patterns) sig(h)=(0, 6) 87.2s
+TR x^5 + (-1)*x^4 + (-5)*x^3 + 2*x^2 + 3*x + (-1)          m=12 digits(H)=351 tower=[('t', 2), ('r', 2), ('s', 3)] point=quadratic real-choice=None Gal(h)=unproved(19 patterns) sig(h)=(0, 6) 101.3s

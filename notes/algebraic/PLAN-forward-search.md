@@ -1,6 +1,6 @@
 # PLAN-forward-search: enumerate engine solutions by parameter, not by field
 
-Planned 2026-11-13. **Stage A complete (2026-11-12, `F1.md`); stages B–E not started.** This stream replaces
+Planned 2026-11-13. **Stages A and B complete (2026-11-12, `F1.md`); stages C–E not started.** This stream replaces
 P4′ of `PLAN-algebraic.md` Phase E-P.
 
 Read first: `P1prime.md` (§1 engines, §3 the conjecture, §4.2 the canonical curve), `P2prime.md`
