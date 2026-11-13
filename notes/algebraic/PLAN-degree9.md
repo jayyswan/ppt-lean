@@ -2,7 +2,7 @@
 
 Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`. E done, open (2026-11-13), see
 `D1E.md`. D1, H done (`D1.md`, `H-deg9.md`); D3 done, open (`D3.md`); D4 killed for Lemma A
-(`D4.md`).** D2, D5 not launched.
+(`D4.md`); D5 reduced to one question (`D5.md`).** D2 not launched.
 
 The all-n target is set aside (user decision, 2026-11-13). This plan aims at specific degrees:
 9 first, then 10, for rational coefficients and for P coefficients.
@@ -132,6 +132,15 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
   centred coefficients of degree-9 factors of `R∘Q − x`. Mod 10007, with the cubic∘cubic family as
   positive control.
 - `Q = R` is impossible. For E2 (T9P), D3 is the surviving all-P route.
+
+**D5 result (2026-11-13, `D5.md`). Reduced to one question.**
+- `deg S ≥ 1466`: isolated nonsingular good lines in `X ∩ H`, certified at 45 digits (Python,
+  since the job is too long for the MCP).
+- So by Serrano every smooth ample-class F-curve on S (Plücker sections; `Γ₇ ∈ |42H|` and
+  `Γ₂,₄ ∈ |8H|` if smooth) has F-gonality ≤ 8 only through a pencil on S whose fibres have
+  Plücker degree ≤ 8.
+- `q(S) = 0` expected (`H³(X) = 0`).
+- Open: does such a pencil exist?
 
 ## 3. Stage 1: routes for T9Q
 

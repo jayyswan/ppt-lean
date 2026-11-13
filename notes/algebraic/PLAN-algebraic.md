@@ -1313,3 +1313,6 @@ D3 (2026-11-13, `D3.md`), open:
 - 4 conic-support conditions at the partner remain.
 
 D4 (2026-11-13, `D4.md`): the one condition has degree ≥ 36, so it is killed for Lemma A (scoped).
+
+D5 (2026-11-13, `D5.md`): `deg S ≥ 1466`. By Serrano, Theorem G on S needs a pencil on S with
+fibres of Plücker degree ≤ 8. That is open.
