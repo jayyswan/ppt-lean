@@ -1223,3 +1223,12 @@ positive control for every search.
   complete solution and remains the user's decision (SUMMARY §10 item 3; C1 §6.1).
 - Degree 9 totally real through the one-line reduction, the explicit S₁₀ decic, and Lean for the
   solvable case and Engine S. These are the achievable targets and can run independently.
+
+## Phase F: forward search (planned 2026-11-13, nothing launched)
+
+See `PLAN-forward-search.md`. It replaces P4′. Idea: enumerate the engine parameter `λ` over
+small solvable fields and keep the cases where the fibre field descends to a field `K` over ℚ, so
+that `K` is an output, not an input. Solutions with `[ℚ(λ):ℚ] = m` are rational points of a fixed
+`m`-dimensional variety `W_m`; a family of solutions is a special subvariety of `W_m`, i.e. an
+identity between engine maps, and that is what the search looks for. Degree 5 (Bring–Jerrard) is
+the positive control and the calibration. Launch on the user's go-ahead.
