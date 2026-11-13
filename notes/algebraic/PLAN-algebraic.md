@@ -1306,3 +1306,8 @@ H (2026-11-13, `H-deg9.md`), dominated:
 - over F, `c_τ = 3`.
 
 D9 stage 1 (E, D1, H) is done without closing T9Q; open threads are listed in `PLAN-degree9.md`.
+
+D3 (2026-11-13, `D3.md`), open:
+- the layer-2 genus-1 square condition is handled by R5 (j-matching the layer to the cubic through
+  the conjugates of a K-point);
+- 4 conic-support conditions at the partner remain.

@@ -1,7 +1,8 @@
 # PLAN-degree9: raising the degree bound past 8
 
 Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`. E done, open (2026-11-13), see
-`D1E.md`.** D1 (cubic X), D2–D5 not launched.
+`D1E.md`. D1, H done (`D1.md`, `H-deg9.md`); D3 done, open (`D3.md`).** D2, D4, D5 not
+launched.
 
 The all-n target is set aside (user decision, 2026-11-13). This plan aims at specific degrees:
 9 first, then 10, for rational coefficients and for P coefficients.
@@ -115,7 +116,16 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
 1. E versality (`D1E.md` §6);
 2. D1-over-F hypersurface degree for special rational `g` (needs homotopy continuation outside
    the MCP);
-3. D3 (towers), not launched.
+3. D3 (towers), now done, open; see below.
+
+**D3 result (2026-11-13, `D3.md`). Open.**
+- Layer 1 is free. The layer-2 square condition is a genus-1 curve `D` for every non-conformal
+  real layer, so the spare parameter cannot make it hold identically, and R4 is negative (scoped).
+- R5 removes it arithmetically: for `Q ∈ K²` whose conjugates' cubic `Γ_Q` has `Δ > 0`, one layer-2
+  shape parameter (a root of a sextic) gives `D ≅ Γ_Q` over F, so `ι(Q)` is a `K_F`-point. Checked
+  on `q₃`.
+- Left: 4 conic-support conditions at the partner, with no sequential order found. The fibre-curve
+  degree is unmeasured (homotopy).
 
 ## 3. Stage 1: routes for T9Q
 
