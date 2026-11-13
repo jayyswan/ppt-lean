@@ -1,8 +1,8 @@
 # PLAN-degree9: raising the degree bound past 8
 
 Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`. E done, open (2026-11-13), see
-`D1E.md`. D1, H done (`D1.md`, `H-deg9.md`); D3 done, open (`D3.md`).** D2, D4, D5 not
-launched.
+`D1E.md`. D1, H done (`D1.md`, `H-deg9.md`); D3 done, open (`D3.md`); D4 killed for Lemma A
+(`D4.md`).** D2, D5 not launched.
 
 The all-n target is set aside (user decision, 2026-11-13). This plan aims at specific degrees:
 9 first, then 10, for rational coefficients and for P coefficients.
@@ -126,6 +126,12 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
   on `q₃`.
 - Left: 4 conic-support conditions at the partner, with no sequential order found. The fibre-curve
   degree is unmeasured (homotopy).
+
+**D4 result (2026-11-13, `D4.md`). Killed for Lemma A (scoped).**
+- The one condition on the generator has degree ≥ 36: no weighted relation of weight ≤ 35 among the
+  centred coefficients of degree-9 factors of `R∘Q − x`. Mod 10007, with the cubic∘cubic family as
+  positive control.
+- `Q = R` is impossible. For E2 (T9P), D3 is the surviving all-P route.
 
 ## 3. Stage 1: routes for T9Q
 
