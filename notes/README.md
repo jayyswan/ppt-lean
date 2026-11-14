@@ -15,7 +15,7 @@ One folder per topic, named for the construction or investigation it belongs to:
 | `exponential-motives/` | literature search on exponentiation of coefficient systems |
 | `hypergeometric/` | hypergeometric / Gauss, Kummer, Pfaff route |
 | `lambert/` | Lambert W: plan for the lower branch `W₋₁` |
-| `notation/` | a human-readable notation for P-constructible numbers (`CORE.md`) and its libraries |
+| `notation/` | a notation for writing PowerPoint constructions (`GUIDE.md`) and the catalogue of constructions (`CONSTRUCTIONS.md`) |
 | `octic/` | octic resolvent, trace form, root extraction |
 | `offset-inversion/` | offset curves, offinverse, Whewell/tangent angle, soundness defects |
 | `ppt-curves/` | PowerPoint curve primitives (tan curves, Béziers, `restrict`) |
