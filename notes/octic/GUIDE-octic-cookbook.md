@@ -1,6 +1,6 @@
 # How to construct a real root of an octic
 
-You have an octic `q(X) = X⁸ + a₇X⁷ + … + a₀` (divide by the leading coefficient first) and
+You have an octic $`q(X) = X^8 + a_7X^7 + \dots + a_0`$ (divide by the leading coefficient first) and
 want to construct one of its real roots `x`.
 
 **What you construct:**
