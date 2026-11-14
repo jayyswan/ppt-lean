@@ -5,16 +5,23 @@ want to construct one of its real roots `x`.
 
 **What you construct:**
 
-- **SOLVE6** — a real root of a polynomial of degree ≤ 6 (square roots included);
-- **CROSS** — one crossing of two curves, once per octic;
-- arithmetic (`+ − × ÷`) on numbers already constructed.
+- **arithmetic** — `+ − × ÷`, powers and roots (so square roots and the quadratic formula
+  are arithmetic) on numbers already constructed;
+- **SOLVE6** — a real root of a polynomial of degree 3 to 6;
+- **CROSS** — one crossing of two curves, once per octic.
 
 **What you work out on paper or in a spreadsheet:** the coefficients of those equations.
 **What Wolfram Alpha is for:** the approximate roots of `q` (Step 0), and the approximate
 roots of each equation so you know which root to take.
 
-The shape is always the same: a few SOLVE6 steps give a polynomial `φ`; one CROSS gives
-`y = φ(x)`; one last SOLVE6 gives `x`.
+The shape is always the same: arithmetic and one to three SOLVE6 steps give a polynomial `φ`;
+one CROSS gives `y = φ(x)`; one last SOLVE6 gives `x`.
+
+| Case | SOLVE6 steps to find `φ` | CROSS | Last step |
+|---|---|---|---|
+| A (2 or 4 real roots) | a cubic | `Y = X⁸` against a quartic | one SOLVE6 |
+| B (6 real roots) | a sextic | `Y = X⁸` against a quartic | one SOLVE6 |
+| C (8 real roots) | a cubic, a sextic, a quintic | a quartic against `Y = c·√X` | one SOLVE6 |
 
 ## Step 0. Alpha: roots and case
 
@@ -62,7 +69,7 @@ Stop as soon as two of the `d`'s are negative and two are positive. Call the neg
 `g_a, g_b` and the positive ones `g_c, g_d`. (If some `d_k` comes out 0, set that `m_k` aside
 and come back to it after the others.)
 
-**A2. SOLVE6 (two square roots).** `t = √(−d_a/d_c)`, `t′ = √(−d_b/d_d)`.
+**A2. Arithmetic.** `t = √(−d_a/d_c)`, `t′ = √(−d_b/d_d)`.
 
 **A3.** `P = g_a + t·g_c`, `R = g_b + t′·g_d`.
 
@@ -77,7 +84,7 @@ and come back to it after the others.)
 **B1. Orthogonalise** as in A1, through all of `m₁, …, m₇`. Exactly one `d` is negative: call
 its polynomial `g_a`. Pick two with positive `d`: `g_c`, `g_d`.
 
-**B2. SOLVE6 (square root).** `t = √(−d_a/d_c)`.
+**B2. Arithmetic.** `t = √(−d_a/d_c)`.
 
 **B3.** Form
 
@@ -112,7 +119,7 @@ interval around it containing no other crossing.
 
 **F3. SOLVE6: recover x.**
 
-- If `φ` has degree ≤ 6: `x` is a root of `φ(X) = y`. Alpha lists its real roots; yours is the
+- If `φ` has degree ≤ 6: `x` is a root of `φ(X) = y`. (Degree 1 or 2 is arithmetic.) Alpha lists its real roots; yours is the
   one equal to your approximate `x`.
 - If `φ` has degree 7: divide `q(X)` by `φ(X) − y` (one long division; the quotient is linear).
   The remainder has degree ≤ 6 and `x` is one of its roots.
@@ -128,8 +135,8 @@ Put `P = a + λ·b`.
 
 **C2.** CHECK `⟨P²g⟩ ≠ 0`. For `j = 1, 2, 3` put `W_j = w_j − ( ⟨P²w_j⟩ / ⟨P²g⟩ )·g`.
 
-**C3. SOLVE6 (quadratic).** `ξ` = a real root of `⟨P W₂²⟩ξ² + 2⟨P W₁W₂⟩ξ + ⟨P W₁²⟩ = 0`.
-Put `q₀ = W₁ + ξ·W₂`.
+**C3. Arithmetic (quadratic formula).** `ξ` = a real root of
+`⟨P W₂²⟩ξ² + 2⟨P W₁W₂⟩ξ + ⟨P W₁²⟩ = 0`. Put `q₀ = W₁ + ξ·W₂`.
 
 **C4.** With `A = ⟨P W₁²⟩`, `B = ⟨P W₁W₃⟩`, `C = ⟨P W₃²⟩`, `E₁ = ⟨P q₀W₁⟩`, `E₀ = ⟨P q₀W₃⟩`, form
 
@@ -161,7 +168,7 @@ and `y = φ(x)` satisfies `Q(y²) = c·y` with `Q(X) = X⁴ + e₂X³ + e₄X² 
 or `Y = −c·√X` if `y₀ < 0`. Yours is the crossing at `X = y₀²`; restrict to an interval
 containing no other.
 
-**C9. SOLVE6 (square root).** `y = √X` if `y₀ > 0`, `y = −√X` if `y₀ < 0`.
+**C9. Arithmetic.** `y = √X` if `y₀ > 0`, `y = −√X` if `y₀ < 0`.
 
 **C10. SOLVE6: recover x.** As F3.
 
@@ -185,7 +192,7 @@ Alpha gives the roots `−0.67337`, `0.93408`, `0.86217 ± 0.78650i`, `−0.1864
 
 (Multiplying `φ` by a constant is harmless and keeps the numbers readable.)
 
-So this root costs: two square roots, a cubic, one crossing, a quartic.
+So this root costs: one cubic, one crossing and one quartic; the rest is arithmetic.
 
 ## Things to know
 
@@ -200,6 +207,8 @@ So this root costs: two square roots, a cubic, one crossing, a quartic.
   correct: `φ` satisfies the three bracket conditions (the CHECK in F1 or C7), which is what
   gives the reduced equation, and `x` is a root of the polynomial in the last step. If you get
   stuck in B or C, the proof's own choices are in `GUIDE-octic-construction.md`.
+- **The cubic in A4 is sometimes arithmetic too.** When it has only one real root, Cardano's
+  formula gives that root with real square and cube roots.
 - **Precision.** Brackets of high powers magnify rounding errors. Carry at least 10 significant
   digits in the roots; the CHECKs tell you if you have lost too many.
 - **Drawing the quartic graph** for the crossing: `GUIDE-octic-construction.md` §9.
