@@ -46,20 +46,20 @@ column** $`u(r_1), \dots, u(r_8)`$. Adding polynomials adds their columns.
 The **bracket** of one or more polynomials is the sum, over the eight rows, of the product
 of their values:
 
-$$
+```math
 \langle u\rangle = \sum_{i} u(r_i), \qquad
 \langle uv\rangle = \sum_{i} u(r_i)\,v(r_i), \qquad
 \langle u^2v\rangle = \sum_{i} u(r_i)^2\,v(r_i), \qquad \text{and so on.}
-$$
+```
 
 Complex roots come in conjugate pairs and so do the values, so a pair contributes twice the
 real part of its product. Every bracket is a real number.
 
 The **starting polynomials** are the centred powers
 
-$$
+```math
 m_j = X^j - \frac{s_j}{8}, \qquad s_j = r_1^j + \dots + r_8^j, \qquad j = 1, \dots, 7.
-$$
+```
 
 (Every bracket is in fact an exact fraction in the coefficients of $`q`$, because the $`s_j`$ are;
 the approximate roots are only a quick way to evaluate it.)
@@ -68,12 +68,12 @@ the approximate roots are only a quick way to evaluate it.)
 
 **A1. Orthogonalise.** Work through $`m_1, m_2, m_3, \dots`$ in order:
 
-$$
+```math
 \begin{aligned}
 g_1 &= m_1, & d_1 &= \langle g_1^2\rangle \\
-g_k &= m_k - \sum_{i<k} \frac{\langle m_k g_i\rangle}{d_i}\, g_i, & d_k &= \langle g_k^2\rangle
+g_k &= m_k - \sum_{i \lt k} \frac{\langle m_k g_i\rangle}{d_i}\, g_i, & d_k &= \langle g_k^2\rangle
 \end{aligned}
-$$
+```
 
 Stop as soon as two of the $`d`$'s are negative and two are positive. Call the negative ones
 $`g_a, g_b`$ and the positive ones $`g_c, g_d`$. (If some $`d_k`$ comes out $`0`$, set that $`m_k`$ aside
@@ -85,9 +85,9 @@ and come back to it after the others.)
 
 **A4. SOLVE6 (cubic).** $`\tau`$ = a real root of
 
-$$
+```math
 \langle R^3\rangle\,\tau^3 + 3\langle P R^2\rangle\,\tau^2 + 3\langle P^2 R\rangle\,\tau + \langle P^3\rangle = 0.
-$$
+```
 
 **A5.** $`\varphi = P + \tau R`$. Go to **Finish**.
 
@@ -100,13 +100,13 @@ its polynomial $`g_a`$. Pick two with positive $`d`$: $`g_c`$, $`g_d`$.
 
 **B3.** Form
 
-$$
+```math
 U = d_c\,(g_a - t\,g_c), \qquad V = -2\,t\,d_c\,g_d, \qquad W = d_d\,(g_a + t\,g_c).
-$$
+```
 
 **B4. SOLVE6 (sextic).** $`m`$ = a real root of $`\Psi_6 m^6 + \Psi_5 m^5 + \dots + \Psi_0 = 0`$, where
 
-$$
+```math
 \begin{aligned}
 \Psi_0 &= \langle U^3\rangle &
 \Psi_1 &= 3\langle U^2V\rangle &
@@ -116,7 +116,7 @@ $$
 \Psi_5 &= 3\langle VW^2\rangle \\
 \Psi_6 &= \langle W^3\rangle
 \end{aligned}
-$$
+```
 
 Put the sextic into Alpha. If it has no real root, go back to B1 and pick a different $`g_c`$,
 $`g_d`$ (swapping the two also counts as different).
@@ -128,9 +128,9 @@ $`g_d`$ (swapping the two also counts as different).
 **F1. Reduced equation.** From the value column $`y_i = \varphi(r_i)`$ compute $`p_k = \sum_i y_i^k`$ for
 $`k = 1, \dots, 8`$. CHECK: $`p_1 = p_2 = p_3 = 0`$ (up to rounding). Then
 
-$$
+```math
 c_4 = \frac{p_4}{4}, \quad c_3 = \frac{p_5}{5}, \quad c_2 = \frac{p_6}{6}, \quad c_1 = \frac{p_7}{7}, \quad c_0 = \frac{p_8}{8} - \frac{p_4^2}{32}
-$$
+```
 
 and $`y = \varphi(x)`$ satisfies $`y^8 = c_4y^4 + c_3y^3 + c_2y^2 + c_1y + c_0`$.
 
@@ -165,22 +165,22 @@ $`\langle P W_2^2\rangle\xi^2 + 2\langle P W_1W_2\rangle\xi + \langle P W_1^2\ra
 
 **C4.** With $`A = \langle P W_1^2\rangle`$, $`B = \langle P W_1W_3\rangle`$, $`C = \langle P W_3^2\rangle`$, $`E_1 = \langle P q_0W_1\rangle`$, $`E_0 = \langle P q_0W_3\rangle`$, form
 
-$$
+```math
 \begin{aligned}
 U &= C\,q_0 - 2E_0\,W_3, \\
 V &= 2B\,q_0 - 2E_0\,W_1 - 2E_1\,W_3, \\
 W &= A\,q_0 - 2E_1\,W_1.
 \end{aligned}
-$$
+```
 
 **C5. SOLVE6 (sextic).** $`\mu`$ = a real root of the sextic with the coefficients $`\Psi_0, \dots, \Psi_6`$ of
 step B4, computed from these $`U, V, W`$. Put $`v = U + \mu V + \mu^2 W`$.
 
 **C6. SOLVE6 (quintic).** $`\kappa`$ = a real root of
 
-$$
+```math
 \langle v^5\rangle\kappa^5 + 5\langle P v^4\rangle\kappa^4 + 10\langle P^2v^3\rangle\kappa^3 + 10\langle P^3v^2\rangle\kappa^2 + 5\langle P^4v\rangle\kappa + \langle P^5\rangle = 0.
-$$
+```
 
 Put $`\varphi = P + \kappa v`$. CHECK: the eight values $`\varphi(r_i)`$ are all different.
 
@@ -189,7 +189,7 @@ does not help, shuffle which of $`m_1, \dots, m_6`$ plays which role (swap $`g`$
 
 **C7. Reduced equation.** With $`y_i = \varphi(r_i)`$ and $`p_k = \sum_i y_i^k`$ (CHECK: $`p_1 = p_3 = p_5 = 0`$):
 
-$$
+```math
 \begin{aligned}
 e_2 &= -\frac{p_2}{2} \\
 e_4 &= \frac{-e_2p_2 - p_4}{4} \\
@@ -197,7 +197,7 @@ e_6 &= \frac{-e_4p_2 - e_2p_4 - p_6}{6} \\
 e_8 &= \frac{-e_6p_2 - e_4p_4 - e_2p_6 - p_8}{8} \\
 c &= \frac{p_7}{7}
 \end{aligned}
-$$
+```
 
 and $`y = \varphi(x)`$ satisfies $`Q(y^2) = c\,y`$ with $`Q(X) = X^4 + e_2X^3 + e_4X^2 + e_6X + e_8`$.
 
