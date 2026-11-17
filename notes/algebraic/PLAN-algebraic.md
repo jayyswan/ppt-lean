@@ -8,6 +8,8 @@ theorem algebraic_Pconstructible {α : ℝ} (h : IsAlgebraic ℚ α) : PConstruc
 
 **Status:** wave 1 done (2026-11-04): N1a, N2, N4, G1, G2; notes in `notes/algebraic/`. Results in §6.
 Wave 2 not launched.
+**2026-11-17:** the separate "Real Algebraics" project (sessions 1–24) is imported in `RA.md`;
+its effect on the degree-9 push is in `PLAN-degree9.md` §9 and `SUMMARY.md` §12.
 
 **Ground rule for this plan: do not conclude negatives.** Obstructions are recorded *scoped to
 the route they block* ("this route cannot…"), never as "the target is false". A route

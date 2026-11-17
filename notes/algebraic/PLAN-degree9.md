@@ -3,6 +3,8 @@
 Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`. E done, open (2026-11-13), see
 `D1E.md`. D1, H done (`D1.md`, `H-deg9.md`); D3 done, open (`D3.md`); D4 killed for Lemma A
 (`D4.md`).** D2, D5 not launched.
+**2026-11-17: the side project "Real Algebraics" (RA, sessions 1–24) was imported as `RA.md`; see §9
+for what it changes here.**
 
 The all-n target is set aside (user decision, 2026-11-13). This plan aims at specific degrees:
 9 first, then 10, for rational coefficients and for P coefficients.
@@ -24,7 +26,7 @@ Read first: `SUMMARY.md` §1, §9, §10; `N2.md` (overshoot, the Descartes table
 | id | statement | what is missing today |
 |---|---|---|
 | **T9Q** | Every real algebraic number of degree 9 over ℚ is P-constructible. | Totally real nonics with group A₉, S₉, PSL(2,8) or PΓL(2,8). Everything else is proved (nonreal root: Lean; solvable: Lean; imprimitive: degree-8 theorem over P). |
-| **T9P** | Every real root of a degree-9 polynomial with P coefficients is P-constructible. | At least 3 nonreal pairs: on paper (THREE-PAIRS), certificate not found (N1a), not in Lean. At most 2 pairs: open. |
+| **T9P** | Every real root of a degree-9 polynomial with P coefficients is P-constructible. | At least 3 nonreal pairs: on paper (THREE-PAIRS), certificate not found (N1a), not in Lean. At most 2 pairs: open. By group over P (RA Theorem C, GAP-checked), the cases with no route are A₉ r ∈ {5, 9}, S₉ r = 7, PSL(2,8) r = 9. |
 | **T10Q** | The same for degree 10 over ℚ. | A₁₀/S₁₀ with a nonreal root: one rational point on a Fano variety (MI-1). A₁₀/S₁₀ totally real: one P-line on a threefold. Other groups: towers (H5), group list from memory. |
 | **T10P** | The same for degree 10 over P. | Open; no route recorded. |
 
@@ -256,3 +258,38 @@ Review each stream's note before the next step, as in Phases E and F.
   computed for one nonic; D4's count is a parameter count only. Both need checking in D0.
 - A rational box search that finds nothing is weak evidence unless its positive control is of
   comparable size (lesson of R3 and F1 stage B).
+
+## 9. Import from RA (2026-11-17)
+
+`RA.md` records the side project's results. What it changes in this plan:
+
+**Closed (RA, scoped to its targets; do not redo).**
+- P-lines on Q₄ = {6p₄ − p₂² = 0} for totally real fields (RA Theorem F, Lemma F.2).
+- Projection from Sing(Q₄) (280 lines, none P-rational), cones from Sing(Q₄), enlarging the root
+  field, lines on Q₅, Hasse-class fibrations of the RA targets, small-height search on D_K, the
+  m-parametrisation, fact-6 decics with a root in P. Full list: `RA.md` §4.
+- Uniform constructions (rational in the conjugates plus radicands) cannot land on Z_K or Q₄ in any
+  of the seven over-P cases (RA Theorem J). This agrees with Y1b and C1: a route has to use
+  field-specific arithmetic.
+
+**Measured by RA, previously unmeasured here.**
+- D0 row M1 (Bézier × Bézier) = RA's Z_K: one condition, a hypersurface of **degree 108**.
+- D0 row N (Bézier × y = x³) = RA's D_K = Q₄ ∩ Q₅: degree 20, of general type (*unchecked*).
+
+**New streams suggested by the import** (none launched).
+- **D6. Genus-one route (RA priority 1).** A genus-one fibration whose fibres carry a P-divisor of
+  degree ≤ 8 (Theorem G suffices), or of degree 2^a·3^b, or CM (RA Lemmas G1/G2, *unchecked*). RA's
+  leads: the base-changed rational elliptic surface of S24.1; surfaces of lines or conics in Q₄ or D;
+  j = 0, 1728.
+- **D7. D_K ∩ {p₃ = 0}.** Q₅ ≡ 18p₅ on X₃ = {p₁ = p₃ = 0} [Proof]. So a P-line ℓ ⊂ X₃ gives a
+  D-point (RA engine: real roots of C³ + A are in P) when p₅|ℓ and Q₄|ℓ share a real root. P-lines in
+  X₃ come from the Lean odd chain (`TotallyReal/Certificate.lean`, steps of degree 3, 2, 6). That is
+  one condition on an 8-dimensional family of P-accessible lines. Work: the degree of that condition
+  in the chain's input parameters, and whether a positive-dimensional subfamily satisfies it.
+- **D8. Degrees of the one-condition all-P rows** G (Bézier × P-quartic) and D1-over-F, to compare
+  with Z_K's 108. Also M2's fibre degree (c_τ = 0, all P), which decides the s ≥ 1 over-P cases.
+- **Census addition:** RA's fact 6 (offset Bézier × line, degree 10) as a D0 row.
+
+**T9Q is unchanged.** RA's open cases with r < 9 are settled for ℚ-defined fields by the Lean nonic
+theorem. T9Q is still the totally real A₉ / PSL(2,8) case. RA's PSL(2,8) test fields (`RA.md` §3)
+can join q₃ as test fields.

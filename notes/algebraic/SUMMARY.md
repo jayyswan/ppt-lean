@@ -2,7 +2,8 @@
 
 This summarizes `pptc/PLAN-algebraic.md`. First written 2026-11-04 (waves 1–2); §§5–7 added
 2026-11-05; §§8–10 and the status table updated 2026-11-06 (Phase D: Y1, Z1–Z8, A1–A2, B1–B3);
-§8 Y1b and §10 Y1b paragraph added 2026-11-10; **§11 added 2026-11-11 (C1: the sine × sine engine)**.
+§8 Y1b and §10 Y1b paragraph added 2026-11-10; **§11 added 2026-11-11 (C1: the sine × sine engine)**;
+**§12 added 2026-11-17 (import of the RA side project, `RA.md`)**.
 The sources are the notes in this folder. Labels follow the notes. Nothing here is a negative about
 the target: every obstruction is scoped to the route it blocks.
 
@@ -24,10 +25,10 @@ explicit surface (totally real nonics) and one P-line on an explicit 3-fold (tot
 | 9 | P, s ≥ 3 | on paper (THREE-PAIRS); the rational certificate centre is a Lean convenience only, so it is an F-construction (Z8) |
 | 9 | ℚ totally real, G ⊇ A₉ or PSL(2,8)/PΓL(2,8) | open. **Reduces to one P-line** in {p₁ = p₃ = p₅ = 0} ⊂ ℙ⁷ off the pairing ℙ³'s (Z8, confirmed A2; Lemma N gap closed B1). PSL(2,8) behaves like A₉ (B1) |
 | 9 | P with s ≤ 2 | open |
-| 10 | imprimitive, or primitive with G ≠ A₁₀, S₁₀ | towers of degree ≤ 6 steps (H5) [Wolfram chains; group list from memory] |
+| 10 | imprimitive, or primitive with G ≠ A₁₀, S₁₀ | towers of degree ≤ 6 steps (H5) [Wolfram chains; group list GAP-checked over P by RA Theorem C: open only A₁₀ r ∈ {2,6,10}, S₁₀ r ∈ {4,8}] |
 | 10 | ℚ, nonreal root, G ⊇ A₁₀ | **route found, one ingredient missing** (MI-1, §2); the MI-2 line reduction is vacuous for s = 2, 3 (A2) |
 | 10 | ℚ totally real, G ⊇ A₁₀ | open. **Reduces to one P-line** in Y₀ = {p₁ = p₃ = 0, S₆ = 0} via Engine C (B2) |
-| 11 | any | open; every transitive group needs a degree-11 engine step; no single-line reduction (B2) |
+| 11 | any | open; every transitive group needs a degree-11 engine step; no single-line reduction (B2). Over P the open groups are PSL(2,11), M₁₁, A₁₁, S₁₁ (RA Theorem C) |
 | ≥ 9 | all | **conditional on (SR) or (SR′) / Taylor's question** (Theorem X, §6; Theorem X′, §11) |
 | any | explicit totally real S_n numbers | in P for every n (Theorem C1, §11) |
 
@@ -370,3 +371,28 @@ See `C1.md`. The target is not closed.
   (SR) or (SR′) for all n would bound RD(n) by 4. The remaining gap needs field-specific arithmetic
   or engines with growing parameter count.
 - **Reformulation.** (SR) ⟺ some u ∈ K_L ∖ L has u and 1 − u multiplicatively dependent modulo L^×.
+
+## 12. RA: the "Real Algebraics" side project (imported 2026-11-17)
+
+See `RA.md`. RA worked over P from seven black-box facts and did not read this repo. It closed no
+nonic case.
+
+- **Its case list (Theorem C, GAP-checked).** Over P the open groups are:
+  - degree 9: PSL(2,8), A₉, S₉;
+  - degree 10: A₁₀, S₁₀;
+  - degree 11: PSL(2,11), M₁₁, A₁₁, S₁₁.
+
+  For ℚ-defined nonics the Lean theorem leaves only r = 9. THREE-PAIRS covers r ≤ 3 over P on paper.
+- **Its targets.** Z_K (Bézier × Bézier, one condition, degree 108) and D_K = Q₄ ∩ Q₅ (Bézier × x³,
+  degree 20, general type).
+- **Its negatives** (scoped): Theorem J (no uniform construction; the obstruction is (ℤ/2)³);
+  Theorem F (no P-line on Q₄ for r = 9); and a list of closed geometric routes (`RA.md` §4).
+- **New tools:** (SR) as originally stated is false, but (SR-3) survives and Theorem X is unaffected;
+  Br(L) = ℤ/2; Lemma C.1 (P(i) has no proper solvable extension); genus-one Lemmas G1/G2
+  (*unchecked*).
+- **What RA did not use from here:** the Lean rational-nonic theorem; Lemma Q in Lean (P-quartic
+  graphs, giving the one-condition all-P row G); the Lean odd chain, which produces P-lines on the
+  cubic {p₁ = p₃ = 0}; rational-shape rows such as E (degree-10 condition); text-warp eggs (M2,
+  c_τ = 0); the five-term sine family.
+- **New cross-link [Proof]:** Q₅ vanishes on {p₃ = p₅ = 0}, so D_K contains {p₁ = p₃ = p₅ = Q₄ = 0}.
+  On P-lines in {p₁ = p₃ = 0}, membership in D_K is one common-root condition (PLAN-degree9 D7).
