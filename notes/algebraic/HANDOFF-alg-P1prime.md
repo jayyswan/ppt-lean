@@ -1,0 +1,9 @@
+- step 0: read PLAN-algebraic Phase E (E-R, E-P), SUMMARY, C1, X1 §3.3 (Theorem X, (SR)), P1 (Lemma LS, Theorem H), Z8 item 4 (2026-11-12)
+- step 1: Remark V: "(T_K) with L ⊂ F" is equivalent to beta in F; the base class must be named. Chain TR-solv ⊂ R-solv ⊂ E ⊂ F_{<n} ⊂ L_inf
+- step 2: Lemma D: for Gal ⊇ A_n, n ≥ 9, no L ⊂ F_{<n} meets Omega beyond Q(sqrt disc); K_L stays a degree-n field (uses X1 section lemma)
+- step 3: conjecture (T_beta; L): M ⊇ L(beta) real, M = L(x0) for a real root of an engine member; Theorem 1 sufficiency; three forms (twisted / specialisation / dependence), Theorem 2 equivalence
+- step 4: pp(p,q) twisted variety is a curve = M-twist of the Galois closure of the Belyi map x^p(1-x)^q; monodromy S_d for coprime p,q>0 (Ritt); genus formula reproduces H1's 47881 at D = 9 [Python arithmetic, scripts/P1prime_checks.py; Wolfram unavailable]
+- step 5: real capacities: tri 2/3, pp coprime 3 [Proof + Python |p|,|q| ≤ 7], cheb any r (sketch), five any; for tri/pp/five the real condition is existence only, so Taylor ⇒ (T) needs no density step
+- step 6: Lemma U: after totally real solvable base change K_L/L is unramified at all finite primes
+- step 7: the three induction measures in the plan (discriminant, height, gonality) all fail; recorded with labels
+- step 8: wrote notes/algebraic/P1prime.md; PLAN updated. DONE.

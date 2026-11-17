@@ -1,0 +1,48 @@
+== pp(2,1)  [d=3 control]: d = 3, 3 admissible transpositions for canonical s_inf
+   genus(C^) = 0   p_g(W_2) = 0   p_g(Z) = 0   q = 0
+   e(W_2) = 3   K_W^2 = 6   (Z = X/S_d: e = 4, K^2 = 4/3)
+   special points (|H|, type after reflections): {(2, '1/2(1,1)'): 1, (2, 'smooth'): 2, (4, 'smooth'): 2, (6, '1/3(1,2)'): 1, (6, 'smooth'): 1}
+   chi(O_S) = 1   e(S) = 6   K_S^2: Noether 6, local 6  -> AGREE
+   general type: not shown
+== pp(3,1) = tri(4) [d=4 control]: d = 4, 4 admissible transpositions for canonical s_inf
+   genus(C^) = 0   p_g(W_2) = 0   p_g(Z) = 0   q = 0
+   e(W_2) = 3   K_W^2 = 6   (Z = X/S_d: e = 4, K^2 = 1/3)
+   special points (|H|, type after reflections): {(2, 'smooth'): 6, (4, 'smooth'): 2, (6, '1/3(1,2)'): 1, (6, 'smooth'): 1, (8, '1/2(1,1)'): 1, (8, 'smooth'): 1}
+   chi(O_S) = 1   e(S) = 6   K_S^2: Noether 6, local 6  -> AGREE
+   general type: not shown
+== tri(5) = pp(4,1): d = 5, 5 admissible transpositions for canonical s_inf
+   genus(C^) = 4   p_g(W_2) = 0   p_g(Z) = 1   q = 0
+   e(W_2) = 4   K_W^2 = 14/5   (Z = X/S_d: e = 8, K^2 = 3/5)
+   special points (|H|, type after reflections): {(10, '1/5(1,2)'): 1, (10, 'smooth'): 1, (2, '1/2(1,1)'): 1, (2, 'smooth'): 18, (4, 'smooth'): 4, (5, '1/5(1,3)'): 1, (8, '1/2(1,1)'): 1, (8, 'smooth'): 1}
+   chi(O_S) = 1   e(S) = 10   K_S^2: Noether 2, local 2  -> AGREE
+   general type: not shown
+== pp(3,2): d = 5, 5 admissible transpositions for canonical s_inf
+   genus(C^) = 9   p_g(W_2) = 0   p_g(Z) = 2   q = 0
+   e(W_2) = 5   K_W^2 = 2/15   (Z = X/S_d: e = 12, K^2 = 64/15)
+   special points (|H|, type after reflections): {(10, '1/5(1,2)'): 1, (10, 'smooth'): 1, (12, '1/3(1,1)'): 1, (12, 'smooth'): 1, (2, '1/2(1,1)'): 3, (2, 'smooth'): 16, (4, 'smooth'): 4, (5, '1/5(1,3)'): 1}
+   chi(O_S) = 1   e(S) = 13   K_S^2: Noether -1, local -1  -> AGREE
+   general type: not shown
+== tri(6) = pp(5,1): d = 6, 6 admissible transpositions for canonical s_inf
+   genus(C^) = 49   p_g(W_2) = 1   p_g(Z) = 7   q = 0
+   e(W_2) = 12   K_W^2 = -13/15   (Z = X/S_d: e = 32, K^2 = 128/5)
+   special points (|H|, type after reflections): {(10, '1/5(1,2)'): 1, (10, 'smooth'): 1, (12, '1/3(1,1)'): 1, (12, 'smooth'): 1, (2, '1/2(1,1)'): 7, (2, 'smooth'): 50, (4, 'smooth'): 12, (5, '1/5(1,3)'): 1, (6, '1/3(1,2)'): 1, (6, 'smooth'): 1}
+   chi(O_S) = 2   e(S) = 26   K_S^2: Noether -2, local -2  -> AGREE
+   general type: not shown
+== pp(4,3): d = 7, 7 admissible transpositions for canonical s_inf
+   genus(C^) = 691   p_g(W_2) = 40   p_g(Z) = 111   q = 0
+   e(W_2) = 194   K_W^2 = 5111/21   (Z = X/S_d: e = 448, K^2 = 5290/7)
+   special points (|H|, type after reflections): {(14, '1/7(1,2)'): 1, (14, 'smooth'): 1, (2, '1/2(1,1)'): 47, (2, 'smooth'): 138, (24, '1/2(1,1)'): 1, (24, '1/3(1,2)'): 1, (24, '1/6(1,1)'): 1, (24, 'smooth'): 1, (4, 'smooth'): 26, (6, '1/3(1,2)'): 1, (6, 'smooth'): 1, (7, '1/7(1,4)'): 1, (7, '1/7(1,5)'): 1}
+   chi(O_S) = 41   e(S) = 254   K_S^2: Noether 238, local 238  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)
+== pp(6,1): d = 7, 7 admissible transpositions for canonical s_inf
+   genus(C^) = 481   p_g(W_2) = 20   p_g(Z) = 62   q = 0
+   e(W_2) = 105   K_W^2 = 1954/21   (Z = X/S_d: e = 252, K^2 = 2560/7)
+   special points (|H|, type after reflections): {(12, '1/3(1,1)'): 1, (12, 'smooth'): 1, (14, '1/7(1,2)'): 1, (14, 'smooth'): 1, (2, '1/2(1,1)'): 47, (2, 'smooth'): 156, (4, 'smooth'): 28, (6, '1/3(1,2)'): 1, (6, 'smooth'): 1, (7, '1/7(1,4)'): 1, (7, '1/7(1,5)'): 1}
+   chi(O_S) = 21   e(S) = 162   K_S^2: Noether 90, local 90  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)
+== pp(5,2): d = 7, 7 admissible transpositions for canonical s_inf
+   genus(C^) = 649   p_g(W_2) = 38   p_g(Z) = 106   q = 0
+   e(W_2) = 185   K_W^2 = 1447/7   (Z = X/S_d: e = 428, K^2 = 23328/35)
+   special points (|H|, type after reflections): {(10, '1/10(1,3)'): 1, (14, '1/7(1,2)'): 1, (14, 'smooth'): 1, (2, '1/2(1,1)'): 71, (2, 'smooth'): 140, (20, '1/5(1,1)'): 1, (20, 'smooth'): 1, (4, 'smooth'): 30, (7, '1/7(1,4)'): 1, (7, '1/7(1,5)'): 1}
+   chi(O_S) = 39   e(S) = 267   K_S^2: Noether 201, local 201  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)

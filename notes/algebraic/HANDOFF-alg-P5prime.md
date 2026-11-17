@@ -1,0 +1,9 @@
+- step 0: read PLAN-algebraic Phase E-P (P5' row), P1prime.md (engines, §4 forms, §4.2 canonical curve, §5 capacities), P2prime.md (§0, §7-8 hand-off), F2.md head (W_2, isomorphism correspondences) (2026-11-13)
+- step 1: RMB without integrality = S1 local functions / S2 weak approximation in Riemann-Roch space / S3 Hilbert; capacity theory only serves integrality (literature cited from memory, not re-opened)
+- step 2: Prop 2.1 [Proof]: some f has a fibre point over an e-field <=> X has a point over an e-field; so steering = (T_beta; one-step engine fields)
+- step 3: shape locus Sh_e(M): tri = twisted CI {p2=...=p_{N-2}=0} in P^{N-2}; genus 0,4,49,481,4681,47881,524161 for N=4..10, equal to Galois-closure genus (scripts/P5prime_checks.py, Python, Wolfram not attached); pp genus >= 4 for N >= 5; cheb surface; five fourfold
+- step 4: locality: N<=4 conic (Hasse-Minkowski, local); N>=5 genus>=4 curve (not local; heuristic part flagged); Bombieri-Lang => good t0 via isomorphism correspondences (F2 object)
+- step 5: Lemma 3.3 pull-back criterion; Hurwitz codim 2m(N-2)-1 for pp; signature: totally real deg>=4 never tri/pp field
+- step 6: Chebyshev: genus 0 output T_N=t0 is a cheb member; Lueroth tower lemma for genus>=1; patching only for integrality
+- step 7: Galois type: MB 1990 S_N; Zariski 1926 for solvable monodromy (general curves); engine-resolvable curves; untwisted C-hat resolvable via Galois-closure tower, does not descend to twist [Open whether other towers]
+- step 8: wrote notes/algebraic/P5prime.md; PLAN updated (P5' DONE row + summary block). DONE.

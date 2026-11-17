@@ -1,0 +1,67 @@
+[n5 beta] H=6: total 52  {'deg': 47, 'ind': 3, 'lin': 1, 'pd': 1}
+   positive-definite forms up to homothety: 1
+     Q = 16 s^2 + -20 s + 9   [rho = (1, 6, -6, -2, 2)]
+[n5 beta] H=7: total 78  {'deg': 71, 'ind': 4, 'lin': 1, 'pd': 2}
+   positive-definite forms up to homothety: 2
+     Q = 16 s^2 + -20 s + 9   [rho = (1, 6, -6, -2, 2)]
+     Q = 81 s^2 + -107 s + 42   [rho = (6, -7, 3, 1, 0)]
+[n5 beta] H=8: total 97  {'deg': 87, 'ind': 5, 'lin': 1, 'pd': 4}
+   positive-definite forms up to homothety: 4
+     Q = 16 s^2 + -20 s + 9   [rho = (1, 6, -6, -2, 2)]
+     Q = 1 s^2 + -2 s + 5   [rho = (3, -1, -8, 0, 2)]
+     Q = 81 s^2 + -107 s + 42   [rho = (6, -7, 3, 1, 0)]
+     Q = 25 s^2 + 49 s + 66   [rho = (8, 3, 3, -1, -2)]
+[n5 beta] H=9: total 125  {'deg': 111, 'ind': 7, 'lin': 1, 'pd': 6}
+   positive-definite forms up to homothety: 6
+     Q = 16 s^2 + -20 s + 9   [rho = (1, 6, -6, -2, 2)]
+     Q = 49 s^2 + -24 s + 20   [rho = (2, 9, -4, -2, 0)]
+     Q = 1 s^2 + -2 s + 5   [rho = (3, -1, -8, 0, 2)]
+     Q = 1 s^2 + 1 s + 6   [rho = (4, -3, -9, 1, 2)]
+     Q = 81 s^2 + -107 s + 42   [rho = (6, -7, 3, 1, 0)]
+     Q = 25 s^2 + 49 s + 66   [rho = (8, 3, 3, -1, -2)]
+[n5 beta] H=10: total 144  {'deg': 127, 'ind': 9, 'lin': 1, 'pd': 7}
+   positive-definite forms up to homothety: 7
+     Q = 16 s^2 + -20 s + 9   [rho = (1, 6, -6, -2, 2)]
+     Q = 49 s^2 + -24 s + 20   [rho = (2, 9, -4, -2, 0)]
+     Q = 1 s^2 + -2 s + 5   [rho = (3, -1, -8, 0, 2)]
+     Q = 1 s^2 + 1 s + 6   [rho = (4, -3, -9, 1, 2)]
+     Q = 81 s^2 + -107 s + 42   [rho = (6, -7, 3, 1, 0)]
+     Q = 25 s^2 + 49 s + 66   [rho = (8, 3, 3, -1, -2)]
+     Q = 89 s^2 + -48 s + 92   [rho = (10, -5, 8, 2, -4)]
+[n5 beta] H=11: total 186  {'deg': 167, 'ind': 9, 'lin': 1, 'pd': 9}
+   positive-definite forms up to homothety: 9
+     Q = 16 s^2 + -20 s + 9   [rho = (1, 6, -6, -2, 2)]
+     Q = 49 s^2 + -24 s + 20   [rho = (2, 9, -4, -2, 0)]
+     Q = 1 s^2 + -2 s + 5   [rho = (3, -1, -8, 0, 2)]
+     Q = 1 s^2 + 1 s + 6   [rho = (4, -3, -9, 1, 2)]
+     Q = 81 s^2 + -107 s + 42   [rho = (6, -7, 3, 1, 0)]
+     Q = 25 s^2 + 49 s + 66   [rho = (8, 3, 3, -1, -2)]
+     Q = 105 s^2 + -134 s + 73   [rho = (9, -11, 8, 4, -4)]
+     Q = 89 s^2 + -48 s + 92   [rho = (10, -5, 8, 2, -4)]
+     Q = 41 s^2 + -54 s + 101   [rho = (11, -7, 4, 4, -2)]
+[n6 beta] H=2: total 8  {'deg': 7, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n6 beta] H=3: total 16  {'deg': 15, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n6 beta] H=4: total 24  {'deg': 23, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n6 beta] H=5: total 40  {'deg': 39, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n6 beta] H=6: total 48  {'deg': 47, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n6 beta] H=7: total 72  {'deg': 71, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n6 beta] H=8: total 88  {'deg': 87, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n6 beta] H=9: total 112  {'deg': 111, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n7 beta] H=2: total 8  {'deg': 7, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n7 beta] H=3: total 16  {'deg': 15, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n7 beta] H=4: total 24  {'deg': 23, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n7 beta] H=5: total 40  {'deg': 39, 'lin': 1}
+   positive-definite forms up to homothety: 0
+[n7 beta] H=6: total 48  {'deg': 47, 'lin': 1}
+   positive-definite forms up to homothety: 0

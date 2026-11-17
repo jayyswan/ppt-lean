@@ -24,6 +24,8 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
+import Pptc.Curves
+import Pptc.TextBox
 
 /-! # Pptc.Defs
 
@@ -67,36 +69,15 @@ Pinch, or Star Wars Thing, depends on who you ask) text warp, a mapping from
 TextGlyph -> PConstructibleCurve. It also contains the identity. This is equivalent to 
 using PowerPoint "text warps" and then fragment-merging with a shape to get the text 
 character as a shape. 
+Text enters through the single constructor `PConstructibleCurve.text`, which draws the
+outline of a `TextBox` (`Pptc.TextBox`). A text box stores plain rational data, not a third
+mutual inductive; the constructor additionally takes the current handle positions and drawn
+box size, which are `PConstructible` reals. Nothing turns a curve back into text.
 -/
 
 namespace Pconstructible
 
-/-- The speed of a plane curve `γ` at parameter `t`, i.e. the Euclidean norm of its
-velocity vector.
-
-The Euclidean norm is written out as `√(x' ^ 2 + y' ^ 2)` rather than as `‖deriv γ t‖`
-on purpose: the product norm that Mathlib puts on `ℝ × ℝ` is the *supremum* norm, so
-`‖deriv γ t‖` would silently compute the wrong quantity. -/
-noncomputable def speed (γ : ℝ → ℝ × ℝ) (t : ℝ) : ℝ :=
-  Real.sqrt (deriv (fun s => (γ s).1) t ^ 2 + deriv (fun s => (γ s).2) t ^ 2)
-
-/-- The arc length of the plane curve `γ` traced over the parameter interval `[a, b]`. -/
-noncomputable def arcLengthOf (γ : ℝ → ℝ × ℝ) (a b : ℝ) : ℝ :=
-  ∫ t in a..b, speed γ t
-
-/-- The cubic Bézier curve with control points `p₁ p₂ p₃ p₄`, in Bernstein form: at
-parameter `t` it is the weighted average of the control points with weights
-`(1-t)³, 3(1-t)²t, 3(1-t)t², t³`.
-
-`p₁` and `p₄` are the endpoints (`bezierParam p₁ p₂ p₃ p₄ 0 = p₁` and `… 1 = p₄`); `p₂`
-and `p₃` are the off-curve handles that set the initial and final tangent directions.
-Only `t ∈ [0, 1]` is drawn; that is where the weights are non-negative and the curve
-stays inside the convex hull of the control points. -/
-def bezierParam (p₁ p₂ p₃ p₄ : ℝ × ℝ) (t : ℝ) : ℝ × ℝ :=
-  ((1 - t) ^ 3 * p₁.1 + 3 * (1 - t) ^ 2 * t * p₂.1
-      + 3 * (1 - t) * t ^ 2 * p₃.1 + t ^ 3 * p₄.1,
-   (1 - t) ^ 3 * p₁.2 + 3 * (1 - t) ^ 2 * t * p₂.2
-      + 3 * (1 - t) * t ^ 2 * p₃.2 + t ^ 3 * p₄.2)
+-- `speed`, `arcLengthOf` and `bezierParam` live in `Pptc.Curves`.
 
 /-- The unit normal of a plane curve `γ` at parameter `t`: the velocity vector turned a
 quarter turn counterclockwise and rescaled to length one.
@@ -529,6 +510,36 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
       -- The displacement is a P-constructible signed distance, of either sign.
       {d : ℝ} (hd : PConstructible d) :
       PConstructibleCurve (offsetParam γ d '' Set.Icc a b)
+
+  -- The outline of a text box, as Merge Shapes ▸ Fragment turns it into a freeform. This is
+  -- the only way text enters the class, and it goes one way: a `TextBox` (`Pptc.TextBox`)
+  -- is built from rational data alone, so no curve can be turned back into text, and its
+  -- single `warp` field means each box is transformed once. Placing the box on the slide is
+  -- left to `translate_x` / `translate_y`; the outline sits in the box's own frame.
+  --
+  -- What this adds is the Transform warps. Unwarped, a catalogued glyph is a circle, a half
+  -- disc or a polygon, all drawable already. Warped, its outline goes through a
+  -- piecewise-bilinear map that no closure operation here performs: an affine image
+  -- of a circle is an ellipse, but the Triangle image of a circle is a quartic egg, and
+  -- pinned at its stop the Triangle collapses the flat side of ◗ to a point and draws a
+  -- lobe of the lemniscate of Gerono (`notes/warp/TEXT-WARP-THEORY.md`).
+  --
+  -- The box's stored data is made of UI choices only, never typed values: font sizes and
+  -- spinner box sizes as step counts, character spacing in its 0.1 pt steps, and the handle
+  -- at its default or dragged past either stop, which stores the `pin` bound exactly. Its
+  -- `WellFormed` hypotheses are the ranges of those choices.
+  --
+  -- The constructor additionally accepts the continuous values a drag can set: the two
+  -- fill-handle fractions `a`, `b` and the box size `w`, `h` as drawn. These are idealized to
+  -- `PConstructible` reals; the handles must lie in the preset's reachable
+  -- ranges, and the box size must be positive. `T.WellFormed` still checks the stored rational
+  -- data, including the stop settings that `TextBox.outline` uses as its special case.
+  | text (T : TextBox) (a b w h : ℝ)
+      (ha : PConstructible a) (hb : PConstructible b)
+      (hw : PConstructible w) (hh : PConstructible h)
+      (hw_pos : 0 < w) (hh_pos : 0 < h)
+      (hrange : T.warp.HandleInRange a b) (hT : T.WellFormed) :
+      PConstructibleCurve (T.outlineAt a b w h)
 end
 
 end Pconstructible

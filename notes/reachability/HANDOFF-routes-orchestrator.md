@@ -1,0 +1,26 @@
+# HANDOFF-routes-orchestrator
+
+Progress log for `notes/reachability/PLAN-routes.md`. One line per step.
+
+- 2026-11-10: plan written after R7 (d=0 separation fails) and R8 (missing-curve audit).
+  Streams: R12 convention (wave 1), R9 singularity spectrum (wave 1), R10 decomposition dictionary
+  (waves 1–2), R11 discrete spectra (wave 2), R13 goat legality (wave 2), IDX standing index.
+- 2026-11-10: **R12 landed** (`R12-convention.md`). **B + C adopted as the working default**
+  (provisional; §2.5 of the note). A kept open as a research thread for the non-log rows. Main
+  findings: (i) the value coordinate is the only free convention slot; (ii) A is genuinely stronger
+  for `1/log`/`δlogδ`/complex-monodromy log points (real `φ` resolve them), but log points with real
+  monodromy are A-robust (Lemma 1.2); (iii) B1 Route-O necessity reduces to a 4-function span
+  condition on `R_C`; the catenary is the `tan` solution, the log-cosine is not, the base catalogue is
+  excluded by Wronskians, and the rest of the tower is open.
+- 2026-11-10: **R9 landed** (`R9-singularity-spectrum.md`). Classification: tower graph functions
+  without `arc_of_length` have only Puiseux/pole/log singularities, log as a summand with constant
+  coefficient; no `1/log`, no `ζ log ζ`, no finite essential singularity. Consequences under B:
+  `tan x = λx` excluded on Route I (`1/log`); `l=0` excluded on Route I (`δlogδ`); Route O untouched.
+  The exclusions are B-only (A resolves the two types).
+- 2026-11-10: **R10 landed** (`R10-decomposition-dictionary.md`, delegated then reviewed). Nine
+  graph-function entries; five depth-1 constructions: H1 (R7's `d=0` parabola), H2 (one/two
+  exponential rates), H3 (trig degree ≤2), H4 (`√(1+u²)`), H5 (`a u^b`). Negative list from
+  R3/R8/R9; three-rate and degree-3 trig are catalogue misses by atom count (`[Heuristic]`).
+- Decisions pending from the user: none for the convention. Next: the `tan` B1 necessity (the main
+  Route-O open item), R11 (discrete spectra), R13 (goat legality). The A-closure / non-log global
+  question is an open thread.

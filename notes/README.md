@@ -14,13 +14,17 @@ One folder per topic, named for the construction or investigation it belongs to:
 | `algebraic/` | the `PLAN-algebraic` programme (whole/non-total-real, Theorem H/W) |
 | `exponential-motives/` | literature search on exponentiation of coefficient systems |
 | `hypergeometric/` | hypergeometric / Gauss, Kummer, Pfaff route |
+| `lambert/` | Lambert W: plan for the lower branch `W₋₁` |
+| `notation/` | a notation for writing PowerPoint constructions (`GUIDE.md`) and the catalogue of constructions (`CONSTRUCTIONS.md`) |
 | `octic/` | octic resolvent, trace form, root extraction |
 | `offset-inversion/` | offset curves, offinverse, Whewell/tangent angle, soundness defects |
 | `ppt-curves/` | PowerPoint curve primitives (tan curves, Béziers, `restrict`) |
+| `reachability/` | route-level reachability plan (Route O vs Route I, singularity invariants, discrete spectra) |
 | `spiral/` | spiral and arc-length constructions |
+| `theta/` | AGM (Gauss's theorem) and theta-function values |
 | `third-kind/` | third-kind integrals at arbitrary `n` |
 | `trendline/` | PowerPoint trendline origin (COM, XML, UI, registry) |
-| `warp/` | sheared/warped sine curves |
+| `warp/` | sheared/warped sine curves; Unicode glyph catalogue (`GLYPH-CATALOGUE.md`) |
 | `archive/` | retired material from earlier programmes (septic, nonic, Jacobi, totally real, gamma, …) |
 
 Inside a topic folder:

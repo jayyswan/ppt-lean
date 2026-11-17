@@ -329,3 +329,60 @@ S is written: `notes/offset-inversion/SUMMARY.md`.
 - The named payoff is gated on the catenary and the log-cosine curve. That ranking has been
   handed to `PLAN-ppt-tan-curves.md`.
 - Open items are listed in SUMMARY §7.
+
+## R6 postscript (2026-11-10)
+
+Open item 3, "chains of two offset inversions", is taken up in `notes/offset-inversion/R6-chains.md`
+(issue 18). Result: a chain is not a new mechanism.
+
+- Same-word chains collapse to one entry: lengths add, and an offset/affine between the links only
+  adds a P-constructible constant (Props. 2.1–2.3).
+- Re-based chains are one-step entries whose data lie in the field of the first root (Thm 3.1), so
+  they add numbers, not equation shapes (Cor. 3.2).
+- What they genuinely add is a *coupling curve* of data: the first laid arc, traversed at unit
+  speed (Prop. 4.2), algebraic for an algebraic base (§4.3).
+- Consequently there is no depth-6 separation theorem to prove; the remaining question is the
+  data-dependence of one-step equations, i.e. R2 Q3.4 / R3 §3.9(2)–(3). This corrects R4 §2.1's
+  depth framing.
+
+## R7 postscript (2026-11-10)
+
+Open item 1, "the `d = 0` separation case", is taken up in `notes/offset-inversion/R7-dzero.md`
+(issue 18). Result: **separation fails at `d = 0`**, constructively.
+
+- `F₀(u) = ¼sinh 2u + u/2 = (e^{2u}/8 + u/4) − (e^{−2u}/8 − u/4)`, an exact difference of two
+  graph functions of affine images of `exp_two` (rates `+2` and `−2`).
+- Intersecting the two curves, with the second translated vertically by `x`, gives the unique
+  abscissa `u = F₀⁻¹(x)`. That is a single `inter_x`, output depth 1.
+- So the branch-point method's silence at `d = 0` is correct, not a gap. The `gd` atom at `d ≠ 0`
+  (infinitely many finite log branch points) is the entire obstruction.
+- The graph of `F₀` is still not a drawable tower curve, but that was a sufficient, not necessary,
+  condition; R3's Lemma 2.3 only needs a difference of graph functions.
+- R3 §3.9(4) and §5.2 item 5 are updated; L2's `d = 0` instance remains true but is subsumed by the
+  single intersection.
+
+## R8 postscript (2026-11-10)
+
+Following R7, `notes/offset-inversion/R8-missing-curve-audit.md` re-reads every "needs the missing
+curve `X`" claim by **route**. Result: the `M` labels in R5 are **sufficiency** statements for the
+offset route (Route O), not impossibility results.
+
+- Route O (offset inversion) is depth 3; Route I (single intersection) is depth ≤ 2.
+- Q2 (offset necessity, by R2 Q3.3 rigidity) is proved only for a fixed curve, fixed `d`, and a
+  continuous interval of `x`; varying `d` is R2 Q3.4 [Open].
+- Q3 (intersection status) is excluded by R3's log-monodromy count only for affine data on a
+  continuous family. Discrete spectra (beam modes) are **not** covered; that is item 4.
+- The involute, rhumb (fixed `k`), tractrix and Biot are genuinely outside Route I; the elastica is
+  outside by non-elementarity. The `l = 0` well is **open** on Route I (`δ log δ` singularity).
+- **`tan x = λx` is open on both routes.** Route O uses `d = λ` (Q3.4 open); Route I is not excluded
+  because the target's singularities are `1/log`, not log. A `1/log` invariant is the concrete next
+  question.
+- The goat is a single target with a legality obstruction, not a separation result; the separatrix
+  is pointwise `R`.
+
+The follow-up plan is `notes/reachability/PLAN-routes.md`: streams R12 (convention), R9
+(singularity spectrum / `1/log`), R10 (Route-I decomposition dictionary), R11 (discrete spectra),
+R13 (goat legality), plus a standing claim index.
+
+
+

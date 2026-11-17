@@ -87,6 +87,27 @@ theorem rat_Pconstructible (q : ℚ) : PConstructible (q : ℝ) := by
   convert PConstructible.div h1 h2
   exact Rat.cast_def q
 
+-- Theorem: the old three-stop text constructor, recovered from the general constructor at
+-- the stored handle settings and spinner box size.
+theorem PConstructibleCurve.text_of_wellFormed (T : TextBox) (hT : T.WellFormed) :
+    PConstructibleCurve T.outline := by
+  have hwP : PConstructible (T.w : ℝ) := rat_Pconstructible T.w
+  have hhP : PConstructible (T.h : ℝ) := rat_Pconstructible T.h
+  have hw_pos_q : (0 : ℚ) < T.w := by
+    rw [TextBox.w]
+    exact mul_pos (by norm_num) (Nat.cast_pos.mpr hT.w_pos)
+  have hh_pos_q : (0 : ℚ) < T.h := by
+    rw [TextBox.h]
+    exact mul_pos (by norm_num) (Nat.cast_pos.mpr hT.h_pos)
+  have hw_pos : (0 : ℝ) < (T.w : ℝ) := by exact_mod_cast hw_pos_q
+  have hh_pos : (0 : ℝ) < (T.h : ℝ) := by exact_mod_cast hh_pos_q
+  simpa only [TextBox.outline] using
+    PConstructibleCurve.text T
+      (T.warp.handleValues.1 : ℝ) (T.warp.handleValues.2 : ℝ)
+      (T.w : ℝ) (T.h : ℝ)
+      (rat_Pconstructible _) (rat_Pconstructible _) hwP hhP hw_pos hh_pos
+      (TextWarp.handleValues_mem_handleRange hT.warp_ok) hT
+
 -- Theorem: an explicit rational numeral is P-constructible. The value is taken as a
 -- hypothesis rather than being the subject, so that `norm_num` can match a numeral such
 -- as `3 / 8` against the cast of the corresponding `ℚ`.

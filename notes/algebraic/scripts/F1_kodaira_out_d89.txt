@@ -1,0 +1,30 @@
+== pp(7,1): d = 8, 8 admissible transpositions for canonical s_inf
+   genus(C^) = 4681   p_g(W_2) = 274   p_g(Z) = 636   q = 0
+   e(W_2) = 1187   K_W^2 = 12458/7   (Z = X/S_d: e = 2548, K^2 = 30420/7)
+   special points (|H|, type after reflections): {(14, '1/7(1,2)'): 1, (14, 'smooth'): 1, (16, '1/2(1,1)'): 1, (16, '1/4(1,1)'): 1, (16, '1/4(1,3)'): 1, (16, 'smooth'): 1, (2, '1/2(1,1)'): 324, (2, 'smooth'): 500, (4, 'smooth'): 82, (7, '1/7(1,4)'): 1, (7, '1/7(1,5)'): 1, (8, '1/2(1,1)'): 1, (8, 'smooth'): 1}
+   chi(O_S) = 275   e(S) = 1524   K_S^2: Noether 1776, local 1776  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)
+== pp(5,3): d = 8, 8 admissible transpositions for canonical s_inf
+   genus(C^) = 6217   p_g(W_2) = 469   p_g(Z) = 1053   q = 0
+   e(W_2) = 1994   K_W^2 = 16517/5   (Z = X/S_d: e = 4216, K^2 = 38332/5)
+   special points (|H|, type after reflections): {(15, '1/15(1,13)'): 1, (15, '1/15(1,8)'): 1, (16, '1/2(1,1)'): 1, (16, '1/4(1,1)'): 1, (16, '1/4(1,3)'): 1, (16, 'smooth'): 1, (2, '1/2(1,1)'): 324, (2, 'smooth'): 436, (30, '1/15(1,2)'): 1, (30, '1/3(1,1)'): 1, (30, '1/5(1,4)'): 1, (30, 'smooth'): 1, (4, 'smooth'): 82, (6, '1/3(1,2)'): 4, (6, 'smooth'): 4, (8, '1/2(1,1)'): 1, (8, 'smooth'): 1}
+   chi(O_S) = 470   e(S) = 2348   K_S^2: Noether 3292, local 3292  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)
+== pp(8,1): d = 9, 9 admissible transpositions for canonical s_inf
+   genus(C^) = 47881   p_g(W_2) = 3304   p_g(Z) = 6952   q = 0
+   e(W_2) = 13563   K_W^2 = 213082/9   (Z = X/S_d: e = 27812, K^2 = 50540)
+   special points (|H|, type after reflections): {(16, '1/2(1,1)'): 1, (16, '1/4(1,1)'): 1, (16, '1/4(1,3)'): 1, (16, 'smooth'): 1, (18, '1/9(1,2)'): 1, (18, 'smooth'): 1, (2, '1/2(1,1)'): 2406, (2, 'smooth'): 1680, (3, '1/3(1,1)'): 1, (4, 'smooth'): 238, (6, '1/3(1,2)'): 3, (6, 'smooth'): 5, (8, '1/2(1,1)'): 1, (8, 'smooth'): 1, (9, '1/9(1,5)'): 1, (9, '1/9(1,7)'): 1}
+   chi(O_S) = 3305   e(S) = 15990   K_S^2: Noether 23670, local 23670  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)
+== pp(7,2): d = 9, 9 admissible transpositions for canonical s_inf
+   genus(C^) = 57601   p_g(W_2) = 4777   p_g(Z) = 9969   q = 0
+   e(W_2) = 19526   K_W^2 = 2182297/63   (Z = X/S_d: e = 39880, K^2 = 512000/7)
+   special points (|H|, type after reflections): {(14, '1/14(1,11)'): 1, (14, '1/14(1,5)'): 1, (18, '1/9(1,2)'): 1, (18, 'smooth'): 1, (2, '1/2(1,1)'): 3159, (2, 'smooth'): 1516, (28, '1/7(1,1)'): 1, (28, 'smooth'): 1, (3, '1/3(1,1)'): 1, (4, 'smooth'): 264, (6, '1/3(1,2)'): 3, (6, 'smooth'): 5, (9, '1/9(1,5)'): 1, (9, '1/9(1,7)'): 1}
+   chi(O_S) = 4778   e(S) = 22708   K_S^2: Noether 34628, local 34628  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)
+== pp(5,4): d = 9, 9 admissible transpositions for canonical s_inf
+   genus(C^) = 61489   p_g(W_2) = 5307   p_g(Z) = 11055   q = 0
+   e(W_2) = 21672   K_W^2 = 1782071/45   (Z = X/S_d: e = 44224, K^2 = 416752/5)
+   special points (|H|, type after reflections): {(10, '1/5(1,2)'): 1, (10, 'smooth'): 1, (18, '1/9(1,2)'): 1, (18, 'smooth'): 1, (2, '1/2(1,1)'): 2404, (2, 'smooth'): 1484, (20, '1/20(1,13)'): 1, (20, '1/20(1,3)'): 1, (3, '1/3(1,1)'): 1, (4, 'smooth'): 232, (40, '1/10(1,1)'): 1, (40, '1/2(1,1)'): 1, (40, '1/5(1,3)'): 1, (40, 'smooth'): 1, (5, '1/5(1,3)'): 1, (6, '1/3(1,2)'): 3, (6, 'smooth'): 5, (8, '1/2(1,1)'): 4, (8, 'smooth'): 4, (9, '1/9(1,5)'): 1, (9, '1/9(1,7)'): 1}
+   chi(O_S) = 5308   e(S) = 24112   K_S^2: Noether 39584, local 39584  -> AGREE
+   general type: yes (K_S^2 > 0, p_g >= 1)

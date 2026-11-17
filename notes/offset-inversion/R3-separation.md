@@ -232,6 +232,11 @@ For R3 I use this in the following explicit form.
 > `u` or on `F`. Algebraic post-processing of the output is allowed through the derived
 > rule `root_Pconstructible_le_six_coeffs` (this is how L2 recovers `w` from the quartic).
 
+> **R12 update.** The value-dependence in (ii) is the convention choice. See
+> `notes/reachability/R12-convention.md` for the B0/B1/C/A classification, the A-analysis
+> (`1/log`/`δlogδ` are B-only; log with real monodromy is A-robust), and the restated theorems.
+> The statements of Theorems 3.4–3.5 below are unchanged; R12 only makes their hypothesis explicit.
+
 Two clarifications matter for the separation.
 
 - **Why `x` may enter at all.** With *fixed* curves, a single intersection is a fixed finite
@@ -612,6 +617,14 @@ Hence the cusp caveat neither weakens nor strengthens Theorems 3.4–3.5. [Proof
    too, so `d = 0` is not a counterexample to the programme, only to a normal-form-based
    separation.
 
+   > **Update (R7, 2026-11-10): resolved — separation fails at `d = 0`.** The graph `G` is not
+   > drawable, but it is the wrong target: `F_0` itself is an exact difference of two drawable
+   > graph functions,
+   > `F_0 = (e^{2u}/8 + u/4) − (e^{−2u}/8 − u/4)`, and both summands are affine images of
+   > `exp_two` (rates `±2`). A single `inter_x` at depth 1 solves the family. So the silence of
+   > the branch-point method is correct, and the `gd` atom is the entire obstruction at `d ≠ 0`.
+   > See `notes/offset-inversion/R7-dzero.md`.
+
 ---
 
 ## 4. Q4 — what remains possible: composition depth
@@ -755,7 +768,9 @@ for P-constructible `d < 1`, `x ≥ 0`.* [R0 §5.3, L2]
    for Q3 (d fixed) but needed for a fully general "uniform in the family".
 5. **The degenerate case `d = 0`** (§3.9 item 4). `F_0(u) = ¼sinh 2u + u/2` is of the exp
    normal form, so the branch-point method is silent; whether the corresponding E-curve is
-   drawable is [Open] and is a constructor-reachability question.
+   drawable is [Open] and is a constructor-reachability question. **Resolved in R7: separation
+   fails.** `F_0` is an exact difference of two `exp_two` graph functions, so one `inter_x` solves
+   the family at depth 1.
 6. **The `w`-versus-`u` variable.** Lemma 3.2 uses `u`. If a construction is allowed to output
    `w` and recover `u` by a *non-algebraic* operation, the branch-point count changes back to
    two. But recovering `u` from `w` is `u = asinh w`, which is not an algebraic operation and

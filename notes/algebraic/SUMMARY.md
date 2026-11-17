@@ -1,7 +1,8 @@
 # Every real algebraic number is P-constructible: summary
 
 This summarizes `pptc/PLAN-algebraic.md`. First written 2026-11-04 (waves 1–2); §§5–7 added
-2026-11-05; **§§8–10 and the status table updated 2026-11-06 (Phase D: Y1, Z1–Z8, A1–A2, B1–B3)**.
+2026-11-05; §§8–10 and the status table updated 2026-11-06 (Phase D: Y1, Z1–Z8, A1–A2, B1–B3);
+§8 Y1b and §10 Y1b paragraph added 2026-11-10; **§11 added 2026-11-11 (C1: the sine × sine engine)**.
 The sources are the notes in this folder. Labels follow the notes. Nothing here is a negative about
 the target: every obstruction is scoped to the route it blocks.
 
@@ -27,7 +28,8 @@ explicit surface (totally real nonics) and one P-line on an explicit 3-fold (tot
 | 10 | ℚ, nonreal root, G ⊇ A₁₀ | **route found, one ingredient missing** (MI-1, §2); the MI-2 line reduction is vacuous for s = 2, 3 (A2) |
 | 10 | ℚ totally real, G ⊇ A₁₀ | open. **Reduces to one P-line** in Y₀ = {p₁ = p₃ = 0, S₆ = 0} via Engine C (B2) |
 | 11 | any | open; every transitive group needs a degree-11 engine step; no single-line reduction (B2) |
-| ≥ 9 | all | **conditional on (SR) / Taylor's question** (Theorem X, §6) |
+| ≥ 9 | all | **conditional on (SR) or (SR′) / Taylor's question** (Theorem X, §6; Theorem X′, §11) |
+| any | explicit totally real S_n numbers | in P for every n (Theorem C1, §11) |
 
 ## 2. Degree 10: the first case beyond the frontier (H5)
 
@@ -215,6 +217,23 @@ explicit surface (totally real nonics) and one P-line on an explicit 3-fold (tot
 - **Theorem R (Y1a) [Proof].** n − 1 non-homothetic positive-definite binary forms Q_j with Q_j(τ)
   a square in K_L give β ∈ P, totally real included. The needed variety V_τ is a complete
   intersection of n − 3 diagonal quadrics: K3 at n = 6, general type for n ≥ 7.
+- **Y1b (2026-11-10, done: scoped negative).** The general-method attack on the
+  simultaneous-squares condition was the deformation of the rank-one square `B₀ = ℓℓᵀ`. Result
+  (`Y1b.md`): the conic `Q_{B₀+tB₁}(τ) = r²` is smooth and already has the point `(t,r) = (0,ℓ)`
+  with `t ∈ L`, so there is **no** Kummer/`H¹(L,μ₂)` class. The condition `t ∈ L` is the pencil
+  curve `X_C ⊂ V_τ`, a `(ℤ/2)ⁿ`-cover of the t-line of genus `1 + (n−3)2^{n−2}` (129, 321, 769 at
+  n = 7, 8, 9). Every positive-definite form is `B₀ + tB₁`, so Y1b.1 *is* the first step of SS. The
+  cover is the K-twist: its fibre at `t = 0` is the `S_n`-resolvent scheme of q (degrees
+  `C(n,k)`; the `k = 1` component is K). Hence the arithmetic closure has `S_n` as a quotient and
+  no free construction reaches a point. Corollary: A1's Theorem G must be applied to the
+  arithmetic closure, not the geometric monodromy. Y1b.4 not launched; Y1b.2 vacuous; Y1b.3
+  answered negatively.
+- **X1L (2026-11-11, Lean plan).** `PLAN-taylor-lean.md` formalizes the conditional theorem
+  Taylor/trinomial point ⇒ `R_alg ⊆ P`, using the already-proved
+  `root_Pconstructible_of_solvable_gal` and a polynomial-gcd recovery. It collects weaker
+  hypotheses: solvable real point, P-tower, degree ≤ 8, real quadratic, real 0-cycle of
+  degree ≤ 8, and PSC for the specific trinomial surface. The P half does not wait on the
+  open Taylor/PSC geometry.
 - **No square-root-free addition exists (Z4) [Proof sketch].** Every curve constructor is unary
   with numeric parameters, so curves depend on each other only through P-numbers. Offsets add only
   ellipses. Scale by 0 gives a root-free summand, but it is ±p, constant on each branch, i.e. a
@@ -303,3 +322,51 @@ weak approximation over number fields has dense E-points (Theorem H): hypersurfa
 N ≥ (d−1)2^d, any X with dim ≥ (D−1)2^D − 1. E is Euclidean, which settles many low-dimensional
 quadric-containing CIs (Theorem W). Rational connectedness alone gives nothing unconditional. None
 of it reaches the general-type varieties the routes need. Proof sketches; see P1.md.
+
+**WARP (2026-11-10): text-warp engines.** The new `PConstructibleCurve.text` constructor
+puts warped glyph outlines in the class; the algebraic ones are rational quartics (egg,
+piriform, Gerono). A single warp adds no new numbers (line/conic intersections are degree
+≤ 8 with P coefficients). The useful content is as an engine component: egg × quintic graph
+is a degree-10 engine with F = 9 (one more than the MI-1 sextic engine), and egg × sextic
+graph is a degree-12 engine with F = 10 (still below H5's F ≥ 11 for totally real decics).
+No goal is closed; the F-point problem is unchanged. Follow-up: a free P handle is already
+in `text`; nonsquare boxes add no new algebraic modulus; an offset adds one P parameter but
+the egg offset has geometric degree **16** (the elimination polynomial has total degree
+28), so offset egg × conic has crossing degree at least 32 and cofactor at least 22 at
+n = 10, far above F = 11 — that candidate is **closed** (`W4-offset.md`). See
+`WARP.md` §8. Planned as stream **W4** in `PLAN-algebraic.md`; W4a done, W4b–W4d remain.
+
+**Y1b (2026-11-10): the rank-one square pencil is closed.** The distance-only deformation of the
+rank-one square does not weaken SS and does not give a Kummer class (`Y1b.md`). The exact conic
+`r² − Q_{B₁}(τ)ts = ℓ(τ)²s²` already has `(t,r) = (0,ℓ)`; the `t ∈ L` condition is the pencil
+curve `X_C ⊂ V_τ`, of genus `1 + (n−3)2^{n−2}`, which is the K-twist of the split `(ℤ/2)ⁿ`-cover.
+Its `t = 0` fibre is the `S_n`-resolvent scheme of q, with the `k = 1` component equal to K, so the
+arithmetic closure carries `S_n` and no free construction lands on it. This closes the
+"deform the rank-one square" idea for all n ≥ 5. It leaves untouched: overshoot engines,
+other bases (rational sextic graphs, power laws with `b = 1 ± 1/k`), the circle partner, and SS
+itself.
+
+## 11. C1: the sine × sine engine (2026-11-11)
+
+See `C1.md`. The target is not closed.
+
+- **Scoping gap in W3 §3.1.** Crossings of `sine` with an algebraic curve are transcendental, but a
+  crossing of two `sine` curves with commensurable frequencies has algebraic cos θ.
+- **Engine S [Proof].** F is closed under roots in [−1, 1] of the Chebyshev trinomial
+  T_p(x) + a·T_q(x) + c, and under cos θ for solutions of
+  A cos pθ + B sin pθ + C cos qθ + D sin qθ + E = 0.
+- **No Descartes barrier [Proof].** |a| + |c| < 1 gives p real roots. The §3 "Realness" bounds
+  (gap ≤ 2, n ≤ 2F − 2) are about monomial supports and do not apply to it.
+- **Theorem C1 [Proof; Python-certified n = 5…30].** P contains totally real numbers of every degree
+  n with Galois group S_n, e.g. cos θ with cos nθ = −cos θ/3 − 1/7.
+- **Theorem X′ [Proof, conditional].** β ∈ P if the K-twisted five-term variety has an F-point:
+  n − 4 conditions on K itself, no square lift. Taylor's question implies it. The conditional
+  hypothesis is now "(SR) or (SR′)".
+- **Limits.** In the monomial basis Engine S is the odd shape with Q pinned, so it does not improve
+  n = 9. It obeys the bookkeeping law (five coefficients). (SR′) is again an F-point on a
+  general-type variety.
+- **Resolvent degree [Proof of the implication].** A construction uniform in K with degree ≤ 8 steps,
+  radicals and engines of ≤ m essential parameters gives RD(n) ≤ max(4, m). So a K-uniform proof of
+  (SR) or (SR′) for all n would bound RD(n) by 4. The remaining gap needs field-specific arithmetic
+  or engines with growing parameter count.
+- **Reformulation.** (SR) ⟺ some u ∈ K_L ∖ L has u and 1 − u multiplicatively dependent modulo L^×.

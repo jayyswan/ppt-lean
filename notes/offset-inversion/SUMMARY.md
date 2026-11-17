@@ -52,7 +52,12 @@ General facts:
 - **Composition is triangular [Proof, R4].** Feeding outputs back in as `d`, `x`, start points,
   crop bounds or affine data only extends the parameters; no new equation shapes appear.
   - Two offsets add (`d₁ + d₂`).
-  - Chains of two offset inversions remain [Open].
+  - **Chains of two offset inversions are triangular [Proof, R6].** Same-word chains collapse to a
+    single entry (lengths add, or a P-constructible constant shift if an offset or affine sits
+    between the links). Re-based chains are one-step entries whose data lie in the field of the
+    first root, so they add numbers, not equation shapes. No separate depth-6 separation theorem
+    is needed; the remaining question is the data-dependence gap (R2 Q3.4, R3 §3.9(2)–(3)).
+    See `notes/offset-inversion/R6-chains.md`.
 
 ## 3. Separation theorems (R3, R4)
 
@@ -64,7 +69,11 @@ General facts:
     solves the family uniformly.
   - Separation survives depth ≤ 2. The construction itself has depth 3
     (`offset → arc_of_length → box`).
-  - The case `d = 0` is [Open].
+  - **The case `d = 0` is resolved: separation fails [Proof, R7].** `F₀(u) = ¼sinh 2u + u/2`
+    decomposes exactly as `(e^{2u}/8 + u/4) − (e^{−2u}/8 − u/4)`, a difference of two graph
+    functions of affine images of `exp_two`; a single `inter_x` (depth 1) solves the family. So the
+    branch-point invariant's silence at `d = 0` is correct, and the `gd` atom is exactly what makes
+    `d ≠ 0` separate. See `notes/offset-inversion/R7-dzero.md`.
 - **`am` stays out of reach [Proof + Wolfram, R4].** `dψ` and every weighted angle form are
   holomorphic at `∞±`, so offsets cannot cancel the residue obstruction.
 - **Rigidity [Proof, R2].** To match the beam spectrum, or `tan x = λx`, for all parameters,
@@ -81,7 +90,27 @@ General facts:
 R4's search found nothing: 288 PSLQ tests at 130 digits found no relation between the
 `tan x = x`, beam or goat roots and the drawable families.
 
-## 5. Missing curves, ranked by what each unlocks
+## 5. Missing curves, ranked by what each *offset-route* construction unlocks
+
+The `M` column above is a **sufficiency** label: it names the curve that makes the known Route-O
+construction work. It is not an impossibility result. `R8-missing-curve-audit.md` audits the
+intersection route (Route I) row by row; `notes/reachability/R12-convention.md` fixes the
+convention (B + C recommended) and gives the route-level table. The short version:
+
+- **Rows genuinely outside Route I (affine data, continuous family):** gear involute; rhumb line
+  (fixed course); tractrix; Biot. The elastica is outside Route I by non-elementarity rather than log
+  monodromy.
+- **Rows open on Route I because the log test is silent:** `tan x = λx` (`1/log` singularities) and
+  the spherical well `l=0` (`δ log δ`). Neither is known to be reachable by an intersection, and
+  neither is excluded.
+- **Beams:** the continuous interpolation is outside Route I; the *discrete* spectrum is **not**
+  excluded (item 4).
+- **`tan x = λx` also open on Route O.** The catenary route uses `d = λ`, whose necessity is open
+  (R2 Q3.4). A `1/log` invariant is the concrete next question.
+- **Goat:** a single target, not a family; the pole/fold issue is one of construction legality, not
+  separation (poles are drawable via `power_law`).
+- **Separatrix:** the value `gd t` is pointwise P-constructible; the log-cosine is a curve-level
+  statement, not a gate.
 
 1. **Catenary.** `tan x = λx` for every λ, the involute function, `j₁` zeros, the clamped–hinged
    beam.
@@ -89,7 +118,8 @@ R4's search found nothing: 288 PSLQ tests at 130 digits found no relation betwee
 3. **Curve with `R = tan ψ − (π/2)sec ψ`.** The goat problem (with an extra obstruction).
 4. **Tractrix and elastica.** Their own families only.
 
-None has a PowerPoint route yet. This ranking goes to `PLAN-ppt-tan-curves.md`, stream M.
+None of these *curves* has a PowerPoint route yet. This ranking goes to
+`PLAN-ppt-tan-curves.md`, stream M.
 
 ## 6. Lean status
 
@@ -102,10 +132,16 @@ All three were repaired to the whole-curve `offset` axiom (commit 875a294). None
 
 ## 7. Open
 
-- The `d = 0` separation case.
+- ~~The `d = 0` separation case~~ **Resolved: separation fails (R7).** `F₀` is an exact difference of
+  two `exp_two` graph functions, so a single intersection solves the family at depth 1. The `gd` atom
+  is the whole reason `d ≠ 0` separates. See `notes/offset-inversion/R7-dzero.md`.
 - Separation for the full tower beyond the base catalogue, and in particular whether a catenary
   or log-cosine parallel curve lies in the tower.
-- Chains of two offset inversions.
+- ~~Chains of two offset inversions~~ **Resolved as a reduction (R6).** Same-word chains collapse to
+  a single entry; re-based chains are one-step entries with data in the first link's field. They
+  add numbers, not equation shapes, so no depth-6 separation theorem is needed — only the
+  data-dependence gap (R2 Q3.4, R3 §3.9(2)–(3)), which chains do not close. See
+  `notes/offset-inversion/R6-chains.md`.
 - Arithmetic (non-uniform) coincidences with named roots. These are not excluded; nothing was
   found.
 

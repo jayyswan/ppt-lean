@@ -2,6 +2,7 @@ import Pptc.Defs
 import Pptc.Tactic
 import Pptc.Box
 import Pptc.Basic
+import Pptc.AGM
 import Pptc.Offset
 import Pptc.ThirdKind
 import Pptc.ThirdKindAll.Main
@@ -18,3 +19,5 @@ import Pptc.OffsetInversion.Projectile
 import Pptc.OffsetInversion.Speed
 import Pptc.OffsetInversion.Parabola
 import Pptc.Octic.Main
+import Pptc.Solvable.Main
+import Pptc.Taylor.Main

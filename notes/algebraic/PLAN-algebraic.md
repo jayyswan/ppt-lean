@@ -130,12 +130,17 @@ polynomials of degree ≤ 8 over itself. The question is whether `F = ℝ_alg`.
 | G3 | math | **General-n engine search.** Using G2, look for an engine family whose number of conditions stays bounded, or grows slower than the Tschirnhaus capacity, as n grows. Candidates: offset towers, crossings of two rotated power laws, power law × Bézier, iterated box/extremum constructions. Test versality numerically for n = 9…13 (Jacobian rank of the crossing-polynomial map modulo Tschirnhaus), and count real crossings for totally real targets. | G2 |
 | G4 | math | **Route constraints, scoped.** Make the Aₙ filter, the Descartes realness bounds and the parameter-count bounds precise as statements about *classes of routes*. The aim is to know exactly what an all-n route must look like. These are not conclusions about the target. | G1, G2 |
 | G5 | math (low priority) | **Transcendental routes to algebraic numbers.** Can P evaluate the special functions in G1's general-equation formulas: hypergeometric pFq at algebraic arguments for trinomials (Mellin), or theta constants (Umemura)? Gamma at rationals and closed-form ₂F₁ are already available. NOTES argued that `arc_of_length` inverts one integral at a time; test that argument. | G1 |
+| Y1b | math (arithmetic/descent) | **Square descent and variable-affine offset towers (added 2026-11-10; done 2026-11-10: scoped negative).** The general-method attack on Y1a's simultaneous-squares condition: can the rank-one square be deformed to nondegenerate positive-definite forms over L? Answer: the deformation is the whole PD cone, so Y1b.1 = the first step of SS; there is no H¹(L,μ₂) class; the pencil curve is the K-twist of (ℤ/2)ⁿ with t = 0 the S_n-resolvent scheme. See `Y1b.md`. | Y1a, G3 |
+| W4 | math + Lean | **Text-warp engines (added 2026-11-10).** The new `PConstructibleCurve.text` constructor gives new algebraic curve families (egg, piriform, offset egg) with P parameters. Measure them as engine components: crossing degrees, condition varieties, F-points, and whether they close or relax an open n = 9–12 case. See `WARP.md`. | N4, G2, H3 |
+| X1L | Lean | **Formalize Taylor ⇒ R_alg ⊆ P (X1 Theorem X).** Prove the conditional theorem from a trinomial lift, using the already-proved `root_Pconstructible_of_solvable_gal` and a polynomial-gcd recovery; collect weaker point-existence hypotheses (degree ≤ 8, real quadratic, 0-cycle, P-tower). See `PLAN-taylor-lean.md`. | X1, `Pptc/Solvable/Main.lean` |
 
 ## 5. Order
 
 - **Wave 1** (all independent): N1 (Lean), N2, N4, G1, G2.
-- **Wave 2:** N3 and N5 (taking N2/N4 results), then G3 (taking G2).
-- **Wave 3:** G4, G5 if warranted. Then the orchestrator writes `notes/algebraic/SUMMARY.md`:
+- **Wave 2:** N3 and N5 (taking N2/N4 results), then G3 (taking G2). **Y1b.1 is done** (2026-11-10):
+  scoped negative, see `Y1b.md`. Y1b.4 is not launched; Y1b.2 is vacuous and Y1b.3 is answered.
+- **Wave 3:** G4, G5 if warranted (Y1b.4/Y1b.5 no longer apply in the planned form). Then the orchestrator
+  writes `notes/algebraic/SUMMARY.md`:
   - degree-9 status by case;
   - the best general-n route candidate;
   - a Lean roadmap.
@@ -262,7 +267,9 @@ Framing for every stream:
 **X1 done (2026-11-05).** Theorem X: the full target follows from (SR), points of the twisted
 trinomial variety over ℚ^solv ∩ ℝ. (SR) is implied by a positive answer to Taylor's question, which
 is open. Solvable real algebraic numbers ⊆ P [Proof]. The Galois-class base case needs (BR_n). See
-SUMMARY §6.
+SUMMARY §6. **Lean plan:** `PLAN-taylor-lean.md` formalizes the conditional theorem
+Taylor/trinomial point ⇒ `R_alg ⊆ P`; `Pptc/Solvable/Main.lean` already proves the solvable-real
+input. The P half (T0–T2) does not wait on the open geometry.
 
 ### X2 (planned, not run; user is conserving usage)
 
@@ -327,12 +334,94 @@ non-elliptical Minkowski summand.
 - End-to-end test on a totally real S₅ quintic: the parabola tower crossing works.
 - **Open:** the simultaneous squares for n ≥ 7, i.e. L-points off the degenerate line on V_τ. V_τ is
   a smooth complete intersection of n−3 diagonal quadrics: K3 at n = 6, general type for n ≥ 7. τ
-  may vary.
+  may vary. **Y1b** (added 2026-11-10) attacked this by deforming the rank-one square; done
+  2026-11-10 with a scoped negative (`Y1b.md`, §Y1b below).
 - Searches at n = 9 and 10 found nothing.
 - Leads:
   - n = 6 (K3: elliptic fibrations);
   - genus-0 or genus-1 curves on V_τ;
   - the family over τ.
+
+### Y1b: square descent and variable-affine towers (2026-11-10, done: Y1b.1 negative)
+
+**Y1b.1 done (2026-11-10).** See `notes/algebraic/Y1b.md`. Verdict: the rank-one deformation is
+not a descent condition and does not weaken SS.
+- The conic \(r^2 - Q_{B_1}(\tau)t = \ell(\tau)^2\) is smooth and has the \(K_L\)-point \((0,\ell)\)
+  with \(t = 0 \in L\) already; the \(H^1(L,\mu_2)\) class is zero. The \(t \in L\) condition is the
+  pencil curve \(X_C \subset V_\tau\), a \((\mathbb{Z}/2)^n\)-cover of the \(t\)-line of genus
+  \(1 + (n-3)2^{n-2}\) (129, 321, 769 at \(n = 7, 8, 9\)).
+- **Equivalence:** every positive-definite form is \(B_0 + tB_1\) with \(B_0 = \ell\ell^T \succeq 0\)
+  and \(t > 0\). So Y1b.1 \(\Leftrightarrow\) \(V_\tau(L)\) meets the positive-definite chamber, the
+  first step of SS. Varying \(B_1\) sweeps \(V_\tau\).
+- **Arithmetic:** the cover is the \(K\)-twist of the split \((\mathbb{Z}/2)^n\)-cover; the fibre at
+  \(t = 0\) is the \(S_n\)-resolvent scheme of \(q\) (components of degrees \(\binom{n}{k}\); the
+  \(k = 1\) component is \(K\) itself [Wolfram \(n = 5\)]). So the arithmetic Galois closure has
+  \(S_n\) as a quotient and is not solvable for \(n \ge 5\); A1's Theorem G (solvable step) does
+  not apply, and no Kummer vanishing produces a point.
+- **Scoped negative:** for \(L = P\) there is no pencil component beyond the trivial one reachable by
+  the free constructions. Y1b.4 not launched; Y1b.2 vacuous (shapes were already free); Y1b.3
+  answered (the obstruction is the \(S_n\)-torsor \(K/\mathbb{Q}\), not a \(\mu_2\)-class).
+- By-products: the exact conic and parametrization; the pencil curve and its genus; the
+  identification with Z5's \(\pi: V_\tau \to \mathbb{P}^2\) picture; the resolvent table; a
+  correction to the applicability clause of A1 Theorem G (check the arithmetic closure, not the
+  geometric monodromy).
+
+
+This is the general-method attack. Y1a's Theorem R reduces all n to two ingredients:
+
+1. τ ∈ K_L;
+2. J ≥ n−1 pairwise non-homothetic positive-definite forms Q_j over L with every Q_j(τ) a square
+   in K_L.
+
+The geometry of \(V_\tau\) is already understood: a smooth complete intersection of \(n-3\)
+diagonal quadrics, K3 at \(n=6\), general type for \(n\ge 7\). The open problem is **arithmetic**,
+not geometric. Fixed engines (egg, piriform, offset egg, text warp) add a constant number of
+parameters and cannot change the asymptotics; Y1b is the stream that tries to make the square
+hypothesis constructive.
+
+**Core question.** Can the degenerate (rank-one) square be deformed to nondegenerate
+positive-definite forms over \(L\)?
+
+- Take \(B_0=\ell\ell^T\) with \(\ell(\tau)\neq0\); then \(Q_{B_0}(\tau)=\ell(\tau)^2\) is a
+  square.
+- For \(B_t=B_0+tB_1\), with \(B_1\) positive definite and \(t>0\), \(B_t\) is positive definite.
+  The square condition \(Q_{B_t}(\tau)=r^2\) is a conic over \(K_L\) with the \(K_L\)-point
+  \((t,r)=(0,\ell(\tau))\).
+- Ask whether it has a point with \(t\in L\), \(r\in K_L\), and \(B_t\) positive definite. This is
+  a **Kummer/descent** condition, not a real-geometry condition. The first job is to compute the
+  obstruction for \(n=7,8,9\).
+
+**Why it could work.** The conic has a \(K_L\)-point; the rank-one boundary is a square. If the
+\(t\)-coordinate can be chosen in \(L\), we get one nondegenerate square form. Varying \(B_1\)
+gives non-homothetic forms, and \(J\ge n-1\) of them feed Theorem R. The rank-one line is the
+only obvious source of \(K_L\)-points, so the whole general method may hinge on this deformation.
+
+**Why it could fail.** The conic's \(L\)-points may be obstructed by a nontrivial Kummer class;
+the \(t\)-coordinate may lie in \(K_L\setminus L\) for every \(B_1\). Then the distance-only tower
+has a scoped obstruction, and the fallback is variable affine layers, overshoot, or a new pen.
+The parabolic base remains the right base: the square condition is about the affine ellipses, not
+about the base curve, so the warp egg is not a shortcut here.
+
+**Tasks.**
+
+| id | model | question / deliverable |
+|---|---|---|
+| Y1b.1 | math/computation (Wolfram or Magma) | **DONE 2026-11-10: scoped negative.** See `Y1b.md`. The conic is smooth with the \(L\)-point \((0,\ell)\) already; \(t\in L\) defines the pencil curve \(X_C\subset V_\tau\) of genus \(1+(n-3)2^{n-2}\); the deformation family is all positive-definite forms, so Y1b.1 = the first step of SS. The obstruction class is the \(S_n\)-torsor \(K/\mathbb{Q}\): the \(t=0\) fibre is the \(S_n\)-resolvent scheme. |
+| Y1b.2 | math (parameter count) | **DONE 2026-11-10: vacuous.** The shapes were already free (Theorem R quantifies over all \(B_j\)); the square conditions are not equations on \(B_j\). The only constraint is \(J+2\ge n\); kernel dimension \(J+2-n\). Nothing to absorb. |
+| Y1b.3 | math (arithmetic) | **DONE 2026-11-10: negative.** No \(H^1(L,\mu_2)\) class exists (the conic is split at \(t=0\)). The correct statement is \(X_C(L)\); the arithmetic closure has \(S_n\) as a quotient, so no Kummer vanishing applies. Includes a correction to A1 Theorem G's solvability clause. |
+| Y1b.4 | math (end-to-end) | **Not launched** (no input from Y1b.1/Y1b.3). |
+| Y1b.5 | fallback | Overshoot and variable-shape layers are untouched by this negative; a different base or circle partner remains the fallback. No mechanism found from the rank-one pencil. |
+
+**Order.** Y1b.1 first: it is one computation and decides whether the deformation is real.
+Y1b.2 and Y1b.3 can run in parallel; Y1b.4 only after a positive Y1b.1/Y1b.3.
+
+**Kill criteria (scoped).** If every tested \(B_1\) gives no positive-definite \(L\)-point and the
+obstruction is nonzero, record a scoped obstruction to the distance-only offset tower; do not
+conclude anything about the target. If the deformation works, proceed to Y1b.4; no negative about
+`algebraic_Pconstructible` follows from Y1b.
+
+**Cost.** Y1b.1: one focused Wolfram/Magma computation for \(n=7,8,9\). Y1b.2: one parameter-count
+stream. Y1b.3: one arithmetic/descent stream. Y1b.4: one end-to-end and Lean stream.
 
 ### Next streams (2026-11-05)
 
@@ -772,3 +861,455 @@ real embedding); false for arbitrary real k.** See `notes/algebraic/Q1.md`.
   [Proof sketch].
 - What would close it: ≥ ~9n P-parameters per K-condition at bounded degree, i.e. a Minkowski-sum or
   two-curve constructor (no UI route known).
+
+### W4: text-warp engines (2026-11-10, proposed)
+
+The new `PConstructibleCurve.text` constructor (`Pptc/Defs.lean`) makes every warped glyph outline
+drawable, including the algebraic egg quartic, the piriform and the Gerono lobe. `WARP.md` assesses
+them against the algebraic goals. This stream turns that assessment into a decision procedure: can
+a warped curve, alone or as an engine component, close or relax an open case?
+
+**What is already settled (see `WARP.md`).**
+- A single warped curve adds no new numbers: line/conic intersections are degree ≤ 4/≤ 8 over F, and
+  `root_Pconstructible_deg8_coeffs` already covers them. No stream is needed for that.
+- The useful objects are **engines**: egg × quintic graph (degree 10, rank F = 9; one more parameter
+  than the MI-1 sextic engine) and egg × sextic graph (degree 12, F = 10; still below H5's F ≥ 11
+  for totally real decics).
+- Nonsquare boxes add **no new algebraic modulus** for the egg family: straight/polyline presets are
+  affine or reparameterize the same universal egg; curved guides are transcendental. Closed, no stream.
+- A free yellow handle is already a `PConstructible` parameter in `text`; the Lean theorem should
+  quantify P handles, not the old rational stops. This is part of W4d, not a separate investigation.
+- The one follow-up that could reach H5's threshold was **offset egg × general conic**: F = 11,
+  viable whenever the offset degree D ≤ 10 (crossing degree 2D, cofactor 2D − 10 < 11 at n = 10).
+  **W4a closes it:** the egg offset has geometric degree 16 (N4's abscissa convention; the
+  elimination polynomial has total degree 28), stable across four parameter choices including the
+  task's `d₀=1,d₁=2` and irreducible over ℚ, so the conic crossing degree is at least 32, the
+  cofactor degree is at least 22 at n = 10, and F = 11 has no room. See
+  `W4-offset.md`. Scoped kill.
+
+**Tasks.**
+
+| id | model | question / deliverable |
+|---|---|---|
+| W4a | math/computation (Opus or Wolfram-heavy) | **Done (2026-11-10):** the geometric offset degree is **16** (N4 convention; elimination polynomial total degree 28, Y-degree 12), stable for `(d₀,d₁,r) = (1,2,1), (2,3,1), (1,4,1), (2,5,1/2)` and irreducible over ℚ; a two-sided Groebner elimination factors as `(degree-4 extraneous)² · (degree-28 elimination polynomial)`. Offset egg × general conic has crossing degree at least 32 and cofactor at least 22 at n = 10, far above F = 11; **close offsets of the egg as an engine route**, scoped to this construction. See `W4-offset.md`. |
+| W4b | math (H3 protocol) | **Egg engines at n = 9–12.** For egg × quintic/sextic graph, compute the condition variety `χ_τ ∣ N_m`: dimension, defining equations, degree, singularities, real points, and the Jacobian rank on monic nonics/decics. The decisive question is whether its degree is < 9 (then H2 Lemma A applies over F) and whether it has a smooth real point. Compare against the F = 8 sextic engine and H3's F = 13 two-graph engine. Deliverable: `W4-engines.md`. |
+| W4c | arithmetic | **Explicit targets.** Test the explicit totally real S₉ nonic `q = ∏_{i=-4}^{4}(x − i) + 1` against egg × sextic, and a totally real S₁₀ decic against egg × quintic. Seek F-points, not just real solutions; a numerical real solution is not enough. Reuse B1/B2's search machinery. Deliverable: a scoped positive or an [Open] with the search box recorded. |
+| W4d | Lean | **Finish the `text` → egg/piriform bridge.** In a real file (`Pptc/Warp/Text.lean`), prove the two-`●` row's left disc normalizes to `glyphCircle a`, isolate it by `restrict`, and derive unconditional `PConstructibleCurve (eggCurve a d₀ d₁)` and the piriform. State the handle over P, not ℚ. Then import from `Pptc.lean`. Deliverable: the Lean file plus the replacement of `TriangleCircleRule` by a theorem for the catalogued row. |
+
+**Order.** W4a is done (offset route closed). W4b is now the first open task; W4c after W4b (it needs
+the engine shapes); W4d is independent of both.
+
+**Kill criteria (scoped).** The offset kill criterion was met: the geometric offset degree is 16
+(the elimination polynomial has total degree 28, also ≥ 11), so the offset-of-warps route is
+closed and recorded. If the egg engines' condition varieties have degree
+≥ 9 or no F-point in the tested boxes, record a scoped [Open]/[Heuristic] and do not conclude
+anything about the target. No negative about `algebraic_Pconstructible` follows from W4.
+
+**Cost.** W4a: one focused Wolfram/elimination computation (hours). W4b: one Opus stream. W4c: one
+Sonnet/Opus search stream. W4d: one `lean-prover` task (the scratch lemmas in
+`Pptc/Scratch/WarpText.lean` and `WarpTwo.lean` already cover the normalization and bounding box).
+
+### C1: sine × sine (2026-11-11)
+
+Brief: look at the whole programme afresh; weaken (SR) or find a new route.
+
+**C1 done (2026-11-11): one new engine, target not closed.** See `notes/algebraic/C1.md`, log
+`HANDOFF-alg-C1.md`, scripts in `notes/algebraic/scripts/`.
+- Engine S (`sine` × `sine`, commensurable frequencies): Chebyshev trinomials T_p + a·T_q + c and the
+  five-term family with phases. All roots real for small a, c; Galois group S_n [Proof for q = 1;
+  Python n = 5…30].
+- Theorem C1: totally real S_n numbers in P for every n.
+- Theorem X′: the conditional theorem without the square lift, n − 4 conditions on K itself.
+- Uniform-in-K routes with bounded engines would bound resolvent degree (C1 §5).
+- Closed, scoped: more than two frequencies, RM period ratios, cubics through the conjugates,
+  product-square for Theorem R, harmonic curves for BR₅.
+- Not done: Lean for Engine S; geometry of the five-term variety; q ≥ 2 Galois groups as a theorem.
+
+## Phase E: two big attempts (planned 2026-11-12, nothing launched)
+
+**Status: R1, R2 done and reviewed (2026-11-12): both came back against the route (no group-law handle; `J_min = n − 2`). R3 is the deciding test. R3 done (see below). P1′ done 2026-11-12 (see below). P2′ done 2026-11-12 (see below). R4, R5 and P3′–P6′ not launched. Launch each stream on
+the user's go-ahead.**
+
+### E.0 Why these two, and what success would mean
+
+After C1 the position is this.
+- Every engine in `Defs` is either a bounded-parameter family, or an offset tower, whose parameters
+  grow with depth but cost one square root each (Z4, Y1a).
+- For a bounded family, reaching a given K is an F-point on a K-twisted Galois cover of a rational
+  base. Every F-curve on such a cover is itself a full twist (B3's component-orbit lemma, C1 §2.3),
+  so Theorem G never applies through the cover map. A construction uniform in K would bound
+  resolvent degree (C1 §5).
+- So inside the current `Defs` exactly two kinds of argument can still close all n:
+  - **E-R**, an engine whose parameter count grows: Theorem R, i.e. the simultaneous squares;
+  - **E-P**, arithmetic that is not uniform in K: a local–global or pseudo-real-closed statement
+    for F, for the specific covers we need.
+
+Honest odds: both are research problems with no known method. The plan is built so that each stream
+ends in a written statement worth keeping, whichever way it goes, and so that dead routes are killed
+early. The ground rule of this plan still holds: obstructions are scoped to their route.
+
+**What counts as success, in decreasing order.**
+1. The target, unconditionally.
+2. The target conditional on a conjecture that experts do hold a view on (replacing Taylor's
+   question, on which Taylor himself had none).
+3. One new unconditional degree (9 totally real, or 10).
+4. A proved obstruction for a whole class of routes, so that effort stops going there.
+
+### E-R: the simultaneous squares (Theorem R)
+
+**Where it stands.** Theorem R (Y1a): n − 1 non-homothetic positive-definite binary forms Q_j over
+L with Q_j(τ) a square in K_L, plus (ND1, ND2), give β ∈ P, totally real included. Then the offset
+distances come from linear algebra. Searches at n = 9, 10 found no points. Z5: no genus 0 or 1
+curves on V_τ. B1: expected dimension of low-gonality curves is ≤ −16.
+
+**Why another look is justified.** Three things were not tried.
+- The problem has a group law that the surface V_τ hides (R1 below).
+- The count n − 1 was never minimised against the other linear parameters available (R2).
+- No search had a positive control, so "nothing found" carries little weight (R3).
+
+| id | kind | question | depends on |
+|---|---|---|---|
+| R1 | math, Opus-level | **DONE 2026-11-12 (see below).** **The Jacobian formulation.** Write Q_j = (x − ω_j)(x − ω̄_j), ω_j ∈ L(i). Then Q_j(τ) is a square in K_L iff τ − ω_j ∈ K_L^× · (K_L(i)^×)². For H: y² = ∏_{j ≤ J} Q_j (genus J − 1, no real branch points) this says the K_L-point (τ, y) has trivial image under the "x − T" 2-descent map at every factor, i.e. it lies in 2·Jac(H)(K_L) up to the usual normalisation at infinity. Prove this precisely (which class group, which point at infinity, the kernel of x − T when deg is even). Then the problem becomes: **find a curve H over L in this family and R ∈ Jac(H)(K_L) with 2R on H.** Deliverables: the exact statement; a check against Y1a's totally real quintic (J = 4 there); the count of conditions "2R ∈ H" as a function of J (it is (J − 2)·n over L, against J·n − … unknowns plus 2J − 3 moduli). | — |
+| R2 | math | **DONE 2026-11-12 (see below).** **The true minimum number of squares.** Theorem R uses the line as partner and the parabola as base. Tabulate the linear K-parameters available from every source at once: Bézier base (Q3: n − 2 forms), circle partner (W1: rank +2), conic or quartic-graph partner, the five-term sine family as partner (new), overshoot. State J_min(n) with proof. Each parameter that is not an offset distance removes one square. If J_min(n) ≤ 3 for some n ≥ 9 the problem is a K_L-point on a curve of genus ≤ 5 with free moduli, a different and much better problem. Expected answer [Heuristic]: J_min ≈ n − 6. | — |
+| R3 | computation | **DONE 2026-11-12; revised 2026-11-12 (see below).** **Degree 7 as the control.** Plain search over ℚ (and ℚ(√d) at H = 1 only), not over the infinite field L. n = 5 positive control; n = 6 K3 and n = 7 are line-only over ℚ in the searched boxes. n = 7 is general type, so the null is the expected Bombieri–Lang outcome, not a test of the route. The n = 6 rank-4 net fibrations are defined over non-solvable degree-15 fields and do not descend to the real solvable L. Record a positive control at n = 5 (Y1a's example) run through the same code. | R1 |
+| R4 | math | **Structured τ.** Look for τ for which W_τ = ⟨1, τ, τ²⟩ contains squares for a structural reason: τ a rational function of an element with a known square root in K_L; τ a value of a Chebyshev or Lattès map; τ in the image of a degree-2 map from a curve with many K_L-points. C1 §6.4 shows only indefinite or rank-1 forms arise from the obvious choices (τ = μ² + μ⁻²), so the question is whether any choice gives **two** definite forms. Two is the first nontrivial case (genus 1). | R1 |
+| R5 | math | **Use elliptic curves through the conjugates.** For n ≤ 9 every K_L-point of the plane lies on an L-rational cubic (C1 §6.3), so genus-1 curves over L with new K_L-points exist rationally. Theorem R's genus-1 curves (two layers) form a 4-dimensional linear system each, too small. Question: is there a tower shape (three layers with one relation, or a non-parabola base) whose genus-1 quotient ranges over a linear system of dimension ≥ n? This is a search over tower shapes, not over points. | R2 |
+
+**R1 done (2026-11-12), reviewed and corrected: the exact condition is lifting to `C_B`; no new handle.**
+See `R1.md` (read its "Review corrections" section first), log `HANDOFF-alg-R1.md`.
+- **Theorem R1 [Proof, repaired in review].** For `H: y² = ∏_{j≤J}Q_j` (`g = J−1`, `∞^±` L-rational)
+  and `H̃ = C₁ ×_{ℙ¹} ⋯ ×_{ℙ¹} C_J`, the cover `π: H̃ → H` is unramified Galois with group
+  `(ℤ/2)^{J−1}`, `g(H̃) = 1 + 2^{J−1}(J−2)`, and `Q_j(τ)` square for all `j` ⟺ `P ∈ π(H̃(K_L))`.
+  `π` is the pull-back of an isogeny `φ: A → Jac(H)` of degree `2^{J−1}`; `π_*: Jac(H̃) → Jac(H)`
+  itself is **not** an isogeny (its kernel has positive dimension for `J ≥ 3`). The obstruction is
+  the tuple `[Q_j(τ)]` in `H¹(K_L, ker φ) = (K_L^×/K_L^{×2})^{J−1}`.
+- **Correction to the plan.** `2·Jac(H)(K_L) ⊂ φ(A(K_L))`, so "lies in `2Jac`" is sufficient but
+  strictly stronger than `SS_J`. No index on rational points is claimed. In even degree the
+  2-descent map lands in `A^×/(K_L^× A^{×2})`: writing `τ − ω_j = c_j w_j²`, 2-divisibility asks
+  the classes `[c_j]` to be **equal** (mod `±` squares, up to a kernel of order ≤ 2), not to vanish.
+- **Strong condition** `2R = [P−∞⁺]`: for fixed `H` the solutions lie on the étale `4^g`-preimage
+  curve of `H`, of genus `1 + 4^{J−1}(J−2)` (`1, 17, 129, …` at `J = 2, 3, 4`).
+- **Y1a check** (`n = 5`, `J = 4`): the four identities `ρ_j² = Q_j(β)` hold exactly (re-verified
+  in review); `g(H) = 3`, `g(H̃) = 17`, `deg π = 8`. `Jac(H)[2](L)` has rank `J` for `J` even and
+  `J − 1` for `J` odd (so 4 here); `ker φ` has rank `J − 1` always.
+- **Not usable as stated in R1.md:** the Faltings remark (our `L` is an infinite extension, so
+  finiteness of `H̃(K_L)` does not follow); the "two different quintics" remark (Y1a's and Y1b's
+  quintics are the same field under `x ↦ 3 − x`).
+- **Assessment.** `H̃` is Y1a's `C_B`: the exact condition is the same curve as before. `J = 2` is
+  trivial (`Jac = H`) and reproduces Y1a §4.6. For `J ≥ 3` the group law gives no new handle, so
+  the kill criterion "R1 fails to give a usable group-theoretic handle" **is met**: R3 falls back
+  to plain search (drop "via R1's doubling construction" from R3's brief).
+
+**R2 done (2026-11-12), reviewed and corrected: the only count that gives a theorem is `n − 2`.**
+See `R2.md` (read its "Review corrections" section first), log `HANDOFF-alg-R2.md`.
+- **Two counts [Proof].** *Type I* parameters are jointly linear with the offsets; a nonzero
+  `L`-solution is guaranteed by `U ≥ n + 1`. *Type II* parameters are only separately linear; they
+  give a determinantal condition of codimension `n − P` on the tower, not free parameters. The
+  plan's "each parameter that is not an offset distance removes one square" was wrong: it holds
+  for Type I only.
+- **Strict minimum [Proof modulo G2's catalogue].** `J ≥ n − 2`: the base contributes `B ≤ 2`
+  (parabola, power law, cubic Bézier with quadratic `x(t)`), and the only uniformly available
+  Type I partner parameter is the intercept of a fixed-slope line. Attained by the cubic Bézier
+  base + line (Q3). For `n ≥ 9`, `J ≥ 7`, `g(C_B) ≥ 321`.
+- **Dimension count for a conic or quartic-graph partner: `J = n − 6`.** The rank condition has
+  codimension `n − 5` and the solution set in the `J + 2` tower parameters is a cone, so
+  `J + 1 ≥ n − 5`. (R2.md's "sharp `n − 7`" forgot the scaling and is wrong; `n = 9`, `J = 2` is
+  generically only the zero tower.) At `n = 9`: `J = 3`, genus 5. At `n = 10`: `J = 4`, genus 17.
+- **The Type II condition is the old frontier problem.** It needs an `L`-point on a variety cut
+  out by `n − 5` conditions, the same shape as the bounded-engine conditions; W1 §2 already
+  identified the conic partner with H1's linear-support family. At `n = 9` the conic route is
+  `SS_3` **plus** a 4-condition `L`-point problem: two open problems, not a trade.
+- **No conic linearisation [Proof].** A nonzero binary quadratic form cannot vanish on a
+  direction space of dimension ≥ 2. Same for circles and graphs of degree ≥ 2.
+- **Sine/exp no-go [Proof].** With algebraic parameters, Lindemann–Weierstrass reduces a sine
+  partner to a horizontal line. Engine S (C1) is a separate route, not a Theorem R partner.
+- **Overshoot [Proof].** No linear parameter; it is a degree/realness device.
+- **Kill criterion.** First half **met**: `J_min(n) = n − 2` in the only sense that gives a
+  theorem. The conic variant is not a way round it. R3 (plain search at `n = 7` with the `n = 5`
+  control; the cubic Bézier base with `J = 3` on Y1a's quintic is a good positive control) is the
+  deciding test. R4 and R5 wait on R3.
+
+**R3 done (2026-11-12; revised 2026-11-12 after review).** **Field actually searched: ℚ**
+(boxes `|ρ| ≤ H`, plus the coefficient box for τ), with `ℚ(√d)` only at `H = 1`; no cubic
+`L` was reached. This is not the infinite field `L` of Theorem R. See `R3.md` (field-scope
+caveat and findings summary first), log `HANDOFF-alg-R3.md`. Plain search; the R1 doubling
+construction was dropped per R1's review. **Outcome: n = 5 control passes; n = 6 and n = 7
+are line-only over ℚ in the searched boxes; kill criterion not established.**
+- **Fields [Wolfram].** `q5 = x⁵ − 5x³ + 4x − 1` (disc 38569), `q6 = ∏_{i=1}^6(x−i)+1`
+  (disc `7⁵·23·53²`), `q7 = ∏_{i=1}^7(x−i)+1` (disc `17·3457·15601·669577`), all irreducible,
+  totally real, with Galois group `S₅/S₆/S₇` certified by cycle types.
+- **n = 5 control [Computed, exact; identities Wolfram].** With `τ = β`, `H = 6..11` gives
+  `1,2,4,6,7,9` positive-definite classes. `H = 11` recovers all four Y1a forms up to scale
+  plus five new ones; all nine identities `ρ² = Q(β)` and discriminants (`176, 3344, 16, 23,
+  2159, 4199, 12704, 30448, 13648`) verified. The code does find positive-definite forms when
+  they are present in the box, so the n = 6 and n = 7 null results are not a code artifact;
+  this does not show that ℚ-points are a proxy for `L`-points.
+- **n = 6 K3 [Computed, exact].** `τ = β`, `H ≤ 9`: every ℚ-point is `deg` (the line `ℓ_τ`) or
+  `lin`; totals `8,16,24,40,48,72,88,112`, `pd = 0`. 324 τ-classes at `H = 2,3` and 48 at
+  `H = 4,5` give zero nondegenerate ℚ-points. The expected elliptic-fibration F-points did
+  not appear.
+- **n = 6 fibrations [Proof; discriminant/norm Wolfram].** The 15 rank-4 net members give quadrics `q_{ij}`
+  over degree-15 fields `F_{ij}` (stabilizer `S₂ × S₄`). The ruling discriminant
+  `δ_{ij} = ∏_{k≠i,j} w_k` is a square in `F_{ij}` (the canonical square root is
+  `H_{ij}`-invariant), so both rulings, and hence the two dual genus-1 fibrations, are
+  defined over `F_{ij}`. A single fibration has stabilizer `S₂ × S₄` (index 15), not
+  `S₂ × A₄`; the norm of `δ` is `(7^15·23^3·53^6)²`, a consistency check. `F_{ij}` is
+  non-solvable, so none of these 30 fibrations is defined over the real solvable `L`.
+  Scoped to these 30; not a classification of all elliptic fibrations and not a negative
+  about `algebraic_Pconstructible`.
+- **n = 7 [Computed, exact].** `τ = β`, `H ≤ 6`: totals `8,16,24,40,48`, all `deg`/`lin`; 324
+  τ-classes at `H = 2` and 48 at `H = 3` give zero nondegenerate ℚ-points. So neither
+  `J = n − 2 = 5` nor `J = n − 1 = 6` is met by a ℚ-point there. For `n ≥ 7`, `V_τ` is of
+  general type; Bombieri–Lang makes the null expected, so this is not a test of the route.
+  `[Heuristic]`
+- **Theorem R read-out [Wolfram].** Parabola `J = 4`: kernel dim 1, and `a`, `c′` are exactly
+  Y1a's values; the minpoly of `X` has Y1a's roots. Cubic Bézier `J = 3`: for all four triples
+  of Y1a's forms the kernel is 1-dimensional, ND1 holds, `X ∉ ℚ`, `[K(X):ℚ] = 5` with an
+  irreducible totally real minpoly. R2's `J = 3` control is confirmed.
+- **Real quadratic `L` [Computed, exact].** `L = ℚ(√d)`, `H = 1`: `d = 5` with three τ shapes
+  and `d = 2,3` with `τ = β + √d β²` give 18–81 solutions each, all on `ℓ_τ`, none genuine.
+  The height-1 box is close to vacuous (coordinates in `{−1,0,1}`) and has no positive control:
+  it also finds nothing at n = 5, where forms are known. The brute-force frontier is quadratic
+  `H = 2` (`5¹⁴ ≈ 6.1 × 10⁹` per τ) and cubic `H = 1` (`3²¹ ≈ 1.0 × 10¹⁰` per τ); beyond it is
+  `[Open]`.
+- **Kill criterion [Heuristic]. Not established by R3.** R2's half holds (`J_min = n − 2`), but
+  R3's half is a bounded-height ℚ-point statement on a general-type surface; it says nothing
+  about `V_τ(L)`. The route is **parked, not closed**: it needs `n − 2` simultaneous `L`-points,
+  with no group-law handle (R1), no way to lower the count (R2), and no computation that can
+  see `L`-points (R3). R4/R5 stay unlaunched under the plan's order. Not closed: R2's Type II
+  conic/determinantal n = 7, `J = 0/1` search and the cubic-Bézier real crossing count, both
+  `[Open]`.
+
+**Order.** R1 ∥ R2 first (paper only, one session each). R3 after R1. R4, R5 only if R2 does not kill
+the route.
+
+**Kill criteria.**
+- R2 shows J_min(n) ≥ n − c for a fixed c, **and** R3 finds no structured point at n = 7 with the
+  n = 5 control passing. Then write the route up as closed for constructions of this shape.
+  (R3 has run and did **not** establish the second half; see the R3 completion block above.)
+- R1 fails to give a usable group-theoretic handle (the doubling locus is as bad as V_τ). Then R3
+  falls back to plain search and the route's odds drop sharply.
+
+**Insight to carry in.**
+- Only the *product* ∏Q_j(τ) can be made a square for free (interpolate y² at τ when 2J ≥ n − 1).
+  The whole difficulty is splitting that one square into J separate ones. That is exactly the
+  gap between a point of H and a point of the multiquadratic cover of H, which is the pull-back of
+  H under multiplication by 2. So the natural objects are Jac(H) and its 2-isogenies, not V_τ.
+- No rational curve parametrises two definite forms at once (a pencil of binary forms with four
+  square members violates Riemann–Hurwitz). So any success is through genus ≥ 1.
+- The moduli of H are free and defined over L, while the point is over K_L. Families of abelian
+  varieties over a rational base can have unirational total space when the family is "small"
+  (the Weierstrass family through two points is 𝔸⁴; Kuga–Sato varieties of level 1 have p_g = 0 up
+  to the 9-fold product). Whether the analogous total space here is unirational for small J is
+  the one place where a genuinely positive surprise is possible. R1 should compute this for J = 2, 3.
+
+### E-P: arithmetic for F (a targeted pseudo-real-closed statement)
+
+**Where it stands.** (PRC₈) is open and unstudied (L1). Theorem H (P1, Q1) gives E-points only in
+the circle-method range, which no route reaches (Q2, Q3). Taylor's question implies (SR) and (SR′).
+
+**Why another look is justified.**
+- We do not need (PRC₈). For each K we need **one** point on **one** of countably many explicit
+  twisted covers: I_{K′,D}, 𝒞_{K,p,q}, 𝒮_{K,p,q}, and the power × power family (C1 §3–4).
+- Local solubility is already free over ℚ^{tr,solv} (Lemma LS). Only the passage from local to
+  global is missing. For curves there is a standard conjecture about exactly that.
+- Nobody has tried to *refute* the statement for F. A week spent on that is cheap either way.
+
+| id | kind | question | depends on |
+|---|---|---|---|
+| P1′ | math | **DONE 2026-11-12 (see below).** **State the minimal conjecture.** "(T_K): for every number field K with a real place there are a totally real solvable L (or L ⊂ F) and (p, q) such that the twisted cover has an L-point of the required real type." Give it in the three equivalent forms: twisted cover; specialisation ("K_L is the root field of a member of the family over L", the Beckmann–Black / parametric-extension language of Dèbes, König–Legrand); multiplicative ("u and 1 − u dependent modulo L^×", C1 §4). Record exactly which real points are needed. | — |
+| P2′ | math, Opus-level | **DONE 2026-11-12 (see below).** **Brauer–Manin under solvable base change.** For a curve X over a number field, the conjecture of Poonen and Stoll says X(𝔸)^{Br} = ∅ whenever X has no rational point; for curves the Brauer set equals the finite abelian descent set. Question: for X one of our twisted curves and (x_v) an adelic point, is there a totally real solvable L′ over which the base change of (x_v) survives *every* finite abelian descent? For one covering it is plausible (the obstruction is a class in a Selmer-type set attached to a finite Galois module, and Lemma LS lets us choose L′ with prescribed local behaviour). The difficulty is uniformity: there are infinitely many coverings and L′ must be one number field. Sub-questions: (a) how do Selmer sets of the n-coverings of Jac(X) behave in solvable towers (they can grow; does the obstruction to a *given* adelic point die?); (b) is it enough to control the 2-part or one prime, using that our X have explicit maps to a conic with group A_n; (c) does the answer change if X is allowed to vary over the countable family, so that only one member needs an unobstructed point. Deliverable: either "Stoll's conjecture ⇒ the target" [Proof], or the precise place where base change cannot help. | P1′ |
+| P3′ | math + computation | **Try to refute.** Look for an invariant that could prove some curve over ℚ with real points has no F-point. Already excluded: point degrees (solvable steps give every degree, so no index obstruction); composition factors (engines carry every A_n); Northcott (L1). Still to try: (a) a height or measure argument (the set of fields reachable by bounded-parameter engines of bounded complexity is thin; is there a counting statement that survives towers?); (b) a model-theoretic invariant of the closure (is the theory of F decidable or tame in a way PRC fields are not, or vice versa); (c) a p-adic analogue: for the closure of ℚ_p-points under the same operations, does the analogous statement fail, and if so does the failure globalise. | — |
+| P4′ | computation | **Small models.** Replace 8 by d ∈ {2, 3, 4} and the engines by the trinomials of degree ≤ some bound, so that the closure E_d is computable to a few levels. Ask whether explicit curves of genus above the gonality range (first cases: genus 3 non-hyperelliptic for d = 2; genus 5 or 6 for d = 3, 4) have E_d-points, by exhaustive search over small towers. Evidence of points appearing at low level supports the conjecture; systematic absence at genus just above the gonality range is a warning. | — |
+| P5′ | literature, then math | **DONE 2026-11-13 (see below).** **Rumely–Moret-Bailly with a shape constraint.** The proof that ℚ^{tr} is PRC builds a function on the curve whose fibres over an interval are totally real (capacity theory). Read the proof for curves with one question: can the construction be steered so that the fibre polynomial has a prescribed sparse shape (trinomial, Chebyshev trinomial, odd)? The Fekete–Szegő side works with Chebyshev polynomials of the real set, which is suggestive given Engine S, but the Galois type of the output is uncontrolled in every version we know. Deliverable: a yes with a sketch, or the precise step where shape control is lost. | — |
+| P6′ | math | **(BD) through the circle method, one more time, with Engine S.** Q3 sharpened (BD) to "about 9n P-parameters per K-condition at bounded degree". Engine S gives real-rooted shapes of unbounded degree with 3 essential parameters, so it does not meet this. Record that explicitly and check the one remaining idea: Weil restriction along a *varying* extension (degree-D points on the condition curve, D large), which raises dimension to about D; C1's working showed the total space is a quotient of a product of two Galois-closure covers, not a complete intersection of low degree. Confirm and close, or find the gap. | — |
+
+**P1′ done (2026-11-12): the minimal conjecture, stated; three forms proved equivalent.** See
+`P1prime.md`, log `HANDOFF-alg-P1prime.md`, check script `scripts/P1prime_checks.py` (Python;
+Wolfram unavailable).
+- **"(or L ⊂ F)" is vacuous [Proof].** It is equivalent to β ∈ F (take L = ℚ(β)). The base class
+  must be fixed: TR-solv ⊂ R-solv ⊂ E ⊂ F_{<n}. The headline is (T; R-solv), implied by Taylor's
+  question and weaker in that only the one real place L ⊂ ℝ is constrained.
+- **Lemma D [Proof].** For Gal ⊇ A_n, n ≥ 9, no L ⊂ F_{<n} splits K: L ∩ Ω ⊆ ℚ(√disc). An
+  induction on n only enlarges the base field.
+- **(T_β; 𝓛) [Proof of sufficiency].** There are L ∈ 𝓛, a real M ⊇ L(β) finite over L, and an
+  engine member over L with a real root x₀, M = L(x₀). The engines are tri, power × power (pp),
+  Chebyshev, five-term. Theorem X uses M ⊋ L(β), via the square lift.
+- **Three forms ⟺ [Proof].** (I) the M-twist of the ordered-roots (Galois-closure) variety has an
+  L-point; (II) M is a factor of a specialisation algebra; (III) dependence: 1, τ, τ^D L-dependent;
+  τ, 1 − τ multiplicatively dependent mod L^×; Lissajous collinearity; five-term L-dependence.
+- **Canonical curve [Proof].** pp(p, q) gives the M-twist of the Galois closure Ĉ_{p,q} of the
+  three-point map x^p(1 − x)^q, with monodromy S_d for coprime p, q > 0. The genus formula
+  reproduces H1's 47881 at D = 9. This is the object P2′ should take.
+- **Real points [Proof].** For tri, pp and five any L-point gives a drawable crossing; the real
+  condition is existence only. The capacities are tri 2/3, coprime pp **3** (Python check for
+  |p|, |q| ≤ 7), sine engines all patterns. The lift is needed only when r ≥ 4 at σ₀. Taylor ⇒ (T)
+  needs no density step except for the Chebyshev cosine form.
+- **Lemma U [Proof].** After a totally real solvable base change, K_L/L is unramified at every
+  finite prime.
+- **Induction measures.** Discriminant: trivial by Lemma U. Height: not well-founded on F.
+  Gonality: geometric gonality is constant in β, and F-gonality is circular. All three fail;
+  insight (i) is untested beyond them.
+
+**P2′ done (2026-11-12): Stoll's conjecture restates the target; base change acts only on the
+cohomological layer.** See `P2prime.md`, log `HANDOFF-alg-P2prime.md`. Paper only, no computation.
+- **Stoll restates, does not imply [Proof].** Under X(𝔸_L)^{f-ab}_• = X(L), (T_β; 𝓛) ⟺ some
+  twisted Belyi curve X_L^{M,p,q} has a non-empty f-ab set off the branch fibres. No unconditional
+  way to show f-ab non-emptiness without a point is known in genus ≥ 2.
+- **Local solubility everywhere [Proof sketch].** Free after totally real solvable base change
+  (Weil bound + Lemma LS/U). **Correction to P1′ §5:** an L-point needs r ≤ 3 at *every* real
+  place of L, not only σ₀; take the lift constant c ∈ ℚ to make this uniform.
+- **Proposition B [Proof].** Base change of a fixed adelic point x is f-ab-unobstructed over L only
+  if [L:k]·c(x) = 0 in ∏J(k_v)_•/\hat{Sel}(J/k) (norm on Selmer groups). Non-torsion obstructions
+  survive every finite extension. This answers the plan's literal question negatively.
+- **Levels [Proof, given a degree-1 class].** f-ab ≠ ∅ iff every level is non-empty over the same L
+  (compactness). Each odd level clears after totally real solvable base change, but the
+  construction needs local degree ≈ 4g·log_p n, unbounded in n: no single number field.
+- **Two layers.** Layer 1, the Pic¹ class in Sha(J/L): cohomological; Ciperiani–Wiles is the
+  genus-1 precedent; [Open]. Layer 2, ι(x) ∈ \overline{J(L)}: the Mordell–Weil sieve. It is
+  non-cohomological, Lemma LS does not reach it, and by Siksek's dimension count plus rank
+  heuristics in solvable towers it gets more rigid up the tower [Heuristic]. **This is the place
+  where solvable base change cannot help.**
+- **Sub-questions.** (a) Selmer growth is irrelevant for fixed points. (b) The conic is ℙ¹ over L and
+  contributes nothing [Proof]; one prime ℓ keeps the full ℓ-adic Chabauty problem. (c) Jac(X) ~
+  ∏_ρ B_ρ ⊗ ρ_c with B_ρ over ℚ fixed (trivial, sign and standard pieces vanish); the family gives
+  structure for P3′, not leverage.
+- **Kill criterion, first half:** met in the scoped sense above (not a claim that no L works).
+
+**P5′ done (2026-11-13): no; shape control is lost at the global step.** See `P5prime.md`, log
+`HANDOFF-alg-P5prime.md`, check script `scripts/P5prime_checks.py` (Python; Wolfram not attached).
+- **Method, for F [Proof sketch].** With no integrality, RMB is local functions (S1), weak
+  approximation in a Riemann–Roch space (S2), optional Hilbert irreducibility (S3). Capacity
+  theory and Fekete–Szegő patching serve only integrality, so they are not the lever.
+- **Steering is the problem [Proof].** Some f has a fibre over an e-field ⟺ X has a point over an
+  e-field. For the canonical curve that is (T_β; one-step engine fields): the target one level up.
+- **Not local once N ≥ 5 [Proof; Python].** "M is a tri(N)-field" is a point on the M-twist of a
+  complete intersection of genus 0, 4, 49, …, 47881 (N = 4, 5, 6, …, 9), equal to H1's Γ and the
+  Ĉ genus. For pp the curve has genus ≥ 4. At N ≤ 4 it is a conic (Hasse–Minkowski), so it is
+  local, but those degrees are solvable. RMB imposes only S-adic open conditions.
+- **Generic shape [Proof].** Every fibre is engine-shaped iff X is a component of a pull-back
+  W_λ. For pp the codimension in the Hurwitz space is 2m(N − 2) − 1. Under Bombieri–Lang,
+  infinitely many good fibres need an isomorphism correspondence between f and the engine (F2's
+  object).
+- **Signature [Proof].** Totally real fields of degree ≥ 4 are never tri- or pp-fields
+  (capacity ≤ 3), so the PRC form is the wrong statement for those engines.
+- **Chebyshev [Proof].** On ℙ¹ the output T_N = t₀ is a cheb member (drawable). For genus ≥ 1,
+  f = h ∘ φ controls only the bottom layer (Lüroth), so the hint does not lift.
+- **Open.** Is the twisted canonical curve *engine-resolvable* (a tower of engine pull-backs) over
+  a real solvable L? The untwisted Ĉ is, by its Galois-closure tower, but that tower does not
+  descend to the twist. Is Sh_cheb(M) (a surface) unirational? Is some degree-5 field with given
+  local data provably not a tri(5)-field (a genus-4 Chabauty problem)?
+
+**Order.** P1′ first (short). Then P2′ ∥ P3′. P4′ can run at any time on Sonnet. P5′ after P2′ if P2′
+does not close. P6′ is a half-session check.
+
+**Kill criteria.**
+- P2′ shows the obstruction cannot be removed by solvable base change for these curves, **and** P3′
+  finds no refutation mechanism. Then E-P ends with: the target is equivalent in difficulty to
+  Taylor's question for an explicit countable family of curves, stated cleanly, and we stop.
+- P3′ finds a refutation mechanism. Then everything redirects to making it a proof. That would be
+  the first negative result of the programme and needs the user's decision before it is pursued,
+  given the ground rule.
+
+**Insight to carry in.**
+- The object is a twisted Galois cover with group S_n (or S_{2p}) over a rational surface, and the
+  only F-rational intermediate cover is the discriminant conic. So nothing abelian is visible on
+  the cover itself; the abelian descent in P2′ lives on its Jacobian, which is large and whose
+  torsion fields are **not** solvable. A tempting shortcut is false: Jac(X)(ℚ^{solv}) is not
+  divisible, because ℚ(Jac[m]) has group inside GSp_{2g}(ℤ/m). Do not build on it.
+- The freedom that Taylor's question does not use: (i) F ⊋ ℚ^{solv} ∩ ℝ, and F is closed under the
+  engines themselves, so the statement is self-referential and could be proved by an induction on
+  some complexity of K that we have not found; (ii) infinitely many varieties, one point needed;
+  (iii) real, not totally real: only one real place of L is constrained.
+- (i) is the most promising and the least explored. X1 tried induction on Galois class and found
+  the base case blocked by three conjugation configurations. An induction that works would need a
+  measure for which the engine step is *decreasing*. Candidates to test in P1′: the conductor or
+  discriminant of K_L/L after the optimal solvable base change; the minimal height of a point on
+  the twisted cover; the gonality of the cover over F.
+
+### E.1 Resources and order across both
+
+| step | streams | model | sessions |
+|---|---|---|---|
+| 1 | R1 ∥ R2 ∥ P1′ | Opus-level for R1; others Sonnet-capable with review | 1 each |
+| 2 | P2′ ∥ P3′ ∥ R3 | Opus-level for P2′ | 1–2 each |
+| 3 | P4′ (background), P6′ | Sonnet | 1 |
+| 4 | R4, R5, P5′ as warranted | — | — |
+| 5 | consolidation into SUMMARY §12 | orchestrator | 1 |
+
+Rules as in §4: every claim labelled; Wolfram for computations where available, Python labelled as
+the fallback; one note and one handoff log per stream in `notes/algebraic/`; no `Defs` changes; a
+positive control for every search.
+
+### E.2 Not in this phase
+
+- A `Defs` change (a two-curve or multi-frequency operation). It remains the most realistic way to a
+  complete solution and remains the user's decision (SUMMARY §10 item 3; C1 §6.1).
+- Degree 9 totally real through the one-line reduction, the explicit S₁₀ decic, and Lean for the
+  solvable case and Engine S. These are the achievable targets and can run independently.
+
+## Phase F: forward search (planned 2026-11-13; stages A and B complete, see `F1.md`)
+
+See `PLAN-forward-search.md`. It replaces P4′. Idea: enumerate the engine parameter `λ` over
+small solvable fields and keep the cases where the fibre field descends to a field `K` over ℚ, so
+that `K` is an output, not an input. Solutions with `[ℚ(λ):ℚ] = m` are rational points of a fixed
+`m`-dimensional variety `W_m`; a family of solutions is a special subvariety of `W_m`, i.e. an
+identity between engine maps, and that is what the search looks for. Degree 5 (Bring–Jerrard) is
+the positive control and the calibration.
+
+Stage A (`F1.md`): exact FLINT pipeline (no PARI) with 50 passing checks; `W_m = Ĉ^m/(S_d × S_m)`
+(no twist); `tri(D) = pp(D − 1, 1)` up to Möbius, so the engines of degree `d` are the coprime
+`pp(p, q)`, `p > q`; `W₂` is of general type for all 8 engines with `7 ≤ d ≤ 9`, not shown for
+`d = 5, 6` (at `d = 5` rational or general type, open); `Ĉ` for `tri(5)` is Bring's curve.
+
+Stage B: Bring–Jerrard gives proved `tri(5)` solutions for all 20 test quintics (exact Trager check;
+filter never rejects). Sizes: `m = 6` (32–118-digit `h`) or `m = 12` (186–351 digits, including all
+totally real fields, which admit no real `λ`). So stage C can only find unexpectedly small
+solutions; C4 should enumerate by tower or be dropped.
+
+Families (`F2.md`, 2026-11-13): at `d ∈ {8, 9}` every family of `m = 2` solutions (for `K` with
+group `⊇ A_d`) lies over a curve `Γ ⊂ ℙ¹ × ℙ¹` along which the two fibre covers are isomorphic
+(Goursat plus a computed Riemann–Hurwitz bound). Hecke-type (étale) ones are excluded for `d ≥ 7`,
+because the triangle groups `Δ(2, pq, d)` are non-arithmetic and maximal (Takeuchi, Margulis,
+Singerman). Bidegrees `(1, k)` and `(2, 2)` are excluded by proof, and `(2,3)`, `(3,3)` by an
+exhaustive search over `F_ℓ`. What remains is ramified isomorphism correspondences of higher
+bidegree, with no known construction. At `d = 5` the explicit commensurator correspondence
+is not a family, and could only reach F20 quintics anyway.
+
+## Phase D9: degree 9 and 10 (planned 2026-11-13; D0 done, see `PLAN-degree9.md`, `D0.md`)
+
+The all-n target is set aside; `PLAN-degree9.md` aims at T9Q (every real algebraic number of degree 9).
+D0's census at n = 9:
+
+- No drawable pair has 10 jointly linear dials. The maximum, F = 9, needs a rational sextic.
+- New row **E**: a cubic Bézier `(t², Y(t))` against `y = g(x)` with `g ∈ ℚ[x]` of degree ≤ 6.
+  It works iff `s_{(4,3,2,1)}(τ₁, …, τ₉) = 0` for some `τ ∈ K`.
+  - The condition has degree 10, is linear in `e₇`, and contains `{p₁ = p₃ = p₅ = 0}`.
+  - It solves an explicit totally real S₉ nonic (positive control).
+  - A height-1 search on the non-degenerate field `q₃` found nothing.
+- The test field `∏(x − i) + 1` used so far is an odd-engine field. It is degenerate for these
+  searches; use `q₃`.
+
+E (2026-11-13, `D1E.md`), open:
+- The condition is `25 Tr τ³ · Tr τ⁷ = 21 (Tr τ⁵)²` for centred τ.
+- E polynomials are exactly `σ(t)E(t²) + r(t)`, so T9Q-via-E is versality of that 8-parameter
+  family.
+- Height-2 search null with a working control; no local obstruction on `q₃`.
+
+D1 (2026-11-13, `D1.md`):
+- Over ℚ it is dominated by E (degree 30).
+- Over F with `g` fixed rational it has one condition on the generator and real capacity 18: a
+  new single-condition F-row, degree unmeasured.
+
+H (2026-11-13, `H-deg9.md`), dominated:
+- over ℚ the fibre over a generator is a 3-fold of degree 266 in `ℙ⁵`;
+- over F, `c_τ = 3`.
+
+D9 stage 1 (E, D1, H) is done without closing T9Q; open threads are listed in `PLAN-degree9.md`.
+
+D3 (2026-11-13, `D3.md`), open:
+- the layer-2 genus-1 square condition is handled by R5 (j-matching the layer to the cubic through
+  the conjugates of a K-point);
+- 4 conic-support conditions at the partner remain.
+
+D4 (2026-11-13, `D4.md`): the one condition has degree ≥ 36, so it is killed for Lemma A (scoped).

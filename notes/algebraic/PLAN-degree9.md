@@ -1,0 +1,258 @@
+# PLAN-degree9: raising the degree bound past 8
+
+Planned 2026-11-13. **D0 done (2026-11-13), see `D0.md`. E done, open (2026-11-13), see
+`D1E.md`. D1, H done (`D1.md`, `H-deg9.md`); D3 done, open (`D3.md`); D4 killed for Lemma A
+(`D4.md`).** D2, D5 not launched.
+
+The all-n target is set aside (user decision, 2026-11-13). This plan aims at specific degrees:
+9 first, then 10, for rational coefficients and for P coefficients.
+
+**Ground rules.**
+- Research only until a route closes on paper; then one Lean stream per closed case.
+- **No `Defs.lean` changes, and no suggestions of any.** Every curve used must be one of the
+  existing constructors. A route that needs a new curve is out of scope.
+- Every claim labelled ([Proof], [Proof sketch], [Computed, exact], [Heuristic], [Open]).
+- Every negative is scoped to the route it blocks.
+- Every search has a positive control run through the same code.
+- One note `D<k>.md` and one log `HANDOFF-alg-D<k>.md` per stream, in `notes/algebraic/`.
+
+Read first: `SUMMARY.md` §1, §9, §10; `N2.md` (overshoot, the Descartes table); `W1.md` §0;
+`R2.md` review corrections; `B3.md` findings.
+
+## 0. Targets
+
+| id | statement | what is missing today |
+|---|---|---|
+| **T9Q** | Every real algebraic number of degree 9 over ℚ is P-constructible. | Totally real nonics with group A₉, S₉, PSL(2,8) or PΓL(2,8). Everything else is proved (nonreal root: Lean; solvable: Lean; imprimitive: degree-8 theorem over P). |
+| **T9P** | Every real root of a degree-9 polynomial with P coefficients is P-constructible. | At least 3 nonreal pairs: on paper (THREE-PAIRS), certificate not found (N1a), not in Lean. At most 2 pairs: open. |
+| **T10Q** | The same for degree 10 over ℚ. | A₁₀/S₁₀ with a nonreal root: one rational point on a Fano variety (MI-1). A₁₀/S₁₀ totally real: one P-line on a threefold. Other groups: towers (H5), group list from memory. |
+| **T10P** | The same for degree 10 over P. | Open; no route recorded. |
+
+**Success** is T9Q. It raises the headline number from 8 to 9. T9P, T10Q and T10P are stretch
+targets, in that order.
+
+**Why degree 9 is not the all-n problem.**
+- Resolvent degree does not obstruct a construction uniform in the field (Hilbert covers 9).
+- One case is missing, and the obstruction in it is realness: for a totally real field the
+  second power sum is positive, so the existing nonic proof (kill `p₂` by Meyer) cannot start.
+- The degree-9 streams were parked on 2026-11-04. Tools found later (P-points instead of
+  ℚ-points, Theorem G, Engine S, overshoot, the tower rank counts) were never applied to it.
+
+## 1. The working principle
+
+The root β is unknown; the curve parameters ("dials") must be numbers already constructed.
+"The curves cross at β" is one equation over ℚ(β), hence 9 equations over the base field.
+
+- If at least 10 dials enter **linearly**, a solution exists by linear algebra and is
+  automatically constructible. This is the only mechanism that has ever closed a degree.
+- Otherwise the dials satisfy a polynomial system, and we need a P-point on its solution
+  variety. That works when the variety has degree below 9 with a smooth real point (H2 Lemma A),
+  or carries a curve of low gonality over a subfield of P (A1 Theorem G), or can be solved one
+  step at a time with steps of degree ≤ 8.
+
+So each stream below is judged by three numbers at degree 9: how many dials are jointly linear,
+the dimension of the solution variety, and its degree.
+
+## 2. Stage 0: the degree-9 census (one session)
+
+**D0. Linear-dial census at n = 9, totally real.** R2 counted jointly linear dials for offset
+towers only. Do it for every pair of drawable families.
+
+- Families: rational `poly_graph` (degree ≤ 6) and its P-affine images; P-quartic graphs (Lemma
+  Q); conics; `power_law` with rational exponent; cubic Bézier; text-warp quartics (egg,
+  piriform); offsets of each; rotations of each.
+- For each pair record: crossing degree; real capacity (must reach 9); jointly linear dials
+  (Type I in R2's sense); remaining conditions; dimension of the solution variety with a
+  rational, and with a P-valued, change of generator.
+- Output: one table, sorted by remaining conditions, with the realness filter applied. Rows
+  with real capacity below 9 are dropped for T9Q but kept for T9P.
+- Known rows to reproduce as a check: odd engine (4 conditions); N2 overshoot with a rational
+  sextic (2 conditions, degree 1428); Bézier × Bézier (1 condition); depth-2 tower × circle
+  (rank 10).
+
+D0 decides the order of D1–D5. The order below is the default if D0 finds nothing new.
+
+**D0 result (2026-11-13, `D0.md`).**
+- No drawable pair reaches 10 jointly linear dials. The maximum, F = 9 (one condition), needs a
+  rational sextic.
+- New best T9Q row **E**: Bézier `(t², cubic)` × ℚ-sextic graph. Its condition is
+  `s_{4321}(τ) = 0`: degree 10, linear in `e₇`, and it contains `{p₁ = p₃ = p₅ = 0}`.
+  A positive control solves an explicit totally real S₉ nonic.
+- Height-1 box search on the non-degenerate field `q₃`: null.
+- **`q₁` is degenerate** (an odd-engine field). D1 must recount on `q₃`; on `q₁` the curve has
+  degree 20, not 19.
+- D4's count is confirmed.
+- **Revised order:** E (a D1 sub-stream), then D1 on `q₃`, then H (two ℚ-sextics, one rotated:
+  a 3-fold of sextics for each generator).
+
+**E result (2026-11-13, `D1E.md`). Open.**
+- The condition is `H(p₁, p₃, p₅, p₇) = 0`. Centred, it is `25 p₃p₇ = 21 p₅²`; even power sums
+  drop out [Proof].
+- E polynomials are exactly `σ(t)E(t²) + r(t)` (σ, E monic cubics, r linear), a rational
+  8-parameter family birational to the locus [Proof]. So T9Q-via-E is a versality question for
+  that family.
+- Height-2 LLL search on `q₃`, shift free: null. A new integer S₉ control was found by the same
+  code.
+- `X_{q₃}` is locally soluble at ∞, 2, every odd p ≤ 97, and 271.
+- D0 §3.4 corrected: with `g` fixed, `τ, Y` may be P-valued. That gives `c_τ ≥ 3` over F, which
+  M1/G/J dominate.
+- Next: D1 on `q₃`, first checking whether its condition also factors through a few power sums;
+  then H.
+
+**D1 result (2026-11-13, `D1.md`).**
+- Over ℚ: dominated by E. The condition has degree 30 (irreducible on `q₃`), i.e. weighted
+  `K = O(19)` against E's `O(1)`. No power-sum reduction.
+- Over F (`g` fixed rational, `X`, `Y` P-valued): `c_τ = 1`, real capacity 18 (attained). It is a
+  new single-condition F-row like M1/G/J, plus a rational 7-parameter choice of `g`.
+- Hypersurface degree not measured; that needs homotopy continuation.
+- Next: H.
+
+**H result (2026-11-13, `H-deg9.md`). Dominated.**
+- Over ℚ the fibre over a generator is a 3-fold of degree 266 in `ℙ⁵` (Thom–Porteous); the
+  low-degree special cases are dominated by E.
+- Over F: `c_τ = 3`.
+
+**Stage 1 done; T9Q not closed.** Open threads, in order:
+1. E versality (`D1E.md` §6);
+2. D1-over-F hypersurface degree for special rational `g` (needs homotopy continuation outside
+   the MCP);
+3. D3 (towers), now done, open; see below.
+
+**D3 result (2026-11-13, `D3.md`). Open.**
+- Layer 1 is free. The layer-2 square condition is a genus-1 curve `D` for every non-conformal
+  real layer, so the spare parameter cannot make it hold identically, and R4 is negative (scoped).
+- R5 removes it arithmetically: for `Q ∈ K²` whose conjugates' cubic `Γ_Q` has `Δ > 0`, one layer-2
+  shape parameter (a root of a sextic) gives `D ≅ Γ_Q` over F, so `ι(Q)` is a `K_F`-point. Checked
+  on `q₃`.
+- Left: 4 conic-support conditions at the partner, with no sequential order found. The fibre-curve
+  degree is unmeasured (homotopy).
+
+**D4 result (2026-11-13, `D4.md`). Killed for Lemma A (scoped).**
+- The one condition on the generator has degree ≥ 36: no weighted relation of weight ≤ 35 among the
+  centred coefficients of degree-9 factors of `R∘Q − x`. Mod 10007, with the cubic∘cubic family as
+  positive control.
+- `Q = R` is impossible. For E2 (T9P), D3 is the surviving all-P route.
+
+## 3. Stage 1: routes for T9Q
+
+### D1. Cubic Bézier against a rational sextic graph
+
+- **Set-up.** Find a generator τ of K, rational cubics X, Y and a rational sextic S with
+  `Y(τ) = S(X(τ))`, not of the trivial kind `S` linear, `Y = S∘X`. Then the Bézier arc
+  `t ↦ (X(t), Y(t))` meets `poly_graph S` at parameter τ, `inter_x` gives `X(τ)`, and τ is a
+  real root of a cubic over P.
+- **Count [Computed, exact, 2026-11-13].** For fixed τ and X, the condition is linear in
+  (Y, S): `span(1, τ, τ², τ³) ∩ span(1, ξ, …, ξ⁶)` with `ξ = X(τ)`. It always contains
+  `⟨1, ξ⟩` (the trivial solutions). A third dimension is one condition on X. For
+  `q = ∏_{i=−4}^{4}(x − i) + 1`, `τ = β`, `X = t³ + a t² + b t`, it is a plane curve of degree 19
+  in (a, b).
+- **Work.**
+  1. Let τ vary over K as well. The condition becomes one hypersurface in about 9 rational
+     variables. Compute its degree and singular locus.
+  2. It is determinantal. Look for linear spaces, rational subvarieties, or a parametrisation.
+  3. Exact box search for rational points (one equation, so cheap), with the nonreal-root
+     nonic as positive control.
+  4. Variant with X quadratic (crossing degree 12).
+- **Kill.** Degree far above the number of variables, no structure found, and a null search to a
+  height where the positive control succeeds.
+
+### D2. N5 revived: the overshoot locus with P-points
+
+- N2's overshoot engine leaves 2 conditions for totally real nonics; the locus W has degree 1428
+  and real points in every totally real K. It was searched over ℚ only.
+- **Work.** Describe W as a variety over ℚ twisted by K: components, dimension, singularities,
+  low-degree subvarieties. Apply Lemma A and Theorem G. State exactly which coordinates must be
+  rational (the sextic's) and which may be in P.
+- **Kill.** W is irreducible of general type with no curve of gonality ≤ 8 visible, as B3 found
+  for the line surface.
+
+### D3. Offset towers with a spare parameter
+
+- At n = 9 a depth-2 tower against a circle has rank 10 (W1), one more than needed, and no
+  realness obstruction. The solution family for a fixed field is positive-dimensional. At
+  n = 10, where it was searched, it has dimension zero.
+- **Work.**
+  1. For one explicit totally real S₉ nonic, compute the real solution family: dimension,
+     degree, components. Confirm the count against W1's rank.
+  2. Look inside it for a step-by-step solution, a rational curve, or a curve Theorem G handles.
+  3. State the square conditions in this formulation (ELI5: each offset's unit normal is a
+     square root at β). Check whether the spare parameter can be spent to make one of them hold
+     identically.
+- Related, unlaunched: **R5** (for n ≤ 9 the nine conjugate points lie on a cubic over the base
+  field; is there a tower shape whose genus-1 quotient uses it?) and **R4** (generators chosen so
+  two square conditions hold structurally). Fold both into D3.
+- **Kill.** The family has no component of degree < 9 and no low-gonality curve, and R5's linear
+  system stays too small.
+
+### D4. Two P-quartic graphs, one rotated
+
+- Curves `y = Q(x)` and `x = R(y)` with Q, R quartics over P (Lemma Q plus `rotate`). The
+  crossing polynomial is `R(Q(x)) − x`, of degree 16. No rationality conditions, real capacity
+  16.
+- **Count [Heuristic, 2026-11-13].** For a fixed generator there are 9 conditions on 8 effective
+  parameters, so no solution is expected. With the generator free the solution family has
+  expected dimension 6.
+- **Work.** Verify the count numerically on one nonic. Compute the degree. Look for a
+  step-by-step solution. The cubic∘cubic case (degree 9, no overshoot) is the positive control
+  for the code.
+- **Kill.** As D2.
+
+### D5. B3's leftovers on the line surface
+
+- The intrinsic curves Γ₇, Γ_{2,4}, Γ_pl on the surface S of good lines have unknown gonality
+  over F. The irregularity and fibrations of S are unknown.
+- **Work.** Compute genus and gonality bounds for the three curves. Compute `q(S)`.
+- **Kill.** All three have gonality above 8 and S has no fibration over a curve of genus ≤ 1.
+
+## 4. Stage 2: T9P (P coefficients)
+
+- **E1. Finish THREE-PAIRS (at least 3 nonreal pairs).** N1a's blocker was a rational
+  certificate centre. Z8 showed the centre need not be rational. Rewrite the chain with a
+  P-valued centre, then formalise (Engine9, Resolvent9, ChainOpen are not blocked).
+- **E2. At most 2 nonreal pairs.** By N2's Descartes table the shape must be odd or even
+  (4 conditions each). Only the routes with all dials in P carry over: D3 and D4. Run E2 after
+  D3 and D4 report, on whichever survives.
+- A success in D3 or D4 that never uses rationality closes T9Q and T9P together.
+
+## 5. Stage 3: degree 10
+
+Run only after Stage 1 reports.
+
+- **G1. MI-1.** A rational point on the (2,3) complete intersection `V'_K ⊂ ℙ⁸` for every decic
+  field with a nonreal embedding. It worked on examples for s = 1, 3, 5 and failed to height 4
+  at s = 4. Work: the s = 4 case; bad-prime local solubility; a fibration into conics or
+  quadrics.
+- **G2. Totally real decics.** One P-line on Y₀ (Engine C). Same kind of problem as D5.
+- **G3. Transfer.** Whatever closed degree 9: redo its count at n = 10 and n = 11.
+- **G4. The explicit S₁₀ decic in Lean** (H5's worked example). Independent of everything else.
+
+## 6. Order and resources
+
+| step | streams | model | sessions |
+|---|---|---|---|
+| 1 | D0 | Opus-level | 1 |
+| 2 | D1, D3 in parallel | Opus-level; computation on Sonnet | 2–3 each |
+| 3 | D2, D4, D5 as D0 ranks them | Opus-level | 1–2 each |
+| 4 | E1 (independent; can start at step 1) | Lean worker | several |
+| 5 | E2, G1–G4 | as warranted | — |
+
+Review each stream's note before the next step, as in Phases E and F.
+
+## 7. Deliverables
+
+- `D0.md`: the census table.
+- `D1.md` … `D5.md`: one per route, each ending with "closed on paper", "killed (scoped)", or
+  "open, with the exact remaining problem".
+- If a route closes: a statement of the theorem, the full chain of constructions with every
+  curve named by its constructor, and a Lean plan.
+- `SUMMARY.md` §1 updated at the end.
+
+## 8. Cautions
+
+- Every route here ends, at worst, at the same kind of problem as before: a P-point on a
+  variety. The bet is that at degree 9 one of these varieties is small enough (degree below 9,
+  low gonality, or a step-by-step solution). Nothing guarantees that.
+- The counts in D1 and D4 were made on 2026-11-13 in conversation. D1's degree-19 figure is
+  computed for one nonic; D4's count is a parameter count only. Both need checking in D0.
+- A rational box search that finds nothing is weak evidence unless its positive control is of
+  comparable size (lesson of R3 and F1 stage B).
