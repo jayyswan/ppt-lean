@@ -1,0 +1,32 @@
+int p=32003; ring r0=(32003),(t,u,s,a,b),dp;
+system("random",7);
+int trial; int done=0; poly chi0; poly X0; list L; int i,m,mask,d; poly N;
+int a0,b0;
+for(trial=1; trial<=200 && done==0; trial++){
+  a0=random(1,p-1); b0=random(1,p-1);
+  X0=t^3+a0*t^2+b0*t;
+  N=random(1,p-1)*t^3+random(1,p-1)*t^2+random(1,p-1)*t+random(1,p-1)
+    -(random(1,p-1)*X0^4+random(1,p-1)*X0^3+random(1,p-1)*X0^2);
+  L=factorize(N); m=size(L[1]);
+  for(mask=0; mask<2^m && done==0; mask++){
+    d=0; chi0=1;
+    for(i=1;i<=m;i++){ if((mask div 2^(i-1)) mod 2==1 && deg(L[1][i])>0){ chi0=chi0*L[1][i]^L[2][i]; d=d+deg(L[1][i])*L[2][i]; } }
+    if(d==9){ if(deg(gcd(chi0,diff(chi0,t)))==0){done=1;} }
+  }
+}
+"trial,a0,b0:"; trial; a0; b0; chi0;
+poly g=0; for(i=0;i<=8;i++){ g=g+random(1,p-1)*u^i; }
+poly chi=resultant(subst(chi0,t,u), t-u-s*g, u);
+chi=chi/leadcoef(chi); "deg chi in t:"; deg(chi,intvec(1,0,0,0,0));
+ideal G=std(ideal(chi));
+poly X=t^3+a*t^2+b*t; matrix M[5][3]; matrix C; int k,j; poly R;
+for(k=2;k<=4;k++){ R=reduce(X^k,G);
+  for(j=4;j<=8;j++){ C=coeffs(R+t^9,t); M[j-3,k-1]=C[j+1,1]; } }
+ring r2=(32003),(a,b,s),dp;
+matrix M=imap(r0,M);
+ideal J=std(minor(M,3));
+"dim,vdim:"; dim(J); vdim(J);
+poly f=eliminate(J,a*b)[1]; "deg f, sqfree:"; deg(f); deg(f/gcd(f,diff(f,s)));
+"f(0)==0 ?"; subst(f,s,0)==0;
+ideal J0=std(J+ideal(s)); "fibre over s=0:"; J0;
+quit;

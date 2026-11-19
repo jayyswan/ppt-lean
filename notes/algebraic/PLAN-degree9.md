@@ -133,6 +133,11 @@ D0 decides the order of D1–D5. The order below is the default if D0 finds noth
   positive control.
 - `Q = R` is impossible. For E2 (T9P), D3 is the surviving all-P route.
 
+**Row G hypersurface (2026-11-19, `D0-G.md`).** Bézier × P-quartic graph: the good generators
+form an irreducible (over ℚ) hypersurface of degree **180** in `K ⊗ ℂ`, fibre one `X` per
+generator. Exact mod p on five lines, with a planted-point control. Too big for the
+tangent-line / Lemma A route (scoped).
+
 **D5 result (2026-11-13, `D5.md`). Reduced to one question.**
 - `deg S ≥ 1466`: isolated nonsingular good lines in `X ∩ H`, certified at 45 digits (Python,
   since the job is too long for the MCP).

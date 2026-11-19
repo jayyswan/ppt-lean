@@ -1,0 +1,5 @@
+p,seed,dim,vdim,deg_s,sqfree,gcd_with_collisions: 32003 1 0 180 180 180 0 
+p,seed,dim,vdim,deg_s,sqfree,gcd_with_collisions: 32003 2 0 180 180 180 0 
+p,seed,dim,vdim,deg_s,sqfree,gcd_with_collisions: 32003 3 0 180 180 180 0 
+p,seed,dim,vdim,deg_s,sqfree,gcd_with_collisions: 1000003 4 0 180 180 180 0 
+p,seed,dim,vdim,deg_s,sqfree,gcd_with_collisions: 65521 5 0 180 180 180 0 
