@@ -31,7 +31,7 @@ p0=randn(ComplexF64,37)*1e-3
 # move start to a generic base point by a straight-line parameter homotopy
 R0=solve(F,[x0]; start_parameters=zeros(ComplexF64,37), target_parameters=p0)
 xs0=solutions(R0); println("moved to generic base: ", length(xs0))
-mres=monodromy_solve(F, xs0, p0; max_loops_no_progress=parse(Int,get(ENV,"NOPROG","8")), permutations=true, threading=true)
+mres=monodromy_solve(F, xs0, p0; max_loops_no_progress=parse(Int,get(ENV,"NOPROG","8")), permutations=true, threading=true, timeout=parse(Float64,get(ENV,"HCT","4500")), show_progress=true)
 println(mres)
 S=solutions(mres); println("generic fibre count found: ", length(S))
 serialize("tb_hc_generic.jls", (p0,S,permutations(mres)))
