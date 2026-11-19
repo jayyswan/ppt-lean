@@ -175,13 +175,17 @@ theorem ellipticPiInc_eq_two_complete_sub {c n θ : ℝ} (hc : c < 1) (hn : n < 
     = 2 * ellipticPi c n - ellipticPiInc c n (Real.pi - θ)
   ring
 
-/-- **Reduction to the first quarter turn.** For `n < 1`, if `Π(n, ·)` is P-constructible at
-every P-constructible `θ ∈ [0, π/2)`, then it is P-constructible at every P-constructible
-upper limit: shift by whole half-turns (`Π(θ + mπ) = Π(θ) + 2mΠ(n)`), then reflect about
-`π/2`; the complete integral `Π(n)` handles the endpoint. -/
-theorem ellipticPiInc_Pconstructible_of_base {c n Φ : ℝ} (hcP : PConstructible c)
-    (hnP : PConstructible n) (hΦP : PConstructible Φ) (hc0 : 0 < c) (hc : c < 1)
-    (hn : n < 1)
+/-- **Reduction to the first quarter turn, with the complete integral supplied separately.**
+For `n < 1`, if `Π(n, ·)` is P-constructible at every P-constructible `θ ∈ [0, π/2)` and the
+complete integral `Π(n)` is P-constructible, then `Π(n, ·)` is P-constructible at every
+P-constructible upper limit: shift by whole half-turns (`Π(θ + mπ) = Π(θ) + 2mΠ(n)`), then
+reflect about `π/2`.
+
+This variant is what the modulus transformations use: they reach `c < 1` moduli for which
+`ellipticPi_Pconstructible` does not apply directly. -/
+theorem ellipticPiInc_Pconstructible_of_base' {c n Φ : ℝ} (hcP : PConstructible c)
+    (hnP : PConstructible n) (hΦP : PConstructible Φ) (hc : c < 1) (hn : n < 1)
+    (hK : PConstructible (ellipticPi c n))
     (base : ∀ θ : ℝ, PConstructible θ → 0 ≤ θ → θ < Real.pi / 2 →
       PConstructible (ellipticPiInc c n θ)) :
     PConstructible (ellipticPiInc c n Φ) := by
@@ -190,7 +194,6 @@ theorem ellipticPiInc_Pconstructible_of_base {c n Φ : ℝ} (hcP : PConstructibl
     PConstructible.sub hΦP (PConstructible.mul (int_Pconstructible m) pi_Pconstructible)
   have hkey := ellipticPiInc_add_int_mul_pi hc hn (Φ - m * Real.pi) m
   rw [sub_add_cancel] at hkey
-  have hK : PConstructible (ellipticPi c n) := ellipticPi_Pconstructible hcP hnP hc0 hc hn
   have hterm : PConstructible (m * (2 * ellipticPi c n)) :=
     PConstructible.mul (int_Pconstructible m) (PConstructible.mul two_Pconstructible hK)
   rw [hkey]
@@ -204,5 +207,18 @@ theorem ellipticPiInc_Pconstructible_of_base {c n Φ : ℝ} (hcP : PConstructibl
       (by linarith) (by linarith)
     exact PConstructible.add
       (PConstructible.sub (PConstructible.mul two_Pconstructible hK) hpart) hterm
+
+/-- **Reduction to the first quarter turn.** For `n < 1`, if `Π(n, ·)` is P-constructible at
+every P-constructible `θ ∈ [0, π/2)`, then it is P-constructible at every P-constructible
+upper limit: shift by whole half-turns (`Π(θ + mπ) = Π(θ) + 2mΠ(n)`), then reflect about
+`π/2`; the complete integral `Π(n)` handles the endpoint. -/
+theorem ellipticPiInc_Pconstructible_of_base {c n Φ : ℝ} (hcP : PConstructible c)
+    (hnP : PConstructible n) (hΦP : PConstructible Φ) (hc0 : 0 < c) (hc : c < 1)
+    (hn : n < 1)
+    (base : ∀ θ : ℝ, PConstructible θ → 0 ≤ θ → θ < Real.pi / 2 →
+      PConstructible (ellipticPiInc c n θ)) :
+    PConstructible (ellipticPiInc c n Φ) :=
+  ellipticPiInc_Pconstructible_of_base' hcP hnP hΦP hc hn
+    (ellipticPi_Pconstructible hcP hnP hc0 hc hn) base
 
 end Pconstructible
