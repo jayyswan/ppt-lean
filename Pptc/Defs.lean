@@ -62,6 +62,13 @@ a fixed signed distance along the
 `unitNormal` there, so it too needs a parametrization at the point of use, and it needs
 that parametrization to be regular (nonvanishing `speed`) for the normal to exist at all.
 
+In addition, the inductive TextGlyph is a class containing idealizable Unicode characters 
+(aka, those that can be significantly geometrically idealized or already are; think 
+circles, triangles, and YM3030). This file contains a definition for the Triangle (or 
+Pinch, or Star Wars Thing, depends on who you ask) text warp, a mapping from 
+TextGlyph -> PConstructibleCurve. It also contains the identity. This is equivalent to 
+using PowerPoint "text warps" and then fragment-merging with a shape to get the text 
+character as a shape. 
 Text enters through the single constructor `PConstructibleCurve.text`, which draws the
 outline of a `TextBox` (`Pptc.TextBox`). A text box stores plain rational data, not a third
 mutual inductive; the constructor additionally takes the current handle positions and drawn
@@ -88,6 +95,45 @@ clearance `|d|`. Positive `d` moves to the left of the direction of travel, nega
 to the right, and `d = 0` reproduces the curve. -/
 noncomputable def offsetParam (γ : ℝ → ℝ × ℝ) (d : ℝ) (t : ℝ) : ℝ × ℝ :=
   ((γ t).1 + d * (unitNormal γ t).1, (γ t).2 + d * (unitNormal γ t).2)
+
+
+/-! ### Text characters and their warps
+
+A text character is not a curve that has been drawn; it is a
+glyph: a letter-shape that the drawing program lays out inside a
+text box. So glyphs form a type of their own, `TextGlyph`, and
+every curve that comes from text enters the construction through
+a constructor of the form `TextGlyph → PConstructibleCurve`.
+
+Warps act on the glyph outline in the text box's own frame,
+before any resizing or moving, and a warp can only be applied
+to a glyph, never to an already finished curve. -/
+
+/-- The text characters on offer. To add a character, add a
+constructor here and a line to `TextGlyph.outline`. -/
+inductive TextGlyph : Type
+  /-- `◠`, U+25E0 UPPER HALF CIRCLE. -/
+  | upperHalfCircle
+
+/-- The upper half of the unit circle, `x ^ 2 + y ^ 2 = 1`
+with `0 ≤ y`, flat side on `y = 0`. -/
+def upperSemicircle : Set (ℝ × ℝ) :=
+  {p | p.1 ^ 2 + p.2 ^ 2 = 1 ∧ 0 ≤ p.2}
+
+/-- The outline of a text character, in the frame of its own
+text box. -/
+def TextGlyph.outline : TextGlyph → Set (ℝ × ℝ)
+  | .upperHalfCircle => upperSemicircle
+
+/-- The Triangle warp: the bottom edge `y = 0` is pinched to
+a point and every other row is scaled in width by its height,
+`(x, y) ↦ (x * y, y)`. -/
+def triangleWarp (p : ℝ × ℝ) : ℝ × ℝ :=
+  (p.1 * p.2, p.2)
+
+/-- Reflection in the `x`-axis, `(x, y) ↦ (x, -y)`. -/
+def mirrorY (p : ℝ × ℝ) : ℝ × ℝ :=
+  (p.1, -p.2)
 
 mutual
 
@@ -323,6 +369,28 @@ inductive PConstructibleCurve : Set (ℝ × ℝ) → Prop
             let θ := (n : ℝ) * (Real.pi / 180)
             (p.1 * Real.cos θ - p.2 * Real.sin θ,
              p.1 * Real.sin θ + p.2 * Real.cos θ)) '' S)
+
+  -- TEXT. Each of the next two constructors turns a TEXT GLYPH
+  -- (not a curve) into a curve.
+
+  /-- The plain glyph: the identity warp, which leaves the
+  character exactly as typed. -/
+  | text_plain (g : TextGlyph) :
+      PConstructibleCurve g.outline
+
+  /-- The Triangle warp, `(x, y) ↦ (x * y, y)`, applied to a
+  text character. The bottom of the text is pinched to zero
+  width, as in a triangle. Applied to `◠` this draws one lobe
+  of the lemniscate of Gerono. -/
+  | text_triangle (g : TextGlyph) :
+      PConstructibleCurve (triangleWarp '' g.outline)
+
+  /-- Duplicate a shape, flip the copy vertically so that it
+  is the mirror image across the `x`-axis, and keep BOTH. -/
+  | mirror_union {S : Set (ℝ × ℝ)}
+      (hS : PConstructibleCurve S) :
+      PConstructibleCurve (S ∪ mirrorY '' S)
+
   -- Crop a curve to an axis-aligned window with `PConstructible` bounds, modelling
   -- cropping a shape to a rectangular frame.
   --
