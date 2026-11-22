@@ -1,0 +1,20 @@
+\\ Session 6: degree of the fact 5 locus Z on a random rational line (Prop. H.1 resolvent). Run with run_read.py; output in deg108.out
+setrand(11);
+a = vector(9,j,random(41)-20); b = vector(9,j,random(41)-20);
+a = vector(9,j,9*a[j]-vecsum(a)); b = vector(9,j,9*b[j]-vecsum(b));
+mm = prod(j=1,9, 'T - (a[j] + L*b[j]));
+u = polcoeff(mm,7,'T)/3; m6 = polcoeff(mm,6,'T); m5 = polcoeff(mm,5,'T); m4 = polcoeff(mm,4,'T); m3 = polcoeff(mm,3,'T); m2 = polcoeff(mm,2,'T); m1 = polcoeff(mm,1,'T); m0 = polcoeff(mm,0,'T);
+A5 = m5 - 3*u^2; A4 = m4 - 2*u*m6; A2 = m2 - u^2*m6; A1 = m1 - u*(m3 - u^3);
+v2v3 = A5/2; v2sq = A5^2/(4*rho); v1v3 = (A4 + 2*u*rho - v2sq)/2;
+v1v2 = v1v3*v2v3/rho; v1sq = v1v3^2/rho;
+v0v3 = (A1 + 2*u*v1v2)*4*rho^2/(4*A4*rho - A5^2); v0v2 = v0v3*v2v3/rho;
+E2 = v1sq + 2*v0v2 - u^2*rho - A2;
+Rn = numerator(E2);
+g2 = m6 - rho; g1 = m3 - u^3 - 2*v0v3 - 2*v1v2; g0 = m0 - v0v3^2/rho;
+dis = poldisc(X^3 + g2*X^2 + g1*X + g0, X);
+Dn = numerator(dis);
+res = polresultant(Rn, Dn, rho);
+f = factor(res);
+write("deg108.out", "R degree in rho ", poldegree(Rn,rho), ", disc numerator degree in rho ", poldegree(Dn,rho), ", resultant degree in L ", poldegree(res,L));
+for(i=1,#f~, write("deg108.out", "factor degree ", poldegree(f[i,1],L), "  multiplicity ", f[i,2]));
+write("deg108.out", "A5 degree ", poldegree(A5,L), "  disc(R) factor degrees ", apply(x->poldegree(x,L), factor(poldisc(Rn,rho))[,1]~));

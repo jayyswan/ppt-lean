@@ -1,0 +1,18 @@
+# Session 38: explicit totally real Engine O nonic. usage: python3 engO_example.py <beta> <u>
+import cypari,sys; P=cypari.pari
+P.allocatemem(10**9)
+P(open('engO_poly.gp').read().replace('\n',''))
+P('Bu=U^5+1296*a*U^3+50112*b*U^2+27648*a^2*U+2985984*a*b')
+P('Au=U^6+1278*a*U^4+50274*b*U^3+3321*a^2*U^2+2357586*a*b*U-1822500*a^3+6751269*b^2')
+P('G=Bu*x^9+sum(k=1,9,(-1)^k*eval(Str("E",k))*x^(9-k))')
+P(f'be={sys.argv[1]}; u={sys.argv[2]}; hh=subst((x+1)*(x^2+be^2),x,x-1/3); aa=polcoef(hh,1); bb=polcoef(hh,0)')
+P('sb(f)=subst(subst(subst(f,a,aa),b,bb),U,u)')
+P('F=sb(G); c2=-sb(Au)/sb(Bu); F=F/pollead(F)')
+print('exact F | F^2-c2 h^5 (depressed):', P('(deriv(F)^2-c2*hh^5)%F==0'), ' c2 =',P('c2'), ' c2>0:',P('c2>0'))
+P('Fo=subst(F,x,x+1/3); Fo=Fo*denominator(content(Fo)); Fo=Fo/content(Fo)')   # original coords, h=(x+1)(x^2+be^2)
+print('F (original x, h=(x+1)(x^2+be^2)) =',P('Fo'))
+print('check original coords:',P('(deriv(Fo)^2-c2*pollead(Fo)^2*((x+1)*(x^2+be^2))^5)%Fo==0'))
+print('irreducible:',P('polisirreducible(Fo)'),' real roots:',P('polsturm(Fo)'),' disc square:',P('issquare(poldisc(Fo))'))
+print('h(x_i)>0 at all roots:',P('vecmin(apply(r->(r+1)*(r^2+be^2),real(polroots(Fo))))>0'))
+P('ct=Map(); forprime(p=3,5000, if(poldisc(Fo)%p && pollead(Fo)%p, f=factormod(Fo,p,1); t=vecsort(f[,1]~); if(!mapisdefined(ct,t),mapput(ct,t,p))))')
+print('Frobenius cycle types seen:',P('Mat(ct)[,1]~'))
