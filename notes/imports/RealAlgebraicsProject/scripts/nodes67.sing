@@ -1,0 +1,11 @@
+// S67.1: singular scheme of the Hermite-Joubert cubic X = {sum z = 0, sum z^3 = 0} in P^9 (i.e. a cubic in P^8)
+ring r = 0,(z(1..9)),dp;
+poly z10 = -(z(1)+z(2)+z(3)+z(4)+z(5)+z(6)+z(7)+z(8)+z(9));
+poly F = z(1)^3+z(2)^3+z(3)^3+z(4)^3+z(5)^3+z(6)^3+z(7)^3+z(8)^3+z(9)^3+z10^3;
+ideal J = jacob(F);
+ideal S = std(J);
+print("affine dim of Jacobian scheme (1 = finitely many projective points):"); print(dim(S));
+print("degree = sum of Tjurina numbers:"); print(mult(S));
+ideal R = std(radical(J));
+print("degree of reduced singular locus (number of points):"); print(mult(R));
+quit;
