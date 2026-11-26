@@ -1,214 +1,214 @@
-# Sheared sines as a family, and the principle behind them
+# Sheared sines: the third-kind family, and where else shearing helps
 
 Written 2026-11-26. Research note only: no `.lean` file was changed. Companion to
 `GENERALIZATIONS.md`. Labels as there: **[Computed]** = `scripts/sheared_sine_checks.py`
-(labels S1–S7), **[Proof]**, **[Proof sketch]**, **[Cited]** (from memory, not re-checked),
-**[Open]**.
+(labels S1–S8), **[Lean]**, **[Proof]**, **[Proof sketch]**, **[Cited]** (from memory, not
+re-checked), **[Heuristic]**, **[Open]**.
 
-## 0. Where shearing actually entered
+Builds on `notes/warp/sheared-sine-inversion.md` (normal form, inversion, residues),
+`notes/warp/sheared-sine-intersections.md` (crossings), `notes/offset-inversion/SUMMARY.md`
+(offsets, chains) and `notes/algebraic/C1.md` (Engine S).
 
-Two different shears are in play, and it is worth keeping them apart.
+## 0. What shearing bought, and what it leaves
 
-- **Octic roots.** `root_Pconstructible_deg8_coeffs` uses no sine. Its last crossing is
-  `Y = X⁸` against a **sheared quartic graph** (`quarticGraph_PConstructibleCurve`: a rational
-  `poly_graph` of `X⁴ ± X²`, scaled, sheared by `bz`, translated). The shear is what turns a
-  rational graph into one with P-coefficients. §5 generalizes this.
-- **Sine × sine.** `notes/algebraic/C1.md` (Engine S) crosses two sine graphs that carry the
-  **same** shear and commensurable frequencies. The shears cancel, `cos θ` comes out
-  algebraic, and P gets totally real `S_n` numbers of every degree. §1–§4 formalize this as one
-  member of a larger family.
+`ThirdKindAll/Circular.lean` gets the incomplete third-kind integral `Π(n, φ | c)` at `n < 0`
+from the arc length of the sheared sine `(−bt + sin t, at)`. DLMF transformations then carry it
+to every real `(c, n, Φ)` (`ellipticPiInc_Pconstructible`, `ThirdKindAll/Main.lean`) **[Lean]**.
 
-The common idea: a shear is a free P-parameter, so it either fills a coefficient you need
-(octic) or cancels between two curves and leaves an algebraic equation (Engine S).
+Consequence: every **forward** arc length of a sheared sine, between P-constructible endpoints,
+is a combination of `F`, `E`, `Π` at real P-constructible arguments plus elementary terms
+(sheared-sine-inversion §2). That direction is closed. A family of *new* numbers from sheared
+sines has to come from the other operations: **inverting** the length, **offsetting**, and
+**crossing**. §1–§2 set up coordinates in which all of these are one family; §3 lists the
+family; §4 is where else to look.
 
-## 1. The master family
+## 1. One parameter for shear: `r ∈ ℂ`
 
-Every sheared sine is an affine image of `sine`. Crossing two of them is, after applying the
-inverse of one affine map, a crossing of `y = sin x` with an affine image
-`(s, sin s) ↦ M(s, sin s) + v` of it. A point is on both exactly when
-
-```
-sin(m₁₁ s + m₁₂ sin s + v₁) = m₂₁ s + m₂₂ sin s + v₂               [Computed]  (S1)
-```
-
-> **Theorem SS (proposed).** For P-constructible `M` (invertible) and `v`, every real `s`
-> solving this equation, other than in the degenerate case where both sides agree
-> identically, is P-constructible, and so is the crossing point.
-
-*Proof sketch.* `sine` and `affineMap_PConstructibleCurve` draw both curves. Along
-`Γ(s) = (s, sin s)` the defining function of the image curve is real-analytic and not
-identically zero, so its zeros are isolated; `restrict` to a rational window around the
-chosen zero and apply `crossing_Pconstructible`. ∎
-
-This is a 6-parameter family, and it splits into strata by two invariants: the
-**nesting coefficient** `m₁₂` and, when `m₁₂ = 0`, the **shear difference** `λ` and the
-**frequency ratio** `ρ`.
-
-When `m₁₂ = 0` the image is again a graph over the x-axis, `y = A sin(ωx + φ) + λx + μ`, and
-the equation becomes the **two-tone equation**
+Trace a graph `y = g(x)` as `t ↦ (t, g(t))` and apply an affine map with linear part
+`M = [[m₁₁, m₁₂], [m₂₁, m₂₂]]`. Read velocities as complex numbers: with
+`z₁ = m₁₁ + i m₂₁`, `z₂ = m₁₂ + i m₂₂`, the velocity is `z₁ + z₂ g′(t)`, so
 
 ```
-sin x − A sin(ωx + φ) − λx − μ = 0.
+speed = |z₂| · |g′(t) − r|,        r = −z₁/z₂                       [Computed]  (S6)
 ```
 
-Before normalizing, both curves can carry a shear, `y = Aᵢ sin(ωᵢx + φᵢ) + λᵢx + μᵢ`; only the
-difference `λ = λ₁ − λ₂` survives. That is why "the same shear" is the algebraic case.
+(checked for `g = sin`, `2^x`, `x^{5/2}`). `r` is real exactly when `det M = 0`. So up to the
+factor `|z₂|`, **the arc lengths of all affine images of one graph are**
 
-| stratum | condition | equation | output | example |
-|---|---|---|---|---|
-| **L0 Chebyshev** | `m₁₂ = 0`, `λ = 0`, `ρ ∈ ℚ` | `A cos pθ + B sin pθ + C cos qθ + D sin qθ + E = 0` | `cos θ` algebraic (Engine S) | `cos 5θ + cos 2θ/3 + 1/7`: `cos θ` has min. poly `336x⁵ − 420x³ + 14x² + 105x − 4` [Computed] (S2) |
-| **L1 incommensurable** | `m₁₂ = 0`, `λ = 0`, `ρ ∉ ℚ` | `sin x = A sin(ωx + φ) + μ` | transcendental-looking **[Open]** | `sin t = sin(√2 t)/2 + 1/3`: no integer relation of degree ≤ 10, height ≤ 10⁶ for `cos t` [Computed] (S3) |
-| **L2 two-tone Kepler** | `m₁₂ = 0`, `λ ≠ 0` | `λx + (two tones) + μ = 0` | Kepler, Dottie, Laplace-type | `cos 2t + cos t/3 + t/5 = 1/7`: no relation for `t` or `cos t` [Computed] (S4) |
-| **L3 nested** | `m₁₂ ≠ 0` | `sin(as + b sin s + v₁) = cs + d sin s + v₂` | "Kepler inside Kepler" | none named |
+```
+𝓛_g(r; t₀, t₁) = ∫_{t₀}^{t₁} |g′(t) − r| dt,      r ∈ ℂ ∖ ℝ.
+```
 
-L0 is the only stratum whose outputs are algebraic for *all* algebraic parameters
-**[Proof sketch]** (other strata can hit algebraic values by accident, e.g. at `θ = 0`): with `λ ≠ 0` or `m₁₂ ≠ 0` the
-unknown appears outside a trigonometric function, and with `ρ ∉ ℚ` the two tones are
-algebraically independent functions; in each case a standard Lindemann–Weierstrass /
-Gelfond–Schneider-type argument is needed to make that precise, and I have not done so.
+Scaling moves `Im r`; **shearing moves `Re r`**. Unsheared scaled graphs are `Re r = 0`, i.e.
+`∫ √(g′² + s²)`, which is what the repo used before `Circular.lean`. This is the whole content
+of "shearing" for arc lengths, and it is the same for every base graph.
 
-## 2. Lean shape of the family
+## 2. The sine instance
+
+For `g = sin`, `r = b + ia` (`b ≥ 0`, `a > 0` after reflections), this is the curve of
+`Circular.lean` with the explicit dictionary of sheared-sine-inversion §1:
+
+```
+S = √((1 + a² + b²)² − 4b²),   n = −(1 + a² + b² − S)/(2S),   c = (1 − a² − b² + S)/(2S),
+a = √(c(1−c))/(c−n),   b = √((1−n)(−n))/(c−n)                      [Computed]  (S7)
+```
+
+and `∫₀^{T(θ)} |cos t − r| dt = circG(c, n, θ)` **[Computed, 150 digits]** (S7), with
+`T(θ) = 2 arctan(k tan(θ/2))`. So `Re r = 0 ⇔ n = 0`: the shear *is* the characteristic.
+
+### Lean shape
 
 ```lean
-/-- The graph of `x ↦ A sin(ω x + φ) + λ x + μ`: a sheared sinusoid. -/
-def shearedSinusoid (A ω φ λ μ : ℝ) : Set (ℝ × ℝ) :=
-  {p | p.2 = A * Real.sin (ω * p.1 + φ) + λ * p.1 + μ}
+/-- Arc length of the affine images of the sine graph, in shear coordinates. -/
+noncomputable def shearedSineLength (r : ℂ) (t₀ t₁ : ℝ) : ℝ :=
+  ∫ t in t₀..t₁, Complex.abs ((Real.cos t : ℂ) - r)
 
-theorem shearedSinusoid_PConstructibleCurve (A ω φ λ μ all PConstructible) :
-    PConstructibleCurve (shearedSinusoid A ω φ λ μ)
--- sine; scale_x 1/ω; translate_x; scale_y A; shear_PConstructibleCurve λ (after a swap);
--- translate_y μ. Every step exists.
+-- Forward (packaging): `arc_length` on `affineMap` of `sine`. Already implicit in Circular.
+theorem shearedSineLength_Pconstructible {r : ℂ} (hr : r.im ≠ 0)
+    (hre : PConstructible r.re) (him : PConstructible r.im)
+    (h₀ : PConstructible t₀) (h₁ : PConstructible t₁) :
+    PConstructible (shearedSineLength r t₀ t₁)
 
-/-- Two-tone trigonometric-linear function. -/
-def twoTone (A₁ ω₁ φ₁ A₂ ω₂ φ₂ λ μ : ℝ) (x : ℝ) : ℝ :=
-  A₁ * Real.sin (ω₁ * x + φ₁) + A₂ * Real.sin (ω₂ * x + φ₂) + λ * x + μ
-
-theorem twoTone_root_Pconstructible (all eight PConstructible)
-    (hnz : ¬ ∀ x, twoTone … x = 0) (hx : twoTone … x = 0) : PConstructible x
+-- Inverse (new in Lean; [Proof] in sheared-sine-inversion §3).
+theorem shearedSineLength_inverse_Pconstructible {r : ℂ} (hr : r.im ≠ 0)
+    (hre : PConstructible r.re) (him : PConstructible r.im)
+    (h₀ : PConstructible t₀) (hσ : PConstructible σ)
+    (h : shearedSineLength r t₀ t₁ = σ) : PConstructible t₁
 ```
 
-`hnz` is the right non-degeneracy hypothesis: it is what the identity theorem for analytic
-functions needs to make zeros isolated, and it handles `ω₁ = ω₂` (where the tones merge) with
-no special case.
+*Proof of the inverse.* Draw `t ↦ (sin t − (Re r)t, −(Im r)t)` (`linearMap` of `sine`), lay
+`σ` from the P-constructible point at `t₀` with `arc_of_length`, and read the far end with
+`arc_yendpoint_Pconstructible`. The y-coordinate `−(Im r)t` is strictly monotone **for all
+`t`**, so unlike `ellipticEAm_Pconstructible_via_sine` (`BoxSine.lean`, the case `r = i`) no
+`[0, π/2]` window is needed. ∎
 
-Corollaries, each a few lines:
+This generalizes the `BoxSine` theorem from the single point `r = i` to the whole open
+half-plane. Example: `r = 0.9 + 0.7i`, `σ = 1` gives `t₁ = 1.3281…`, with no integer relation of
+degree ≤ 8 [Computed] (S8). What is *proved* about these inverses (sheared-sine-inversion §4):
+for `Re r ≠ 0` they are never `am`, and never the inverse of any `αF + βE + const`, because
+`|cos t − r| dt` has a double pole and residues `±i·Re r` at the two points over `cos t = ∞`.
 
-- `dottie_Pconstructible`, Kepler for all `(e, M)` (`GENERALIZATIONS.md` §7) — one tone, `λ ≠ 0`.
-- **Engine S.** For integers `p > q ≥ 1` and P-constructible `A … E` not all zero, every real
-  `θ` with `A cos pθ + B sin pθ + C cos qθ + D sin qθ + E = 0` is P-constructible, hence so
-  are `cos θ`, `sin θ` (`cos_sin_Pconstructible`).
-- **Chebyshev trinomial roots.** Every root in `[−1, 1]` of `T_p + a·T_q + c` (`a, c` P) is
-  P-constructible. Stated with Mathlib's `Polynomial.Chebyshev.T`.
-- **Theorem C1** for one explicit `n ≥ 13` (`T_n + x/3 + 1/7`), giving totally real `S_n`
-  numbers beyond anything degree-≤ 8 machinery can reach.
+## 3. The family, as a list of operations
 
-## 3. The algebraic stratum as a set
+Call a number a **sheared-sine number** if it is obtained from P-constructible data by the
+operations below. Each row says what is new.
 
-> **Definition.** `𝒯_{p,q}` is the set of `cos θ` for real `θ` solving a nontrivial
-> `A cos pθ + B sin pθ + C cos qθ + D sin qθ + E = 0` with `A … E ∈ P`.
-> `𝒯 = ⋃ 𝒯_{p,q}`.
-
-Equivalent descriptions [Proof, C1 §1.2]:
-
-- `𝒯_{p,q}` = real parts of the **unimodular** roots of self-inversive pentanomials
-  `α u^{2p} + β u^{p+q} + E u^p + β̄ u^{p−q} + ᾱ`, `α, β ∈ P + iP`, `E ∈ P`.
-- With `B = D = 0`: roots in `[−1, 1]` of Chebyshev trinomials `T_p + a T_q + c`.
-
-Structure worth stating once:
-
-- **Rotation torsor** [Computed] (S5). `θ ↦ θ + φ` with `φ ∈ P` maps the five-term family to
-  itself. So the 5 coefficients carry 3 essential parameters (minus scale, minus rotation),
-  matching C1 §5's count.
-- **Chebyshev towers.** `T_{pk} = T_p ∘ T_k`, and `cos(θ/k)` is P whenever `cos θ` is
-  (`arccos` then divide). So `𝒯` is closed under `T_k⁻¹`, the trigonometric analogue of
-  taking radicals. This is the casus-irreducibilis mechanism in P's language.
-- **Full symmetric group, all roots real.** C1 §1.3–1.4. This is the one property the
-  monomial-basis engines (trinomials, power laws) cannot have.
-
-**Question T.** `𝒯 ⊆ F = P ∩ ℝ_alg` by construction. The open direction is the converse for a
-*given* field: which real number fields `K` contain an element of `𝒯` (over a tower of
-degree-≤ 8 steps) that generates them? That is C1's (SR′), an F-point on a general-type
-variety **[Open]**.
-
-## 4. Where else to look: the commensurable-crossing principle
-
-Engine S is one instance of a pattern that also produced the trinomial engine (W3):
-
-> Cross **two copies of one transcendental graph** `y = g(x)`, with commensurable
-> frequencies and **equal shear**. If `g(px)` and `g(qx)` are algebraically dependent, the
-> crossing equation becomes algebraic in `g(x)`, and its real roots land in `F`.
-
-| `g` | drawable as | multiplication law | engine |
+| operation on a sheared sine `r` | output | new? | status |
 |---|---|---|---|
-| `x^r`, polynomials | `power_law`, `poly_graph` | trivial | power-law crossings (already the main algebraic tool) |
-| `2^x` | `exp_two` | `u^p` | power trinomials `a u^p + b u^q + c` (W3, Theorem X) |
-| `sin x` | `sine` | Chebyshev `T_p` | Engine S (C1) |
-| elliptic `sn x` | **not drawable** | division polynomials | would give elliptic division engines |
+| length between P endpoints | `F, E, Π(n ≤ 0)` + elementary | no | **[Lean]** (`ThirdKindAll`) |
+| inverse length `Λ_r⁻¹(σ)` | 2-parameter inverse functions | **yes** for `Re r ≠ 0` (`Re r = 0` is `E⁻¹`) | [Proof]; Lean-feasible (§2) |
+| offset by `d`, then length | `Λ_r − d·Δψ`, `ψ = arg(cos t − r)` | no | [Lean] (`OffsetInversion/Speed`) |
+| offset, then inverse length | `(Λ_r − dψ)⁻¹(σ)`, 3 parameters | **yes** | [Proof] (offset-inversion catalogue, "sheared sine" row) |
+| bounding box | `cos t` = const: elementary | no | [Proof] (intersections §3a) |
+| crossing with a line / algebraic curve / `exp_two` | Kepler-type and `Q(t, sin t) = 0` families | yes | [Proof] (intersections §1) |
+| crossing with another sheared sine | two-tone and Engine S, §4.3 | yes | [Proof] |
+| chains of the above | triangular: no new equation shapes | — | [Proof] (offset-inversion R4, R6) |
 
-**Why the list stops there [Cited].** Ritt (1922) classified periodic meromorphic functions
-with an algebraic multiplication theorem `f(kx) = R(f(x))`: up to change of variables they are
-exponential, trigonometric or elliptic. With Weierstrass's addition-theorem classification,
-this says the drawable transcendental shapes give **every** non-elliptic engine of this type,
-and the only remaining one needs the graph of an elliptic function. That is precisely the
-Jacobi-amplitude frontier of `GENERALIZATIONS.md` §8 (`jacobiAm_Pconstructible_iff_epsilon`).
-Even if it opened, H4 says elliptic division values give only `A₅` and `PSL(2, p)` groups, so
-it would not beat Engine S for `S_n`. [Proof sketch for the last sentence, via H4.]
+The triangularity result means the family has a clean normal form **[Proof sketch, from
+R4/R6]**: every sheared-sine number is a root of **one** equation
 
-**Mixed pairs** (different `g`) are the transcendental side of the same table. Two
-immediately useful corollaries of a two-tone theorem with `exp_two` in place of `sine`
-[Proof, assuming the two-tone theorem]:
+```
+Λ_r(t) − d·ψ_r(t) = σ            (inversion stratum), or
+two-tone crossing equation        (crossing stratum, §4.3),
+```
 
-- **Hyperbolic Kepler.** `e sinh H − H = M` for `e > 1` is
-  `(e/2)·e^H = (e/2)·e^{−H} + H + M`: one exponential graph against a reflected, sheared,
-  translated one (`exp_PConstructibleCurve` is already in `Basic.lean`). The difference is
-  strictly increasing, so the root is unique and needs no window argument.
-- **Catenary equations.** `cosh x = kx` is `e^x/2 = kx − e^{−x}/2`, same construction.
+whose data `(r, d, σ, …)` lie in a field generated by earlier sheared-sine numbers. So the
+family is parametrized by three continuous parameters `(Re r, Im r, d)` for inversion, plus the
+crossing data, and depth only enlarges the field of parameters.
 
-So the right general statement is not about sines at all:
+## 4. Where else to look
 
-> **Theorem 2T (proposed).** Let `g₁, g₂` each be `sin`, `exp`, or a `power_law` shape, and let
-> `f(x) = a₁ g₁(ω₁x + φ₁) + a₂ g₂(ω₂x + φ₂) + λx + μ` with P-constructible parameters,
-> `f ≢ 0` on the relevant domain. Every real zero of `f` is P-constructible.
+### 4.1 Shear on other base graphs: when does it make a third-kind term?
 
-It subsumes Dottie, Kepler (elliptic and hyperbolic), Lambert `W` (`eˣ = ax + b`), Engine S
-and the trinomial engine. (The Laplace limit and generalized Lambert need a hyperbola, so they
-stay with `GENERALIZATIONS.md` §7.) The algebraic outputs are exactly the
-same-`g`, commensurable, `λ = 0` cells.
+`𝓛_g(r)` makes sense for every drawable graph. Near `g′ = ∞`,
+`|g′ − r| = g′ − Re r + O(1/g′)`, so
 
-## 5. The octic side: shear orbits of polynomial graphs
+```
+|g′ − r| dt = dg − (Re r) dt + (holomorphic there).
+```
 
-The octic engine needs a quartic graph with arbitrary P-coefficients. The affine maps that keep
-a graph a graph (x-translate, x-scale, y-scale, shear, y-translate) form a 5-dimensional group,
-so from a rational `poly_graph` of degree `d` they reach a 5-dimensional orbit, against `d + 1`
-coefficients. Depressing (`x`-translate), killing the linear term (shear), the constant
-(`y`-translate), and normalizing the leading and `x^{d−2}` coefficients (the two scalings)
-leaves `d − 4` **shear-orbit invariants** that must be rational:
+The shear contributes `−(Re r) dt`. It produces a **logarithmic (third-kind) term exactly when
+`dt` has a simple pole at a point over `g′ = ∞`**, i.e. when `t` is a logarithm of an algebraic
+function of `g′` **[Proof sketch]**:
 
-| `d` | invariants (depressed, monic, `a = coeff x^{d−2} ≠ 0`) | consequence |
-|---|---|---|
-| ≤ 4 | none | every P-quartic graph is drawable (this is `quarticGraph_general_PConstructibleCurve`) |
-| 5 | `b/(±a)^{3/2}` with `b = coeff x²`, sign making the base positive | P-quintic graphs form a ℚ-indexed set of 4-parameter families [Computed] (S6) |
-| 6 | `b/a^{3/2}`, `c/a²` | two rational invariants [Computed] (S7) |
+| `g` | `t` as a function of `u = g′` | does shear add a log term? | class of `𝓛_g` | class of `𝓛_g⁻¹` |
+|---|---|---|---|---|
+| `sin` | `arccos u` (log of algebraic) | **yes**: residue `±i·Re r` | elliptic, `Π` | new 2-parameter family (§2) |
+| `2^x` | `log₂(u/ln 2)` | **yes** | elementary (genus 0) | elementary-transcendental equations: `√Q(u) + α·asinh(…) + β·log u = σ` |
+| `x^p` | `(u/p)^{1/(p−1)}` (algebraic) | **no** | Appell `F₁` at a conjugate pair (`GENERALIZATIONS.md` §2) | inverse of an `F₁` |
+| polynomial deg 3 | algebraic | no | elliptic (it is a cubic Bézier) | already in P's elliptic class |
+| polynomial deg 4–6 | algebraic | no | hyperelliptic, genus 2–4 | formally new, no tools |
 
-[Proof for "rational invariants ⇒ drawable"; the converse holds for this route only, since
-Bézier and other curves could reach more.]
+So among drawable graphs, **sine and `exp_two` are the only ones where shearing changes the
+kind of integral**. This agrees with `notes/archive/NOTES-jacobi-R1c.md`, which found for both
+bases that the log part has coefficient `q₁` (`speed² = q₂u² + q₁u + q₀`, and `q₁ = −2|z₂|² Re r`)
+and vanishes for orthogonal-row maps, i.e. exactly when `Re r = 0`. For the sine that change was exactly what reached `Π`. For `exp_two` it
+stays elementary, but the inverse equations are a new and untouched family (the offset
+catalogue covers offsets of `exp_two`; I found no note on its sheared arc-length inverse). That is the cheapest
+next family to write down: a sheared exponential, an arc of given length, and the endpoint read
+off a box.
 
-Two generalizations follow directly:
+### 4.2 Genus one is (almost) closed
 
-- **Any exponent.** `powerLaw_quartic_root_PConstructible` is stated for `β⁸` only. The same
-  proof should give `βⁿ = quartic(β)` for every natural `n > 4`, and for `β > 0` every rational
-  exponent `r` (`power_law 1 r`). That is the 5-parameter engine
-  "`X^r` × P-quartic" for all `r`, of which the octic resolvent uses `r = 8`. **[Proof sketch]**
-- **Degree-5/6 engines with rational moduli.** `X^n` against a quintic or sextic graph whose
-  shear-orbit invariants are rational gives engines with 4 + (rational data) parameters. This is
-  where the bookkeeping law (`notes/algebraic` H1) loses `d − 4` free parameters, and it explains
-  why quartic graphs, not sextic ones, are the workhorse of the degree-8 proof.
+With `Π` at every real `(c, n, Φ)` in Lean, the natural generalization is:
 
-## 6. Suggested order
+> **Theorem A1 (proposed).** Let `f` be a real quartic and `R(x, y)` a real rational function,
+> both with P-constructible coefficients, and suppose every pole of `R(x, ±√f)` on the path lies
+> at a real `x`. Then `∫_{x₀}^{x₁} R(x, √f(x)) dx` is P-constructible for P-constructible
+> `x₀, x₁` avoiding branch points.
 
-1. `shearedSinusoid_PConstructibleCurve` and `twoTone_root_Pconstructible`: small, and every
-   later item is a corollary.
-2. Engine S and the Chebyshev-trinomial corollary, then Theorem C1 at one explicit `n ≥ 13`.
-3. `powerLaw_quartic_root` for general exponent (§5): mechanical.
-4. Theorem 2T with `exp_two`, plus hyperbolic Kepler as the showcase.
-5. Research: L1 vs L0 transcendence (§1), and Question T / (SR′) (§3).
+*Proof sketch.* Roots of `f` are P (degree 4). A real Möbius map plus `x = sn`-type substitution
+puts `f` in Legendre form with real `c`. Partial fractions in `sn²` give `F`, `E`, `Π` at real
+`n` (a real pole maps to a real `n`) and elementary terms. Every piece is in `ThirdKindAll`. ∎
+
+Every sheared-sine length, Bézier length, ellipse length and offset length is an instance. The
+case left out is the interesting one:
+
+> **Question Π_ℂ [Open].** Is `Re Π(ν, φ | c)` P-constructible for non-real `ν`?
+
+Sheared sines never produce it: shearing moves the **zeros** `r, r̄` of the speed off the real
+axis, not its poles. Affine images of offsets of the sine do not either: the curvature factor
+puts singularities at `u = ±i`, but those are branch points of the new quartic, so they give
+second-kind terms. I know of no drawable curve whose length element has a pole off the real
+axis. Classical tables (Byrd–Friedman) reduce conjugate poles to real `n` when the poles are
+`±iν` under an even substitution; whether that covers the general case was not checked.
+
+### 4.3 Crossings: the two-tone family
+
+Crossing two sheared sines that are graphs over a common axis gives
+
+```
+A₁ sin(ω₁x + φ₁) + A₂ sin(ω₂x + φ₂) + λx + μ = 0,      λ = difference of the two shears.
+```
+
+The general crossing (`m₁₂ ≠ 0` in S1) is "Kepler inside Kepler",
+`sin(m₁₁s + m₁₂ sin s + v₁) = m₂₁s + m₂₂ sin s + v₂` [Computed] (S1). Strata:
+
+| stratum | condition | output | example |
+|---|---|---|---|
+| **Chebyshev** (Engine S, C1) | `λ = 0`, `ω₁/ω₂ ∈ ℚ` | `cos θ` algebraic; totally real `S_n` for all `n` | `cos 5θ + cos 2θ/3 + 1/7 = 0` ⇒ `336x⁵ − 420x³ + 14x² + 105x − 4 = 0`, `x = cos θ` [Computed] (S2) |
+| incommensurable | `λ = 0`, `ω₁/ω₂ ∉ ℚ` | transcendental-looking **[Open]** | `sin t = sin(√2 t)/2 + 1/3`: no relation for `cos t` [Computed] (S3) |
+| two-tone Kepler | `λ ≠ 0` | Kepler, Dottie as one-tone cases | `cos 2t + cos t/3 + t/5 = 1/7`: no relation [Computed] (S4) |
+
+Equal shears cancel, and that is why `λ = 0` is the algebraic stratum. The Chebyshev stratum is
+a torsor under `θ ↦ θ + φ` [Computed] (S5), so its five coefficients carry three essential
+parameters. Lean shape: one theorem `twoTone_root_Pconstructible` with the hypothesis
+"not identically zero" (all zeros then isolated, by analyticity), from which Engine S, Kepler for
+all `(e, M)` and Dottie are corollaries. The same theorem with `exp_two` in place of `sine` gives
+the hyperbolic Kepler equation `e sinh H − H = M` and `cosh x = kx`.
+
+**Why the sine is special here too [Cited: Ritt 1922].** Two copies of one transcendental graph
+with commensurable frequencies give an algebraic equation only if the function has an algebraic
+multiplication theorem: exponential (trinomial engine), trigonometric (Engine S), or elliptic.
+An elliptic-function graph is not drawable; it is the Jacobi-amplitude frontier
+(`jacobiAm_Pconstructible_iff_epsilon`).
+
+## 5. Suggested order
+
+1. `shearedSineLength_inverse_Pconstructible` (§2). Small: the curve, `arc_of_length` and
+   `arc_yendpoint_Pconstructible` all exist, and the monotone y-coordinate removes the window
+   argument. It is the first Lean theorem whose output is a genuinely new function.
+2. The sheared-`exp_two` inverse (§4.1): same proof, and its equation class is untouched.
+3. `twoTone_root_Pconstructible` (§4.3), with Engine S and hyperbolic Kepler as corollaries.
+4. Theorem A1 (§4.2). Medium-large: a Legendre-reduction library on top of `ThirdKindAll`.
+5. Research: Question Π_ℂ; whether the inverse family of §2 meets any classical function.

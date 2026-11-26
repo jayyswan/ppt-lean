@@ -20,7 +20,7 @@ C1–C10 match the script); **[Proof sketch]** means argued here but not checked
 | 5 | beyond `p+q ∈ ½+ℤ` | genus-1 incomplete Betas, e.g. `B_T(⅓,⅓)` | reduction of a genus-1 differential to Legendre form | research |
 | 6 | Watson/Pólya constants (single numbers) | lattice Green functions `G(t)` at every P-constructible `t` | bcc is one line; sc/fcc need Joyce's formulas | small (bcc) |
 | 7 | Dottie, Laplace limit, `W` | Kepler's equation for all `(e, M)`; generalized Lambert `eˣ = (ax+b)/(cx+d)` | packaging `crossing_Pconstructible` | small |
-| 8 | Engine S (`notes/algebraic/C1.md`, not in Lean); octic `X⁸` × sheared quartic | two-tone crossings `a₁g₁(ω₁x+φ₁) + a₂g₂(ω₂x+φ₂) + λx + μ = 0`; `X^r` × P-quartic for every `r` | see `SHEARED-SINES.md` | small–medium |
+| 8 | `Π` at `n < 0` via the sheared sine (`ThirdKindAll/Circular`); `E⁻¹` via the sine (`BoxSine`, `r = i`) | inverse sheared-sine lengths `Λ_r⁻¹` for every `r ∈ ℂ∖ℝ`; sheared `exp_two` inverses; two-tone crossings; genus-1 integrals with real poles | see `SHEARED-SINES.md` | small–medium |
 
 The organizing idea for the hypergeometric track (§3–§4) is a single reachable set
 `HypReach ⊆ ℝ⁴` of parameter tuples where `₂F₁` and its derivative are P-constructible, with
