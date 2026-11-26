@@ -1,4 +1,4 @@
-"""Numerical checks for notes/hypergeometric/GENERALIZATIONS.md (labels C1-C10 match the note).
+"""Numerical checks for notes/generalization/GENERALIZATIONS.md (labels C1-C10 match the note).
 Run: pip install mpmath; python3 generalizations_checks.py. Each line prints |lhs - rhs|."""
 from mpmath import mp, mpf, quad, sqrt, hyp2f1, hyp3f2, betainc, appellf1, conj, gamma, beta
 mp.dps = 40
