@@ -105,8 +105,7 @@ is junk outside the disc). Both restrictions are artefacts:
 
 - `power_law` now includes the origin for positive exponents (the R1 question in
   `archive/PLAN-hypergeometric-00-overview.md` §4 H6 is closed), so every positive rational `m`
-  is available. That includes non-integer `m`, and `m` below 2 via the reflected curve
-  `x = y^{1/b}`.
+  is available, including non-integer `m`.
 - Outside the disc, state the result in the Pfaff form `₂F₁(−½, 1; 1+p; T)` with
   `T ∈ [0,1)`. `Pfaff.lean` already proves the transformation on `(−1, ½)`.
 
@@ -141,8 +140,9 @@ special case `arg r = π`, where `z₁ ∥ z₂`.
 > **Theorem G2 (proposed).** For rational `p > 0` and every `ζ ∈ ℂ \ ℝ` with P-constructible
 > real and imaginary parts and `|ζ| < 1`, `Re F₁(p; −½, −½; 1+p; ζ, ζ̄)` is P-constructible.
 
-*Proof sketch.* Choose `z₁ = 1` and `z₂ = −1/ζ'`, which fixes the shear `(a, b, c, d)` as
-P-constructible numbers, and choose `X` so that `X^s/r = ζ`. G2 drops the `n ≤ 6` restriction
+*Proof sketch.* Take `X = 1`, `z₁ = 1` (`a = 1`, `c = 0`) and `z₂ = −ζ`
+(`b = −Re ζ / n`, `d = −Im ζ / n`). Then `r = 1/ζ`, so `X^s/r = ζ`, and the shear is
+P-constructible. G2 drops the `n ≤ 6` restriction
 for the same reason as §1′. It also needs `F₁` defined as a double series (Mathlib has none);
 alternatively, state G2 as the integral and keep `F₁` in the docstring, as `Polya.lean` does
 with its named identities.
@@ -282,9 +282,10 @@ At `t = 1` this is `k² = ½`, and `(2K/π)² = Γ(¼)⁴/(4π³) = bccReturn3`.
 
 For sc and fcc, Joyce's formulas write `G(t)` as products of two `K`s whose moduli are algebraic
 in `t` of low degree. Each Green function is then P-constructible on its whole real range
-**[Literature: G. S. Joyce, J. Phys. A 1998 / Proc. R. Soc. A 2002; not re-checked]**. This also
-gives Pólya-type return probabilities for walks with a holding probability: a lazy walk is
-`G(t)` at `t < 1`.
+**[Literature: Joyce's closed forms for the sc and fcc Green functions; not re-checked]**. For
+`t < 1`, `G(t)` is the expected number of visits to the origin of a walk that is killed with
+probability `1 − t` at each step. So the theorem covers that whole family of walks, not just
+the one constant.
 
 ---
 
@@ -298,7 +299,7 @@ needs only finiteness of the root set, not a window. Packaged families worth sta
   is P-constructible. It is the crossing of `sine` (scaled by `e`) with the line `y = x − M`. The
   root set is finite on any bounded window when `e ≠ 0`; for `|e| < 1` the solution is unique. The
   Laplace-limit docstring already motivates this, but the theorem itself is not in the repo. The
-  Dottie number is the case `cos x = x`, i.e. `x − sin(x + π/2) = 0`.
+  Dottie number is a phase-shifted instance: `cos x = x`, i.e. `x − sin(x + π/2) = 0`.
 - **Generalized Lambert W.** For P-constructible `a, b, c, d`, every real solution of
   `eˣ = (ax + b)/(cx + d)` is P-constructible. It is the crossing of `exp_PConstructibleCurve` with
   a translated hyperbola, exactly the Laplace-limit construction. This is the "r-Lambert" /
