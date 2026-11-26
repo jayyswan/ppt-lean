@@ -207,17 +207,92 @@ statement with `𝔅_p` replaced by the base term of each. Theorem T is base-ind
   Whether this gives anything for the degree-9 programme (`algebraic/PLAN-degree9.md`) is worth
   one check.
 
-## 7. Lean shape and order
+## 7. The formula, piece by piece, and why each piece is P
 
-1. **`arcLengthOf_tower`** (Theorem T). Define `towerParam` as a list of `(N_i, d_i)` steps
-   folded with `linearMap` and `offsetParam`. The proof is an induction on the list:
-   `deriv_offsetParam` for the offset step, linearity of `deriv` for the affine step, and the
-   identity `|λ N T| = λ |N T|` for `λ > 0`. It needs a C² hypothesis at each stage, which is
-   how `offset` already states its own hypotheses. This is small: it is `arcLengthOf_offsetParam`
-   with one more induction.
-2. **Corollary: P ellipse arcs absorb offsets.** This is the statement of Consequence 1,
-   proved by exhibiting each correction as `arc_length` on `linearMap` of `ellipse`.
-3. **`towerLength_inverse_Pconstructible`.** (★) for one offset under a monotone coordinate:
-   `arc_of_length` + `arc_yendpoint_Pconstructible`, as in `SHEARED-SINES.md` §2.
-4. **The genus table (§3)** as a docstring classification. In Lean it is just the statement of
-   G1/G2 over rational `p`. The genus is not a Lean object, and nothing needs it to be.
+Written out in the base coordinate `t`, with `N = [[a, b], [c, d]]` the composite linear part,
+`N_j = [[a_j, b_j], [c_j, d_j]]` the linear part composed before the `j`-th offset, and `h_j`
+the `j`-th offset distance:
+
+```latex
+L = \int_{t_0}^{t_1} \sqrt{\bigl(a + b\,p\,t^{\,p-1}\bigr)^2 + \bigl(c + d\,p\,t^{\,p-1}\bigr)^2}\;dt
+  \;-\; \sum_j h_j \det N_j \int_{t_0}^{t_1}
+  \frac{\|N\,(1, v)\|}{\|N_j\,(1, v)\|^{3}}\, v'\,dt,
+\qquad v = p\,t^{\,p-1},\; v' = p(p-1)\,t^{\,p-2}.
+```
+
+Here `‖N(1, v)‖ = √((a + bv)² + (c + dv)²)` is the Euclidean length of `N` applied to `(1, v)`.
+
+| variable | allowed values |
+|---|---|
+| `p` | **rational only** (`power_law`) |
+| `a, b, c, d` | any P, `ad − bc ≠ 0` |
+| `a_j, b_j, c_j, d_j` | any P, `a_j d_j − b_j c_j > 0` (a reflection only flips `h_j`) |
+| `h_j` | any P, either sign |
+| `t₀, t₁` | any P, `0 ≤ t₀ ≤ t₁` (`t₀ > 0` if `p ≤ 0`) |
+
+Every such tuple is realized by some tower (Consequence 2 of §1). The identity needs the no-cusp
+hypothesis, but **each piece is P on its own, without it** **[Proof sketch]**:
+
+1. **The first integral** is `arc_length` on `linearMap (power_law p)` from
+   `N(t₀, t₀^p)` to `N(t₁, t₁^p)`. Those endpoints are P by `rpow_Pconstructible`, and
+   injectivity holds because a graph is injective and `det N ≠ 0`.
+2. **Each sum term.** Change variables to the angle `ψ_j` of `N_j(1, v)`. Then
+   `dψ_j = det N_j · v′ dt / ‖N_j(1, v)‖²` absorbs the `det N_j`, and
+   `‖N(1, v)‖ / ‖N_j(1, v)‖ = ‖M_j e^{iψ_j}‖` with `M_j = N N_j⁻¹`, so the term is
+   `h_j ∫_{ψ_j(t₀)}^{ψ_j(t₁)} ‖M_j e^{iψ}‖ dψ`. That integral is `arc_length` on
+   `linearMap (ellipse)` (the unit circle) from `M_j(sin ψ_j, −cos ψ_j)` at `t₀` to the same
+   point at `t₁`. The endpoints are P, since `(cos ψ_j, sin ψ_j) = N_j(1, v)/‖N_j(1, v)‖`.
+   Injectivity holds because `ψ_j` turns by less than `π` as `v` runs over an interval.
+3. **The sum** is finite, so it is P.
+
+`L` itself was already P, by `arc_length` on the whole tower. What the split adds is the
+*identification*: all of the tower's depth lies in ellipse arcs.
+
+## 8. Is the general statement worth proving first?
+
+Partly. Proving the general first integral P is cheap, but by itself it barely shortens the Γ
+proof. The payoff comes from specializing it to **new** results.
+
+- **Cheap.** The general statement is one `arc_length` application plus side conditions
+  (injectivity, integrability near `t = 0` when `p < 1`, P endpoints). That is about the size of
+  `GammaRational/ArcLength.lean` (138 lines), which is the special case `a = 1`, `b = c = 0`,
+  `t ∈ [0, 1]`. Specializing back is a `congr`/`ring` step.
+- **No shortening of Γ by itself.** The arc length is the easy step of the Γ chain. The rest is
+  identifying the integral: `Substitution.lean` (185 lines), `HalfShift.lean` (218),
+  `Doubling.lean` (256) and the other Γ files (about 320 lines between them). The general lemma
+  leaves all of these unchanged. P-constructibility of an integral is never the hard part;
+  proving that it equals a named quantity is.
+- **Where it pays.** When the identification files are generalized along with it:
+  1. **General power-law arc-length lemma** for every rational `p`. It replaces
+     `ArcLength.lean`'s special case and the `n ≤ 6` restriction of
+     `arcLengthOf_affineImageGraph_pow_Pconstructible`. Small.
+  2. **Variable endpoint in `Substitution.lean`**, from `½` to any P `T`. This gives the
+     incomplete Beta family (G1), and Γ at rationals becomes the corollary `T = ½` plus the
+     existing doubling argument. This is the step that buys a family.
+  3. **The sheared case** (`b ≠ 0` or `c ≠ 0`): the Appell `F₁` family (G2), stated as the
+     integral, since Mathlib has no `F₁`.
+- **Lower priority: the tower lemma (Theorem T).** It mostly *classifies*: offsets add no new
+  lengths. No existing result specializes from it. It is needed only for theorems about
+  `arc_of_length` inverses on offset curves (§4).
+
+**Recommendation:** do items 1 and 2 together; leave Theorem T for later.
+
+## 9. Lean shape and order
+
+In the order §8 recommends:
+
+1. **`arcLengthOf_affineImagePowerLaw_Pconstructible`**: §7 item 1 for every rational `p`,
+   every P linear part, and every P endpoints `0 ≤ t₀ ≤ t₁`.
+2. **Generalize `Substitution.lean` to a variable endpoint `T`**, and define `incBeta`
+   (`GENERALIZATIONS.md` §1, Lean delta). `Gamma_rat_Pconstructible` then becomes a corollary.
+3. **G2 as an integral statement** (the sheared case of item 1, with `F₁` in the docstring).
+4. **`arcLengthOf_tower`** (Theorem T). Define `towerParam` as a list of `(N_i, h_i)` steps
+   folded with `linearMap` and `offsetParam`, and prove it by induction on the list:
+   `deriv_offsetParam` for the offset step, linearity of `deriv` for the affine step, and
+   `|λ N T| = λ |N T|` for `λ > 0`. It needs a C² hypothesis at each stage, as `offset` already
+   does. Add the ellipse-arc corollary (§7 item 2), which needs a change-of-variables lemma from
+   `t` to `ψ_j`, proved by the FTC as `arcLengthOf_offsetParam` is.
+5. **`towerLength_inverse_Pconstructible`**: (★) for one offset under a monotone coordinate,
+   from `arc_of_length` + `arc_yendpoint_Pconstructible`, as in `SHEARED-SINES.md` §2.
+6. **The genus table (§3)** stays a docstring classification. The genus is not a Lean object,
+   and nothing needs it to be.
