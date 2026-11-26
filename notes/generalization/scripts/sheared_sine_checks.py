@@ -94,7 +94,7 @@ show("S8 findpoly(t1, deg<=8) [None = no relation]", str(findpoly(t1, 8, maxcoef
 #                                       + (1/2) log[(1 + k2 sn a sn b sn u sn(u-a-b)) / (1 + k2 sn a sn b sn u sn(u+a+b))].
 from mpmath import ellipfun, ellipf as _F, ellippi as _Pi, asin, log as _log, conj as _conj
 mp.dps = 30
-for m_, a_, u_ in [(mpf('0.4'), mpc('0.5','0.7'), mpf('0.9')), (mpf('0.75'), mpc('0.3','0.4'), mpf('1.2'))]:
+for m_, a_, u_ in [(mpf('0.4'), mpc('0.5','0.7'), mpf('0.9')), (mpf('0.75'), mpc('0.3','0.4'), mpf('1.2')), (mpf('0.1'), mpc('1.1','0.9'), mpf('0.5'))]:
     sn_ = lambda z: ellipfun('sn', z, m=m_); cn_ = lambda z: ellipfun('cn', z, m=m_); dn_ = lambda z: ellipfun('dn', z, m=m_)
     ph = asin(sn_(u_)); Fv = _F(ph, m_)
     PiJ = lambda b: (cn_(b)*dn_(b)/sn_(b))*(_Pi(m_*sn_(b)**2, ph, m_) - Fv)
