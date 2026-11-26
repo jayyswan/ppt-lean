@@ -2,7 +2,7 @@
 
 Written 2026-11-26. Research note only: no `.lean` file was changed. Companion to
 `GENERALIZATIONS.md`. Labels as there: **[Computed]** = `scripts/sheared_sine_checks.py`
-(labels S1–S8), **[Lean]**, **[Proof]**, **[Proof sketch]**, **[Cited]** (from memory, not
+(labels S1–S9), **[Lean]**, **[Proof]**, **[Proof sketch]**, **[Cited]** (from memory, not
 re-checked), **[Heuristic]**, **[Open]**.
 
 Builds on `notes/warp/sheared-sine-inversion.md` (normal form, inversion, residues),
@@ -148,30 +148,79 @@ catalogue covers offsets of `exp_two`; I found no note on its sheared arc-length
 next family to write down: a sheared exponential, an arc of given length, and the endpoint read
 off a box.
 
-### 4.2 Genus one is (almost) closed
+### 4.2 Genus one is closed: every elliptic integral with P data
 
-With `Π` at every real `(c, n, Φ)` in Lean, the natural generalization is:
+`ThirdKindAll` proves `F`, `E`, `Π` P-constructible at every real `(c, n, Φ)`. Those are three
+*functions*. An "elliptic integral" in general is `∫ R(x, √f(x)) dx`, with `f` a cubic or quartic
+and `R` rational. The classical theorem that every such integral is `F`, `E`, `Π` plus elementary
+terms uses `Π` at the characteristics where `R` has poles, and those can be **complex**. So
+"we have `Π` for all real parameters" and "we have all elliptic integrals" differ by exactly one
+lemma, which turns out to be true:
 
-> **Theorem A1 (proposed).** Let `f` be a real quartic and `R(x, y)` a real rational function,
-> both with P-constructible coefficients, and suppose every pole of `R(x, ±√f)` on the path lies
-> at a real `x`. Then `∫_{x₀}^{x₁} R(x, √f(x)) dx` is P-constructible for P-constructible
-> `x₀, x₁` avoiding branch points.
+> **Lemma Π_ℂ [Computed, 30 digits, three test points] (S9).** For `0 < m < 1`, non-real `ν`
+> and real `φ`, `Re Π(ν, φ | m)` and `Im Π(ν, φ | m)` are explicit combinations of
+> `Π(n₁, φ | m)`, `Π(n₂, φ | m)`, `F(φ | m)` and elementary functions, with **real**
+> characteristics `n₁ ∈ (0, m)` and `n₂ < 0`, algebraic in `(ν, m)`.
 
-*Proof sketch.* Roots of `f` are P (degree 4). A real Möbius map plus `x = sn`-type substitution
-puts `f` in Legendre form with real `c`. Partial fractions in `sn²` give `F`, `E`, `Π` at real
-`n` (a real pole maps to a real `n`) and elementary terms. Every piece is in `ThirdKindAll`. ∎
+*Proof sketch.* Write `ν = m sn²a` with `a` complex, `u = F(φ)`, and use Jacobi's form
+`Π_J(u, b) = (cn b dn b / sn b)(Π(m sn²b, φ) − F(φ))`, so that `Π(ν, φ) = F + (sn a /(cn a dn a)) Π_J(u, a)`.
+Jacobi's addition theorem in the parameter (sign fitted and checked numerically):
 
-Every sheared-sine length, Bézier length, ellipse length and offset length is an instance. The
-case left out is the interesting one:
+```
+Π_J(u,a) + Π_J(u,b) − Π_J(u,a+b) = m sn a sn b sn(a+b)·u
+     + ½ log[(1 + m sn a sn b sn u sn(u−a−b)) / (1 + m sn a sn b sn u sn(u+a+b))].
+```
 
-> **Question Π_ℂ [Open].** Is `Re Π(ν, φ | c)` P-constructible for non-real `ν`?
+Apply it with `b = ā` and `b = −ā`, and average:
+`Π_J(u, a) = ½[Π_J(u, a+ā) + Π_J(u, a−ā)] + elementary`.
+`a + ā` is real, so `n₁ = m sn²(a+ā) ∈ (0, m)`. `a − ā` is imaginary, so `sn(a−ā)` is imaginary
+and `n₂ = m sn²(a−ā) < 0`. Explicitly, with `s = sn a = √(ν/m)`, `c = √(1−s²)`, `d = √(1−ms²)`,
 
-Sheared sines never produce it: shearing moves the **zeros** `r, r̄` of the speed off the real
-axis, not its poles. Affine images of offsets of the sine do not either: the curvature factor
-puts singularities at `u = ±i`, but those are branch points of the new quartic, so they give
-second-kind terms. I know of no drawable curve whose length element has a pole off the real
-axis. Classical tables (Byrd–Friedman) reduce conjugate poles to real `n` when the poles are
-`±iν` under an even substitution; whether that covers the general case was not checked.
+```
+n₁,₂ = m (s c̄ d̄ ± s̄ c d)² / (1 − m|s|⁴)²,
+```
+
+so `n₁, n₂` and every coefficient are P whenever `ν` and `m` are: only complex square roots
+and field operations. The log term is the log of a P-algebraic function of `sin φ, cos φ, Δ(φ)`,
+so its real and imaginary parts are a `log` and an `arctan` (with the branch followed along the
+path, which changes it by multiples of `π`). Both characteristics are pole-free, so
+`ellipticPiInc_Pconstructible` applies with no side conditions. ∎
+
+With the lemma, the theorem has no hypothesis on the poles:
+
+> **Theorem A1 (proposed).** Let `f` be a real cubic or quartic and `R(x, y)` a real rational
+> function, both with P-constructible coefficients. For P-constructible `x₀, x₁` such that
+> `f ≥ 0` on `[x₀, x₁]` and the integrand is finite there,
+> `∫_{x₀}^{x₁} R(x, √f(x)) dx` is P-constructible.
+
+*Proof sketch.* (1) The roots of `f` are P (degree ≤ 4). (2) A real Möbius map and a
+`sn`-substitution put `f` in Legendre form with real `m ∈ (0, 1)`; the endpoints become
+P-constructible amplitudes, since `arcsin` and `arctan` of P numbers are P. (3) Write
+`R(x, y) = R₁(x) + R₂(x)/y`. The `R₁` part is elementary. Partial fractions of `R₂` in `sn²` give
+`F`, `E`, elementary terms, and one `Π(ν)` per pole `ν` of `R₂`; real poles give real `ν`, and
+conjugate pairs give `2 Re Π(ν)` (Lemma Π_ℂ). Every piece is P. ∎
+
+**Answering the question "don't we have all elliptic integrals already?"** Yes, for every integral
+the repo's curves actually produce. Sheared sines, Bézier curves, ellipses and their offsets all
+have length elements whose only poles are at real points: shearing moves the **zeros** `r, r̄` of
+the speed off the real axis, not its poles, and the curvature factor of an offset puts its
+singularities at branch points. So Lemma Π_ℂ is not needed for any existing construction. What A1
+adds is a **classification**: an elliptic integral (genus 1, real path, P data) can never be a new
+number. That has two uses:
+
+- **Negative.** A route whose answer is an elliptic integral of this kind adds nothing to P,
+  without anyone having to find the specific substitution. That covers the `arc_length` reading
+  of every genus-1 curve in the drawable list, and the third kind of every offset tower.
+- **Where the frontier is.** New numbers from lengths need genus ≥ 2 (quartic–sextic graphs,
+  power laws with `num(p − 1) ≥ 3`), the two-variable Appell family of `GENERALIZATIONS.md` §2, or
+  an *inverse*: the inversion stratum of §3 is outside A1 because `Λ_r⁻¹` is an inverse function,
+  not an integral.
+
+**Lean cost.** Lemma Π_ℂ can avoid complex Jacobi functions entirely, since Mathlib has none: state
+it as an identity between real functions of `φ` with the explicit `n₁, n₂` above, and prove it by
+differentiating, as `Circular.lean` does for `circG`. The Legendre reduction in A1 is the large
+part: a case split on the real-root pattern of `f`, with one substitution per case (Byrd–Friedman
+tabulate them), each proved the same way.
 
 ### 4.3 Crossings: the two-tone family
 
@@ -210,5 +259,6 @@ An elliptic-function graph is not drawable; it is the Jacobi-amplitude frontier
    argument. It is the first Lean theorem whose output is a genuinely new function.
 2. The sheared-`exp_two` inverse (§4.1): same proof, and its equation class is untouched.
 3. `twoTone_root_Pconstructible` (§4.3), with Engine S and hyperbolic Kepler as corollaries.
-4. Theorem A1 (§4.2). Medium-large: a Legendre-reduction library on top of `ThirdKindAll`.
-5. Research: Question Π_ℂ; whether the inverse family of §2 meets any classical function.
+4. Lemma Π_ℂ (§4.2): medium, a real identity proved by differentiation. Then Theorem A1:
+   medium-large, a Legendre-reduction library on top of `ThirdKindAll`.
+5. Research: whether the inverse family of §2 meets any classical function.

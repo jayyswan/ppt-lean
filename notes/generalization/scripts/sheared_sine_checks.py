@@ -1,4 +1,4 @@
-"""Numerical checks for notes/generalization/SHEARED-SINES.md (labels S1-S8 match the note).
+"""Numerical checks for notes/generalization/SHEARED-SINES.md (labels S1-S9 match the note).
 Run: pip install mpmath; python3 sheared_sine_checks.py. Each line prints a residual or a verdict."""
 from mpmath import mp, mpf, sin, cos, pi, sqrt, findroot, pslq, chebyt
 
@@ -84,3 +84,25 @@ sigma = mpf(1)
 t1 = _fr(lambda u: quad(lambda t: abs(cos(t) - mpc(b, a)), [0, u]) - sigma, mpf(1))
 show("S8 t1 = Lambda_r^{-1}(1)", t1)
 show("S8 findpoly(t1, deg<=8) [None = no relation]", str(findpoly(t1, 8, maxcoeff=10**5)))
+
+# S9  complex characteristic reduces to two real ones (Jacobi's addition theorem in the parameter).
+#     nu = m sn^2(a) complex. With b1 = a + conj(a) (real) and b2 = a - conj(a) (imaginary),
+#     n1 = m sn^2 b1 in (0, m) and n2 = m sn^2 b2 < 0 are real, and
+#     Pi(nu, phi) = F + (sn a/(cn a dn a)) * (1/2) * sum_{b = b1, b2} [PiJ(u, b) + elem(a, b - a)],
+#     PiJ(u, b) = (cn b dn b / sn b)(Pi(m sn^2 b, phi) - F),
+#     PiJ(u,a) + PiJ(u,b) - PiJ(u,a+b) = k2 sn a sn b sn(a+b) u
+#                                       + (1/2) log[(1 + k2 sn a sn b sn u sn(u-a-b)) / (1 + k2 sn a sn b sn u sn(u+a+b))].
+from mpmath import ellipfun, ellipf as _F, ellippi as _Pi, asin, log as _log, conj as _conj
+mp.dps = 30
+for m_, a_, u_ in [(mpf('0.4'), mpc('0.5','0.7'), mpf('0.9')), (mpf('0.75'), mpc('0.3','0.4'), mpf('1.2'))]:
+    sn_ = lambda z: ellipfun('sn', z, m=m_); cn_ = lambda z: ellipfun('cn', z, m=m_); dn_ = lambda z: ellipfun('dn', z, m=m_)
+    ph = asin(sn_(u_)); Fv = _F(ph, m_)
+    PiJ = lambda b: (cn_(b)*dn_(b)/sn_(b))*(_Pi(m_*sn_(b)**2, ph, m_) - Fv)
+    def elem(x, y):
+        s_ = m_*sn_(x)*sn_(y)
+        return s_*sn_(x+y)*u_ + _log((1 + s_*sn_(u_)*sn_(u_-x-y))/(1 + s_*sn_(u_)*sn_(u_+x+y)))/2
+    b1, b2 = a_ + _conj(a_), a_ - _conj(a_)
+    PiJa = ((PiJ(b1) + elem(a_, _conj(a_))) + (PiJ(b2) + elem(a_, -_conj(a_))))/2
+    nu_ = m_*sn_(a_)**2
+    show(f"S9 m={m_}, nu={mp.nstr(nu_,4)}: n1={mp.nstr((m_*sn_(b1)**2).real,6)}, n2={mp.nstr((m_*sn_(b2)**2).real,6)}; |rebuilt - Pi(nu)|",
+         abs(Fv + sn_(a_)/(cn_(a_)*dn_(a_))*PiJa - _Pi(nu_, ph, m_)))
