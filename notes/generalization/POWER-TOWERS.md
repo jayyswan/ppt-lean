@@ -173,8 +173,10 @@ sub-arcs, and an offset of a sub-arc is a sub-arc of the offset. **[Proof sketch
 
 1. **(F)** `Φ(v₀, v₁)` for data `(r, q_j, c_j, v₀, v₁)` in `K` (forward lengths, by Theorem T);
 2. **(I)** solutions `v₁` of (★) with data in `K`;
-3. **(B)** box readouts. These add nothing: the extremes are endpoints, or points where
-   `N(1, v)` is axis-parallel, which is linear in `v`;
+3. **(B)** box readouts. These add nothing beyond (X): the extremes are endpoints, points
+   where `N(1, v)` is axis-parallel (linear in `v`), or **offset cusps** (`1 − h_j κ_j = 0`, an
+   algebraic equation in `w` and the `√q_j`, so an (X)-type root). The cusp case was missed in
+   the first version of this note; see `PLAN-normal-form.md` §3;
 4. **(X)** crossing coordinates. With a line or with another tower, a crossing is an algebraic
    equation in `w = t^{1/n}` and `√q_j(v)`, with coefficients in `K`.
 
