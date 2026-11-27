@@ -12,7 +12,7 @@ One folder per topic, named for the construction or investigation it belongs to:
 | --- | --- |
 | `3d/` | 3D rotation of curves, the rotation formula and how it is baked |
 | `algebraic/` | the `PLAN-algebraic` programme (whole/non-total-real, Theorem H/W) |
-| `generalization/` | specific results that are one point of a larger reachable family (incomplete Beta, Appell F₁, lattice Green functions, …) |
+| `generalization/` | specific results that are one point of a larger reachable family (incomplete Beta, Appell F₁, lattice Green functions, …), power-law towers, and the living plan for a normal form of P (`PLAN-normal-form.md`) |
 | `exponential-motives/` | literature search on exponentiation of coefficient systems |
 | `hypergeometric/` | hypergeometric / Gauss, Kummer, Pfaff route |
 | `lambert/` | Lambert W: plan for the lower branch `W₋₁` |
